@@ -1,0 +1,12 @@
+{
+  "name": "cape",
+  "version": "1.0.0",
+  "description": "Collection of opinionated Claude Code commands and skills.",
+  "author": {
+    "name": "Oskar Grunning",
+    "email": "oskargrunning@gmail.com",
+    "url": "https://github.com/sQVe"
+  },
+  "repository": "https://github.com/sQVe/cape",
+  "license": "MIT"
+}
