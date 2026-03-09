@@ -1,0 +1,15 @@
+{
+  "eval_id": 0,
+  "eval_name": "changelog-cli",
+  "prompt": "I want to add a CLI command that generates changelogs from git history. Something like `cape changelog` that reads commits and outputs a nicely formatted CHANGELOG.md section.",
+  "assertions": [
+    {"text": "Asks at least 2 clarifying questions before proposing a solution"},
+    {"text": "References actual files or patterns from the cape project codebase"},
+    {"text": "Proposes at least 2 distinct approaches with pros and cons"},
+    {"text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements"},
+    {"text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning"},
+    {"text": "Creates exactly one first task, not zero or multiple"},
+    {"text": "Does not write implementation code"},
+    {"text": "Includes a Key Decisions table with Question/Answer/Implication columns"}
+  ]
+}

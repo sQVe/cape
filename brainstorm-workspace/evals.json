@@ -1,0 +1,53 @@
+{
+  "skill_name": "brainstorm",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "I want to add a CLI command that generates changelogs from git history. Something like `cape changelog` that reads commits and outputs a nicely formatted CHANGELOG.md section.",
+      "expected_output": "Clarifying questions, research into codebase, 2-3 approaches proposed, epic created with immutable requirements and anti-patterns, exactly one first task.",
+      "files": [],
+      "assertions": [
+        {"text": "Asks at least 2 clarifying questions before proposing a solution", "type": "qualitative"},
+        {"text": "References actual files or patterns from the cape project codebase", "type": "qualitative"},
+        {"text": "Proposes at least 2 distinct approaches with pros and cons", "type": "qualitative"},
+        {"text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements", "type": "qualitative"},
+        {"text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning", "type": "qualitative"},
+        {"text": "Creates exactly one first task, not zero or multiple", "type": "qualitative"},
+        {"text": "Does not write implementation code", "type": "qualitative"},
+        {"text": "Includes a Key Decisions table with Question/Answer/Implication columns", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Add a new agent called `doc-writer` that generates documentation for code. It should look at source files and produce markdown docs.",
+      "expected_output": "Investigates existing agent patterns (codebase-investigator.md, internet-researcher.md), asks clarifying questions, proposes approaches following existing conventions, creates epic and first task.",
+      "files": [],
+      "assertions": [
+        {"text": "Asks at least 2 clarifying questions before proposing a solution", "type": "qualitative"},
+        {"text": "References actual files or patterns from the cape project codebase", "type": "qualitative"},
+        {"text": "Proposes at least 2 distinct approaches with pros and cons", "type": "qualitative"},
+        {"text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements", "type": "qualitative"},
+        {"text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning", "type": "qualitative"},
+        {"text": "Creates exactly one first task, not zero or multiple", "type": "qualitative"},
+        {"text": "Does not write implementation code", "type": "qualitative"},
+        {"text": "Includes a Key Decisions table with Question/Answer/Implication columns", "type": "qualitative"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Just add OAuth to this project, use passport.js with Google strategy. I already know what I want.",
+      "expected_output": "Still asks clarifying questions despite user's directive tone. Researches codebase first. Proposes alternatives even though user specified an approach. Creates epic with anti-patterns. Doesn't skip to code.",
+      "files": [],
+      "assertions": [
+        {"text": "Asks at least 2 clarifying questions before proposing a solution", "type": "qualitative"},
+        {"text": "References actual files or patterns from the cape project codebase", "type": "qualitative"},
+        {"text": "Proposes at least 2 distinct approaches with pros and cons", "type": "qualitative"},
+        {"text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements", "type": "qualitative"},
+        {"text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning", "type": "qualitative"},
+        {"text": "Creates exactly one first task, not zero or multiple", "type": "qualitative"},
+        {"text": "Does not write implementation code", "type": "qualitative"},
+        {"text": "Includes a Key Decisions table with Question/Answer/Implication columns", "type": "qualitative"}
+      ]
+    }
+  ]
+}

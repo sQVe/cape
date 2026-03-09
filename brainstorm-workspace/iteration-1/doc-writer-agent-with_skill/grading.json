@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Asks at least 2 clarifying questions before proposing a solution",
+      "passed": true,
+      "evidence": "5 questions: language support, doc type, output location, update existing docs, doc standard. 4 critical + 1 nice-to-have. All with multiple-choice options and recommended defaults."
+    },
+    {
+      "text": "References actual files or patterns from the cape project codebase",
+      "passed": true,
+      "evidence": "References agents/codebase-investigator.md:1-41, agents/internet-researcher.md:1-43, .claude-plugin/plugin.json, settings.json. Identifies specific patterns: frontmatter fields, file naming, structure, closing directive."
+    },
+    {
+      "text": "Proposes at least 2 distinct approaches with pros and cons",
+      "passed": true,
+      "evidence": "3 approaches: (1) Mirror existing agent pattern (selected), (2) Agent with companion skill (rejected), (3) Agent with external tool integration (rejected). All have pros, cons, and rationale."
+    },
+    {
+      "text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements",
+      "passed": true,
+      "evidence": "Epic has '## Requirements (IMMUTABLE)' with 7 items, e.g., 'Agent file at agents/doc-writer.md follows existing agent frontmatter pattern' and 'Agent is language-agnostic: works with any source language without hardcoded parsers'."
+    },
+    {
+      "text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning",
+      "passed": true,
+      "evidence": "6 anti-patterns: 'NO hardcoded language parsers (reason: agent must be language-agnostic...)', 'NO external tool dependencies (reason: existing agents have zero deps...)', 'NO generating docs without checking existing docs first (reason: ...)', etc."
+    },
+    {
+      "text": "Creates exactly one first task, not zero or multiple",
+      "passed": true,
+      "evidence": "Exactly one task: 'Task 1: Create agents/doc-writer.md' with goal, implementation steps referencing existing agents, and success criteria."
+    },
+    {
+      "text": "Does not write implementation code",
+      "passed": true,
+      "evidence": "No source code or agent files created. Output is design documentation only."
+    },
+    {
+      "text": "Includes a Key Decisions table with Question/Answer/Implication columns",
+      "passed": true,
+      "evidence": "Key decisions table with 6 rows: Language support, Doc type, Output location, Update existing, Doc standard, Model. All three columns present."
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

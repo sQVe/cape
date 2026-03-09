@@ -1,0 +1,82 @@
+16:09:15 INFO: Opening in existing instance
+Split: 13 train, 7 test (holdout=0.4)
+
+============================================================
+Iteration 1/5
+Description: Use when creating or developing anything, before writing code - refines rough ideas into br epics with immutable requirements
+============================================================
+Train: 21/39 correct, precision=100% recall=0% accuracy=54% (72.0s)
+  [FAIL] rate=0/3 expected=True: I'd like to add a new command to cape that auto-generates a 
+  [FAIL] rate=0/3 expected=True: I want to add a plugin system to this CLI tool so other devs
+  [FAIL] rate=0/3 expected=True: ok so I want to build a dashboard that shows real-time metri
+  [FAIL] rate=0/3 expected=True: I'm thinking about replacing our REST API with GraphQL but I
+  [FAIL] rate=0/3 expected=True: I've been thinking about adding a notification system to our
+  [FAIL] rate=0/3 expected=True: we need some kind of rate limiting for the API. right now th
+  [PASS] rate=0/3 expected=False: The /api/users endpoint is returning results in 3.2 seconds.
+  [PASS] rate=0/3 expected=False: Review PR #234 from @daniels. It adds WebSocket support to t
+  [PASS] rate=0/3 expected=False: The login page is showing a 500 error when users try to sign
+  [PASS] rate=0/3 expected=False: Rename all instances of 'accessToken' to 'bearerToken' acros
+  [PASS] rate=0/3 expected=False: Add a --json flag to the existing /cape:changelog command so
+  [PASS] rate=0/3 expected=False: Can you refactor the UserService class? It's 800 lines long 
+  [PASS] rate=0/3 expected=False: Commit the changes I just made and push to the feature branc
+Test : 12/21 correct, precision=100% recall=0% accuracy=57% (0.0s)
+  [FAIL] rate=0/3 expected=True: Need to add PDF export to the reporting module. Users click 
+  [FAIL] rate=0/3 expected=True: Add support for multi-tenant data isolation. Each customer o
+  [PASS] rate=0/3 expected=False: The br epic for the caching layer is already created (EPIC-4
+  [FAIL] rate=0/3 expected=True: We want to add end-to-end encryption for our chat feature. M
+  [PASS] rate=0/3 expected=False: Run the test suite and fix any failures. I made some changes
+  [PASS] rate=0/3 expected=False: Update the README to document the new CLI flags we added las
+  [PASS] rate=0/3 expected=False: What does the handleWebhook function in src/integrations/str
+
+Improving description...
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/sqve/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/run_loop.py", line 332, in <module>
+    main()
+    ~~~~^^
+  File "/home/sqve/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/run_loop.py", line 297, in main
+    output = run_loop(
+        eval_set=eval_set,
+    ...<11 lines>...
+        log_dir=log_dir,
+    )
+  File "/home/sqve/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/run_loop.py", line 202, in run_loop
+    new_description = improve_description(
+        client=client,
+    ...<7 lines>...
+        iteration=iteration,
+    )
+  File "/home/sqve/.claude/plugins/cache/claude-plugins-official/skill-creator/205b6e0b3036/skills/skill-creator/scripts/improve_description.py", line 114, in improve_description
+    response = client.messages.create(
+        model=model,
+    ...<5 lines>...
+        messages=[{"role": "user", "content": prompt}],
+    )
+  File "/usr/lib/python3.14/site-packages/anthropic/_utils/_utils.py", line 282, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/lib/python3.14/site-packages/anthropic/resources/messages/messages.py", line 930, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<26 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/lib/python3.14/site-packages/anthropic/_base_client.py", line 1326, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/anthropic/_base_client.py", line 1035, in request
+    request = self._build_request(options, retries_taken=retries_taken)
+  File "/usr/lib/python3.14/site-packages/anthropic/_base_client.py", line 506, in _build_request
+    headers = self._build_headers(options, retries_taken=retries_taken)
+  File "/usr/lib/python3.14/site-packages/anthropic/_base_client.py", line 447, in _build_headers
+    self._validate_headers(headers_dict, custom_headers)
+    ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/site-packages/anthropic/_client.py", line 200, in _validate_headers
+    raise TypeError(
+        '"Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"'
+    )
+TypeError: "Could not resolve authentication method. Expected either api_key or auth_token to be set. Or for one of the `X-Api-Key` or `Authorization` headers to be explicitly omitted"

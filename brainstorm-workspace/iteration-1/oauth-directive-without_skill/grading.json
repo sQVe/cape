@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Asks at least 2 clarifying questions before proposing a solution",
+      "passed": true,
+      "evidence": "3 questions: (1) Are you asking about cape itself? (2) Wrong project? (3) Should this be a cape command that scaffolds OAuth? All address the fundamental mismatch."
+    },
+    {
+      "text": "References actual files or patterns from the cape project codebase",
+      "passed": true,
+      "evidence": "States 'Cape has no application runtime. It contains markdown definitions and shell scripts. There is no package.json, no node_modules, no Express server, no route handlers.' Demonstrates actual codebase investigation."
+    },
+    {
+      "text": "Proposes at least 2 distinct approaches with pros and cons",
+      "passed": true,
+      "evidence": "2 alternatives: (A) User meant a different project — lists what info is needed, (B) Create a cape skill/command that scaffolds OAuth into target projects. Both clearly described."
+    },
+    {
+      "text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements",
+      "passed": false,
+      "evidence": "No epic structure at all. Output is a pushback response with alternatives. No Requirements section."
+    },
+    {
+      "text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning",
+      "passed": false,
+      "evidence": "No anti-patterns section. The output pushes back on the entire request rather than designing with guardrails."
+    },
+    {
+      "text": "Creates exactly one first task, not zero or multiple",
+      "passed": false,
+      "evidence": "No task created. Output recommends the user clarify their intent before any work begins."
+    },
+    {
+      "text": "Does not write implementation code",
+      "passed": true,
+      "evidence": "No code written. Output is entirely a pushback/clarification response."
+    },
+    {
+      "text": "Includes a Key Decisions table with Question/Answer/Implication columns",
+      "passed": false,
+      "evidence": "No Key Decisions table. No structured decision tracking."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 4,
+    "total": 8,
+    "pass_rate": 0.5
+  }
+}

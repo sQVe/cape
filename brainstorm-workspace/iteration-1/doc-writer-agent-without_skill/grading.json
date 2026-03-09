@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "Asks at least 2 clarifying questions before proposing a solution",
+      "passed": true,
+      "evidence": "5 clarifying questions in a table: doc type, review-first vs auto-write, language scope, granularity, model choice. All with default answers and reasoning."
+    },
+    {
+      "text": "References actual files or patterns from the cape project codebase",
+      "passed": true,
+      "evidence": "Reads and references agents/codebase-investigator.md and agents/internet-researcher.md. Extracts specific patterns: frontmatter fields (name, description, model), naming convention, description convention, tone."
+    },
+    {
+      "text": "Proposes at least 2 distinct approaches with pros and cons",
+      "passed": false,
+      "evidence": "Only one approach proposed: 'Proposed approach' section describes a single plan (mirror existing agent pattern). No alternative approaches compared."
+    },
+    {
+      "text": "Epic contains a Requirements (IMMUTABLE) section with specific, testable statements",
+      "passed": false,
+      "evidence": "No epic structure. Has 'Success criteria' checklist and 'Anti-patterns' but no Requirements (IMMUTABLE) section."
+    },
+    {
+      "text": "Anti-patterns use 'NO X (reason: Y)' format with reasoning",
+      "passed": true,
+      "evidence": "4 anti-patterns with correct format: 'NO invented APIs (reason: documentation must reflect actual code, not assumptions)', 'NO documenting private internals by default (reason: ...)', 'NO writing files without user review (reason: ...)', 'NO ignoring existing doc comments (reason: ...)'."
+    },
+    {
+      "text": "Creates exactly one first task, not zero or multiple",
+      "passed": false,
+      "evidence": "No task structure. States 'Single deliverable: Create agents/doc-writer.md' but doesn't frame it as a task with implementation steps and success criteria in the skill's format."
+    },
+    {
+      "text": "Does not write implementation code",
+      "passed": true,
+      "evidence": "No source code files created. Includes an output format template example but no actual agent file was written."
+    },
+    {
+      "text": "Includes a Key Decisions table with Question/Answer/Implication columns",
+      "passed": false,
+      "evidence": "No Key Decisions table. Questions are in a table but with columns #/Question/Default answer/Reasoning — different structure, no Implication column."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 4,
+    "total": 8,
+    "pass_rate": 0.5
+  }
+}
