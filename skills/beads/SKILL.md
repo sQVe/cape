@@ -206,6 +206,53 @@ br count --group-by status             # Count by status
 
 ---
 
+## Step 2.5: Preserve task history
+
+When updating a task's design field, preserve existing content and append new content. Never
+overwrite.
+
+### Read-before-write rule
+
+Before any `br update --design`, run `br show <id>` first. Capture the existing design content, then
+append new content to it. This applies to tasks only — epics keep immutable requirements per
+existing convention.
+
+### Frozen sections
+
+Once created, these sections are immutable:
+
+- **Goal** — what the task delivers
+- **Implementation** — how it gets built
+- **Success criteria** — measurable outcomes
+
+New content goes only in the Divergence log and Outcome sections below.
+
+### Divergence log
+
+When execution diverges from the original plan, append a dated entry. Trigger moments: approach
+changes, task abandoned or descoped, assumption proves wrong, unexpected discovery changes design.
+
+```markdown
+## Divergence log
+
+### YYYY-MM-DD: [Short description]
+
+**What changed:** [What diverged from original plan] **Why:** [Why the original approach was wrong]
+**New approach:** [What we're doing instead]
+```
+
+### Outcome
+
+Before closing a task with `br close`, append a summary of what actually shipped:
+
+```markdown
+## Outcome
+
+[1-3 sentences: what actually shipped, how it differs from the original plan]
+```
+
+---
+
 ## Step 3: Output from skills
 
 Cape skills that discover actionable findings should create br items, not just print text. This
@@ -311,6 +358,16 @@ individual issue status.
 **Right:** `br update br-3 --status in_progress` — use `br update` to change issue status.
 </example>
 
+<example>
+<scenario>Updating task design after approach changes</scenario>
+
+**Wrong:** `br update br-3 --design "New approach: use Redis instead"` — overwrites the original
+plan. No record of what was tried or why it changed.
+
+**Right:** Read existing content with `br show br-3`, then append divergence entry:
+`br update br-3 --design "<existing content>\n\n## Divergence log\n\n### 2026-03-11: Switched to Redis\n**What changed:** ..."`.
+Original Goal and Implementation sections preserved. </example>
+
 </examples>
 
 <key_principles>
@@ -333,5 +390,7 @@ individual issue status.
 5. **Skills create br items** — actionable findings become tracked issues, not just text
 6. **One issue per finding** — batch skills create separate issues, not checklists
 7. **Always set type and priority** — never leave these as defaults
+8. **Read before writing design** — `br show` before `br update --design`, preserve existing
+   content, append only
 
 </critical_rules>

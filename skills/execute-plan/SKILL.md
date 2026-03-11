@@ -76,7 +76,12 @@ when building new functionality.
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
 If you genuinely need to switch approaches, explain why the original reasoning no longer holds and
-get user confirmation.
+get user confirmation. Then append a divergence log entry to the task's design field per the beads
+skill history convention (`br show` first, then `br update --design` with existing content plus the
+new divergence entry).
+
+Before closing, append an Outcome section to the task's design field per the beads skill history
+convention (`br show` first, then `br update --design` with existing content plus the outcome).
 
 Close the task only when all substeps are done:
 
@@ -205,5 +210,7 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 4. **Complete all substeps before closing a task** -- partially done is not done
 5. **Use `--description` on `br create`** -- `--design` does not exist on create
 6. **Orient from br state** -- never ask "where did we leave off"
+7. **Append outcome before closing** -- follow beads skill history convention (`br show` then
+   `br update --design` with existing content + outcome)
 
 </critical_rules>
