@@ -24,16 +24,20 @@ cape/
 ├── commands/     # Slash commands
 ├── skills/       # Skill workflows
 ├── hooks/        # Hook scripts and definitions
+├── resources/    # Templates and reference files
+├── scripts/      # Validation and tooling
 ├── CLAUDE.md     # Dev guide
 └── CHANGELOG.md  # Release history
 ```
 
-| Directory  | Purpose                                    |
-| ---------- | ------------------------------------------ |
-| `agents/`  | Specialized agent configurations           |
-| `commands/`| Slash commands invoked with `/cape:name`   |
-| `skills/`  | Reusable skill workflows                   |
-| `hooks/`   | Event hooks (session start, tool calls)    |
+| Directory    | Purpose                                    |
+| ------------ | ------------------------------------------ |
+| `agents/`    | Specialized agent configurations           |
+| `commands/`  | Slash commands invoked with `/cape:name`   |
+| `skills/`    | Reusable skill workflows                   |
+| `hooks/`     | Event hooks (session start, tool calls)    |
+| `resources/` | Templates for skills, agents, and epics    |
+| `scripts/`   | Validation (`bun scripts/validate.ts`)     |
 
 ## Contributing
 
