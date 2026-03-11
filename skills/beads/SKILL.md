@@ -91,6 +91,7 @@ br create "Task: Specific deliverable" \
   --type task \
   --priority 2 \
   --parent <epic-id> \
+  --labels "refactor,auth" \
   --description "Task details here"
 
 br create "Bug: Description of defect" \
@@ -110,7 +111,7 @@ W"
 Quick capture (prints ID only):
 
 ```bash
-br q Fix flaky test in auth module -t bug -p 2
+br q Fix flaky test in auth module -t bug -p 2 -l test-gap
 ```
 
 ## Reading issues
@@ -132,7 +133,9 @@ br epic status                # Progress of all epics
 br update br-3 --status in_progress   # Start work
 br update br-3 --design "Updated design notes"
 br update br-3 --priority 1           # Change priority
-br update br-3 --add-label "security" # Add label
+br update br-3 --add-label "security"    # Add label
+br update br-3 --remove-label "security" # Remove label
+br update br-3 --set-labels "auth,api"   # Replace all labels
 ```
 
 ## Closing issues
@@ -163,12 +166,25 @@ br dep tree br-1
 br dep cycles
 ```
 
+## Managing labels
+
+```bash
+br label add br-3 br-5 -l security    # Add label to multiple issues
+br label remove br-3 -l security      # Remove label from issue
+br label list br-3                     # Labels on a specific issue
+br label list-all                      # All labels with counts
+br label rename "test-gaps" "test-gap" # Rename across all issues
+```
+
 ## Common queries
 
 ```bash
 br list --status in_progress           # What's active
 br ready --parent br-1                 # Ready tasks in epic
 br list --status open -t bug           # Open bugs
+br list -l security                    # Filter by label (AND, repeatable)
+br list --label-any security --label-any auth  # OR filtering
+br search "auth" -l pr-review          # Combine text + label search
 br blocked                             # What's stuck
 br stale                               # Neglected issues
 br stats                               # Project overview
@@ -285,7 +301,7 @@ Cape skills that discover actionable findings should create br items, not just p
    - P4: nice-to-have, backlog
 3. **Link to parent when context exists** — if working within an epic, use `--parent`.
 4. **Include actionable descriptions** — file paths, line numbers, reproduction steps.
-5. **Use labels for categorization** — `--labels "test-gap,auth"`.
+5. **Use labels for categorization** — `--labels "test-gap,auth"`. Lowercase, hyphenated. Always include the skill name as a label. Common categories: `test-gap`, `pr-review`, `security`, `refactor`, `debt`.
 
 ### Template for skill output
 
