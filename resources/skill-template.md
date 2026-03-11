@@ -37,6 +37,11 @@ description: >
 
 [Steps use `## Step N: Title` headings separated by `---` rules.]
 
+[Convention: if this step makes design or implementation decisions, consider adding a lightweight
+assumption challenge checkpoint -- surface scope creep, ambiguous terms, or over-engineering before
+committing. See `cape:challenge` for the full process; inline a focused version when a standalone
+dispatch would be too heavy.]
+
 ---
 
 ## Step 3: [Title]

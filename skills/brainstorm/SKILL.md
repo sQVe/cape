@@ -120,9 +120,16 @@ Lead with recommended option. Explain why.
 - Cover: architecture, components, data flow, error handling
 - Record user concerns or hesitations as Open Concerns
 
+**Challenge assumptions:**
+
+Before locking in the design, run a lightweight assumption challenge on the proposed design. Focus
+on scope creep in requirements, ambiguous terms, and over-engineering in the approach. Present
+findings to the user -- confirmed assumptions become epic requirements or anti-patterns, rejected
+ones trigger scope reductions or requirement changes. Keep this focused (high and medium risk only).
+
 **Create the epic:**
 
-After design is validated, create the `br` epic using the template from
+After design is validated and assumptions are resolved, create the `br` epic using the template from
 `resources/epic-template.md`. Every section is required:
 
 ```bash

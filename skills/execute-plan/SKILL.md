@@ -93,7 +93,14 @@ br close <task-id>
 
 ## Step 3: Reflect and plan
 
-After closing the task, step back and think about what happened.
+After closing the task, challenge assumptions before planning the next step.
+
+**Challenge completed work:** Run a lightweight assumption challenge on what was just implemented.
+Compare what was built against what the task asked for. Focus on scope creep, unrequested features,
+and over-engineering. Rejected assumptions become scope corrections or inform the next task.
+Confirmed assumptions become outcome notes. Keep this focused (high and medium risk only).
+
+Then step back and think about what happened.
 
 - What did this task reveal about the problem?
 - Did you discover existing code, new constraints, or dead ends?
