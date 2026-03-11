@@ -66,12 +66,14 @@ Do not proceed to hypotheses until the symptom is confirmed or the inability to 
 
 **Use tools, not intuition.**
 
-Dispatch `cape:codebase-investigator` to:
+Dispatch `cape:bug-tracer` to:
 
-- Trace the code path from the error location
-- Find related tests and their expectations
-- Identify recent changes to the affected area (`git log --oneline -20 -- <files>`)
-- Check for similar patterns elsewhere that work correctly
+- Trace execution backward from the error location
+- Check recent changes to affected files (`git log --oneline -20 -- <files>`, `git blame`)
+- Compare working code paths with broken ones to find the divergence
+- Identify instrumentation points -- where to add debug prints, what state to inspect
+
+If broader code understanding is needed (architecture, patterns, unrelated modules), dispatch `cape:codebase-investigator` as a secondary agent.
 
 If the error involves external APIs, libraries, or unfamiliar behavior, dispatch `cape:internet-researcher` to:
 
@@ -206,12 +208,13 @@ Ready for fix-bug when you want to address it.
 
 <agent_references>
 
-## Dispatch `cape:codebase-investigator` when:
+## Dispatch `cape:bug-tracer` (primary) when:
 
-- Tracing the code path from an error location
-- Finding what changed recently in affected files
-- Locating related tests and their expectations
+- Tracing execution backward from an error location
+- Finding what changed recently in affected files (`git log`, `git blame`)
 - Comparing working code paths with broken ones
+- Identifying instrumentation points and state to inspect
+- Binary searching through code when the failure point is unclear
 
 ## Dispatch `cape:internet-researcher` when:
 
@@ -220,12 +223,19 @@ Ready for fix-bug when you want to address it.
 - Checking for known issues or breaking changes in dependencies
 - Unfamiliar error messages or codes
 
+## Dispatch `cape:codebase-investigator` (secondary) when:
+
+- Bug-tracer needs broader context about how a system works
+- Understanding architecture or patterns unrelated to the specific failure
+- Finding existing conventions before suggesting a fix direction
+
 ## Investigation protocol:
 
 1. Reproduce first -- tools confirm the symptom exists
-2. Codebase evidence -- trace code paths, read implementations, check git history
+2. Bug-tracer -- trace backward from error, check git history, compare working vs broken paths
 3. External evidence -- only when the bug may involve external factors
-4. Never skip straight to external research without checking the codebase first
+4. Codebase-investigator -- fall back for broader code understanding when needed
+5. Never skip straight to external research without tracing the code first
 
 </agent_references>
 
@@ -242,7 +252,7 @@ User: "Getting this error: TypeError: Cannot read property 'id' of undefined at 
 
 1. Read handlers/order.ts:42 to understand the code path
 2. Reproduce: run the operation that triggers the error
-3. Dispatch codebase-investigator: trace where `order` is populated -- find the database query at services/order.ts:28
+3. Dispatch bug-tracer: trace where `order` is populated -- find the database query at services/order.ts:28
 4. Evidence: the query uses `findOne` without joining the `items` relation, but line 42 accesses `order.items[0].id`
 5. Check git log: commit abc123 added the items access but didn't update the query
 6. Root cause: missing join in the query at services/order.ts:28
@@ -260,7 +270,7 @@ User: "test_session_cleanup fails about 30% of the time in CI"
 
 1. Run the test locally multiple times to reproduce
 2. Read the test: it creates a session, waits 100ms, then checks cleanup ran
-3. Dispatch codebase-investigator: find the cleanup scheduler
+3. Dispatch bug-tracer: find the cleanup scheduler
 4. Evidence: cleanup interval is 100ms but uses `setInterval` -- first run happens AFTER 100ms, not AT 100ms
 5. The test passes when cleanup fires before the assertion (race condition) and fails when it doesn't
 6. Root cause: race condition -- test assumes cleanup runs within 100ms but the interval means it runs between 100-200ms
@@ -278,7 +288,7 @@ User: "The user profile page shows the wrong email after updating it"
 
 1. Reproduce: update email, reload profile, confirm stale email displays
 2. Check the API response: GET /api/profile still returns old email after PUT succeeds
-3. Dispatch codebase-investigator: trace the update handler through services to the database query
+3. Dispatch bug-tracer: trace the update handler through services to the database query
 4. Evidence: the PUT handler writes to the database, but the GET handler reads from a Redis cache
 5. The cache invalidation call is missing from the update path
 6. Root cause: cache not invalidated after profile update in services/user.ts:updateUser()
