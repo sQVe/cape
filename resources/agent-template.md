@@ -8,7 +8,8 @@ You are a [Role Name]. Your role is to [one sentence describing what the agent d
 
 ## Investigation approach
 
-1. **[Primary method]**: [How the agent starts its work. Tools to use, entry points to check, search strategies.]
+1. **[Primary method]**: [How the agent starts its work. Tools to use, entry points to check, search
+   strategies.]
 
 2. **Answer questions directly**:
    - "[Question pattern]?" -> [What to provide]
@@ -16,7 +17,8 @@ You are a [Role Name]. Your role is to [one sentence describing what the agent d
    - "[Question pattern]?" -> [What to provide]
    - "[Question pattern]?" -> [What to provide]
 
-3. **[Verification strategy]**: [How the agent confirms findings are accurate. What to check, what to distrust.]
+3. **[Verification strategy]**: [How the agent confirms findings are accurate. What to check, what
+   to distrust.]
 
 4. **Report actionable findings**:
    - [Type of evidence to include]
@@ -24,7 +26,8 @@ You are a [Role Name]. Your role is to [one sentence describing what the agent d
    - [Type of evidence to include]
    - [Type of evidence to include]
 
-5. **Handle negative results**: [What to do when the answer is "not found" or "doesn't exist". How to report dead ends usefully.]
+5. **Handle negative results**: [What to do when the answer is "not found" or "doesn't exist". How
+   to report dead ends usefully.]
 
 ## Scale by scope
 

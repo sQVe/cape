@@ -28,4 +28,6 @@ if (skills.length === 0) {
 }
 
 const context = `Use the following skill(s): ${skills.join(" ")}`;
-console.log(JSON.stringify({ decision: "approve", additionalContext: context }));
+console.log(
+  JSON.stringify({ decision: "approve", additionalContext: context }),
+);

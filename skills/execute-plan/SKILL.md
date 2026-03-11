@@ -1,26 +1,25 @@
 ---
 name: execute-plan
 description: >
-  Builds code from a br epic, one task at a time. The counterpart to
-  cape:brainstorm -- brainstorm designs the plan, this skill implements it.
-  TRIGGER: any user intent to make forward progress on planned work. Common
-  signals: "continue", "next task", "resume", "let's go", "work on the plan",
-  a bare "Continue.", br task IDs like br-7.3, or transitioning after
-  brainstorming is complete. Picks up from br state automatically -- never asks
-  where you left off. Implements one task, reflects on learnings, creates the
-  informed next task, then stops for user review. NOT for: initial planning
+  Builds code from a br epic, one task at a time. The counterpart to cape:brainstorm -- brainstorm
+  designs the plan, this skill implements it. TRIGGER: any user intent to make forward progress on
+  planned work. Common signals: "continue", "next task", "resume", "let's go", "work on the plan", a
+  bare "Continue.", br task IDs like br-7.3, or transitioning after brainstorming is complete. Picks
+  up from br state automatically -- never asks where you left off. Implements one task, reflects on
+  learnings, creates the informed next task, then stops for user review. NOT for: initial planning
   (cape:brainstorm), bug investigation, status queries, or git operations.
 ---
 
-<skill_overview>
-The companion to `cape:brainstorm`. Brainstorm designs an epic with one first task. This skill picks up that task, completes it, figures out what comes next based on what was learned, then hands control back to the user before continuing.
+<skill_overview> The companion to `cape:brainstorm`. Brainstorm designs an epic with one first task.
+This skill picks up that task, completes it, figures out what comes next based on what was learned,
+then hands control back to the user before continuing.
 
 The rhythm: load epic context, do one task, reflect on what changed, create the next task, stop.
 </skill_overview>
 
-<rigidity_level>
-LOW FREEDOM -- The rhythm (one task, reflect, stop) is non-negotiable. Everything else -- how you implement, what tools you reach for, how you structure the next task -- adapts to context.
-</rigidity_level>
+<rigidity_level> LOW FREEDOM -- The rhythm (one task, reflect, stop) is non-negotiable. Everything
+else -- how you implement, what tools you reach for, how you structure the next task -- adapts to
+context. </rigidity_level>
 
 <when_to_use>
 
@@ -53,7 +52,8 @@ br ready
 - **All tasks closed, epic open** -- check if success criteria are met (step 4)
 - **No open epic** -- nothing to execute; suggest `cape:brainstorm`
 
-Load the epic once at the start of each invocation. Its requirements, success criteria, and anti-patterns are the guardrails for every decision you make during execution.
+Load the epic once at the start of each invocation. Its requirements, success criteria, and
+anti-patterns are the guardrails for every decision you make during execution.
 
 ```bash
 br show <epic-id>
@@ -70,9 +70,13 @@ br update <task-id> --status in_progress
 br show <task-id>
 ```
 
-Break the task into substeps and track them. Do the work -- write tests, implement, verify. Use TDD when building new functionality.
+Break the task into substeps and track them. Do the work -- write tests, implement, verify. Use TDD
+when building new functionality.
 
-When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section documents what was already rejected and why. Those reasons usually still apply when things get hard. If you genuinely need to switch approaches, explain why the original reasoning no longer holds and get user confirmation.
+When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
+documents what was already rejected and why. Those reasons usually still apply when things get hard.
+If you genuinely need to switch approaches, explain why the original reasoning no longer holds and
+get user confirmation.
 
 Close the task only when all substeps are done:
 
@@ -97,7 +101,8 @@ Re-read the epic to stay anchored:
 br show <epic-id>
 ```
 
-If a planned task is now redundant, close it with a reason. If a new task is needed, create one that reflects what you actually learned -- not what you assumed at the start:
+If a planned task is now redundant, close it with a reason. If a new task is needed, create one that
+reflects what you actually learned -- not what you assumed at the start:
 
 ```bash
 br create "Task N: [Informed next step]" \
@@ -125,7 +130,8 @@ EOF
 
 ## Step 4: Checkpoint
 
-Present a summary and stop. The user needs the chance to review your work, adjust the next task, and clear context before continuing.
+Present a summary and stop. The user needs the chance to review your work, adjust the next task, and
+clear context before continuing.
 
 ```
 ## Checkpoint -- <task-id> complete
@@ -137,7 +143,8 @@ Present a summary and stop. The user needs the chance to review your work, adjus
 Run `/cape:execute-plan` to continue.
 ```
 
-When all success criteria appear met, run verification (tests, linting, hooks) and present findings before closing the epic.
+When all success criteria appear met, run verification (tests, linting, hooks) and present findings
+before closing the epic.
 
 </the_process>
 
@@ -146,29 +153,33 @@ When all success criteria appear met, run verification (tests, linting, hooks) a
 <example>
 <scenario>First task reveals the second task is unnecessary</scenario>
 
-Epic has two planned tasks: br-3 "add config parser" and br-4 "add config validation." While implementing br-3, you discover the parsing library already validates schemas.
+Epic has two planned tasks: br-3 "add config parser" and br-4 "add config validation." While
+implementing br-3, you discover the parsing library already validates schemas.
 
 **Wrong:** Implement br-4 anyway because it's in the plan. Duplicates built-in validation.
 
-**Right:** Close br-4 with reason "library handles validation natively," then create a task for integration testing instead. Plans adapt to reality.
-</example>
+**Right:** Close br-4 with reason "library handles validation natively," then create a task for
+integration testing instead. Plans adapt to reality. </example>
 
 <example>
 <scenario>Obstacle tempts a shortcut the epic forbids</scenario>
 
-Epic anti-pattern says "NO mocking the database in integration tests." Setting up a test database turns out to be harder than expected.
+Epic anti-pattern says "NO mocking the database in integration tests." Setting up a test database
+turns out to be harder than expected.
 
-**Wrong:** Mock the database "just for now" with a TODO to fix later. The TODO never gets addressed, and the tests don't actually test integration.
+**Wrong:** Mock the database "just for now" with a TODO to fix later. The TODO never gets addressed,
+and the tests don't actually test integration.
 
-**Right:** Research how the project sets up test databases. Check for existing test fixtures or Docker configs. If truly stuck, ask the user -- don't silently violate the anti-pattern.
-</example>
+**Right:** Research how the project sets up test databases. Check for existing test fixtures or
+Docker configs. If truly stuck, ask the user -- don't silently violate the anti-pattern. </example>
 
 <example>
 <scenario>Skipping the checkpoint to maintain momentum</scenario>
 
 Completed br-3, context is fresh, br-4 looks straightforward.
 
-**Wrong:** Continue into br-4 without stopping. If br-4 hits complexity, context is now exhausted with two tasks' worth of state, and the user hasn't reviewed br-3.
+**Wrong:** Continue into br-4 without stopping. If br-4 hits complexity, context is now exhausted
+with two tasks' worth of state, and the user hasn't reviewed br-3.
 
 **Right:** Present the checkpoint. Context reloads are cheap. Mistakes from skipped review are not.
 </example>
@@ -178,9 +189,11 @@ Completed br-3, context is fresh, br-4 looks straightforward.
 <key_principles>
 
 - **One task, then stop** -- the rhythm exists because each completed task changes what you know
-- **Tasks are disposable, requirements are not** -- delete redundant tasks freely; never water down epic requirements
+- **Tasks are disposable, requirements are not** -- delete redundant tasks freely; never water down
+  epic requirements
 - **Learn forward** -- each task's next step is created from what was learned, not what was assumed
-- **Obstacles don't justify shortcuts** -- re-read the epic when blocked, research the problem, ask the user
+- **Obstacles don't justify shortcuts** -- re-read the epic when blocked, research the problem, ask
+  the user
 
 </key_principles>
 

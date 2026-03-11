@@ -30,14 +30,14 @@ cape/
 └── CHANGELOG.md  # Release history
 ```
 
-| Directory    | Purpose                                    |
-| ------------ | ------------------------------------------ |
-| `agents/`    | Specialized agent configurations           |
-| `commands/`  | Slash commands invoked with `/cape:name`   |
-| `skills/`    | Reusable skill workflows                   |
-| `hooks/`     | Event hooks (session start, tool calls)    |
-| `resources/` | Templates for skills, agents, and epics    |
-| `scripts/`   | Validation (`bun scripts/validate.ts`)     |
+| Directory    | Purpose                                  |
+| ------------ | ---------------------------------------- |
+| `agents/`    | Specialized agent configurations         |
+| `commands/`  | Slash commands invoked with `/cape:name` |
+| `skills/`    | Reusable skill workflows                 |
+| `hooks/`     | Event hooks (session start, tool calls)  |
+| `resources/` | Templates for skills, agents, and epics  |
+| `scripts/`   | Validation (`bun scripts/validate.ts`)   |
 
 ## Contributing
 

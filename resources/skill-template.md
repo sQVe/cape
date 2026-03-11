@@ -1,18 +1,15 @@
 ---
 name: skill-name
 description: >
-  Use whenever [trigger condition]. Triggers on: [explicit triggers like user phrases,
-  commands, situations]. Also triggers on: [implicit triggers]. Do NOT use for [negative
-  triggers -- things that sound similar but need a different skill].
+  Use whenever [trigger condition]. Triggers on: [explicit triggers like user phrases, commands,
+  situations]. Also triggers on: [implicit triggers]. Do NOT use for [negative triggers -- things
+  that sound similar but need a different skill].
 ---
 
-<skill_overview>
-[1-2 sentences: what this skill does and what it produces. State the core contract -- the
-non-negotiable guarantee this skill makes.]
-</skill_overview>
+<skill_overview> [1-2 sentences: what this skill does and what it produces. State the core contract
+-- the non-negotiable guarantee this skill makes.] </skill_overview>
 
-<rigidity_level>
-[HIGH or LOW] FREEDOM -- [What's rigid and what adapts to context. One sentence.]
+<rigidity_level> [HIGH or LOW] FREEDOM -- [What's rigid and what adapts to context. One sentence.]
 </rigidity_level>
 
 <when_to_use>
@@ -66,16 +63,14 @@ non-negotiable guarantee this skill makes.]
 
 **Wrong:** [What happens without the skill or when skipping steps. Explain the consequence.]
 
-**Right:** [Correct approach following the process. Show the key actions and outcome.]
-</example>
+**Right:** [Correct approach following the process. Show the key actions and outcome.] </example>
 
 <example>
 <scenario>[A different situation exercising another part of the process]</scenario>
 
 **Wrong:** [Common mistake or shortcut.]
 
-**Right:** [Correct approach.]
-</example>
+**Right:** [Correct approach.] </example>
 
 </examples>
 

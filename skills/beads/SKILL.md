@@ -1,52 +1,45 @@
 ---
 name: beads
 description: >
-  How to use br (beads) — the CLI issue tracker for epics, tasks, and bugs.
-  Use this skill whenever the user mentions br, beads, .beads, or issue tracking.
-  Triggers on: creating/updating/closing/querying br issues, br command errors
-  (e.g. --design not working on br create), asking what task to work on next,
-  tracking findings from code review or test gap analysis as br issues, setting
-  up a beads workspace, or building a skill that should output br items.
-  Also use when the user says "create a bead", "log this bug", "track this",
-  or asks about issue priorities, types, dependencies, or ready/blocked status.
+  How to use br (beads) — the CLI issue tracker for epics, tasks, and bugs. Use this skill whenever
+  the user mentions br, beads, .beads, or issue tracking. Triggers on:
+  creating/updating/closing/querying br issues, br command errors (e.g. --design not working on br
+  create), asking what task to work on next, tracking findings from code review or test gap analysis
+  as br issues, setting up a beads workspace, or building a skill that should output br items. Also
+  use when the user says "create a bead", "log this bug", "track this", or asks about issue
+  priorities, types, dependencies, or ready/blocked status.
 ---
 
-<skill_overview>
-`br` is a git-backed issue tracker CLI. It stores epics, tasks, and bugs in a `.beads/` directory (SQLite + JSONL) within each repository. This skill is the single reference for how cape skills interact with `br`.
+<skill_overview> `br` is a git-backed issue tracker CLI. It stores epics, tasks, and bugs in a
+`.beads/` directory (SQLite + JSONL) within each repository. This skill is the single reference for
+how cape skills interact with `br`.
 
 Two roles:
+
 1. **Command reference** — correct syntax, flags, and common mistakes.
 2. **Output conventions** — how cape skills should create br items as their output artifacts.
-</skill_overview>
+   </skill_overview>
 
-<rigidity_level>
-HIGH FREEDOM — Adapt commands to context, but always use the correct flags documented here. The gotchas section is rigid: violating it produces silent failures.
+<rigidity_level> HIGH FREEDOM — Adapt commands to context, but always use the correct flags
+documented here. The critical rules are rigid: violating them produces silent failures.
 </rigidity_level>
 
 <when_to_use>
+
 - Any cape skill needs to create, update, or query br items
 - User asks about br commands or beads workflows
 - Building a new cape skill that should output tracked work items
 - Debugging br command failures (wrong flags, missing workspace)
 
 **Don't use for:**
+
 - Creating epics during brainstorming (use `cape:brainstorm`)
 - Advanced operations like splitting/merging tasks (use `hyperpowers:managing-br-tasks`)
-</when_to_use>
+  </when_to_use>
 
-<workspace_setup>
+<the_process>
 
-## Initializing a workspace
-
-```bash
-br init
-```
-
-Creates a `.beads/` directory in the current repository with:
-- `beads.db` — SQLite database
-- `issues.jsonl` — JSONL export (git-tracked)
-- `config.yaml` — configuration
-- `metadata.json` — workspace metadata
+## Step 1: Ensure workspace
 
 Check if a workspace exists before creating issues:
 
@@ -54,7 +47,12 @@ Check if a workspace exists before creating issues:
 br where 2>/dev/null || br init
 ```
 
-## Syncing with git
+`br init` creates a `.beads/` directory with:
+
+- `beads.db` — SQLite database
+- `issues.jsonl` — JSONL export (git-tracked)
+- `config.yaml` — configuration
+- `metadata.json` — workspace metadata
 
 `br` never runs git commands. After creating or modifying issues, sync manually:
 
@@ -64,22 +62,22 @@ git add .beads/
 git commit -m "sync beads"
 ```
 
-</workspace_setup>
+---
 
-<command_reference>
+## Step 2: Work with issues
 
-## Core concepts
+### Core concepts
 
-| Concept | Description |
-|---------|-------------|
-| **Epic** | Immutable design contract — requirements, anti-patterns, success criteria |
-| **Task** | Implementation work item, child of an epic |
-| **Bug** | Defect report with reproduction steps |
-| **Feature** | Feature request or enhancement |
-| **Dependency** | Blocking relationship: A depends on B means do B first |
-| **Parent-child** | Structural grouping: task belongs to epic |
+| Concept          | Description                                                               |
+| ---------------- | ------------------------------------------------------------------------- |
+| **Epic**         | Immutable design contract — requirements, anti-patterns, success criteria |
+| **Task**         | Implementation work item, child of an epic                                |
+| **Bug**          | Defect report with reproduction steps                                     |
+| **Feature**      | Feature request or enhancement                                            |
+| **Dependency**   | Blocking relationship: A depends on B means do B first                    |
+| **Parent-child** | Structural grouping: task belongs to epic                                 |
 
-## Creating issues
+### Creating issues
 
 ```bash
 br create "Epic: Feature Name" \
@@ -114,147 +112,13 @@ Quick capture (prints ID only):
 br q Fix flaky test in auth module -t bug -p 2 -l test-gap
 ```
 
-## Reading issues
-
-```bash
-br show br-3                  # Full issue details
-br list                       # All open issues
-br list --status open         # Filter by status
-br list -t epic               # Filter by type
-br ready                      # Unblocked, not deferred
-br search "auth"              # Search by text
-br dep tree br-1              # Dependency tree for epic
-br epic status                # Progress of all epics
-```
-
-## Updating issues
-
-```bash
-br update br-3 --status in_progress   # Start work
-br update br-3 --design "Updated design notes"
-br update br-3 --priority 1           # Change priority
-br update br-3 --add-label "security"    # Add label
-br update br-3 --remove-label "security" # Remove label
-br update br-3 --set-labels "auth,api"   # Replace all labels
-```
-
-## Closing issues
-
-```bash
-br close br-3                              # Complete
-br close br-3 --reason "Duplicate of br-7" # With reason
-br close br-3 --suggest-next               # Show newly unblocked
-br reopen br-3                             # Reopen
-```
-
-## Managing dependencies
-
-```bash
-# br-5 depends on br-3 (do br-3 first)
-br dep add br-5 br-3
-
-# br-5 is child of br-1
-br dep add br-5 br-1 --type parent-child
-
-# Remove dependency
-br dep remove br-5 br-3
-
-# View tree
-br dep tree br-1
-
-# Detect cycles
-br dep cycles
-```
-
-## Managing labels
-
-```bash
-br label add br-3 br-5 -l security    # Add label to multiple issues
-br label remove br-3 -l security      # Remove label from issue
-br label list br-3                     # Labels on a specific issue
-br label list-all                      # All labels with counts
-br label rename "test-gaps" "test-gap" # Rename across all issues
-```
-
-## Common queries
-
-```bash
-br list --status in_progress           # What's active
-br ready --parent br-1                 # Ready tasks in epic
-br list --status open -t bug           # Open bugs
-br list -l security                    # Filter by label (AND, repeatable)
-br list --label-any security --label-any auth  # OR filtering
-br search "auth" -l pr-review          # Combine text + label search
-br blocked                             # What's stuck
-br stale                               # Neglected issues
-br stats                               # Project overview
-br count --group-by status             # Count by status
-```
-
-</command_reference>
-
-<gotchas>
-
-## Common mistakes
-
-These cause silent failures or wrong behavior. Follow the correct patterns exactly.
-
-### `--description` vs `--design`
-
-`br create` has `--description` but NO `--design` flag.
-`br update` has BOTH `--description` and `--design` (different fields).
-
-```bash
-# WRONG — --design does not exist on br create
-br create "Task" --type task --design "details"
-
-# CORRECT — use --description on br create
-br create "Task" --type task --description "details"
-
-# CORRECT — --design works on br update
-br update br-3 --design "updated design notes"
-```
-
-### Status values use underscores
-
-```bash
-# WRONG
-br update br-3 --status in-progress
-br update br-3 --status done
-
-# CORRECT
-br update br-3 --status in_progress
-br close br-3
-```
-
-Valid status values: `open`, `in_progress`, `blocked`, `closed`
-
-### `br status` vs `br update --status`
-
-```bash
-# WRONG — br status shows database overview, not issue status
-br status br-3 --status in_progress
-
-# CORRECT — use br update to change status
-br update br-3 --status in_progress
-```
-
-### Parent linking on create
-
 Use `--parent` on `br create` instead of a separate `br dep add` call:
 
 ```bash
-# VERBOSE — works but unnecessary
-br create "Task" --type task --description "..."
-br dep add br-5 br-1 --type parent-child
-
-# SIMPLER — --parent does both at once
 br create "Task" --type task --parent br-1 --description "..."
 ```
 
-### Long descriptions with heredoc
-
-For multi-line descriptions, use heredoc to avoid shell escaping issues:
+For multi-line descriptions, use heredoc to avoid shell escaping:
 
 ```bash
 br create "Task: Auth endpoints" \
@@ -272,23 +136,90 @@ EOF
 )"
 ```
 
-</gotchas>
+### Reading issues
 
-<output_conventions>
+```bash
+br show br-3                  # Full issue details
+br list                       # All open issues
+br list --status open         # Filter by status
+br list -t epic               # Filter by type
+br ready                      # Unblocked, not deferred
+br search "auth"              # Search by text
+br dep tree br-1              # Dependency tree for epic
+br epic status                # Progress of all epics
+```
 
-## How cape skills should output br items
+### Updating issues
 
-Cape skills that discover actionable findings should create br items, not just print text. This makes findings trackable, prioritizable, and closeable.
+```bash
+br update br-3 --status in_progress   # Start work
+br update br-3 --design "Updated design notes"
+br update br-3 --priority 1           # Change priority
+br update br-3 --add-label "security"    # Add label
+br update br-3 --remove-label "security" # Remove label
+br update br-3 --set-labels "auth,api"   # Replace all labels
+```
+
+### Closing issues
+
+```bash
+br close br-3                              # Complete
+br close br-3 --reason "Duplicate of br-7" # With reason
+br close br-3 --suggest-next               # Show newly unblocked
+br reopen br-3                             # Reopen
+```
+
+### Managing dependencies
+
+```bash
+br dep add br-5 br-3                    # br-5 depends on br-3 (do br-3 first)
+br dep add br-5 br-1 --type parent-child # br-5 is child of br-1
+br dep remove br-5 br-3                 # Remove dependency
+br dep tree br-1                        # View tree
+br dep cycles                           # Detect cycles
+```
+
+### Managing labels
+
+```bash
+br label add br-3 br-5 -l security    # Add label to multiple issues
+br label remove br-3 -l security      # Remove label from issue
+br label list br-3                     # Labels on a specific issue
+br label list-all                      # All labels with counts
+br label rename "test-gaps" "test-gap" # Rename across all issues
+```
+
+### Common queries
+
+```bash
+br list --status in_progress           # What's active
+br ready --parent br-1                 # Ready tasks in epic
+br list --status open -t bug           # Open bugs
+br list -l security                    # Filter by label (AND, repeatable)
+br list --label-any security --label-any auth  # OR filtering
+br search "auth" -l pr-review          # Combine text + label search
+br blocked                             # What's stuck
+br stale                               # Neglected issues
+br stats                               # Project overview
+br count --group-by status             # Count by status
+```
+
+---
+
+## Step 3: Output from skills
+
+Cape skills that discover actionable findings should create br items, not just print text. This
+makes findings trackable, prioritizable, and closeable.
 
 ### Mapping skill outputs to br types
 
-| Skill | br type | Example title |
-|-------|---------|---------------|
-| `find-test-gaps` | `task` | "Add missing edge-case tests for parseConfig" |
-| `review` | `bug` or `task` | "Bug: XSS in user input rendering" |
-| `debug-issue` | `bug` | "Bug: Race condition in session cleanup" |
-| `fix-bug` | `bug` | "Bug: Off-by-one in pagination offset" |
-| `lint` | `task` | "Fix eslint violations in auth module" |
+| Skill            | br type         | Example title                                 |
+| ---------------- | --------------- | --------------------------------------------- |
+| `find-test-gaps` | `task`          | "Add missing edge-case tests for parseConfig" |
+| `review`         | `bug` or `task` | "Bug: XSS in user input rendering"            |
+| `debug-issue`    | `bug`           | "Bug: Race condition in session cleanup"      |
+| `fix-bug`        | `bug`           | "Bug: Off-by-one in pagination offset"        |
+| `lint`           | `task`          | "Fix eslint violations in auth module"        |
 
 ### Conventions for skill-created issues
 
@@ -301,7 +232,9 @@ Cape skills that discover actionable findings should create br items, not just p
    - P4: nice-to-have, backlog
 3. **Link to parent when context exists** — if working within an epic, use `--parent`.
 4. **Include actionable descriptions** — file paths, line numbers, reproduction steps.
-5. **Use labels for categorization** — `--labels "test-gap,auth"`. Lowercase, hyphenated. Always include the skill name as a label. Common categories: `test-gap`, `pr-review`, `security`, `refactor`, `debt`.
+5. **Use labels for categorization** — `--labels "test-gap,auth"`. Lowercase, hyphenated. Always
+   include the skill name as a label. Common categories: `test-gap`, `pr-review`, `security`,
+   `refactor`, `debt`.
 
 ### Template for skill output
 
@@ -330,15 +263,12 @@ EOF
 ### Batch output
 
 Skills that produce multiple findings (e.g., `find-test-gaps` finding 5 gaps) should:
+
 1. Create one issue per finding — not a single issue with a checklist.
 2. Use `br q` for lightweight batch creation when descriptions are short.
 3. Summarize at the end: "Created br-10 through br-14 (5 test gap tasks)."
 
-</output_conventions>
-
-<commit_references>
-
-## Referencing br items in commits
+### Referencing br items in commits
 
 Include the br ID in commit messages to link work to tracked issues:
 
@@ -350,7 +280,49 @@ Implements step 1 of br-3: Auth API endpoints
 
 Format: `type(br-N): description`
 
-</commit_references>
+</the_process>
+
+<examples>
+
+<example>
+<scenario>Creating an issue with --design instead of --description</scenario>
+
+**Wrong:** `br create "Task" --type task --design "details"` — `--design` does not exist on
+`br create`. The flag is silently ignored and the issue has no description.
+
+**Right:** `br create "Task" --type task --description "details"` — use `--description` on create.
+`--design` only works on `br update`. </example>
+
+<example>
+<scenario>Setting status with wrong values</scenario>
+
+**Wrong:** `br update br-3 --status in-progress` or `--status done` — hyphenated status and "done"
+are not valid values.
+
+**Right:** `br update br-3 --status in_progress` (underscore) or `br close br-3` (not
+`--status done`). Valid values: `open`, `in_progress`, `blocked`, `closed`. </example>
+
+<example>
+<scenario>Using br status to change an issue's status</scenario>
+
+**Wrong:** `br status br-3 --status in_progress` — `br status` shows a database overview, not
+individual issue status.
+
+**Right:** `br update br-3 --status in_progress` — use `br update` to change issue status.
+</example>
+
+</examples>
+
+<key_principles>
+
+- **Skills create br items** — actionable findings become tracked issues, not just conversation text
+- **One issue per finding** — batch skills create separate issues, not checklists
+- **Always set type and priority** — never leave these as defaults; skills should assess severity
+- **Include skill name as label** — every skill-created issue includes the skill name for
+  traceability
+- **Commit references use `type(br-N):` format** — links work to tracked issues in git history
+
+</key_principles>
 
 <critical_rules>
 
