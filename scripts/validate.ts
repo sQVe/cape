@@ -17,7 +17,9 @@ const results: Result[] = [];
 
 let root: string;
 try {
-  root = execSync("git rev-parse --show-toplevel", { encoding: "utf-8" }).trim();
+  root = execSync("git rev-parse --show-toplevel", {
+    encoding: "utf-8",
+  }).trim();
 } catch {
   console.error("Not a git repository");
   process.exit(1);
@@ -31,11 +33,23 @@ function parseFrontmatter(content: string): Record<string, string> | null {
 
   const block = content.slice(4, closing);
   const fields: Record<string, string> = {};
+  let currentKey: string | null = null;
+  let currentValue: string[] = [];
+
   for (const line of block.split("\n")) {
-    const match = line.match(/^(\w+):/);
+    const match = line.match(/^(\w+):\s*(.*)/);
     if (match) {
-      fields[match[1]] = line.slice(match[1].length + 1).trim();
+      if (currentKey != null) {
+        fields[currentKey] = currentValue.join(" ").trim();
+      }
+      currentKey = match[1];
+      currentValue = match[2] ? [match[2]] : [];
+    } else if (currentKey != null && line.match(/^\s+/)) {
+      currentValue.push(line.trim());
     }
+  }
+  if (currentKey != null) {
+    fields[currentKey] = currentValue.join(" ").trim();
   }
   return fields;
 }
@@ -65,10 +79,16 @@ function validateSkill(file: string): Result {
     errors.push("Missing YAML frontmatter");
   } else {
     if (!frontmatter.name) errors.push("Missing frontmatter field: name");
-    if (!frontmatter.description) errors.push("Missing frontmatter field: description");
+    if (!frontmatter.description)
+      errors.push("Missing frontmatter field: description");
   }
 
-  const requiredTags = ["skill_overview", "rigidity_level", "when_to_use", "critical_rules"];
+  const requiredTags = [
+    "skill_overview",
+    "rigidity_level",
+    "when_to_use",
+    "critical_rules",
+  ];
   for (const tag of requiredTags) {
     if (!hasTag(content, tag)) {
       errors.push(`Missing required tag: <${tag}>`);
@@ -89,17 +109,26 @@ function validateAgent(file: string): Result {
     errors.push("Missing YAML frontmatter");
   } else {
     if (!frontmatter.name) errors.push("Missing frontmatter field: name");
-    if (!frontmatter.description) errors.push("Missing frontmatter field: description");
+    if (!frontmatter.description)
+      errors.push("Missing frontmatter field: description");
     if (!frontmatter.model) errors.push("Missing frontmatter field: model");
   }
 
   // Accepted variants for the methodology heading
-  if (!hasHeading(content, "## Investigation approach") && !hasHeading(content, "## Research approach")) {
-    errors.push("Missing heading: ## Investigation approach (or ## Research approach)");
+  if (
+    !hasHeading(content, "## Investigation approach") &&
+    !hasHeading(content, "## Research approach")
+  ) {
+    errors.push(
+      "Missing heading: ## Investigation approach (or ## Research approach)",
+    );
   }
 
   // Accepted variants for the scope-scaling heading
-  if (!hasHeading(content, "## Scale by scope") && !hasHeading(content, "## Source tiers")) {
+  if (
+    !hasHeading(content, "## Scale by scope") &&
+    !hasHeading(content, "## Source tiers")
+  ) {
     errors.push("Missing heading: ## Scale by scope (or ## Source tiers)");
   }
 
@@ -114,11 +143,14 @@ function validateCommand(file: string): Result {
   if (frontmatter == null) {
     errors.push("Missing YAML frontmatter");
   } else {
-    if (!frontmatter.description) errors.push("Missing frontmatter field: description");
+    if (!frontmatter.description)
+      errors.push("Missing frontmatter field: description");
   }
 
   if (!content.includes("Use the cape:")) {
-    errors.push("Body must reference a skill (expected 'Use the cape:' pattern)");
+    errors.push(
+      "Body must reference a skill (expected 'Use the cape:' pattern)",
+    );
   }
 
   return { file, errors };
@@ -131,13 +163,15 @@ function glob(pattern: string): string[] {
 
 function validateByType(type: string) {
   if (type === "all" || type === "skills") {
-    for (const file of glob("skills/*/SKILL.md")) results.push(validateSkill(file));
+    for (const file of glob("skills/*/SKILL.md"))
+      results.push(validateSkill(file));
   }
   if (type === "all" || type === "agents") {
     for (const file of glob("agents/*.md")) results.push(validateAgent(file));
   }
   if (type === "all" || type === "commands") {
-    for (const file of glob("commands/*.md")) results.push(validateCommand(file));
+    for (const file of glob("commands/*.md"))
+      results.push(validateCommand(file));
   }
 }
 
