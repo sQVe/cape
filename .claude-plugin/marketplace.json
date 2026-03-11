@@ -1,5 +1,12 @@
 {
-  "namespace": "sQVe",
-  "packageId": "cape",
-  "source": "local"
+  "name": "cape",
+  "owner": { "name": "sqve" },
+  "plugins": [
+    {
+      "name": "cape",
+      "description": "Collection of opinionated Claude Code commands and skills.",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
 }
