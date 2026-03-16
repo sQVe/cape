@@ -1,16 +1,16 @@
 ---
 name: execute-plan
 description: >
-  Builds code from a br epic, one task at a time. The counterpart to cape:brainstorm -- brainstorm
-  designs the plan, this skill implements it. TRIGGER: any user intent to make forward progress on
+  Builds code from a br epic, one task at a time. The counterpart to cape:write-plan -- write-plan
+  creates the epic, this skill implements it. TRIGGER: any user intent to make forward progress on
   planned work. Common signals: "continue", "next task", "resume", "let's go", "work on the plan", a
-  bare "Continue.", br task IDs like br-7.3, or transitioning after brainstorming is complete. Picks
-  up from br state automatically -- never asks where you left off. Implements one task, reflects on
+  bare "Continue.", br task IDs like br-7.3, or transitioning after planning is complete. Picks up
+  from br state automatically -- never asks where you left off. Implements one task, reflects on
   learnings, creates the informed next task, then stops for user review. NOT for: initial planning
-  (cape:brainstorm), bug investigation, status queries, or git operations.
+  (cape:brainstorm, cape:write-plan), bug investigation, status queries, or git operations.
 ---
 
-<skill_overview> The companion to `cape:brainstorm`. Brainstorm designs an epic with one first task.
+<skill_overview> The companion to `cape:write-plan`. Write-plan creates an epic with one first task.
 This skill picks up that task, completes it, figures out what comes next based on what was learned,
 then hands control back to the user before continuing.
 
@@ -29,7 +29,7 @@ context. </rigidity_level>
 
 **Don't use for:**
 
-- No epic exists yet (use `cape:brainstorm`)
+- No epic exists yet (use `cape:brainstorm` then `cape:write-plan`)
 - Investigating a defect (use `cape:debug-issue`)
 - Requirements still unclear (use `cape:brainstorm`)
 
@@ -50,7 +50,7 @@ br ready
 - **In-progress task found** -- pick up where it left off (step 2)
 - **Ready tasks available** -- load epic context, then execute the next one (step 2)
 - **All tasks closed, epic open** -- check if success criteria are met (step 4)
-- **No open epic** -- nothing to execute; suggest `cape:brainstorm`
+- **No open epic** -- nothing to execute; suggest `cape:brainstorm` then `cape:write-plan`
 
 Load the epic once at the start of each invocation. Its requirements, success criteria, and
 anti-patterns are the guardrails for every decision you make during execution.

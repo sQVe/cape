@@ -33,7 +33,7 @@ documented here. The critical rules are rigid: violating them produces silent fa
 
 **Don't use for:**
 
-- Creating epics during brainstorming (use `cape:brainstorm`)
+- Creating epics from designs (use `cape:write-plan`)
 - Advanced operations like splitting/merging tasks (use `hyperpowers:managing-br-tasks`)
   </when_to_use>
 

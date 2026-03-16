@@ -1,6 +1,6 @@
 # Epic template
 
-Use this template when creating `br` epics during brainstorming. Every section is required. Populate
+Use this template when creating `br` epics during plan writing. Every section is required. Populate
 from research findings, user decisions, and design validation captured during the brainstorm.
 
 ## Template

@@ -32,7 +32,7 @@ adapt to context. </rigidity_level>
 
 - Investigation only, no intent to fix (use debug-issue)
 - Feature work or enhancements (use execute-plan)
-- Refactoring without a specific defect (use brainstorm + execute-plan)
+- Refactoring without a specific defect (use brainstorm + write-plan + execute-plan)
 
 </when_to_use>
 

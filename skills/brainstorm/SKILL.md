@@ -7,18 +7,19 @@ description:
   architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
   models, API patterns). Do NOT use for bug fixes, refactoring, executing existing plans, or tasks
   where the implementation path is already clear. This skill researches the codebase, asks Socratic
-  questions, proposes 2-3 approaches, and produces a br epic with immutable requirements,
-  anti-patterns, and a first task.
+  questions, proposes 2-3 approaches, and produces a design summary for `cape:write-plan` to
+  formalize into a br epic.
 ---
 
-<skill_overview> Turn rough ideas into validated designs stored as `br` epics with immutable
-requirements. Tasks are created iteratively as you learn, not upfront.
+<skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
+into a `br` epic. Research the codebase, ask Socratic questions, propose approaches, challenge
+assumptions, and produce a self-contained design summary.
 
-Core contract: no code gets written until an epic exists with immutable requirements, anti-patterns
-with reasoning, and exactly one first task. </skill_overview>
+Core contract: no design gets locked without research, user-confirmed approach selection, and
+assumption challenge. </skill_overview>
 
 <rigidity_level> HIGH FREEDOM — Adapt questioning style and research depth to context, but always:
-research before proposing, create immutable epic before code, create only the first task.
+research before proposing, validate design before stopping.
 </rigidity_level>
 
 <when_to_use>
@@ -71,7 +72,7 @@ Maintain a running "Key Decisions" table throughout the conversation:
 | ---------------- | ---------------- | ------------------------------------------ |
 | [What you asked] | [What user said] | [How it shapes requirements/anti-patterns] |
 
-This table feeds directly into the epic's Design Discovery section.
+This table feeds directly into the design summary.
 
 ---
 
@@ -111,84 +112,57 @@ Lead with recommended option. Explain why.
 
 ---
 
-## Step 3: Validate design and create epic
-
-**Present design in sections:**
-
-- Break into 200-300 word chunks
-- Confirm each chunk: "Does this look right so far?"
-- Cover: architecture, components, data flow, error handling
-- Record user concerns or hesitations as Open Concerns
+## Step 3: Lock design and stop
 
 **Challenge assumptions:**
 
-Before locking in the design, run a lightweight assumption challenge on the proposed design. Focus
-on scope creep in requirements, ambiguous terms, and over-engineering in the approach. Present
-findings to the user -- confirmed assumptions become epic requirements or anti-patterns, rejected
-ones trigger scope reductions or requirement changes. Keep this focused (high and medium risk only).
+Before locking the design, run a lightweight assumption challenge on the proposed design. Focus on
+scope creep in requirements, ambiguous terms, and over-engineering in the approach. Present findings
+to the user -- confirmed assumptions become requirements or anti-patterns in the design summary,
+rejected ones trigger scope reductions or requirement changes. Keep this focused (high and medium
+risk only).
 
-**Create the epic:**
+**Present design summary:**
 
-After design is validated and assumptions are resolved, create the `br` epic using the template from
-`resources/epic-template.md`. Every section is required:
-
-```bash
-br create "Epic: [Feature Name]" \
-  --type epic \
-  --priority [0-4] \
-  --description "[full epic content from template]"
-```
-
-**Anti-patterns MUST include reasoning:**
+After the approach is selected and assumptions are resolved, present a structured design summary.
+This summary must be self-contained -- `cape:write-plan` should be able to create the epic without
+re-asking brainstorm's questions.
 
 ```
-- NO localStorage tokens (reason: httpOnly prevents XSS token theft)
-- NO mocking OAuth in integration tests (reason: defeats purpose of testing real flow)
+## Design summary
+
+**Problem:** [1-2 sentences]
+**Chosen approach:** [Name + rationale]
+**Requirements:** [Bullet list derived from decisions]
+**Anti-patterns:** [Bullet list with "NO X (reason: Y)" format]
+**Architecture:** [Components, data flow, integration points]
+**Scope:** In: [inclusions] / Out: [exclusions]
+**Open questions:** [Uncertainties for implementation]
+
+### Key decisions
+
+| Question | Answer | Implication |
+|----------|--------|-------------|
+
+### Research findings
+
+**Codebase:** [file paths, patterns]
+**External:** [APIs, libraries, docs]
+
+### Approaches considered
+
+1. **[Chosen]** (selected) — [why]
+2. **[Rejected]** — [why rejected, DO NOT REVISIT UNLESS]
+
+### Dead ends
+
+[What explored, what found, why abandoned]
 ```
 
-Not just "NO X" — always "NO X (reason: Y)".
-
----
-
-## Step 4: Create first task
-
-Create exactly one task as a child of the epic:
-
-```bash
-br create "Task 1: [Specific deliverable]" \
-  --type feature \
-  --priority [match epic] \
-  --parent [epic-id] \
-  --description "## Goal
-[What this task delivers — one clear outcome]
-
-## Implementation
-1. Study existing code
-   [Point to 2-3 similar implementations: file:line]
-
-2. Write tests first (TDD)
-   [Specific test cases for this task]
-
-3. Implementation checklist
-   - [ ] file:line - function_name() - [what it does]
-   - [ ] test:line - test_name() - [what it tests]
-
-## Success criteria
-- [ ] [Specific, measurable outcome]
-- [ ] Tests passing
-- [ ] Pre-commit hooks passing"
-```
-
-**Why only one task?** Subsequent tasks should be created iteratively during execution. Each task
-reflects learnings from the previous one. Upfront task trees become brittle when assumptions change.
-
-**Present completion summary:**
+**Stop and hand off:**
 
 ```
-Epic [id] created with immutable requirements and success criteria.
-First task [id] is ready to execute.
-
-The epic has [N] requirements, [N] anti-patterns, and [N] success criteria.
+Design summary complete. Run `/cape:write-plan` to formalize this into a br epic.
 ```
 
 </the_process>
@@ -233,7 +207,8 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 2. Dispatch internet-researcher: finds passport-google-oauth20 strategy
 3. Propose extending existing passport setup (matches codebase) vs Auth0 (vendor dependency) vs
    custom JWT (scope creep)
-4. Research informs design, design builds on existing code </example>
+4. Challenge assumptions, present design summary
+5. Stop: "Run `/cape:write-plan` to formalize this into a br epic." </example>
 
 <example>
 <scenario>Epic created without anti-patterns — requirements get watered down during implementation</scenario>
@@ -241,9 +216,9 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 **Wrong:** Epic says "Tokens stored securely" with no anti-patterns. During implementation, hits
 complexity → stores tokens in localStorage. No guardrail prevented it.
 
-**Right:** Epic says "Tokens stored in httpOnly cookies" with anti-pattern "NO localStorage tokens
-(reason: httpOnly prevents XSS token theft)". When implementation gets hard, the anti-pattern blocks
-the shortcut and forces the correct solution. </example>
+**Right:** Design summary says "Tokens stored in httpOnly cookies" with anti-pattern "NO localStorage
+tokens (reason: httpOnly prevents XSS token theft)". When `write-plan` formalizes this into an epic,
+the anti-pattern is preserved and blocks shortcuts during implementation. </example>
 
 </examples>
 
@@ -251,21 +226,18 @@ the shortcut and forces the correct solution. </example>
 
 - **Research before proposing** — use agents to understand codebase and external context
 - **Multiple choice preferred** — easier for user to answer than open-ended questions
-- **Epic is contract** — requirements immutable, tasks adapt
+- **Design summary is the handoff** — contains everything write-plan needs to create the epic
 - **Anti-patterns prevent shortcuts** — every entry uses "NO X (reason: Y)" format
-- **One task only** — subsequent tasks created iteratively as you learn
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
-- **Capture decisions** — Key Decisions table feeds Design Discovery section
+- **Capture decisions** — Key Decisions table feeds the design summary
 - **Document dead ends** — prevents wasted re-investigation during implementation </key_principles>
 
 <critical_rules>
 
 1. **Research BEFORE proposing** — use agents to understand context
 2. **Propose 2-3 approaches** — don't jump to a single solution
-3. **Epic requirements IMMUTABLE** — tasks adapt, requirements don't
-4. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
-5. **Create ONLY first task** — subsequent tasks created iteratively
-6. **Use epic template** — every section from `resources/epic-template.md` is required
-7. **Use `--description` flag** — not `--design` (that flag doesn't exist)
+3. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
+4. **Stop after design summary** — present summary and wait for user to run write-plan
+5. **Design summary must be self-contained** — write-plan should not need to re-ask questions
 
 </critical_rules>

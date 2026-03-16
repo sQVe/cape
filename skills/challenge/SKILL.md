@@ -5,7 +5,7 @@ description: >
   design before committing, auditing completed work for scope creep, or when the user asks to
   challenge/question/audit assumptions. Triggers on: "challenge this", "check my assumptions",
   "what am I assuming", "audit this design", "did I over-engineer", reviewing a plan before
-  execution, or reflecting after implementation. Also dispatched by brainstorm (pre-epic) and
+  execution, or reflecting after implementation. Also dispatched by brainstorm (pre-design) and
   execute-plan (post-task) as a lightweight checkpoint. Do NOT use for code review (use review),
   test gap analysis (use test), or debugging (use debug-issue).
 ---
@@ -28,7 +28,7 @@ for complex designs). The three steps and the interactive resolution are non-neg
 - Reviewing a proposed design before creating an epic
 - Auditing completed work for scope creep or unrequested additions
 - Requirements feel vague or ambiguous before implementation
-- Dispatched as checkpoint by brainstorm or execute-plan skills
+- Dispatched as checkpoint by brainstorm, write-plan, or execute-plan skills
 
 **Don't use for:**
 
@@ -120,7 +120,9 @@ After resolution, summarize results:
 
 When dispatched by another skill, feed results back:
 
-- **brainstorm**: confirmed assumptions become epic requirements or anti-patterns; rejected ones
+- **brainstorm**: confirmed assumptions become design summary requirements or anti-patterns;
+  rejected ones trigger scope reductions or requirement changes
+- **write-plan**: confirmed assumptions become epic requirements or anti-patterns; rejected ones
   become scope reductions or requirement changes before `br create`
 - **execute-plan**: rejected assumptions become scope corrections or new tasks; confirmed ones
   become outcome notes on the completed task
@@ -187,8 +189,8 @@ question to answer before implementation begins. </example>
 2. **Group by risk level** -- high-risk assumptions first, always
 3. **Include resolution for every finding** -- not just "this is an assumption" but "here's what to
    do about it"
-4. **Feed results back to calling skill** -- when dispatched by brainstorm or execute-plan, results
-   must flow into their artifacts (epic, task, etc.)
+4. **Feed results back to calling skill** -- when dispatched by brainstorm, write-plan, or
+   execute-plan, results must flow into their artifacts (design summary, epic, task, etc.)
 5. **Never skip high-risk assumptions** -- even in lightweight mode, high-risk items are always
    surfaced
 
