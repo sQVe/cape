@@ -19,8 +19,7 @@ Core contract: no design gets locked without research, user-confirmed approach s
 assumption challenge. </skill_overview>
 
 <rigidity_level> HIGH FREEDOM — Adapt questioning style and research depth to context, but always:
-research before proposing, validate design before stopping.
-</rigidity_level>
+research before proposing, validate design before stopping. </rigidity_level>
 
 <when_to_use>
 
@@ -183,6 +182,12 @@ Design summary complete. Run `/cape:write-plan` to formalize this into a br epic
 - Comparing technology options
 - Finding official code examples
 
+## Dispatch `cape:notebox-researcher` when:
+
+- User mentions checking their notes or past research
+- User references a topic they may have explored before
+- You want to find past decisions relevant to the design
+
 ## Research protocol:
 
 1. Codebase pattern exists → use it (unless clearly unwise)
@@ -216,9 +221,9 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 **Wrong:** Epic says "Tokens stored securely" with no anti-patterns. During implementation, hits
 complexity → stores tokens in localStorage. No guardrail prevented it.
 
-**Right:** Design summary says "Tokens stored in httpOnly cookies" with anti-pattern "NO localStorage
-tokens (reason: httpOnly prevents XSS token theft)". When `write-plan` formalizes this into an epic,
-the anti-pattern is preserved and blocks shortcuts during implementation. </example>
+**Right:** Design summary says "Tokens stored in httpOnly cookies" with anti-pattern "NO
+localStorage tokens (reason: httpOnly prevents XSS token theft)". When `write-plan` formalizes this
+into an epic, the anti-pattern is preserved and blocks shortcuts during implementation. </example>
 
 </examples>
 
