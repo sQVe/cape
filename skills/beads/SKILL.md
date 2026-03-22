@@ -7,7 +7,12 @@ description: >
   create), asking what task to work on next, tracking findings from code review or test gap analysis
   as br issues, setting up a beads workspace, or building a skill that should output br items. Also
   use when the user says "create a bead", "log this bug", "track this", or asks about issue
-  priorities, types, dependencies, or ready/blocked status.
+  priorities, types, dependencies, or ready/blocked status. Also triggers when the conversation
+  contains strings that look like bead IDs — the pattern is `<prefix>-<hash>[.<number>]` where
+  prefix is a workspace name (e.g. cape, nit.nvim, br), hash is 3-8 alphanumeric characters, and an
+  optional dot-number suffix for subtasks. Examples: cape-2vo, cape-2vo.13, nit.nvim-7f5, br-3. If
+  you see an identifier matching this pattern, it is likely a bead ID — use this skill to look it up
+  with `br show`.
 ---
 
 <skill_overview> `br` is a git-backed issue tracker CLI. It stores epics, tasks, and bugs in a
@@ -76,6 +81,21 @@ git commit -m "sync beads"
 | **Feature**      | Feature request or enhancement                                            |
 | **Dependency**   | Blocking relationship: A depends on B means do B first                    |
 | **Parent-child** | Structural grouping: task belongs to epic                                 |
+
+### Recognizing bead IDs
+
+Bead IDs follow the pattern `<prefix>-<hash>[.<subtask>]`:
+
+- **Prefix** — the workspace name configured via `issue_prefix` (e.g. `cape`, `nit.nvim`, `br`)
+- **Hash** — 3-8 base62 characters (letters and digits, e.g. `2vo`, `my4`, `7f5`)
+- **Subtask** — optional dot-separated number for child tasks (e.g. `.13`, `.1`)
+
+Examples: `cape-2vo`, `cape-2vo.13`, `nit.nvim-7f5`, `br-3`, `cape-my4.1`.
+
+When you encounter a string matching this pattern, use context to decide whether it's a bead ID or a
+common hyphenated name (like `node-v18`, `react-dom`, `my-app`). Strong signals it's a bead: the
+prefix matches a known workspace name, the conversation involves issue tracking, or the hash looks
+random rather than meaningful. When uncertain, run `br show <id>` — if it resolves, it's a bead.
 
 ### Creating issues
 
