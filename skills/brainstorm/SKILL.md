@@ -50,6 +50,12 @@ research before proposing, validate design before stopping. </rigidity_level>
   tech
 - If agents aren't available, investigate manually with Glob/Grep/Read and WebSearch/WebFetch
 
+**Answer your own questions first:**
+
+Before asking the user anything, check if the codebase or research can answer the question. Explore
+code, read docs, check patterns. Only ask the user questions that require human judgment
+(priorities, preferences, business constraints). If you can answer it by reading code, read code.
+
 **Ask clarifying questions:**
 
 Use AskUserQuestion for structured choices (token storage, auth strategy, data model decisions). Use
