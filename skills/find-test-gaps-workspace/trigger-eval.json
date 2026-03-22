@@ -1,0 +1,74 @@
+[
+  {
+    "query": "i just finished building the webhook dispatcher in src/webhooks/ and want to make sure i didn't leave any untested paths before merging. can you check what's missing?",
+    "should_trigger": true
+  },
+  {
+    "query": "we're about to do a big refactor of the auth module. before we start breaking things, scan lua/myapp/auth/ and tell me what behaviors don't have tests covering them",
+    "should_trigger": true
+  },
+  {
+    "query": "find test gaps in internal/git/. I want br tasks for each module that needs work so I can plan a test sprint",
+    "should_trigger": true
+  },
+  {
+    "query": "what's untested in the billing package? I keep finding bugs there and I suspect we're missing edge case tests for the invoice calculations and discount logic",
+    "should_trigger": true
+  },
+  {
+    "query": "can you look at src/api/handlers/ and tell me which functions don't have corresponding test cases? I want to know the gaps before we ship v2",
+    "should_trigger": true
+  },
+  {
+    "query": "check test coverage for the state management module at lib/state/. we shipped it last week and I'm worried some error paths aren't tested",
+    "should_trigger": true
+  },
+  {
+    "query": "I need to improve tests for our parser. It's at packages/parser/src/ and the tests are in packages/parser/__tests__/. Can you find what's not covered and create issues for what needs fixing?",
+    "should_trigger": true
+  },
+  {
+    "query": "are there any test gaps in the sorting algorithm implementation? it's in main/lua/sort/sort.lua and the tests are in main/tests/sort_spec.lua",
+    "should_trigger": true
+  },
+  {
+    "query": "we just shipped a new feature and a few of the integration tests are failing with timeout errors. can you look into it?",
+    "should_trigger": false
+  },
+  {
+    "query": "our test suite has 90% coverage but we keep finding bugs in production. I think the tests themselves are garbage — lots of mocks testing mocks. can you audit the test quality?",
+    "should_trigger": false
+  },
+  {
+    "query": "write tests for the validateInput function in src/validators.ts. It should handle empty strings, null, and objects with missing required fields",
+    "should_trigger": false
+  },
+  {
+    "query": "I want to add a caching layer to our API. The endpoints are in src/api/ and we're thinking Redis. Can you help design this?",
+    "should_trigger": false
+  },
+  {
+    "query": "the login endpoint returns 500 when the password has unicode characters. here's the stack trace: TypeError at auth.ts:42",
+    "should_trigger": false
+  },
+  {
+    "query": "fix the flaky test in tests/auth_spec.lua — it passes locally but fails in CI about 30% of the time",
+    "should_trigger": false
+  },
+  {
+    "query": "can you review this PR? it changes the payment processing flow and I want to make sure nothing looks off. the diff is at github.com/myorg/myapp/pull/147",
+    "should_trigger": false
+  },
+  {
+    "query": "I need to refactor the database module — it's gotten too big and has too many responsibilities. Can you help me figure out how to split it up?",
+    "should_trigger": false
+  },
+  {
+    "query": "run the test suite for the auth module and tell me if anything fails. I just changed the token validation logic",
+    "should_trigger": false
+  },
+  {
+    "query": "our tests are really slow — the full suite takes 12 minutes. can you help figure out why and speed them up?",
+    "should_trigger": false
+  }
+]

@@ -3,11 +3,11 @@ name: challenge
 description: >
   Challenge assumptions in designs, implementations, or requirements. Use when reviewing a proposed
   design before committing, auditing completed work for scope creep, or when the user asks to
-  challenge/question/audit assumptions. Triggers on: "challenge this", "check my assumptions",
-  "what am I assuming", "audit this design", "did I over-engineer", reviewing a plan before
-  execution, or reflecting after implementation. Also dispatched by brainstorm (pre-design) and
-  execute-plan (post-task) as a lightweight checkpoint. Do NOT use for code review (use review),
-  test gap analysis (use test), or debugging (use debug-issue).
+  challenge/question/audit assumptions. Triggers on: "challenge this", "check my assumptions", "what
+  am I assuming", "audit this design", "did I over-engineer", reviewing a plan before execution, or
+  reflecting after implementation. Also dispatched by brainstorm (pre-design) and execute-plan
+  (post-task) as a lightweight checkpoint. Do NOT use for code review (use review), test gap
+  analysis (use test), or debugging (use debug-issue).
 ---
 
 <skill_overview> Surface hidden assumptions in designs, implementations, and requirements before
@@ -33,7 +33,7 @@ for complex designs). The three steps and the interactive resolution are non-neg
 **Don't use for:**
 
 - Code review (use `cape:review`)
-- Test coverage analysis (use `cape:test`)
+- Test coverage analysis (use `cape:find-test-gaps`)
 - Bug investigation (use `cape:debug-issue`)
 
 </when_to_use>
@@ -53,11 +53,11 @@ Determine what's being challenged. Sources:
 
 Categorize the phase:
 
-| Phase | Focus | Depth |
-|-------|-------|-------|
-| Design (pre-implementation) | Scope, ambiguity, over-engineering | Full audit |
-| Implementation (post-task) | Scope creep, unrequested additions | Compare against task spec |
-| Ad-hoc review | All categories | Proportional to complexity |
+| Phase                       | Focus                              | Depth                      |
+| --------------------------- | ---------------------------------- | -------------------------- |
+| Design (pre-implementation) | Scope, ambiguity, over-engineering | Full audit                 |
+| Implementation (post-task)  | Scope creep, unrequested additions | Compare against task spec  |
+| Ad-hoc review               | All categories                     | Proportional to complexity |
 
 ---
 
@@ -65,14 +65,14 @@ Categorize the phase:
 
 Scan through six categories:
 
-| Category | What to look for |
-|----------|-----------------|
-| Scope creep | Features or handling nobody requested |
-| Implicit constraints | Ambiguous terms, assumed boundaries |
-| Unstated requirements | Assumed needs never confirmed |
-| Hidden dependencies | Assumed library, service, or environment behavior |
-| Over-engineering | Premature abstraction, unnecessary configurability |
-| Under-specification | Vague requirements that could go multiple directions |
+| Category              | What to look for                                     |
+| --------------------- | ---------------------------------------------------- |
+| Scope creep           | Features or handling nobody requested                |
+| Implicit constraints  | Ambiguous terms, assumed boundaries                  |
+| Unstated requirements | Assumed needs never confirmed                        |
+| Hidden dependencies   | Assumed library, service, or environment behavior    |
+| Over-engineering      | Premature abstraction, unnecessary configurability   |
+| Under-specification   | Vague requirements that could go multiple directions |
 
 For each assumption found, assess risk as impact multiplied by reversibility:
 

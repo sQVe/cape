@@ -40,6 +40,7 @@ tool.
 | Something broken, error, stack trace, "doesn't work" | `cape:debug-issue`     | Investigation only         |
 | Fix a diagnosed bug, "fix br-N"                      | `cape:fix-bug`         | Requires br bug to exist   |
 | Refine, stress-test, harden a task before executing  | `cape:task-refinement` | Between plan and execute   |
+| Find untested behavior, test gaps, what's untested   | `cape:find-test-gaps`  | Standalone                 |
 | Challenge, audit, check assumptions                  | `cape:challenge`       | Standalone or dispatched   |
 | Create a branch, start work on a branch              | `cape:branch`          | Standalone                 |
 | Commit, wrap up, save changes                        | `cape:commit`          | Standalone                 |
