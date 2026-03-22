@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "rest-to-graphql",
+  "prompt": "We're thinking about replacing our REST API with GraphQL for the dashboard endpoints. The REST API serves both our React dashboard and a few external integrations. There's auth middleware, rate limiting, and about 15 endpoints.",
+  "assertions": [
+    "Output contains three distinct approaches under different constraints (e.g., thin wrapper vs full schema-first vs hybrid)",
+    "Output contains an interactive assumption challenge that walks at least 3 decision branches",
+    "Design summary includes anti-patterns with NO X (reason: Y) format",
+    "Output addresses auth middleware compatibility and breaking changes for external consumers"
+  ]
+}

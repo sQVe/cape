@@ -1,0 +1,78 @@
+{
+  "expectations": [
+    {
+      "text": "Output contains three distinct approaches under different constraints (e.g., thin wrapper vs full schema-first vs hybrid)",
+      "passed": true,
+      "evidence": "Three clearly distinct approaches under explicit constraints: Design 1 'Minimal — thin GraphQL layer over existing handlers' (constraint: minimize the interface), Design 2 'Flexible — full GraphQL schema with relay-style connections' (constraint: maximize flexibility), Design 3 'Pragmatic — GraphQL for dashboard with shared service layer' (constraint: optimize for the most common case). Each has different trade-offs and scope."
+    },
+    {
+      "text": "Output contains an interactive assumption challenge that walks at least 3 decision branches",
+      "passed": true,
+      "evidence": "Step 3 'Challenge assumptions — grill-me cadence' contains 5 decision branches: Branch 1/5 (coexistence duration — 3 options), Branch 2/5 (GraphQL server library choice — 3 options), Branch 3/5 (schema design philosophy — 3 options), Branch 4/5 (rate limiting strategy — 3 options), Branch 5/5 (migration sequencing — 3 options). Each branch presents alternatives and resolves with a justified choice. Exceeds the minimum of 3."
+    },
+    {
+      "text": "Design summary includes anti-patterns with NO X (reason: Y) format",
+      "passed": true,
+      "evidence": "The 'Anti-patterns' section lists 7 items in the exact format: 'NO REST-over-GraphQL gateway (reason: adds latency...)', 'NO relay connection spec (reason: cursor-based pagination is YAGNI...)', 'NO GraphQL subscriptions (reason: no stated real-time requirement...)', 'NO schema that mirrors REST response shapes (reason: defeats GraphQL's value...)', 'NO forcing external integrations to migrate (reason: partner contracts...)', 'NO big-bang migration (reason: page-by-page migration de-risks...)', 'NO custom auth system for GraphQL (reason: existing JWT middleware works...)'."
+    },
+    {
+      "text": "Output addresses auth middleware compatibility and breaking changes for external consumers",
+      "passed": true,
+      "evidence": "Auth middleware: Step 1 identifies JWT auth at 'src/middleware/auth.ts', key decisions table states 'Reuse JWT middleware via GraphQL context — No new auth system; req.user available in resolvers'. Design summary requirement: 'GraphQL context built from Express req using existing JWT auth middleware'. Breaking changes for external consumers: Step 1 key decisions table says 'Must keep REST for external consumers', anti-pattern 'NO forcing external integrations to migrate (reason: partner contracts; REST endpoints are stable and cheap to maintain)', design summary states 'All 5 external-facing REST endpoints remain untouched', Branch 1/5 resolution explicitly rejects forcing partner migration."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 140.3
+  },
+  "claims": [
+    {
+      "claim": "Express routes found in src/routes/ with 15 endpoint files",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Simulated codebase investigation — cannot verify against real files. The output states this is simulated research."
+    },
+    {
+      "claim": "Several dashboard endpoints make 3-4 sequential DB calls to assemble nested responses",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Simulated finding — no real codebase to verify against."
+    },
+    {
+      "claim": "5 of the 15 endpoints serve external integrations (read-only)",
+      "type": "factual",
+      "verified": false,
+      "evidence": "Derived from simulated research. The user prompt mentioned 'a few external integrations' but the specific count of 5 is fabricated for the brainstorm."
+    },
+    {
+      "claim": "Three approaches were explored under different constraints",
+      "type": "process",
+      "verified": true,
+      "evidence": "Designs 1-3 are present in the output with distinct constraints and trade-offs."
+    },
+    {
+      "claim": "All 5 branches resolved in the assumption challenge",
+      "type": "process",
+      "verified": true,
+      "evidence": "Branches 1/5 through 5/5 all have explicit resolutions with justified choices."
+    }
+  ],
+  "user_notes_summary": null,
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Output contains an interactive assumption challenge that walks at least 3 decision branches",
+        "reason": "The assertion checks for quantity (3+ branches) but not quality. A run could present 3 shallow branches with obvious answers and still pass. Consider requiring that at least one branch surfaces a non-obvious risk or changes the recommended approach."
+      },
+      {
+        "reason": "No assertion checks whether the output includes a clear architecture diagram or migration sequence. The with_skill output includes both (ASCII architecture diagram and page-by-page migration plan), which add significant value — worth asserting."
+      }
+    ],
+    "overall": "Assertions cover the key structural elements well. The anti-pattern format assertion is strong and discriminating. The auth/breaking-changes assertion tests for genuine substance. Consider adding an assertion for actionable next steps or migration ordering."
+  }
+}

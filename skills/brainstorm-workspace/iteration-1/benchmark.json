@@ -1,0 +1,173 @@
+{
+  "metadata": {
+    "skill_name": "brainstorm",
+    "skill_path": "skills/brainstorm/SKILL.md",
+    "executor_model": "claude-opus-4-6",
+    "analyzer_model": "claude-opus-4-6",
+    "timestamp": "2026-03-22T10:00:00Z",
+    "evals_run": ["notification-system", "verbose-flag", "rest-to-graphql"],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "notification-system",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 128.8,
+        "tokens": 23064,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output contains three distinct approaches designed under different constraints (minimal/simple, flexible, pragmatic/common-case)", "passed": true, "evidence": "Three explicitly labeled approaches: Minimal, Flexible, Pragmatic — each designed under a stated constraint."},
+        {"text": "Output contains an interactive assumption challenge with numbered decision branches", "passed": true, "evidence": "5 numbered branches in grill-me cadence section with lettered options and resolutions."},
+        {"text": "Output contains a structured design summary with Problem, Requirements, and Anti-patterns sections", "passed": true, "evidence": "Design summary has Problem, Requirements (9 bullets), Anti-patterns (7 items in NO X format)."},
+        {"text": "Output identifies at least 3 decision branches to challenge", "passed": true, "evidence": "5 decision branches: job queue tech, in-app delivery, preference granularity, templates, failure handling."}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "notification-system",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.0,
+        "passed": 0,
+        "failed": 4,
+        "total": 4,
+        "time_seconds": 50.2,
+        "tokens": 13997,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output contains three distinct approaches designed under different constraints (minimal/simple, flexible, pragmatic/common-case)", "passed": false, "evidence": "Three approaches exist but not designed under explicit constraints — they're architectural alternatives."},
+        {"text": "Output contains an interactive assumption challenge with numbered decision branches", "passed": false, "evidence": "No assumption challenge section. Decisions presented as resolved recommendations."},
+        {"text": "Output contains a structured design summary with Problem, Requirements, and Anti-patterns sections", "passed": false, "evidence": "No sections labeled Problem, Requirements, or Anti-patterns."},
+        {"text": "Output identifies at least 3 decision branches to challenge", "passed": false, "evidence": "No decision branches as challenges. Key decisions stated as resolved recommendations."}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "verbose-flag",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.67,
+        "passed": 2,
+        "failed": 1,
+        "total": 3,
+        "time_seconds": 147.6,
+        "tokens": 24135,
+        "tool_calls": 6,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output uses inline mode — does NOT dispatch 3 divergent design agents for this trivial task", "passed": true, "evidence": "Explicitly states 'Inline mode. Skip divergent agents.' Two approaches proposed inline."},
+        {"text": "Assumption challenge is brief (at most 2 rounds), appropriate for trivial scope", "passed": false, "evidence": "4 branches in assumption challenge — exceeds the 2-round threshold for trivial scope."},
+        {"text": "Output contains a design summary (even if lightweight)", "passed": true, "evidence": "Full design summary with problem, approach, requirements (6), anti-patterns (4), architecture, scope."}
+      ],
+      "notes": ["210 lines for a boolean flag — disproportionate to task complexity"]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "verbose-flag",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 50.7,
+        "tokens": 14686,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output uses inline mode — does NOT dispatch 3 divergent design agents for this trivial task", "passed": true, "evidence": "No divergent agent mechanism exists — trivially passes."},
+        {"text": "Assumption challenge is brief (at most 2 rounds), appropriate for trivial scope", "passed": true, "evidence": "Zero rounds — no assumption challenge mechanism exists."},
+        {"text": "Output contains a design summary (even if lightweight)", "passed": true, "evidence": "Recommendation section functions as design summary with steps and code."}
+      ],
+      "notes": ["90 lines — more proportionate to task complexity"]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "rest-to-graphql",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 140.3,
+        "tokens": 23326,
+        "tool_calls": 4,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output contains three distinct approaches under different constraints", "passed": true, "evidence": "Three designs: Minimal (thin wrapper), Flexible (relay + subscriptions), Pragmatic (dashboard-shaped schema + DataLoader)."},
+        {"text": "Output contains an interactive assumption challenge that walks at least 3 decision branches", "passed": true, "evidence": "5 branches: coexistence duration, library choice, schema philosophy, rate limiting, migration sequencing."},
+        {"text": "Design summary includes anti-patterns with NO X (reason: Y) format", "passed": true, "evidence": "7 anti-patterns in exact format: NO REST-over-GraphQL gateway, NO relay, NO subscriptions, etc."},
+        {"text": "Output addresses auth middleware compatibility and breaking changes for external consumers", "passed": true, "evidence": "JWT middleware reuse via GraphQL context. Anti-pattern: NO forcing external integrations to migrate."}
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "rest-to-graphql",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 57.4,
+        "tokens": 14071,
+        "tool_calls": 3,
+        "errors": 0
+      },
+      "expectations": [
+        {"text": "Output contains three distinct approaches under different constraints", "passed": true, "evidence": "Four approaches but without explicit constraint framing."},
+        {"text": "Output contains an interactive assumption challenge that walks at least 3 decision branches", "passed": false, "evidence": "No interactive assumption challenge — trade-offs discussed as prose paragraphs."},
+        {"text": "Design summary includes anti-patterns with NO X (reason: Y) format", "passed": false, "evidence": "No anti-patterns section or NO X format."},
+        {"text": "Output addresses auth middleware compatibility and breaking changes for external consumers", "passed": true, "evidence": "Auth middleware and external integration impact both substantively addressed."}
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {"mean": 0.89, "stddev": 0.19, "min": 0.67, "max": 1.0},
+      "time_seconds": {"mean": 138.9, "stddev": 9.5, "min": 128.8, "max": 147.6},
+      "tokens": {"mean": 23508, "stddev": 569, "min": 23064, "max": 24135}
+    },
+    "without_skill": {
+      "pass_rate": {"mean": 0.50, "stddev": 0.50, "min": 0.0, "max": 1.0},
+      "time_seconds": {"mean": 52.8, "stddev": 3.9, "min": 50.2, "max": 57.4},
+      "tokens": {"mean": 14251, "stddev": 459, "min": 13997, "max": 14686}
+    },
+    "delta": {
+      "pass_rate": "+0.39",
+      "time_seconds": "+86.1",
+      "tokens": "+9257"
+    }
+  },
+  "notes": [
+    "Eval 2 (verbose-flag): with_skill scored LOWER than without_skill (67% vs 100%) — the skill over-engineers trivial tasks with 4 grill-me branches for a boolean flag",
+    "Eval 2 assertions are skill-specific mechanisms that trivially pass for vanilla Claude (no agent dispatch = pass, no challenge = pass)",
+    "Skill adds ~86s and ~9K tokens on average — significant overhead, justified for complex tasks but excessive for trivial ones",
+    "For complex tasks (evals 1 and 3), the skill produces meaningfully better structured output: constraint-driven approaches, anti-patterns, assumption challenges",
+    "Grader feedback: assertions check structure but not quality of decision branches or proportionality to task complexity"
+  ]
+}

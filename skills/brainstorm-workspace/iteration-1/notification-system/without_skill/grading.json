@@ -1,0 +1,66 @@
+{
+  "expectations": [
+    {
+      "text": "Output contains three distinct approaches designed under different constraints (minimal/simple, flexible, pragmatic/common-case)",
+      "passed": false,
+      "evidence": "Three approaches exist ('Approach A: channel strategy pattern', 'Approach B: event-driven with message queue', 'Approach C: simple function dispatch (minimal)') but they are not designed under explicit constraints. They're architectural pattern alternatives, not constraint-driven explorations. Only Approach C is labeled 'minimal'; A is 'recommended' (strategy pattern) and B is 'event-driven' — neither maps to 'flexible' or 'pragmatic/common-case' as constraint frames. The trade-off table compares them on dimensions but doesn't frame each approach as answering 'what if we optimized for X?'"
+    },
+    {
+      "text": "Output contains an interactive assumption challenge with numbered decision branches",
+      "passed": false,
+      "evidence": "No assumption challenge section exists. The 'Key decisions' section lists 5 resolved decisions but presents them as single recommendations, not as interactive challenges with multiple options to evaluate. The 'Open questions for the developer' section lists 5 questions but these are unresolved questions directed at the user, not numbered decision branches with options and trade-offs to weigh."
+    },
+    {
+      "text": "Output contains a structured design summary with Problem, Requirements, and Anti-patterns sections",
+      "passed": false,
+      "evidence": "No sections labeled 'Problem', 'Requirements', or 'Anti-patterns' exist. The output has 'Context' (closest to Problem but is a one-liner, not a problem statement), 'Design recommendation' (contains implementation details but not a requirements list), and 'Key decisions'. Anti-patterns are entirely absent — no section warns against patterns to avoid."
+    },
+    {
+      "text": "Output identifies at least 3 decision branches to challenge (e.g., delivery guarantees, preference storage, retry semantics)",
+      "passed": false,
+      "evidence": "No decision branches are presented as challenges. The 'Key decisions' section covers 5 topics (preference model, in-app storage, push notifications, async dispatch, wrapping mailer) but each is stated as a resolved recommendation without presenting alternative options to challenge or evaluate. There is no 'challenge assumptions' or 'grill-me' cadence."
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 4,
+    "total": 4,
+    "pass_rate": 0.0
+  },
+  "timing": {
+    "executor_duration_seconds": 50.2,
+    "total_duration_seconds": 50.2
+  },
+  "claims": [
+    {
+      "claim": "Approach A positions you well for migration to queues because channel implementations don't care how they're invoked",
+      "type": "quality",
+      "verified": true,
+      "evidence": "The strategy pattern's channel interface (send method) is indeed transport-agnostic. The 'Migration to queues' section correctly notes that replacing direct calls with queue publishes leaves channel implementations unchanged."
+    },
+    {
+      "claim": "Time to implement: A ~2-3 days, B ~4-5 days, C ~1 day",
+      "type": "factual",
+      "verified": false,
+      "evidence": "These estimates are plausible but unverifiable without knowing the team's familiarity with the tools and the codebase complexity. Presented as facts but are judgment calls."
+    },
+    {
+      "claim": "Promise.allSettled ensures one channel's failure doesn't block others",
+      "type": "factual",
+      "verified": true,
+      "evidence": "Promise.allSettled returns a promise that resolves after all input promises have settled (fulfilled or rejected), so a failure in one channel does not prevent others from completing."
+    }
+  ],
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "Output contains three distinct approaches designed under different constraints (minimal/simple, flexible, pragmatic/common-case)",
+        "reason": "This assertion conflates 'three approaches' with 'constraint-driven framing'. The without_skill output does present three viable approaches with a trade-off table — it's genuinely useful brainstorming. Consider splitting into two assertions: one for 'presents multiple approaches' (lower bar, tests breadth) and one for 'frames approaches under explicit constraints' (higher bar, tests the skill's divergent-thinking method)."
+      },
+      {
+        "reason": "The without_skill output's trade-off comparison table (Complexity, Scalability, Testability, Reliability, Time, Adding channels) is a strong artifact that no assertion measures. Consider an assertion like 'Output contains a structured comparison of approaches across multiple dimensions'."
+      }
+    ],
+    "overall": "Assertions are well-calibrated to distinguish skill-guided output from baseline. The 0/4 fail rate for without_skill is genuine — the baseline produces useful brainstorming but with fundamentally different structure. The assertions test the skill's specific methodology (constraint-driven divergence, assumption challenges, structured summary) rather than general brainstorming quality."
+  }
+}
