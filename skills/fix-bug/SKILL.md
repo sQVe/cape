@@ -52,8 +52,8 @@ Read the root cause, evidence, reproduction steps, and success criteria. This is
 
 **If no br bug exists** (user reports a new bug and wants it fixed):
 
-Dispatch the `cape:debug-issue` skill to investigate first. It will produce a br bug with root
-cause analysis, evidence, and reproduction steps. Once the br bug exists, read it and continue.
+Dispatch the `cape:debug-issue` skill to investigate first. It will produce a br bug with root cause
+analysis, evidence, and reproduction steps. Once the br bug exists, read it and continue.
 
 Do not proceed to step 2 without a br bug that has a documented root cause.
 
@@ -73,31 +73,17 @@ may be incomplete.
 
 ---
 
-## Step 3: Write failing test (RED)
+## Step 3: Fix with TDD
 
-Write a test that exercises the bug's root cause. The test must:
-
-- Target the root cause identified in the br bug, not a surface symptom
-- Fail for the right reason (the actual bug, not a setup error)
-- Serve as the regression guard going forward
-
-Run the test. Confirm it fails (RED). If it passes, either the bug is already fixed or the test
-doesn't cover the actual defect -- investigate before proceeding.
-
----
-
-## Step 4: Implement the fix (GREEN)
-
-Minimal change to make the failing test pass. Fix the root cause identified in the br bug.
+Follow `cape:test-driven-development` for the RED-GREEN-REFACTOR cycle. The bug's root cause from
+the br bug is your test target.
 
 **Scope guard:**
 
-- Don't refactor adjacent code
+- Don't refactor adjacent code beyond what the REFACTOR phase justifies
 - Don't improve error handling elsewhere
 - Don't add features
 - Don't clean up unrelated tests
-
-Run the regression test. Confirm it passes (GREEN).
 
 Run the full test suite to catch regressions introduced by the fix.
 
@@ -111,8 +97,8 @@ undocumented API semantics.
 
 ## Step 5: Verify and close
 
-**Verify the original symptom is gone:** re-run the reproduction steps from step 2 and confirm
-they no longer trigger the bug.
+**Verify the original symptom is gone:** re-run the reproduction steps from step 2 and confirm they
+no longer trigger the bug.
 
 **Append an Outcome section to the br bug** (`br show` first, then `br update --design` with
 existing content plus the outcome):
@@ -186,7 +172,7 @@ silently.
 3. Write a test that exercises the boundary condition at `auth.ts:47` -- confirm it fails (RED)
 4. Fix the comparison operator -- confirm the test passes (GREEN), full suite green
 5. Re-run reproduction steps, symptom gone. Append Outcome to br-42, present summary, close
-</example>
+   </example>
 
 <example>
 <scenario>User reports a new bug and wants it fixed</scenario>
@@ -199,13 +185,12 @@ query) remains exploitable.
 
 **Right:**
 
-1. No br bug exists -- dispatch debug-issue to investigate. It produces br-58 with root cause:
-   email not URL-encoded before being passed to the auth service query
+1. No br bug exists -- dispatch debug-issue to investigate. It produces br-58 with root cause: email
+   not URL-encoded before being passed to the auth service query
 2. Run reproduction: POST login with `user+test@example.com`, confirm 500
 3. Write a test for the auth service that passes an email with `+` -- confirm it fails (RED)
 4. Fix the encoding in the auth service -- confirm test passes (GREEN), full suite green
-5. Re-run reproduction, login succeeds. Append Outcome to br-58, present summary, close
-</example>
+5. Re-run reproduction, login succeeds. Append Outcome to br-58, present summary, close </example>
 
 </examples>
 

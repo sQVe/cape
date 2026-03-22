@@ -70,8 +70,8 @@ br update <task-id> --status in_progress
 br show <task-id>
 ```
 
-Break the task into substeps and track them. Do the work -- write tests, implement, verify. Use TDD
-when building new functionality.
+Break the task into substeps and track them. Do the work -- write tests, implement, verify. Follow
+`cape:test-driven-development` when building new functionality or fixing defects within a task.
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
