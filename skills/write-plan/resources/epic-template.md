@@ -20,6 +20,9 @@ from research findings, user decisions, and design validation captured during th
 - NO [pattern] (reason: [why this is forbidden])
 - NO [pattern] (reason: [why this is forbidden])
 
+## Durable decisions
+[Decisions that remain stable across refactors — routes, schema shapes, core data models, auth patterns, external service boundaries. Reference these when creating tasks to avoid re-evaluating fundamentals.]
+
 ## Approach
 [2-3 paragraph summary of chosen approach, referencing codebase patterns and research findings]
 

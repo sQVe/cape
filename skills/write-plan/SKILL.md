@@ -57,6 +57,8 @@ Present the design in sections for chunk-by-chunk validation (200-300 word chunk
 the brainstorm's high-level design gets refined into epic-grade specifics:
 
 - **Requirements:** convert design summary bullets into specific, testable statements
+- **Durable decisions:** extract decisions that survive refactors (routes, schema shapes, auth
+  patterns, external service boundaries) into their own section
 - **Anti-patterns:** ensure every entry has reasoning ("NO X (reason: Y)")
 - **Architecture:** flesh out with concrete files, components, data flow
 - **Success criteria:** derive from requirements, make objectively measurable
@@ -86,22 +88,28 @@ br create "Epic: [Feature Name]" \
   --description "[full epic content from template]"
 ```
 
-Create exactly one task as a child of the epic:
+Create exactly one task as a child of the epic. The task should be a **vertical slice** — a thin
+end-to-end path through all layers (schema, API, UI, tests), not a horizontal layer. A completed
+slice is independently demonstrable.
 
 ```bash
 br create "Task 1: [Specific deliverable]" \
   --type feature \
   --priority [match epic] \
   --parent [epic-id] \
+  --labels "[hitl or afk]" \
   --description "$(cat <<'EOF'
 ## Goal
 [What this task delivers — one clear outcome]
+
+## Execution mode
+[HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
 
 ## Implementation
 1. Study existing code
    [Point to 2-3 similar implementations: file:line]
 
-2. Write tests first (TDD)
+2. Write tests first (`cape:test-driven-development`)
    [Specific test cases for this task]
 
 3. Implementation checklist
@@ -118,6 +126,9 @@ EOF
 
 **Why only one task?** Subsequent tasks should be created iteratively during execution. Each task
 reflects learnings from the previous one. Upfront task trees become brittle when assumptions change.
+
+**Why vertical slices?** Horizontal tasks ("write all models", "write all tests") hide integration
+risk. Vertical slices prove the system works end-to-end sooner and are independently demoable.
 
 **Present completion summary and stop:**
 
@@ -142,9 +153,9 @@ User ran brainstorm, design summary says "tokens stored securely" as a requireme
 **Wrong:** Copy "tokens stored securely" directly into the epic. During implementation, this vague
 requirement allows localStorage, sessionStorage, or cookies — no clear standard to hold against.
 
-**Right:** During validation, tighten to "Tokens stored in httpOnly cookies (NOT localStorage)."
-Add anti-pattern: "NO localStorage tokens (reason: httpOnly prevents XSS token theft)." The epic is
-more precise than the design summary. </example>
+**Right:** During validation, tighten to "Tokens stored in httpOnly cookies (NOT localStorage)." Add
+anti-pattern: "NO localStorage tokens (reason: httpOnly prevents XSS token theft)." The epic is more
+precise than the design summary. </example>
 
 <example>
 <scenario>No design summary exists in conversation</scenario>
