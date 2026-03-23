@@ -7,17 +7,16 @@ description:
   architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
   models, API patterns). Do NOT use for bug fixes, refactoring, executing existing plans, or tasks
   where the implementation path is already clear. This skill researches the codebase, asks Socratic
-  questions, generates competing designs under different constraints, challenges every assumption
-  interactively, and produces a design summary for `cape:write-plan` to formalize into a br epic.
+  questions, generates competing designs under different constraints, and produces a design summary
+  for `cape:write-plan` to formalize into a br epic.
 ---
 
 <skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
 into a `br` epic. Research the codebase, ask Socratic questions, generate competing designs under
-different constraints, walk every branch of the decision tree, and produce a self-contained design
-summary.
+different constraints, and produce a self-contained design summary.
 
-Core contract: no design gets locked without research, constraint-driven design exploration, and
-interactive assumption challenge where every decision branch is resolved. </skill_overview>
+Core contract: no design gets locked without research and constraint-driven design exploration.
+</skill_overview>
 
 <rigidity_level> HIGH FREEDOM — Adapt questioning style and research depth to context, but always:
 research before proposing, validate design before stopping. </rigidity_level>
@@ -152,51 +151,14 @@ For simple ideas with an obvious path, skip agents and propose 1-2 approaches in
 
 ---
 
-## Step 3: Lock design and stop
+## Step 3: Challenge and lock design
 
-**Challenge assumptions — grill-me cadence:**
+Before locking the design, run `cape:challenge` to surface hidden assumptions. Challenge walks each
+assumption interactively — one per turn — with researched recommendations. Confirmed assumptions
+become requirements or anti-patterns in the design summary. Rejected ones trigger scope reductions
+or requirement changes.
 
-Before locking the design, walk every branch of the decision tree interactively. This builds shared
-understanding through turn-by-turn interrogation rather than a one-shot assumption dump.
-
-**Scale depth to complexity:** A boolean flag needs 1-2 branches. A notification system needs 4-5.
-If Step 2 used inline mode (trivial task), keep the challenge to 1-2 branches covering only
-non-obvious interactions (e.g., flag conflicts). If Step 2 used divergent mode (complex task), walk
-up to 5 branches.
-
-Protocol:
-
-1. Identify all decision branches in the proposed design — architectural choices, scope boundaries,
-   implicit constraints, technology bets, integration assumptions.
-2. Present one question per turn. Include your recommended answer based on codebase research and the
-   conversation so far.
-3. Explore the codebase to answer your own questions when possible — only ask the user questions
-   that require human judgment (priorities, preferences, business constraints).
-4. Walk each branch: what happens if this assumption is wrong? What's the fallback? Is it
-   reversible?
-5. Continue until all branches are resolved or the cap is reached (whichever comes first).
-
-Question format:
-
-```
-**Branch [N/total]: [Topic]**
-
-[Context — why this matters for the design]
-
-Recommended: [Your recommendation with reasoning]
-
-a) [Recommendation] — [trade-off]
-b) [Alternative] — [trade-off]
-c) [Different direction] — [trade-off]
-```
-
-Termination:
-
-- **Natural end:** all decision branches resolved — confirmed assumptions become requirements or
-  anti-patterns, rejected ones trigger scope reductions or requirement changes
-- **User escape:** reply "lock it" to end the challenge and proceed to design summary
-- **Hard cap:** after reaching the depth limit (1-2 for inline mode, 5 for divergent mode),
-  summarize remaining unresolved branches as open questions in the design summary
+After challenge completes (or the user skips it), present the design summary.
 
 **Present design summary:**
 
@@ -323,7 +285,8 @@ complexity.
    - Agent 2 (flexible): plugin registry with lifecycle hooks and dependency injection
    - Agent 3 (pragmatic): simple interface with optional hooks for two known extension points
 3. Compare: Agent 3 covers real use cases without Agent 2's over-engineering
-4. Grill-me: walk through plugin discovery, error handling, versioning — 3 rounds resolve all
+4. Challenge: run `cape:challenge` — surfaces plugin discovery, error handling, versioning
+   assumptions; 3 rounds resolve all
 5. Design summary locks pragmatic approach with anti-pattern "NO dependency injection framework
    (reason: 3 plugins don't justify a DI container)" </example>
 
@@ -344,7 +307,7 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 - **Research before proposing** — use agents to understand codebase and external context
 - **Constraint-driven design** — competing constraints reveal trade-offs a single perspective misses
 - **Scale effort to complexity** — divergent agents for complex ideas, inline for simple ones
-- **Challenge interactively** — one branch per turn, not a dump of all assumptions at once
+- **Challenge before locking** — run `cape:challenge` to surface and resolve hidden assumptions
 - **Design summary is the handoff** — contains everything write-plan needs to create the epic
 - **Anti-patterns prevent shortcuts** — every entry uses "NO X (reason: Y)" format
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
@@ -356,8 +319,7 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 1. **Research BEFORE proposing** — use agents to understand context
 2. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
    simple ideas with obvious paths
-3. **Grill-me before locking** — walk every decision branch interactively; do not skip to design
-   summary
+3. **Challenge before locking** — run `cape:challenge` before presenting design summary
 4. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
 5. **Stop after design summary** — present summary and wait for user to run write-plan
 6. **Design summary must be self-contained** — write-plan should not need to re-ask questions

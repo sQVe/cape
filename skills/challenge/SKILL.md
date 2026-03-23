@@ -5,20 +5,20 @@ description: >
   design before committing, auditing completed work for scope creep, or when the user asks to
   challenge/question/audit assumptions. Triggers on: "challenge this", "check my assumptions", "what
   am I assuming", "audit this design", "did I over-engineer", reviewing a plan before execution, or
-  reflecting after implementation. Also dispatched by brainstorm (pre-design) and execute-plan
-  (post-task) as a lightweight checkpoint. Do NOT use for code review (use review), test gap
-  analysis (use test), or debugging (use debug-issue).
+  reflecting after implementation. Do NOT use for test gap analysis (use cape:find-test-gaps) or
+  debugging (use cape:debug-issue).
 ---
 
 <skill_overview> Surface hidden assumptions in designs, implementations, and requirements before
-they become expensive mistakes. Produces an interactive report where each assumption is confirmed
-(documented as intentional constraint) or rejected (triggers a scope change, requirement fix, or
-question to resolve).
+they become expensive mistakes. Walks each assumption interactively — one per turn — with a
+researched recommendation, options, and trade-offs. Every assumption is confirmed (documented as
+intentional constraint) or rejected (triggers a scope change, requirement fix, or question to
+resolve).
 
 Core contract: every assumption found is categorized, risk-assessed, and resolved with the user
-before work continues. </skill_overview>
+through interactive turn-by-turn interrogation before work continues. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM -- Adapt depth to complexity (light touch for simple work, full audit
+<rigidity_level> HIGH FREEDOM — Adapt depth to complexity (light touch for simple work, full audit
 for complex designs). The three steps and the interactive resolution are non-negotiable.
 </rigidity_level>
 
@@ -28,11 +28,10 @@ for complex designs). The three steps and the interactive resolution are non-neg
 - Reviewing a proposed design before creating an epic
 - Auditing completed work for scope creep or unrequested additions
 - Requirements feel vague or ambiguous before implementation
-- Dispatched as checkpoint by brainstorm, write-plan, or execute-plan skills
+- Mid-brainstorm when the user wants to stress-test the design before locking it
 
 **Don't use for:**
 
-- Code review (use `cape:review`)
 - Test coverage analysis (use `cape:find-test-gaps`)
 - Bug investigation (use `cape:debug-issue`)
 
@@ -46,18 +45,22 @@ for complex designs). The three steps and the interactive resolution are non-neg
 
 Determine what's being challenged. Sources:
 
-- **Conversation context** -- read back through the current discussion for designs, decisions, plans
-- **Code changes** -- if post-implementation, review recent commits and diffs
-- **br state** -- if within a brainstorm or execute-plan flow, read the epic and current task
-- **User-provided artifact** -- the user may point at a specific design doc, PR, or plan
+- **Conversation context** — read back through the current discussion for designs, decisions, plans
+- **Code changes** — if post-implementation, review recent commits and diffs
+- **br state** — if within a brainstorm or execute-plan flow, read the epic and current task
+- **User-provided artifact** — the user may point at a specific design doc, PR, or plan
 
-Categorize the phase:
+**Research before presenting.** Explore the codebase to self-answer questions before surfacing them.
+Only present assumptions that require human judgment — priorities, preferences, business
+constraints. If you can resolve an assumption by reading code, resolve it silently and move on.
 
-| Phase                       | Focus                              | Depth                      |
-| --------------------------- | ---------------------------------- | -------------------------- |
-| Design (pre-implementation) | Scope, ambiguity, over-engineering | Full audit                 |
-| Implementation (post-task)  | Scope creep, unrequested additions | Compare against task spec  |
-| Ad-hoc review               | All categories                     | Proportional to complexity |
+Categorize the phase to calibrate depth:
+
+| Phase                       | Focus                              | Depth cap |
+| --------------------------- | ---------------------------------- | --------- |
+| Design (pre-implementation) | Scope, ambiguity, over-engineering | Up to 5   |
+| Implementation (post-task)  | Scope creep, unrequested additions | Up to 3   |
+| Ad-hoc review               | All categories                     | Up to 5   |
 
 ---
 
@@ -76,33 +79,49 @@ Scan through six categories:
 
 For each assumption found, assess risk as impact multiplied by reversibility:
 
-- **High** -- fundamental design issue, hard to undo (wrong data model, wrong architecture)
-- **Medium** -- requires rework but contained (unnecessary feature, wrong default)
-- **Low** -- cosmetic or easily fixed (naming, minor scope addition)
+- **High** — fundamental design issue, hard to undo (wrong data model, wrong architecture)
+- **Medium** — requires rework but contained (unnecessary feature, wrong default)
+- **Low** — cosmetic or easily fixed (naming, minor scope addition)
 
-**Depth calibration:** For simple tasks or lightweight checkpoints (dispatched by other skills),
-skip low-risk items and focus on high and medium. For complex designs or full audits, include all.
+**Depth calibration:** Skip low-risk items when the depth cap is tight. Always surface high and
+medium risk items.
+
+Sort findings: high risk first, then medium, then low.
 
 ---
 
-## Step 3: Present and resolve
+## Step 3: Present and resolve interactively
 
-Present findings grouped by risk level (high first). For each assumption:
+Walk each assumption **one per turn** — not a batch dump. This builds shared understanding through
+back-and-forth rather than overwhelming the user.
+
+**Question format:**
 
 ```
-### [Risk] Assumption: [short description]
+**Assumption [N/total]: [Topic]** [Risk]
 
-**Where:** [location -- conversation context, code file:line, task description, etc.]
-**Impact:** [what goes wrong if this assumption is wrong]
-**Resolution:** [question to answer, constraint to add, or scope to cut]
+[Context — why this matters and what you found in the codebase]
+
+Recommended: [Your recommendation with reasoning from research]
+
+a) [Recommendation] — [trade-off]
+b) [Alternative] — [trade-off]
+c) [Different direction] — [trade-off]
 ```
 
-Ask the user to confirm or reject each finding:
+For each assumption the user resolves:
 
-- **Confirmed** -- the assumption is intentional. Document it as an explicit constraint.
-- **Rejected** -- the assumption needs to change. Capture the correction.
+- **Confirmed** — the assumption is intentional. Document it as an explicit constraint.
+- **Rejected** — the assumption needs to change. Capture the correction.
 
-After resolution, summarize results:
+**Termination:**
+
+- **Natural end:** all assumptions resolved
+- **User escape:** reply "lock it" to end early — summarize remaining unresolved assumptions as open
+  questions
+- **Hard cap:** after reaching the depth limit, summarize remaining unresolved items
+
+**Present challenge summary after resolution:**
 
 ```
 ## Challenge summary
@@ -116,16 +135,10 @@ After resolution, summarize results:
 
 ### Documented constraints
 - [List of confirmed assumptions, now explicit]
+
+### Open questions (if ended early)
+- [Unresolved assumptions that may need attention later]
 ```
-
-When dispatched by another skill, feed results back:
-
-- **brainstorm**: confirmed assumptions become design summary requirements or anti-patterns;
-  rejected ones trigger scope reductions or requirement changes
-- **write-plan**: confirmed assumptions become epic requirements or anti-patterns; rejected ones
-  become scope reductions or requirement changes before `br create`
-- **execute-plan**: rejected assumptions become scope corrections or new tasks; confirmed ones
-  become outcome notes on the completed task
 
 </the_process>
 
@@ -140,9 +153,22 @@ timezone conversion, and locale-aware display. The tool is only used by our team
 **Wrong:** Accept the design as-is. Timezone conversion and locale handling ship, adding complexity
 nobody needs. Three months later someone asks why the date picker has 200 lines of timezone code.
 
-**Right:** Flag timezone conversion and locale-aware display as scope creep -- single-region
-internal tool doesn't need them. User confirms they're unnecessary, cuts scope to formatting and
-validation only. Design shrinks by half. </example>
+**Right:** Surface timezone conversion and locale-aware display as scope creep one at a time:
+
+```
+**Assumption [1/2]: Timezone conversion** [Medium]
+
+The tool is used by a single team in Stockholm. Timezone conversion adds complexity
+for a single-timezone use case.
+
+Recommended: Remove timezone conversion — single-region tool doesn't need it.
+
+a) Remove timezone conversion — simpler code, no conversion bugs
+b) Keep it — future-proofs for remote team members
+c) Add a flag — off by default, available if needed
+```
+
+User confirms they're unnecessary — scope shrinks by half. </example>
 
 <example>
 <scenario>Implementation exceeds original requirement</scenario>
@@ -154,44 +180,60 @@ email and password'."
 **Wrong:** Praise the thorough implementation. Email verification, password reset, and rate limiting
 ship as undocumented features with no tests and no requirement backing them.
 
-**Right:** Flag email verification, password reset, and rate limiting as scope creep beyond "basic
-login." User decides: either expand the requirement (making them official with tests and docs) or
-remove them. Either way, nothing ships silently. </example>
+**Right:** Flag email verification, password reset, and rate limiting as scope creep one at a time.
+User decides: either expand the requirement (making them official with tests and docs) or remove
+them. Either way, nothing ships silently. </example>
 
 <example>
-<scenario>Vague requirements before implementation</scenario>
+<scenario>Mid-brainstorm design challenge</scenario>
 
-User: "We need to build a notification system. Users should get notified about important events."
+User runs `/cape:challenge` during a brainstorm session to stress-test the proposed approach.
 
-**Wrong:** Start implementing with assumptions about what "users", "important", "events", and
-"notified" mean. Ship email notifications for all users on all events because nothing was specified.
+**Wrong:** Dump all assumptions at once. User is overwhelmed and confirms everything to move on.
 
-**Right:** Flag four under-specifications: "users" (which users?), "important" (who decides
-importance?), "events" (which specific events?), "notified" (email, push, in-app?). Each becomes a
-question to answer before implementation begins. </example>
+**Right:** Walk each decision branch one per turn. Research the codebase between questions to
+provide informed recommendations. Challenge the notification system design:
+
+```
+**Assumption [1/4]: Push notification service** [High]
+
+The design assumes a third-party push service. Codebase investigation shows
+`src/notifications/email.ts` exists but no push infrastructure.
+
+Recommended: Start with email only — proven infrastructure exists.
+
+a) Email only — reuses existing infrastructure, ships faster
+b) Add push via Firebase — new dependency, new failure mode
+c) Abstract behind interface — implement email now, add push later
+```
+
+Continue through remaining branches until all resolved or user says "lock it". </example>
 
 </examples>
 
 <key_principles>
 
-- **Everything is challengeable** -- including user requirements, not just agent assumptions
-- **Depth matches risk** -- lightweight for simple tasks, full audit for complex designs
-- **Assumptions are binary** -- each is either confirmed (becomes a documented constraint) or
+- **Everything is challengeable** — including user requirements, not just agent assumptions
+- **Research before surfacing** — investigate the codebase to provide informed recommendations
+- **One per turn** — interactive back-and-forth, not a batch dump
+- **Depth matches risk** — lightweight for simple tasks, full audit for complex designs
+- **Assumptions are binary** — each is either confirmed (becomes a documented constraint) or
   rejected (triggers a change)
-- **Challenge early, challenge often** -- cheaper to catch assumptions in design than in production
-- **No silent assumptions** -- if something was assumed, it gets surfaced and resolved explicitly
+- **Challenge early, challenge often** — cheaper to catch assumptions in design than in production
+- **No silent assumptions** — if something was assumed, it gets surfaced and resolved explicitly
 
 </key_principles>
 
 <critical_rules>
 
-1. **Always present findings interactively** -- the user confirms or rejects each assumption
-2. **Group by risk level** -- high-risk assumptions first, always
-3. **Include resolution for every finding** -- not just "this is an assumption" but "here's what to
-   do about it"
-4. **Feed results back to calling skill** -- when dispatched by brainstorm, write-plan, or
-   execute-plan, results must flow into their artifacts (design summary, epic, task, etc.)
-5. **Never skip high-risk assumptions** -- even in lightweight mode, high-risk items are always
+1. **One assumption per turn** — walk interactively, never batch-dump findings
+2. **Research before presenting** — investigate codebase to self-answer what you can
+3. **Include recommendation with options** — not just "this is an assumption" but "here's what I
+   recommend and here are alternatives with trade-offs"
+4. **Group by risk level** — high-risk assumptions first, always
+5. **Respect depth caps** — 3 for post-implementation, 5 for design and ad-hoc
+6. **Never skip high-risk assumptions** — even in lightweight mode, high-risk items are always
    surfaced
+7. **Support "lock it" escape** — user can end early; summarize remaining as open questions
 
-</critical_rules>
+</critical_rules> </output>
