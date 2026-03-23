@@ -1,0 +1,44 @@
+{
+  "skill_name": "finish-epic",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "All tasks for epic cape-2n2 are done. Let's finish it up.",
+      "expected_output": "Runs verification, audits success criteria with evidence, appends Outcome to epic, closes it, presents completion report",
+      "files": [],
+      "expectations": [
+        "Checks br state to confirm all tasks are closed before proceeding",
+        "Runs automated checks (tests or linting)",
+        "Audits each success criterion with specific evidence",
+        "Appends an Outcome section to the epic via br update --design",
+        "Closes the epic with br close",
+        "Presents a completion report summarizing what was accomplished"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Wrap up epic cape-ym2, we're done with it.",
+      "expected_output": "Detects open tasks and stops without closing the epic",
+      "files": [],
+      "expectations": [
+        "Checks br state and discovers open task cape-ym2.2",
+        "Reports which task is still open",
+        "Does NOT close the epic",
+        "Does NOT proceed to verification"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Close out epic cape-96j, everything is implemented.",
+      "expected_output": "All tasks closed but success criteria gap found (no README docs, no util.ts file), stops without closing",
+      "files": [],
+      "expectations": [
+        "Checks br state to confirm all tasks are closed",
+        "Audits success criteria and identifies at least one unmet criterion",
+        "Reports specifically what is missing",
+        "Does NOT close the epic",
+        "Stops and explains what needs to happen before the epic can close"
+      ]
+    }
+  ]
+}

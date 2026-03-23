@@ -7,15 +7,39 @@
       "expected_output": "Should identify source files without test files (motions.lua, textobjects.lua, mappings.lua, repeat.lua), skip types.lua as trivial, note that config.lua/sort.lua/utils.lua/operator.lua/interface.lua have tests. For files without tests, should describe specific untested behaviors with bug risks — not just 'no test file exists'. Should ask for approval before creating br items, then produce an epic + per-module tasks.",
       "files": [],
       "assertions": [
-        {"text": "Skips trivial files (types.lua) from analysis with stated reason", "type": "boolean"},
-        {"text": "References actual function names from source files (read the code, not guessed)", "type": "boolean"},
-        {"text": "References what existing tests cover (read test files)", "type": "boolean"},
-        {"text": "Each gap explains what bug it would catch, not just 'no test exists'", "type": "boolean"},
-        {"text": "Findings grouped by source file/module, not by gap category", "type": "boolean"},
-        {"text": "Proposes a br epic for the scope", "type": "boolean"},
-        {"text": "Proposes one br task per module with gaps", "type": "boolean"},
-        {"text": "Asks user for approval before creating br items", "type": "boolean"},
-        {"text": "Does not suggest testing trivial code or chasing coverage percentages", "type": "boolean"}
+        {
+          "text": "Skips trivial files (types.lua) from analysis with stated reason",
+          "type": "boolean"
+        },
+        {
+          "text": "References actual function names from source files (read the code, not guessed)",
+          "type": "boolean"
+        },
+        {
+          "text": "References what existing tests cover (read test files)",
+          "type": "boolean"
+        },
+        {
+          "text": "Each gap explains what bug it would catch, not just 'no test exists'",
+          "type": "boolean"
+        },
+        {
+          "text": "Findings grouped by source file/module, not by gap category",
+          "type": "boolean"
+        },
+        { "text": "Proposes a br epic for the scope", "type": "boolean" },
+        {
+          "text": "Proposes one br task per module with gaps",
+          "type": "boolean"
+        },
+        {
+          "text": "Asks user for approval before creating br items",
+          "type": "boolean"
+        },
+        {
+          "text": "Does not suggest testing trivial code or chasing coverage percentages",
+          "type": "boolean"
+        }
       ]
     },
     {
@@ -24,15 +48,39 @@
       "expected_output": "Should map source files (pending.lua, observers.lua, persistence.lua, data.lua, types.lua) to test files in tests/state/. Should skip types.lua. For files with existing tests, should read both source and test to find behaviors that exist in source but aren't exercised in tests. Gaps should be specific (e.g. 'persistence.lua save() has no test for disk write failure') not generic. One task per module file that has gaps.",
       "files": [],
       "assertions": [
-        {"text": "Skips trivial files (types.lua) from analysis with stated reason", "type": "boolean"},
-        {"text": "References actual function names from source files (read the code, not guessed)", "type": "boolean"},
-        {"text": "References what existing tests cover (read test files)", "type": "boolean"},
-        {"text": "Each gap explains what bug it would catch, not just 'no test exists'", "type": "boolean"},
-        {"text": "Findings grouped by source file/module, not by gap category", "type": "boolean"},
-        {"text": "Proposes a br epic for the scope", "type": "boolean"},
-        {"text": "Proposes one br task per module with gaps", "type": "boolean"},
-        {"text": "Asks user for approval before creating br items", "type": "boolean"},
-        {"text": "Does not suggest testing trivial code or chasing coverage percentages", "type": "boolean"}
+        {
+          "text": "Skips trivial files (types.lua) from analysis with stated reason",
+          "type": "boolean"
+        },
+        {
+          "text": "References actual function names from source files (read the code, not guessed)",
+          "type": "boolean"
+        },
+        {
+          "text": "References what existing tests cover (read test files)",
+          "type": "boolean"
+        },
+        {
+          "text": "Each gap explains what bug it would catch, not just 'no test exists'",
+          "type": "boolean"
+        },
+        {
+          "text": "Findings grouped by source file/module, not by gap category",
+          "type": "boolean"
+        },
+        { "text": "Proposes a br epic for the scope", "type": "boolean" },
+        {
+          "text": "Proposes one br task per module with gaps",
+          "type": "boolean"
+        },
+        {
+          "text": "Asks user for approval before creating br items",
+          "type": "boolean"
+        },
+        {
+          "text": "Does not suggest testing trivial code or chasing coverage percentages",
+          "type": "boolean"
+        }
       ]
     },
     {
@@ -41,15 +89,39 @@
       "expected_output": "Should find co-located _test.go files, note which .go files have tests and which don't. types.go should be skipped (type definitions). For files with tests, should read the source to find exported functions and compare against what tests cover. Should identify untested error paths, edge cases in branch operations, etc. Should assess risk higher because user said they're about to refactor. Output as br epic + per-module tasks.",
       "files": [],
       "assertions": [
-        {"text": "Skips trivial files (types.go) from analysis with stated reason", "type": "boolean"},
-        {"text": "References actual function names from source files (read the code, not guessed)", "type": "boolean"},
-        {"text": "References what existing tests cover (read test files)", "type": "boolean"},
-        {"text": "Each gap explains what bug it would catch, not just 'no test exists'", "type": "boolean"},
-        {"text": "Findings grouped by source file/module, not by gap category", "type": "boolean"},
-        {"text": "Proposes a br epic for the scope", "type": "boolean"},
-        {"text": "Proposes one br task per module with gaps", "type": "boolean"},
-        {"text": "Asks user for approval before creating br items", "type": "boolean"},
-        {"text": "Does not suggest testing trivial code or chasing coverage percentages", "type": "boolean"}
+        {
+          "text": "Skips trivial files (types.go) from analysis with stated reason",
+          "type": "boolean"
+        },
+        {
+          "text": "References actual function names from source files (read the code, not guessed)",
+          "type": "boolean"
+        },
+        {
+          "text": "References what existing tests cover (read test files)",
+          "type": "boolean"
+        },
+        {
+          "text": "Each gap explains what bug it would catch, not just 'no test exists'",
+          "type": "boolean"
+        },
+        {
+          "text": "Findings grouped by source file/module, not by gap category",
+          "type": "boolean"
+        },
+        { "text": "Proposes a br epic for the scope", "type": "boolean" },
+        {
+          "text": "Proposes one br task per module with gaps",
+          "type": "boolean"
+        },
+        {
+          "text": "Asks user for approval before creating br items",
+          "type": "boolean"
+        },
+        {
+          "text": "Does not suggest testing trivial code or chasing coverage percentages",
+          "type": "boolean"
+        }
       ]
     }
   ]
