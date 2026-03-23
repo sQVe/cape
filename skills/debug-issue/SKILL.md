@@ -239,6 +239,12 @@ Ready for fix-bug when you want to address it.
 - Understanding architecture or patterns unrelated to the specific failure
 - Finding existing conventions before suggesting a fix direction
 
+## Dispatch `cape:notebox-researcher` (optional) when:
+
+- The bug involves a system the user has investigated or debugged before
+- The error pattern or module has appeared in past notes or journals
+- You want to check if past decisions or research are relevant to this bug
+
 ## Investigation protocol:
 
 1. Reproduce first -- tools confirm the symptom exists

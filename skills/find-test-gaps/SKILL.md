@@ -37,11 +37,9 @@ trivial code) is non-negotiable. </rigidity_level>
 
 **Don't use for:**
 
-- Auditing quality of existing tests (use `cape:analyze-tests` or `hyperpowers:analyze-tests`)
+- Auditing quality of existing tests (use `cape:analyze-tests`)
 - Writing tests (use `cape:test-driven-development`)
 - Debugging test failures (use `cape:debug-issue`)
-- Whole-codebase test audits without a specific scope (use
-  `hyperpowers:analyzing-test-effectiveness`)
 
 </when_to_use>
 
@@ -60,8 +58,14 @@ What should I analyze? Examples:
 - A feature area: everything related to session management
 ```
 
-Once scope is clear, identify the source files and their corresponding test files. Dispatch
-`cape:codebase-investigator` to:
+Once scope is clear, use code-review-graph to build structural context before reading files:
+
+1. `get_impact_radius_tool` on the scope's production files to prioritize which gaps matter most —
+   high-impact code (many callers) deserves more scrutiny
+2. `query_graph_tool` with `tests_for` to find existing test-to-source mappings
+3. `semantic_search_nodes_tool` to find related test utilities and fixtures
+
+If the graph is unavailable, fall back to `cape:codebase-investigator`. Dispatch it to:
 
 - Find all source files within the scope
 - Find the project's test file conventions (co-located vs separate `tests/` directory, naming

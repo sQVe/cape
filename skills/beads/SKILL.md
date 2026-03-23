@@ -226,7 +226,7 @@ br count --group-by status             # Count by status
 
 ---
 
-## Step 2.5: Preserve task history
+## Step 3: Preserve task history
 
 When updating a task's design field, preserve existing content and append new content. Never
 overwrite.
@@ -273,7 +273,7 @@ Before closing a task with `br close`, append a summary of what actually shipped
 
 ---
 
-## Step 3: Output from skills
+## Step 4: Output from skills
 
 Cape skills that discover actionable findings should create br items, not just print text. This
 makes findings trackable, prioritizable, and closeable.

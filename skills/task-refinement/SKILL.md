@@ -195,6 +195,18 @@ is a valid refinement outcome -- not every task needs changes.
 - The task assumes module structure, test setup, or API shapes
 - You need to find existing utilities the task should reuse
 
+## Dispatch `cape:fact-checker` (optional) when:
+
+- The task has many specific function/path claims to verify in step 3e (stale references)
+- The task makes claims about API behavior or external dependency semantics
+- You want structured Confirmed/Refuted/Partially correct verdicts for claim-heavy tasks
+
+## Dispatch `cape:notebox-researcher` (optional) when:
+
+- The task involves a system the user has worked on before
+- Past design decisions or research notes may be relevant to refinement
+- You want to check if similar edge cases were discussed in past sessions
+
 </agent_references>
 
 <examples>

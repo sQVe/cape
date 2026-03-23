@@ -57,12 +57,12 @@ br list --status open --parent <epic-id>
 
 ## Step 2: Verify
 
-Run three verification passes. All three must pass before closing.
+Run four verification passes. All must pass before closing.
 
 ### 2a: Automated checks
 
-Run the project's full test suite, linter, and pre-commit hooks. Adapt commands to the project's
-tooling.
+Dispatch `cape:test-runner` to run the project's full test suite, linter, and pre-commit hooks. This
+keeps verbose output out of the main context. Adapt commands to the project's tooling.
 
 If any fail, report the failures and stop. Don't close an epic with broken checks.
 
@@ -81,10 +81,16 @@ Present a checklist:
 - [ ] Criterion 3 — NOT MET: [what's missing]
 ```
 
-If any criterion is not met, report what's missing and stop. The user can create a new task or
-adjust the criteria.
+If any criterion is not met, report what's missing and stop. The user can create a new task with
+`br create` and run `/cape:execute-plan` to address the gap before retrying finish-epic.
 
-### 2c: Manual verification
+### 2c: Code review
+
+Dispatch `cape:code-reviewer` to review the implementation against the epic's requirements,
+anti-patterns, and success criteria. The reviewer compares what was built against what was planned
+and flags deviations. Address any critical findings before proceeding.
+
+### 2d: Manual verification
 
 If the epic specifies manual verification steps (e.g., "run the app and confirm X works", "verify
 the CLI outputs Y"), execute them and record the results.
@@ -134,6 +140,22 @@ Optionally run `/cape:find-test-gaps` to verify test coverage before shipping.
 ```
 
 </the_process>
+
+<agent_references>
+
+## Dispatch `cape:test-runner` when:
+
+- Running the full test suite, linter, and pre-commit hooks in step 2a
+- Keeps verbose output out of the main context
+
+## Dispatch `cape:code-reviewer` when:
+
+- Step 2c: reviewing the implementation against epic requirements before closing
+- Flags deviations from the plan, anti-pattern violations, and quality issues
+
+If agents aren't available, run checks and review manually with Glob/Grep/Read.
+
+</agent_references>
 
 <examples>
 

@@ -43,6 +43,9 @@ git log --oneline -10
 From git log, note the project's commit conventions — type prefixes used, whether scope is common,
 subject line style, whether bodies are used.
 
+Note: `git diff HEAD` does not show untracked new files. Check `git status` output for new files
+that should be included in the staging plan.
+
 If there are no changes to commit, tell the user and stop.
 
 ---

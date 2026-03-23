@@ -35,7 +35,7 @@ tool.
 | ------------------------------------------------------------------- | ------------------------------ | ---------------------------- |
 | Build, add, create, implement something new                         | `cape:brainstorm`              | Starts the build chain       |
 | "How should I approach X", unclear requirements                     | `cape:brainstorm`              | Design before code           |
-| Refactor code, restructure, reorganize                              | `cape:brainstorm`              | Plan refactors like features |
+| Large refactor requiring design decisions                           | `cape:brainstorm`              | When architecture is unclear |
 | Formalize a design into an epic                                     | `cape:write-plan`              | Requires brainstorm output   |
 | "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`            | Picks up from br state       |
 | Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`             | Investigation only           |
@@ -57,6 +57,22 @@ tool.
 
 If nothing matches, proceed without a skill.
 
+**Agents** (dispatched internally by skills, not user-routed):
+
+| Agent                        | Dispatched by                                                                                            | Purpose                                                                      |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                     | Trace execution backward from errors to root cause                           |
+| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug                                                                       | Review implementation against plan and standards                             |
+| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge | Explore codebase structure, find patterns, verify assumptions                |
+| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                | Verify claims and assumptions against codebase evidence                      |
+| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug                                                                         | Research external APIs, libraries, community practices                       |
+| `cape:notebox-researcher`    | brainstorm, debug-issue, task-refinement                                                                 | Surface past decisions and research from notes                               |
+| `cape:test-auditor`          | analyze-tests                                                                                            | Audit test quality for tautological tests, weak assertions, missing coverage |
+| `cape:test-runner`           | test-driven-development, finish-epic                                                                     | Run tests and hooks without polluting context                                |
+
+Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
+continues manually with Glob/Grep/Read/WebSearch.
+
 ---
 
 ## Step 2: Follow the chain
@@ -66,11 +82,11 @@ Cape skills form two workflow chains. Each link hands off to the next. Don't ski
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm → challenge → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → commit loop) → finish-epic → commit
+brainstorm [includes challenge] → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
 ```
 
 - `brainstorm` produces a design summary
-- `challenge` surfaces and resolves hidden assumptions in the design
+- `challenge` is invoked by brainstorm to surface hidden assumptions before locking the design
 - `write-plan` formalizes it into a br epic with one first task
 - **STOP** — present the epic and wait. The user decides when to start building.
 - `task-refinement` (optional) stress-tests the task before implementation

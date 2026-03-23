@@ -303,6 +303,7 @@ Tasks:
   br-N.2: Improve tests in session.test.ts (P2, 0 RED, 3 YELLOW)
 
 Run `/cape:execute-plan` to start implementing.
+Optionally run `/cape:find-test-gaps` to also find missing tests (this skill audits existing quality only).
 ```
 
 </the_process>

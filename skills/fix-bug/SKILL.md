@@ -89,13 +89,17 @@ Run the full test suite to catch regressions introduced by the fix.
 
 If the full suite reveals new failures, investigate whether your fix caused them before proceeding.
 
-Dispatch `cape:codebase-investigator` if you need to understand broader impact of the fix on other
-modules. Dispatch `cape:internet-researcher` if the fix involves external library behavior or
-undocumented API semantics.
+Dispatch `cape:bug-tracer` if the root cause from the br bug proves incomplete or a new failure path
+is discovered during the fix. Dispatch `cape:codebase-investigator` if you need to understand
+broader impact of the fix on other modules. Dispatch `cape:internet-researcher` if the fix involves
+external library behavior or undocumented API semantics.
+
+Dispatch `cape:code-reviewer` after the fix is green to review the change against the br bug's root
+cause and verify no regressions were introduced.
 
 ---
 
-## Step 5: Verify and close
+## Step 4: Verify and close
 
 **Verify the original symptom is gone:** re-run the reproduction steps from step 2 and confirm they
 no longer trigger the bug.
@@ -145,6 +149,17 @@ Bug closed. Run `/cape:commit` to commit the fix.
 
 - User reports a bug but no br bug exists yet
 - Investigation is needed before fixing can begin
+
+## Dispatch `cape:bug-tracer` when:
+
+- Root cause from the br bug proves incomplete during the fix
+- A new failure path is discovered that wasn't in the original investigation
+- The fix reveals deeper issues than the initial diagnosis found
+
+## Dispatch `cape:code-reviewer` when:
+
+- Fix is green and full suite passes — review the change before closing
+- Verify the fix addresses the root cause, not just the symptom
 
 ## Dispatch `cape:codebase-investigator` when:
 

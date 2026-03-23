@@ -66,7 +66,8 @@ Extract from the epic:
 ## Step 2: Investigate the codebase
 
 This is the step that separates a grounded plan from a speculative one. Dispatch
-`cape:codebase-investigator` (or investigate manually) to answer:
+`cape:codebase-investigator` to answer the questions below. Fall back to Grep/Glob/Read if agent
+dispatch isn't available.
 
 - **Where does this change land?** Find the exact files and line ranges that need modification. Not
   the files the task _imagines_ exist — the files that _actually_ exist.

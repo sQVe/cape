@@ -50,8 +50,10 @@ Check for active br task context:
 br list --status in_progress 2>/dev/null
 ```
 
-If a br task is active, use its title and type to inform the branch name. If the user referenced a
-specific task, look it up. Otherwise, infer from the conversation what the work is about.
+If a br task is active, use its title and type to inform the branch name. If multiple tasks are
+in-progress, prefer the most recently updated one, or ask the user which task the branch is for. If
+the user referenced a specific task, look it up. Otherwise, infer from the conversation what the
+work is about.
 
 ---
 

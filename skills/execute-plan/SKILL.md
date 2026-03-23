@@ -106,6 +106,12 @@ what was built against what the task asked for, focusing on scope creep, unreque
 over-engineering. Rejected assumptions become scope corrections or inform the next task. Confirmed
 assumptions become outcome notes.
 
+**Review implementation:** Dispatch `cape:code-reviewer` to review the completed task against the
+epic's requirements and anti-patterns. Address any critical findings before creating the next task.
+
+**Verify claims:** Optionally dispatch `cape:fact-checker` if the task made specific claims about
+codebase structure, API behavior, or dependencies that should be confirmed before proceeding.
+
 Then step back and think about what happened.
 
 - What did this task reveal about the problem?
@@ -158,7 +164,7 @@ clear context before continuing.
 **Next:** <next-id>: [Title and brief description]
 **Progress:** [X/Y epic success criteria met]
 
-Run `/cape:commit` to commit, then `/cape:execute-plan` to continue.
+Commit the completed task with `/cape:commit`, then run `/cape:execute-plan` to continue with the next task.
 ```
 
 When all tasks are closed and all success criteria appear met:
@@ -211,6 +217,27 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 </example>
 
 </examples>
+
+<agent_references>
+
+## Dispatch `cape:code-reviewer` when:
+
+- A task is complete — review implementation against epic requirements before creating the next task
+- Catches plan deviations and anti-pattern violations early
+
+## Dispatch `cape:fact-checker` when:
+
+- Task made specific claims about codebase structure or API behavior
+- Verifying that assumptions from expand-task still hold after implementation
+
+## Dispatch `cape:challenge` when:
+
+- Task is complete — surfaces scope creep, unrequested features, and over-engineering
+
+Note: expand-task dispatches `cape:codebase-investigator` on behalf of execute-plan during step 2.
+If agents aren't available, continue manually with Glob/Grep/Read.
+
+</agent_references>
 
 <key_principles>
 

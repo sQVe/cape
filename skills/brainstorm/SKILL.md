@@ -33,7 +33,7 @@ research before proposing, validate design before stopping. </rigidity_level>
 
 - Executing existing plans with an epic already created
 - Fixing bugs
-- Refactoring existing code
+- Simple refactoring where the implementation path is already clear
 - Requirements already crystal clear and epic exists </when_to_use>
 
 <the_process>

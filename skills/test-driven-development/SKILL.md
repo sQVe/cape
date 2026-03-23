@@ -54,7 +54,7 @@ Write one test that describes the next behavior you need. The test should:
 - Read as a behavioral sentence ("returns error when input is empty")
 - Assert the expected outcome, not implementation details
 
-Run the test. It must fail. Inspect the failure output carefully:
+Dispatch `cape:test-runner` to run the test. It must fail. Inspect the failure output carefully:
 
 - **Right failure:** The assertion fires because the behavior does not exist yet. The test runs,
   reaches the assertion, and the assertion fails. This is what you want.
@@ -73,8 +73,9 @@ Write the minimum production code to make the failing test pass. Minimum means:
 - No generalizing beyond what the test demands
 - Hard-coded values are acceptable if that is all the test requires
 
-Run the test. It must pass. Then run the full test suite to confirm nothing else broke. If other
-tests fail, fix the regression before moving on.
+Dispatch `cape:test-runner` to run the test. It must pass. Then dispatch `cape:test-runner` to run
+the full test suite to confirm nothing else broke. If other tests fail, fix the regression before
+moving on.
 
 ## Step 3: REFACTOR — Improve the code
 
@@ -88,8 +89,8 @@ Good refactoring targets:
 - Overly complex conditionals that can be simplified
 - Test setup that repeats across multiple tests
 
-Run the full test suite after refactoring. Every test must still pass. If a test breaks during
-refactoring, undo the refactor and try a smaller step.
+Dispatch `cape:test-runner` to run the full test suite after refactoring. Every test must still
+pass. If a test breaks during refactoring, undo the refactor and try a smaller step.
 
 ## Step 4: Repeat
 
