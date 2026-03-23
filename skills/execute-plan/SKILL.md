@@ -70,7 +70,13 @@ br update <task-id> --status in_progress
 br show <task-id>
 ```
 
-Break the task into substeps and track them. Do the work -- write tests, implement, verify. Follow
+If the task's design field does not already contain an `## Expanded plan` section, invoke
+`cape:expand-task` to ground the task in codebase reality before writing any code. Expand-task
+investigates actual files and patterns, then appends a step-by-step plan with exact file paths, line
+numbers, and verification commands to the task's design field. Skip this if the section already
+exists.
+
+Follow the expanded plan's steps using TDD. Each step maps to one red-green-refactor cycle. Follow
 `cape:test-driven-development` when building new functionality or fixing defects within a task.
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
@@ -95,10 +101,10 @@ br close <task-id>
 
 After closing the task, challenge assumptions before planning the next step.
 
-**Challenge completed work:** Run a lightweight assumption challenge on what was just implemented.
-Compare what was built against what the task asked for. Focus on scope creep, unrequested features,
-and over-engineering. Rejected assumptions become scope corrections or inform the next task.
-Confirmed assumptions become outcome notes. Keep this focused (high and medium risk only).
+**Challenge completed work:** Run `cape:challenge` on what was just implemented. It will compare
+what was built against what the task asked for, focusing on scope creep, unrequested features, and
+over-engineering. Rejected assumptions become scope corrections or inform the next task. Confirmed
+assumptions become outcome notes.
 
 Then step back and think about what happened.
 
@@ -152,11 +158,19 @@ clear context before continuing.
 **Next:** <next-id>: [Title and brief description]
 **Progress:** [X/Y epic success criteria met]
 
-Run `/cape:execute-plan` to continue.
+Run `/cape:commit` to commit, then `/cape:execute-plan` to continue.
 ```
 
-When all success criteria appear met, run verification (tests, linting, hooks) and present findings
-before closing the epic.
+When all tasks are closed and all success criteria appear met:
+
+```
+## Checkpoint -- all tasks complete
+
+**Done:** [What was implemented across all tasks]
+**Progress:** All [N] success criteria appear met.
+
+Run `/cape:commit` to commit, then `/cape:finish-epic` to verify and close the epic.
+```
 
 </the_process>
 

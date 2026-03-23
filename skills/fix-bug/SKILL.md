@@ -131,6 +131,12 @@ Wait for user approval, then close:
 br close <bug-id>
 ```
 
+After closing, prompt for commit:
+
+```
+Bug closed. Run `/cape:commit` to commit the fix.
+```
+
 </the_process>
 
 <agent_references>

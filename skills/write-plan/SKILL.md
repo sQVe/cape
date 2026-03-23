@@ -138,6 +138,7 @@ First task [id] is ready to execute.
 
 The epic has [N] requirements, [N] anti-patterns, and [N] success criteria.
 
+Optionally run `/cape:task-refinement` to stress-test the first task before executing.
 Run `/cape:execute-plan` to continue.
 ```
 
