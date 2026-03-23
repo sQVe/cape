@@ -31,20 +31,28 @@ Always active. Injected at session start via hook. Applies to every user message
 Before responding to any user message, scan this table. If a skill matches, load it with the Skill
 tool.
 
-| User intent                                          | Skill                  | Notes                      |
-| ---------------------------------------------------- | ---------------------- | -------------------------- |
-| Build, add, create, implement something new          | `cape:brainstorm`      | Starts the build chain     |
-| "How should I approach X", unclear requirements      | `cape:brainstorm`      | Design before code         |
-| Formalize a design into an epic                      | `cape:write-plan`      | Requires brainstorm output |
-| "Continue", "next task", resume planned work         | `cape:execute-plan`    | Picks up from br state     |
-| Something broken, error, stack trace, "doesn't work" | `cape:debug-issue`     | Investigation only         |
-| Fix a diagnosed bug, "fix br-N"                      | `cape:fix-bug`         | Requires br bug to exist   |
-| Refine, stress-test, harden a task before executing  | `cape:task-refinement` | Between plan and execute   |
-| Find untested behavior, test gaps, what's untested   | `cape:find-test-gaps`  | Standalone                 |
-| Challenge, audit, check assumptions                  | `cape:challenge`       | Standalone or dispatched   |
-| Create a branch, start work on a branch              | `cape:branch`          | Standalone                 |
-| Commit, wrap up, save changes                        | `cape:commit`          | Standalone                 |
-| br/beads operations, issue tracking                  | `cape:beads`           | Reference skill            |
+| User intent                                                         | Skill                          | Notes                        |
+| ------------------------------------------------------------------- | ------------------------------ | ---------------------------- |
+| Build, add, create, implement something new                         | `cape:brainstorm`              | Starts the build chain       |
+| "How should I approach X", unclear requirements                     | `cape:brainstorm`              | Design before code           |
+| Refactor code, restructure, reorganize                              | `cape:brainstorm`              | Plan refactors like features |
+| Formalize a design into an epic                                     | `cape:write-plan`              | Requires brainstorm output   |
+| "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`            | Picks up from br state       |
+| Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`             | Investigation only           |
+| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`                 | Requires br bug to exist     |
+| Refine, stress-test, harden a task before executing                 | `cape:task-refinement`         | Between plan and execute     |
+| Find untested behavior, test gaps, what's untested                  | `cape:find-test-gaps`          | Standalone                   |
+| Write tests for X, TDD, red-green-refactor, test before code        | `cape:test-driven-development` | Internal to execute/fix-bug  |
+| Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`               | Standalone                   |
+| Create a branch, start work on a branch                             | `cape:branch`                  | Standalone                   |
+| Finish, wrap up, close out an epic, all tasks done                  | `cape:finish-epic`             | End of build chain           |
+| Commit, save changes                                                | `cape:commit`                  | Standalone                   |
+| br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`                   | Reference skill              |
+
+**Internal skills** (called by other skills, not user-routed):
+
+- `cape:expand-task` — called by `execute-plan` to ground tasks in codebase reality before coding
+- `cape:test-driven-development` — called by `execute-plan` and `fix-bug` for RED-GREEN-REFACTOR
 
 If nothing matches, proceed without a skill.
 
@@ -57,15 +65,20 @@ Cape skills form two workflow chains. Each link hands off to the next. Don't ski
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm → write-plan → STOP → [task-refinement] → execute-plan (loop) → commit
+brainstorm → challenge → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → commit loop) → finish-epic → commit
 ```
 
 - `brainstorm` produces a design summary
+- `challenge` surfaces and resolves hidden assumptions in the design
 - `write-plan` formalizes it into a br epic with one first task
 - **STOP** — present the epic and wait. The user decides when to start building.
 - `task-refinement` (optional) stress-tests the task before implementation
-- `execute-plan` implements one task, reflects, creates the next task, stops for review
-- `commit` persists each completed unit of work
+- `execute-plan` implements one task, challenges completed work, creates the next task, stops for
+  review
+  - `expand-task` (internal, automatic) grounds the task in codebase reality before coding starts
+  - `commit` persists each completed unit of work
+- `finish-epic` verifies all success criteria, runs final checks, closes the epic
+- `commit` persists any remaining changes
 
 **Fix chain** — for bugs and defects:
 
@@ -74,7 +87,7 @@ debug-issue → fix-bug → commit
 ```
 
 - `debug-issue` investigates to root cause, creates a br bug
-- `fix-bug` writes a failing test, implements the minimal fix, verifies
+- `fix-bug` writes a failing test, implements the minimal fix, verifies, prompts for commit
 - `commit` persists the fix
 
 **Why chains matter:** brainstorm researches the codebase and surfaces assumptions before you commit
