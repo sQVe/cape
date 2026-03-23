@@ -16,15 +16,21 @@ relevant notes, past decisions, and references that inform the current design.
    collection.
 
 2. **Retrieve top hits**: For each distinct document that scores well across both searches, fetch
-   the full document via `mcp__plugin_qmd_qmd__get` using its path or docid.
+   the full document via `mcp__plugin_qmd_qmd__get` using its path or docid. When multiple documents
+   score well, use `mcp__plugin_qmd_qmd__multi_get` for batch retrieval.
 
-3. **Report actionable findings**:
+3. **Fall back to deep search**: If both keyword and vector searches return weak results (low
+   scores, few hits), use `mcp__plugin_qmd_qmd__deep_search` which auto-expands the query into
+   variations and reranks results. This is slower (~10s) but surfaces adjacent concepts that exact
+   queries miss.
+
+4. **Report actionable findings**:
    - Document path and title
    - Key excerpts directly relevant to the topic
    - Past decisions or conclusions the user reached
    - References or links captured in the notes
 
-4. **Handle no-results gracefully**: "No relevant notes found for X" is a valid answer. Explain what
+5. **Handle no-results gracefully**: "No relevant notes found for X" is a valid answer. Explain what
    queries you tried.
 
 ## Search strategy
