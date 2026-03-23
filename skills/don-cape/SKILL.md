@@ -42,6 +42,7 @@ tool.
 | Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`                 | Requires br bug to exist     |
 | Refine, stress-test, harden a task before executing                 | `cape:task-refinement`         | Between plan and execute     |
 | Find untested behavior, test gaps, what's untested                  | `cape:find-test-gaps`          | Standalone                   |
+| Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`           | Standalone                   |
 | Write tests for X, TDD, red-green-refactor, test before code        | `cape:test-driven-development` | Internal to execute/fix-bug  |
 | Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`               | Standalone                   |
 | Create a branch, start work on a branch                             | `cape:branch`                  | Standalone                   |
