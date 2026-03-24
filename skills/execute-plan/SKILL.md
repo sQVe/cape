@@ -175,8 +175,10 @@ When all tasks are closed and all success criteria appear met:
 **Done:** [What was implemented across all tasks]
 **Progress:** All [N] success criteria appear met.
 
-Run `/cape:commit` to commit, then `/cape:finish-epic` to verify and close the epic.
+Committing and running finish-epic to verify and close.
 ```
+
+Then run `/cape:commit` followed by `/cape:finish-epic` automatically.
 
 </the_process>
 
