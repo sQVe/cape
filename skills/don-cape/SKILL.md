@@ -50,6 +50,7 @@ tool.
 | Finish, wrap up, close out an epic, all tasks done                  | `cape:finish-epic`             | End of build chain           |
 | Commit, save changes                                                | `cape:commit`                  | Standalone                   |
 | Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`                      | Standalone                   |
+| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`                  | Standalone                   |
 | br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`                   | Reference skill              |
 
 **Internal skills** (called by other skills, not user-routed):
