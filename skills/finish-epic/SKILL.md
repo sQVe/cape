@@ -7,7 +7,7 @@ description: >
   it, or execute-plan detects all success criteria appear met. Runs final verification (tests,
   linting, hooks), checks every success criterion with evidence, executes manual verification steps
   from the epic, appends an Outcome to the epic, and closes it. Also triggers on epic IDs combined
-  with closure intent. NOT for: implementing tasks (use execute-plan), creating plans (use
+  with closure intent. Do NOT use for implementing tasks (use execute-plan), creating plans (use
   write-plan), or git operations (merge/PR/push — user handles those).
 ---
 
