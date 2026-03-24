@@ -101,8 +101,11 @@ Dead-end documentation prevents wasted re-investigation when obstacles arise lat
 
 Assess whether the idea warrants divergent exploration or has an obvious path:
 
+- **Interface mode** — the core design question is about an interface, API surface, module boundary,
+  or type contract. Delegate to `cape:design-an-interface` instead of running divergent mode inline.
+  Its comparison and recommendation feed back as the chosen approach and approaches considered.
 - **Divergent mode** — the idea touches multiple components, has competing viable approaches, or
-  involves architectural decisions. Dispatch 3 parallel design agents.
+  involves architectural decisions beyond interface shape. Dispatch 3 parallel design agents.
 - **Inline mode** — single-file change, one obvious pattern to follow, trivial scope. Propose 1-2
   approaches directly without agents.
 
@@ -226,6 +229,14 @@ Design summary complete. Run `/cape:write-plan` to formalize this into a br epic
 - User mentions checking their notes or past research
 - User references a topic they may have explored before
 - You want to find past decisions relevant to the design
+
+## Dispatch `cape:design-an-interface` when (interface mode):
+
+- The core design question is about an interface, API surface, or module boundary
+- Multiple viable interface shapes exist and the choice drives the architecture
+- The user's idea is fundamentally about what callers should see
+
+Its recommendation feeds into the design summary as the chosen approach.
 
 ## Dispatch 3 parallel design sub-agents when (divergent mode):
 
