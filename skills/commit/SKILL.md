@@ -28,6 +28,15 @@ selective staging, always conventional format, always confirm before committing.
 - Creating pull requests
 - Branch operations </when_to_use>
 
+<arguments>
+
+- **--no-confirm** (optional): Skip confirmation (step 4). Useful when other cape skills call
+  commit.
+- **commit-message** (optional): Use this message instead of generating one. Still present the
+  staging plan for review unless `--no-confirm` is also passed.
+
+</arguments>
+
 <the_process>
 
 ## Step 1: Gather context
@@ -146,8 +155,20 @@ EOF
 )"
 ```
 
-After the commit, show `git status --short` to confirm state. If there are remaining changes from
-another logical group, loop back to step 3 for the next commit.
+If the commit **fails** (pre-commit hook, lint error):
+
+1. Analyze the failure output
+2. Auto-fix if possible (formatting, lint issues)
+3. Re-stage and re-attempt the commit
+4. After 3 failures: report the issues and ask the user to fix manually
+
+After a successful commit, show:
+
+- Commit hash and message summary
+- `git status --short` to confirm state
+- Remaining uncommitted changes, if any
+
+If there are remaining changes from another logical group, loop back to step 3 for the next commit.
 
 </the_process>
 
@@ -220,3 +241,17 @@ The subject says what changed; the body explains why. </example>
 6. **Never amend without being asked** — always create new commits
 
 </critical_rules>
+
+<anti_patterns>
+
+After presenting the staging plan and message, NEVER:
+
+- "Let me create/start/begin..."
+- "I'll now..."
+- "Starting with the first..."
+- "Now I will..."
+
+Present findings completely, then immediately proceed to the confirm step (or execute if
+`--no-confirm`).
+
+</anti_patterns>
