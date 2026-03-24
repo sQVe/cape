@@ -1,5 +1,6 @@
 ---
 name: beads
+user-invocable: false
 description: >
   How to use br (beads) — the CLI issue tracker for epics, tasks, and bugs. Use this skill whenever
   the user mentions br, beads, .beads, or issue tracking. Triggers on:

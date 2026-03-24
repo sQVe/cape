@@ -1,5 +1,6 @@
 ---
 name: test-driven-development
+user-invocable: false
 description: >
   Enforce the RED-GREEN-REFACTOR cycle when implementing features or fixing bugs. Use this skill
   whenever writing production code that has a corresponding test suite. Triggers on: implementing a
