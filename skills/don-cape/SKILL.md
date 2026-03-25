@@ -86,11 +86,12 @@ Cape skills form two workflow chains. Each link hands off to the next. Don't ski
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm [includes challenge] → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
+brainstorm [challenge optional] → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
 ```
 
-- `brainstorm` produces a design summary
-- `challenge` is invoked by brainstorm to surface hidden assumptions before locking the design
+- `brainstorm` is conversational — never enters plan mode. It checkpoints after research and after
+  proposing approaches, waiting for user input each time. Produces a design summary.
+- `challenge` is offered by brainstorm (opt-in) to surface hidden assumptions before locking
 - `write-plan` formalizes it into a br epic with one first task
 - **STOP** — present the epic and wait. The user decides when to start building.
 - `task-refinement` (optional) stress-tests the task before implementation

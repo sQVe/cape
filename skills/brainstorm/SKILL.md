@@ -15,11 +15,17 @@ description:
 into a `br` epic. Research the codebase, ask Socratic questions, generate competing designs under
 different constraints, and produce a self-contained design summary.
 
-Core contract: no design gets locked without research and constraint-driven design exploration.
-</skill_overview>
+Core contract: no design gets locked without research, constraint-driven design exploration, and
+iterative user discussion at every stage. </skill_overview>
 
 <rigidity_level> HIGH FREEDOM — Adapt questioning style and research depth to context, but always:
-research before proposing, validate design before stopping. </rigidity_level>
+research before proposing, checkpoint after each step, never advance without user input.
+</rigidity_level>
+
+<mode> CONVERSATIONAL — Brainstorm is a discussion, not a plan artifact. Never enter plan mode. If
+plan mode is active when brainstorm is invoked, exit it immediately and proceed conversationally.
+The design summary lives in conversation context; `write-plan` formalizes it into a br epic later.
+</mode>
 
 <when_to_use>
 
@@ -38,7 +44,13 @@ research before proposing, validate design before stopping. </rigidity_level>
 
 <the_process>
 
-## Step 1: Understand the idea
+Every step ends with a **CHECKPOINT** — present findings and wait for user input. Never advance to
+the next step until the user responds. The user may discuss, redirect, ask follow-ups, or say
+"continue" to proceed. This is a conversation, not a pipeline.
+
+---
+
+## Step 1: Research and understand
 
 **Announce:** "I'm using the brainstorming skill to refine your idea into a design."
 
@@ -79,23 +91,32 @@ Maintain a running "Key Decisions" table throughout the conversation:
 
 This table feeds directly into the design summary.
 
+### CHECKPOINT: Present research summary
+
+Present what you found — do not propose solutions yet:
+
+```
+## Research summary
+
+**Codebase:** [existing patterns, relevant files, constraints discovered]
+**External:** [API docs, library capabilities — if researched]
+**Dead ends:** [what you explored, what you found, why it's not relevant]
+**Key decisions so far:** [table of user answers from clarifying questions]
+```
+
+**STOP here.** Ask: "Anything to discuss or redirect before I propose approaches?"
+
+The user may:
+
+- Discuss findings, ask follow-ups, correct misunderstandings
+- Point out missed context or redirect research
+- Say "continue" to proceed to Step 2
+
+Do NOT proceed to Step 2 until the user responds.
+
 ---
 
-## Step 2: Research and propose approaches
-
-**Research order:**
-
-1. Codebase patterns first — if a pattern exists, use it unless clearly unwise
-2. External docs second — APIs, libraries, community practices
-3. Ask user if research yields nothing useful
-
-**Capture findings as you go:**
-
-- Codebase: file paths, patterns, relevant code snippets
-- External: API capabilities, library constraints, doc URLs
-- Dead ends: what you explored, what you found, why you abandoned it
-
-Dead-end documentation prevents wasted re-investigation when obstacles arise later.
+## Step 2: Propose approaches
 
 **Generate competing designs:**
 
@@ -123,9 +144,13 @@ far) and designs under a different constraint:
 If agents aren't available, simulate the constraints yourself: design each approach sequentially
 under the stated constraint.
 
-**Compare and recommend:**
+**Inline mode — propose directly:**
 
-After all three designs return, compare side by side:
+For simple ideas with an obvious path, skip agents and propose 1-2 approaches inline with pros/cons.
+
+### CHECKPOINT: Present approaches for discussion
+
+Present approaches side by side — do not pick one yet:
 
 ```
 Three designs explored under different constraints:
@@ -146,28 +171,42 @@ I recommend option [N] because [specific reason, especially codebase consistency
 The other designs revealed [insight the recommended approach should absorb].
 ```
 
-Lead with recommended option. Explain why. Note useful ideas from rejected designs worth absorbing.
+**STOP here.** The comparison is the discussion artifact. Let the user react.
 
-**Inline mode — propose directly:**
+The user may:
 
-For simple ideas with an obvious path, skip agents and propose 1-2 approaches inline with pros/cons.
+- Pick an approach
+- Ask to combine elements from multiple approaches
+- Want to explore a direction not covered
+- Raise concerns or trade-offs
+- Ask for more detail on a specific approach
+
+Iterate until the user signals satisfaction with a direction. Only then proceed to Step 3.
 
 ---
 
-## Step 3: Challenge and lock design
+## Step 3: Challenge assumptions (opt-in)
 
-Before locking the design, run `cape:challenge` to surface hidden assumptions. Challenge walks each
-assumption interactively — one per turn — with researched recommendations. Confirmed assumptions
-become requirements or anti-patterns in the design summary. Rejected ones trigger scope reductions
-or requirement changes.
+After the approach is selected, offer challenge:
 
-After challenge completes (or the user skips it), present the design summary.
+"Want me to run `cape:challenge` to stress-test this design for hidden assumptions, or skip straight
+to the design summary?"
 
-**Present design summary:**
+If the user wants challenge:
 
-After the approach is selected and assumptions are resolved, present a structured design summary.
-This summary must be self-contained -- `cape:write-plan` should be able to create the epic without
-re-asking brainstorm's questions.
+- Run `cape:challenge` to surface hidden assumptions
+- Challenge walks each assumption interactively — one per turn — with researched recommendations
+- Confirmed assumptions become requirements or anti-patterns in the design summary
+- Rejected ones trigger scope reductions or requirement changes
+
+If the user skips, proceed directly to Step 4.
+
+---
+
+## Step 4: Lock design
+
+Present the design summary. This summary must be self-contained — `cape:write-plan` should be able
+to create the epic without re-asking brainstorm's questions.
 
 ```
 ## Design summary
@@ -263,6 +302,28 @@ If sub-agents aren't available, simulate constraints sequentially.
 <examples>
 
 <example>
+<scenario>Brainstorm rushes through without stopping for discussion</scenario>
+
+User: "Add template support to our Tiptap editor. We have a POC."
+
+**Wrong:** Research POC + editor → ask intake questions → propose full implementation plan → present
+design summary. The user never gets to discuss research findings or debate approaches — only answer
+data-gathering questions. By the time they see the design, all decisions are made.
+
+**Right:**
+
+1. Research POC and current editor
+2. CHECKPOINT: "Here's what I found — the POC has X, the editor currently does Y, existing patterns
+   suggest Z. Anything to discuss before I propose approaches?"
+3. User: "The POC also has feature W you missed" — adjusts understanding
+4. Propose 3 approaches
+5. CHECKPOINT: "I recommend option 2. What do you think?"
+6. User: "Option 2 but let's drop the validation for now" — narrows scope
+7. Offer challenge — user skips
+8. Design summary with reduced scope
+9. Stop: "Run `/cape:write-plan`" </example>
+
+<example>
 <scenario>Developer skips research, proposes approach without checking codebase</scenario>
 
 User: "Add OAuth authentication"
@@ -274,13 +335,17 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 
 1. Dispatch codebase-investigator: finds passport.js at auth/passport-config.ts
 2. Dispatch internet-researcher: finds passport-google-oauth20 strategy
-3. Propose extending existing passport setup (matches codebase) vs Auth0 (vendor dependency) vs
-   custom JWT (scope creep)
-4. Challenge assumptions, present design summary
-5. Stop: "Run `/cape:write-plan` to formalize this into a br epic." </example>
+3. CHECKPOINT: present research summary — existing passport setup, available strategies
+4. User discusses, confirms OAuth provider choice
+5. Propose extending existing passport setup vs Auth0 vs custom JWT
+6. CHECKPOINT: present comparison, recommend extending passport
+7. User picks passport extension, asks about refresh tokens
+8. Iterate on refresh token handling
+9. Offer challenge — user accepts, 2 assumptions resolved
+10. Design summary → stop </example>
 
 <example>
-<scenario>Complex design dispatches divergent agents, simple one skips them</scenario>
+<scenario>Complex design dispatches divergent agents</scenario>
 
 User: "Build a plugin system for our CLI tool"
 
@@ -291,18 +356,18 @@ complexity.
 **Right:**
 
 1. Research reveals 3 existing plugins hardcoded in `src/plugins/`
-2. Divergent mode — dispatch 3 design agents:
-   - Agent 1 (minimal): expose a single `run(args)` function contract
-   - Agent 2 (flexible): plugin registry with lifecycle hooks and dependency injection
-   - Agent 3 (pragmatic): simple interface with optional hooks for two known extension points
-3. Compare: Agent 3 covers real use cases without Agent 2's over-engineering
-4. Challenge: run `cape:challenge` — surfaces plugin discovery, error handling, versioning
-   assumptions; 3 rounds resolve all
-5. Design summary locks pragmatic approach with anti-pattern "NO dependency injection framework
-   (reason: 3 plugins don't justify a DI container)" </example>
+2. CHECKPOINT: present research — 3 plugins, current loading pattern, no plugin interface
+3. User confirms scope: "just these 3, maybe 1-2 more later"
+4. Divergent mode — dispatch 3 design agents
+5. CHECKPOINT: compare approaches, recommend pragmatic
+6. User: "I like pragmatic but let's take the type contract from minimal"
+7. Refine hybrid approach
+8. Offer challenge — user accepts, surfaces plugin discovery assumption
+9. Design summary with anti-pattern "NO dependency injection framework (reason: 3 plugins don't
+   justify a DI container)" </example>
 
 <example>
-<scenario>Epic created without anti-patterns — requirements get watered down during implementation</scenario>
+<scenario>Anti-patterns prevent implementation shortcuts</scenario>
 
 **Wrong:** Epic says "Tokens stored securely" with no anti-patterns. During implementation, hits
 complexity → stores tokens in localStorage. No guardrail prevented it.
@@ -316,9 +381,10 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 <key_principles>
 
 - **Research before proposing** — use agents to understand codebase and external context
+- **Checkpoint after every step** — present findings, wait for user input, never auto-advance
 - **Constraint-driven design** — competing constraints reveal trade-offs a single perspective misses
 - **Scale effort to complexity** — divergent agents for complex ideas, inline for simple ones
-- **Challenge before locking** — run `cape:challenge` to surface and resolve hidden assumptions
+- **Challenge is opt-in** — offer it, don't force it
 - **Design summary is the handoff** — contains everything write-plan needs to create the epic
 - **Anti-patterns prevent shortcuts** — every entry uses "NO X (reason: Y)" format
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
@@ -327,12 +393,16 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 
 <critical_rules>
 
-1. **Research BEFORE proposing** — use agents to understand context
-2. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
+1. **Checkpoint after each step** — present findings/proposals and STOP. Never advance to the next
+   step without user input. The user may discuss, redirect, iterate, or say "continue".
+2. **Research BEFORE proposing** — use agents to understand context
+3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
+4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
    simple ideas with obvious paths
-3. **Challenge before locking** — run `cape:challenge` before presenting design summary
-4. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
-5. **Stop after design summary** — present summary and wait for user to run write-plan
-6. **Design summary must be self-contained** — write-plan should not need to re-ask questions
+5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't run
+   automatically
+6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
+7. **Stop after design summary** — present summary and wait for user to run write-plan
+8. **Design summary must be self-contained** — write-plan should not need to re-ask questions
 
 </critical_rules>
