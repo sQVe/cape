@@ -40,8 +40,6 @@ adapt to context. </rigidity_level>
 
 ## Step 1: Adopt or create the bug
 
-**Announce:** "I'm using the fix-bug skill to fix this end-to-end."
-
 **If a br bug already exists** (from debug-issue or user reference):
 
 ```bash
@@ -75,8 +73,8 @@ may be incomplete.
 
 ## Step 3: Fix with TDD
 
-Follow `cape:test-driven-development` for the RED-GREEN-REFACTOR cycle. The bug's root cause from
-the br bug is your test target.
+Load `cape:test-driven-development` with the Skill tool for the RED-GREEN-REFACTOR cycle. The bug's
+root cause from the br bug is your test target.
 
 **Scope guard:**
 

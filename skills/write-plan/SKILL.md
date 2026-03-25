@@ -37,8 +37,6 @@ non-negotiable. Validation depth and detail-filling adapt to the design's comple
 
 ## Step 1: Verify design context
 
-**Announce:** "I'm using the write-plan skill to formalize your design into a br epic."
-
 Check that a design summary exists in conversation context. If not, tell the user to run
 `cape:brainstorm` first and stop.
 
@@ -105,16 +103,14 @@ br create "Task 1: [Specific deliverable]" \
 ## Execution mode
 [HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
 
-## Implementation
-1. Study existing code
-   [Point to 2-3 similar implementations: file:line]
+## Behaviors
+[Each behavior is one TDD cycle. List them in implementation order.]
+- [Behavior 1: "returns error when input is empty"]
+- [Behavior 2: "parses valid input into sections"]
+- ...
 
-2. Write tests first (`cape:test-driven-development`)
-   [Specific test cases for this task]
-
-3. Implementation checklist
-   - [ ] file:line - function_name() - [what it does]
-   - [ ] test:line - test_name() - [what it tests]
+## References
+[Point to 1-3 similar implementations or patterns: file:line]
 
 ## Success criteria
 - [ ] [Specific, measurable outcome]

@@ -70,14 +70,15 @@ br update <task-id> --status in_progress
 br show <task-id>
 ```
 
-If the task's design field does not already contain an `## Expanded plan` section, invoke
-`cape:expand-task` to ground the task in codebase reality before writing any code. Expand-task
-investigates actual files and patterns, then appends a step-by-step plan with exact file paths, line
-numbers, and verification commands to the task's design field. Skip this if the section already
-exists.
+If the task's design field does not already contain an `## Expanded plan` section, load
+`cape:expand-task` with the Skill tool to ground the task in codebase reality before writing any
+code. Expand-task investigates actual files and patterns, then appends a step-by-step plan with
+exact file paths, line numbers, and verification commands to the task's design field. Skip this if
+the section already exists.
 
-Follow the expanded plan's steps using TDD. Each step maps to one red-green-refactor cycle. Follow
-`cape:test-driven-development` when building new functionality or fixing defects within a task.
+Follow the expanded plan's steps using TDD. Each step maps to one red-green-refactor cycle. Load
+`cape:test-driven-development` with the Skill tool when building new functionality or fixing defects
+within a task.
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
