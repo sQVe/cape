@@ -266,18 +266,15 @@ br create "Improve tests in [module name]" \
 ## Goal
 Fix [R] RED and [Y] YELLOW tests in [file path].
 
-## RED — Remove or replace
-1. [test name] (line N) — [verdict]. Replace with: [specific replacement].
-2. ...
+## TDD classification
+REQUIRED — each replacement test must fail against broken production code before passing.
 
-## YELLOW — Strengthen
-1. [test name] (line N) — [verdict]. Fix: [specific improvement].
-2. ...
+## Behaviors
+- [test name] (RED, line N): replace with test that verifies [specific behavior]
+- [test name] (YELLOW, line N): strengthen assertion to check [specific value]
+- GREEN tests: [list tests to leave unchanged]
 
-## GREEN — No action
-[List green tests so the implementer knows what not to touch]
-
-## Implementation
+## References
 - Test file: [path]
 - Production file: [path]
 - Framework: [framework]

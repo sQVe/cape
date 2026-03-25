@@ -52,8 +52,13 @@ design field). If it does, skip expansion — the task is already grounded.
 Extract from the task:
 
 - **Goal** — what this task delivers
-- **Implementation hints** — any file paths, patterns, or approaches mentioned
+- **TDD classification** — REQUIRED or EXEMPT; determines whether steps need Test fields
+- **Behaviors** — the list of TDD cycles to ground in real files
 - **Success criteria** — what "done" looks like
+
+If the task is missing `## TDD classification` or `## Behaviors`, flag this to execute-plan before
+expanding. These sections are required by `resources/task-template.md` — a task without them cannot
+be meaningfully expanded into TDD-compatible steps.
 
 Extract from the epic:
 
@@ -118,7 +123,10 @@ execute-plan rather than producing a sprawling plan.
 - **Pattern** references a real file the step should mirror. Omit if no relevant pattern exists.
 - **Changes** reference real files at real line numbers. For new files, name them following existing
   conventions found during investigation.
-- **Test** describes the specific test case for this step — feeds directly into TDD.
+- **Test** describes the specific test case for this step — feeds directly into TDD. For
+  TDD-REQUIRED tasks (the default), every step must have a Test field. A step without a testable
+  behavior should be merged into an adjacent step or split differently. For TDD-EXEMPT tasks, omit
+  the Test field.
 - **Verify** is an exact shell command. Not "run tests" — `npm test -- --grep 'auth strategy'` or
   `go test ./internal/auth/... -run TestGoogleStrategy`.
 
@@ -225,5 +233,10 @@ produce the expanded plan — let execute-plan handle the split. </example>
 4. **Skip if already expanded** — check for `## Expanded plan` section before doing work
 5. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
 6. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
+7. **TDD-REQUIRED steps need tests** — every step in a TDD-REQUIRED task must have a Test field;
+   steps without testable behavior must be merged or split differently
+8. **Flag malformed tasks** — if the task is missing `## TDD classification` or `## Behaviors`,
+   report this to execute-plan before expanding; these sections are required for TDD-compatible step
+   generation
 
 </critical_rules>
