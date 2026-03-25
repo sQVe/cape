@@ -240,7 +240,7 @@ to create the epic without re-asking brainstorm's questions.
 **Stop and hand off:**
 
 ```
-Design summary complete. Run `/cape:write-plan` to formalize this into a br epic.
+Design summary complete. Next step: formalize into a br epic with `cape:write-plan`.
 ```
 
 </the_process>
@@ -319,7 +319,7 @@ data-gathering questions. By the time they see the design, all decisions are mad
 6. User: "Option 2 but let's drop the validation for now" — narrows scope
 7. Offer challenge — user skips
 8. Design summary with reduced scope
-9. Stop: "Run `/cape:write-plan`" </example>
+9. Stop: suggest `cape:write-plan` as next step </example>
 
 <example>
 <scenario>Developer skips research, proposes approach without checking codebase</scenario>

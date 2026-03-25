@@ -121,6 +121,11 @@ For each assumption the user resolves:
   questions
 - **Hard cap:** after reaching the depth limit, summarize remaining unresolved items
 
+**Output contract (when called by brainstorm or execute-plan):**
+
+The calling skill incorporates this summary: confirmed constraints feed the design summary's
+Requirements or Anti-patterns section; rejected assumptions trigger revisions before proceeding.
+
 **Present challenge summary after resolution:**
 
 ```

@@ -71,10 +71,30 @@ may be incomplete.
 
 ---
 
-## Step 3: Fix with TDD
+## Step 3: Fix the bug
 
-Load `cape:test-driven-development` with the Skill tool for the RED-GREEN-REFACTOR cycle. The bug's
-root cause from the br bug is your test target.
+The bug's root cause from the br bug is your test target.
+
+**RED — Write a failing regression test:**
+
+Write a test that reproduces the bug. The failing test IS the bug reproduction. Dispatch
+`cape:test-runner` to run the test. It must fail. Inspect the failure:
+
+- **Right failure:** The assertion fires because the buggy behavior still exists. This is what you
+  want.
+- **Wrong failure:** Import error, syntax error, missing module, type error. Fix the test until the
+  failure comes from the assertion itself.
+
+Do not write any production code until you have a test that fails for the right reason.
+
+**GREEN — Fix the bug:**
+
+Write the minimum code to make the failing test pass. Dispatch `cape:test-runner` to confirm the
+test passes and the full suite still passes.
+
+**REFACTOR — Clean up if needed:**
+
+Look at the fix and its immediate surroundings. If nothing needs improvement, move on.
 
 **Scope guard:**
 
@@ -82,8 +102,6 @@ root cause from the br bug is your test target.
 - Don't improve error handling elsewhere
 - Don't add features
 - Don't clean up unrelated tests
-
-Run the full test suite to catch regressions introduced by the fix.
 
 If the full suite reveals new failures, investigate whether your fix caused them before proceeding.
 
@@ -133,11 +151,7 @@ Wait for user approval, then close:
 br close <bug-id>
 ```
 
-After closing, prompt for commit:
-
-```
-Bug closed. Run `/cape:commit` to commit the fix.
-```
+After closing, load `cape:commit` with the Skill tool to commit the fix.
 
 </the_process>
 
@@ -227,9 +241,6 @@ query) remains exploitable.
 1. **br bug must exist before fixing** -- adopt from debug-issue or create via debug-issue dispatch
 2. **Failing test before code change** -- RED before GREEN, always
 3. **Full test suite before closing** -- no regressions introduced
-4. **Append Outcome to br bug** -- `br show` then `br update --design` with existing content plus
-   outcome
-5. **Use `--labels "fix-bug"`** -- skill name as label per beads convention
-6. **Confirm before closing** -- present fix summary and get user approval
+4. **Confirm before closing** -- present fix summary and get user approval
 
 </critical_rules>

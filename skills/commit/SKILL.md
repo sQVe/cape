@@ -233,12 +233,11 @@ The subject says what changed; the body explains why. </example>
 
 <critical_rules>
 
-1. **Never `git add .` or `git add -A`** — always stage specific files
-2. **Never commit without user approval** — present message and staging first
-3. **Never skip hooks** — no `--no-verify` unless the user explicitly asks
-4. **One logical change per commit** — if the diff has mixed concerns, split
-5. **Conventional commit format** — `type(scope): subject` matching project conventions
-6. **Never amend without being asked** — always create new commits
+1. **Never commit without user approval** — present message and staging first
+2. **Never skip hooks** — no `--no-verify` unless the user explicitly asks
+3. **One logical change per commit** — if the diff has mixed concerns, split
+4. **Conventional commit format** — `type(scope): subject` matching project conventions
+5. **Never amend without being asked** — always create new commits
 
 </critical_rules>
 

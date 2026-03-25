@@ -47,6 +47,8 @@ br list --status in_progress
 br ready
 ```
 
+- **Multiple open epics** -- ask the user which epic to work on, then use
+  `br ready --parent <epic-id>`
 - **In-progress task found** -- pick up where it left off (step 2)
 - **Ready tasks available** -- load epic context, then execute the next one (step 2)
 - **All tasks closed, epic open** -- check if success criteria are met (step 4)
@@ -63,10 +65,9 @@ br show <epic-id>
 
 ## Step 2: Execute
 
-Mark the task in-progress and read its details:
+Read the task's details:
 
 ```bash
-br update <task-id> --status in_progress
 br show <task-id>
 ```
 
@@ -76,8 +77,16 @@ code. Expand-task investigates actual files and patterns, then appends a step-by
 exact file paths, line numbers, and verification commands to the task's design field. Skip this if
 the section already exists.
 
-Load `cape:test-driven-development` with the Skill tool before writing any production code. Each
-step in the expanded plan maps to one red-green-refactor cycle.
+After expand-task returns, re-read the task (`br show <task-id>`). If the design field contains a
+`## Split recommendation` section instead of an expanded plan, the task is too large. Close it with
+reason "split per expand-task recommendation", create the recommended subtasks, and stop for user
+review.
+
+Once an expanded plan exists, mark the task in-progress:
+
+```bash
+br update <task-id> --status in_progress
+```
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
@@ -99,15 +108,15 @@ br close <task-id>
 
 ## Step 3: Reflect and plan
 
-After closing the task, challenge assumptions before planning the next step.
-
-**Challenge completed work:** Run `cape:challenge` on what was just implemented. It will compare
-what was built against what the task asked for, focusing on scope creep, unrequested features, and
-over-engineering. Rejected assumptions become scope corrections or inform the next task. Confirmed
-assumptions become outcome notes.
+After closing the task, review and optionally challenge before planning the next step.
 
 **Review implementation:** Dispatch `cape:code-reviewer` to review the completed task against the
 epic's requirements and anti-patterns. Address any critical findings before creating the next task.
+
+**Challenge completed work (opt-in):** Ask: "Want me to run `cape:challenge` to check for scope
+creep or over-engineering, or proceed to the next task?" If the user accepts, run `cape:challenge`
+on what was just implemented, focusing on scope creep, unrequested features, and over-engineering.
+Skip for straightforward single-file changes.
 
 **Verify claims:** Optionally dispatch `cape:fact-checker` if the task made specific claims about
 codebase structure, API behavior, or dependencies that should be confirmed before proceeding.
@@ -164,8 +173,16 @@ clear context before continuing.
 **Next:** <next-id>: [Title and brief description]
 **Progress:** [X/Y epic success criteria met]
 
-Commit the completed task with `/cape:commit`, then run `/cape:execute-plan` to continue with the next task.
+Continue with `cape:execute-plan` to pick up the next task.
 ```
+
+Check the task's `## Execution mode` field (set by write-plan). **HITL (human-in-the-loop):**
+present checkpoint and stop as normal. **AFK (autonomous):** skip the stop — load `cape:commit`,
+create the next task, and continue into it without waiting for user input. If no execution mode is
+set, default to HITL.
+
+Load `cape:commit` with the Skill tool to commit the completed task, then stop (HITL) or continue
+(AFK).
 
 When all tasks are closed and all success criteria appear met:
 
@@ -178,7 +195,8 @@ When all tasks are closed and all success criteria appear met:
 Committing and running finish-epic to verify and close.
 ```
 
-Then run `/cape:commit` followed by `/cape:finish-epic` automatically.
+Then load `cape:commit` with the Skill tool, followed by `cape:finish-epic` with the Skill tool. Do
+not tell the user to run these — execute them yourself.
 
 </the_process>
 
@@ -225,16 +243,42 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 ## Dispatch `cape:code-reviewer` when:
 
 - A task is complete — review implementation against epic requirements before creating the next task
-- Catches plan deviations and anti-pattern violations early
+
+**Pass as context:**
+
+- The task ID (`br show <task-id>` output) and epic ID
+- The git diff for this task's changes
+
+**Expect back:**
+
+- Verdict (pass/fail) with categorized findings (Critical/Important/Suggestion)
 
 ## Dispatch `cape:fact-checker` when:
 
 - Task made specific claims about codebase structure or API behavior
 - Verifying that assumptions from expand-task still hold after implementation
 
-## Dispatch `cape:challenge` when:
+**Pass as context:**
 
-- Task is complete — surfaces scope creep, unrequested features, and over-engineering
+- The specific claims to verify (file paths, function signatures, import relationships)
+
+**Expect back:**
+
+- Per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:line evidence
+
+## Dispatch `cape:challenge` (opt-in) when:
+
+- Task is complete and touched multiple components or took longer than expected
+- User accepts the challenge offer from step 3
+
+**Pass as context:**
+
+- The task's goal and what was actually built
+- The epic's requirements and anti-patterns
+
+**Expect back:**
+
+- Challenge summary with confirmed constraints and rejected assumptions
 
 Note: expand-task dispatches `cape:codebase-investigator` on behalf of execute-plan during step 2.
 If agents aren't available, continue manually with Glob/Grep/Read.
@@ -258,11 +302,6 @@ If agents aren't available, continue manually with Glob/Grep/Read.
 2. **Epic requirements are immutable** -- when blocked, research or ask; never weaken
 3. **Re-read the epic before changing course** -- rejected approaches were rejected for reasons
 4. **Complete all substeps before closing a task** -- partially done is not done
-5. **Use `--description` on `br create`** -- `--design` does not exist on create
-6. **Orient from br state** -- never ask "where did we leave off"
-7. **Append outcome before closing** -- follow beads skill history convention (`br show` then
-   `br update --design` with existing content + outcome)
-8. **TDD before production code** -- load `cape:test-driven-development` before writing any
-   production file; no conditions, no exceptions unless the user says to skip
+5. **Orient from br state** -- never ask "where did we leave off"
 
 </critical_rules>

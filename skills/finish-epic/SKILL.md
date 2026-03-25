@@ -81,7 +81,8 @@ Present a checklist:
 ```
 
 If any criterion is not met, report what's missing and stop. The user can create a new task with
-`br create` and run `/cape:execute-plan` to address the gap before retrying finish-epic.
+`br create` and load `cape:execute-plan` with the Skill tool to address the gap before retrying
+finish-epic.
 
 ### 2c: Code review
 
@@ -104,19 +105,24 @@ Append an Outcome section to the epic. Read existing content first, then append:
 
 ```bash
 br show <epic-id>
-br update <epic-id> --design "<existing content>
+br update <epic-id> --design "$(cat <<'EOF'
+[existing design content]
 
 ## Outcome
 
 **Completed:** YYYY-MM-DD
 **Tasks:** [N tasks completed]
 **Summary:** [2-3 sentences: what was built, key decisions, divergences from original design]
-**Verification:** All tests passing, all success criteria met[, manual verification passed]"
+**Verification:** All tests passing, all success criteria met[, manual verification passed]
+EOF
+)"
 ```
 
 ---
 
-## Step 4: Close and report
+## Step 4: Commit, close, and report
+
+Load `cape:commit` with the Skill tool to commit any remaining changes before closing.
 
 ```bash
 br close <epic-id>
@@ -134,8 +140,7 @@ Present a completion report:
 
 Epic closed.
 
-Run `/cape:commit` to commit any remaining changes.
-Optionally run `/cape:find-test-gaps` to verify test coverage before shipping.
+Optionally load `cape:find-test-gaps` to verify test coverage before shipping.
 ```
 
 </the_process>
@@ -209,8 +214,7 @@ signal.
 1. **All tasks must be closed** — don't close open tasks to force epic closure
 2. **All automated checks must pass** — tests, linting, hooks
 3. **All success criteria need evidence** — verify and cite, don't self-certify
-4. **Append Outcome before closing** — `br show` then `br update --design` with existing content
-5. **Stop on failure** — report what's missing, don't close a failing epic
-6. **No git operations** — no merge, no PR, no push; user handles integration
+4. **Stop on failure** — report what's missing, don't close a failing epic
+5. **No git operations** — no merge, no PR, no push; user handles integration
 
 </critical_rules>

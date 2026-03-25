@@ -300,8 +300,8 @@ Tasks:
   br-N.1: Improve tests in login.test.ts (P1, 2 RED, 4 YELLOW)
   br-N.2: Improve tests in session.test.ts (P2, 0 RED, 3 YELLOW)
 
-Run `/cape:execute-plan` to start implementing.
-Optionally run `/cape:find-test-gaps` to also find missing tests (this skill audits existing quality only).
+Continue with `cape:execute-plan` to start implementing.
+Optionally load `cape:find-test-gaps` to also find missing tests (this skill audits existing quality only).
 ```
 
 </the_process>
@@ -312,6 +312,20 @@ Optionally run `/cape:find-test-gaps` to also find missing tests (this skill aud
 
 - Graph is unavailable: finding test conventions, source-to-test mappings, and test framework setup
 - Understanding module structure when graph coverage is incomplete
+
+## Dispatch `cape:test-auditor` for step 2:
+
+Each dispatched subagent uses the test-auditor role to evaluate test quality: classifying tests as
+RED/YELLOW/GREEN, identifying anti-patterns, and returning categorized verdicts.
+
+**Pass as context:**
+
+- The production file path and its corresponding test file path
+- Graph findings (impact radius, callers) for the production code
+
+**Expect back:**
+
+- Per-test verdicts (RED/YELLOW/GREEN) with line references and fix descriptions
 
 ## Dispatch parallel subagents for step 2 when:
 
@@ -398,15 +412,8 @@ without the production code and guess at quality.
 
 <critical_rules>
 
-1. **Read production code before evaluating tests** — judging a test without knowing the production
-   code it guards leads to false verdicts
-2. **Every RED/YELLOW must cite the specific weakness** — "could be improved" is not a verdict
-3. **Use code-review-graph when available** — query structural relationships before reading files to
-   focus on high-impact code
-4. **Confirm before creating br items** — present findings, wait for explicit user approval
-5. **Use `--labels "analyze-tests"`** — skill name as label per beads output conventions
-6. **Use `--description` on `br create`** — `--design` does not exist on create
-7. **Self-review before presenting** — challenge your own REDs and GREENs to reduce false positives
-8. **Scope is user-controlled** — never expand analysis beyond what was asked
+1. **Self-review before presenting** — challenge your own REDs and GREENs to reduce false positives
+2. **Confirm before creating br items** — present findings, wait for explicit user approval
+3. **Scope is user-controlled** — never expand analysis beyond what was asked
 
 </critical_rules>

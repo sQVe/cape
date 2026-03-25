@@ -51,18 +51,25 @@ not found: use the bundled template at `resources/pr-template.md`.
 
 Run in parallel:
 
+Detect the default branch:
+
+```bash
+git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
+```
+
+Fall back to `main` if the command returns empty. Use this as `<default-branch>` throughout.
+
 ```bash
 git rev-parse --abbrev-ref HEAD
 git status --short
 git log --oneline -10
-git diff main...HEAD --stat
+git diff <default-branch>...HEAD --stat
 ```
 
 **Gate checks:**
 
-- Current branch is not `main` or `master` — if it is, stop: "Create a feature branch first."
-- All changes are committed — if uncommitted changes exist, stop: "Uncommitted changes. Run
-  `/cape:commit` first."
+- Current branch is not the default branch
+- All changes are committed
 
 ---
 
@@ -74,7 +81,7 @@ Ensure the branch is ready for a PR:
 2. If no upstream, push with tracking: `git push -u origin HEAD`
 3. If upstream exists, check if local is ahead: `git log @{upstream}..HEAD --oneline`
 4. If ahead, push: `git push`
-5. Check if branch is up-to-date with target: `git log HEAD..main --oneline`
+5. Check if branch is up-to-date with target: `git log HEAD..<default-branch> --oneline`
 6. If behind, warn the user — don't rebase automatically
 
 ---
@@ -96,8 +103,8 @@ If none exist, skip.
 Read the full diff against the target branch:
 
 ```bash
-git diff main...HEAD
-git log main..HEAD --oneline
+git diff <default-branch>...HEAD
+git log <default-branch>..HEAD --oneline
 ```
 
 Write the description following the detected template structure (step 1). Use the
@@ -185,7 +192,7 @@ If creation fails (push rejected, conflicts):
 
 After successful creation:
 
-1. Link relevant issues: `gh pr edit <number> --add-label <label>`
+1. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
 2. Add reviewers if the user mentioned any or the project has conventions
 3. Report:
 
@@ -243,7 +250,7 @@ Test plan has 3 items. Second item (`npm test`) fails with 2 test failures.
 
 User says "create a PR" but `git status` shows modified files.
 
-**Right:** "Uncommitted changes detected. Run `/cape:commit` first." **Wrong:** Silently commit and
+**Right:** "Uncommitted changes detected. Load `cape:commit` first." **Wrong:** Silently commit and
 proceed. </example>
 
 </examples>
@@ -260,12 +267,10 @@ proceed. </example>
 
 <critical_rules>
 
-1. **Never create a PR from main/master** — stop and tell the user to branch
-2. **Never create a PR with uncommitted changes** — stop and tell the user to commit
-3. **Never skip the test plan gate** — all checkboxes must be `[x]`
-4. **Never create without user confirmation** — present description and wait for approval
-5. **Use repo PR template when available** — don't override project conventions
-6. **Use `gh pr create`** — not the GitHub API directly
-7. **Stop on failure** — report what failed, don't push through
+1. **Never skip the test plan gate** — all checkboxes must be `[x]`
+2. **Never create without user confirmation** — present description and wait for approval
+3. **Use repo PR template when available** — don't override project conventions
+4. **Use `gh pr create`** — not the GitHub API directly
+5. **Stop on failure** — report what failed, don't push through
 
 </critical_rules>

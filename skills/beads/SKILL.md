@@ -335,18 +335,6 @@ Skills that produce multiple findings (e.g., `find-test-gaps` finding 5 gaps) sh
 2. Use `br q` for lightweight batch creation when descriptions are short.
 3. Summarize at the end: "Created br-10 through br-14 (5 test gap tasks)."
 
-### Referencing br items in commits
-
-Include the br ID in commit messages to link work to tracked issues:
-
-```
-feat(br-3): implement login endpoint
-
-Implements step 1 of br-3: Auth API endpoints
-```
-
-Format: `type(br-N): description`
-
 </the_process>
 
 <examples>
@@ -397,7 +385,6 @@ Original Goal and Implementation sections preserved. </example>
 - **Always set type and priority** — never leave these as defaults; skills should assess severity
 - **Include skill name as label** — every skill-created issue includes the skill name for
   traceability
-- **Commit references use `type(br-N):` format** — links work to tracked issues in git history
 
 </key_principles>
 

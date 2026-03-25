@@ -48,6 +48,9 @@ task:
 br ready
 ```
 
+If multiple open epics exist, ask the user which epic to target before proceeding. Use
+`br ready --parent <epic-id>` to scope results.
+
 Read the task and its parent epic:
 
 ```bash
@@ -177,7 +180,7 @@ Changes:
 - [N] stale references corrected
 - [N] test gaps closed
 
-Run `/cape:execute-plan` to implement.
+Continue with `cape:execute-plan` to implement.
 ```
 
 If the task is well-specified and investigation confirms its claims, say so. A clean bill of health
@@ -300,9 +303,7 @@ need fixing. </example>
    recommend closing or re-scoping; then complete the remaining review
 5. **Respect HITL/AFK modes** -- present for approval on HITL, apply directly on AFK
 6. **Don't add scope** -- refinement tightens existing goals; new features belong in new tasks
-7. **Append refinement log** -- use `br show` first, then `br update --design` with existing content
-   plus refinement notes (beads history convention)
-8. **Every edge case needs a test** -- if you add an edge case, add the corresponding test case to
+7. **Every edge case needs a test** -- if you add an edge case, add the corresponding test case to
    the implementation checklist
 
 </critical_rules>

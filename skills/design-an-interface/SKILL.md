@@ -72,6 +72,11 @@ Ask only what the codebase and research can't answer. Confirm:
 Build a **requirements brief** from research findings and user answers. This brief is the shared
 context all design agents receive.
 
+### Checkpoint: Confirm requirements brief
+
+Present the requirements brief to the user before dispatching agents. **STOP here.** Ask: "Anything
+to add or correct before I generate designs?" Do NOT dispatch design agents until the user confirms.
+
 ---
 
 ## Step 2: Spawn parallel design agents
@@ -182,8 +187,8 @@ Present the recommended interface with its signature, usage examples, and anti-p
 ```
 Interface design complete.
 
-To build this, run `/cape:brainstorm` to create a full design
-(the interface recommendation carries forward), or `/cape:write-plan`
+To build this, continue with `cape:brainstorm` to create a full design
+(the interface recommendation carries forward), or `cape:write-plan`
 if a design summary already exists.
 ```
 

@@ -175,6 +175,10 @@ Gaps:
 2. login() — no test for concurrent login from multiple sessions. Bug risk: session corruption.
 ```
 
+**Self-review before presenting:** Walk through each gap and verify it has a realistic, non-trivial
+bug scenario. Drop gaps where the "bug risk" is speculative or the code is too simple to fail
+meaningfully. Promote any gaps you initially skipped if re-reading the source reveals real risk.
+
 After presenting all modules, **explicitly ask the user before proceeding:**
 
 ```
@@ -253,7 +257,7 @@ Tasks:
   br-N.1: Add missing tests for permissions.ts (P1, 3 gaps)
   br-N.2: Add missing tests for login.ts (P2, 2 gaps)
 
-Run `/cape:execute-plan` to start implementing.
+Continue with `cape:execute-plan` to start implementing.
 ```
 
 </the_process>
@@ -344,13 +348,10 @@ the important behavior is tested.
 <critical_rules>
 
 1. **Always ask for scope if not provided** — never default to analyzing the entire codebase
-2. **Every gap must state the bug it would catch** — gaps without bug risk are coverage porn
-3. **Apply the value filter** — skip type definitions, re-exports, constants, and trivial wrappers
-4. **Read source code before claiming gaps** — understand the actual behavior, don't guess from file
+2. **Read source code before claiming gaps** — understand the actual behavior, don't guess from file
    names
-5. **One task per module** — group gaps by source file, not by gap category
-6. **Confirm before creating br items** — present findings, wait for user approval
-7. **Use `--description` on `br create`** — `--design` does not exist on create
-8. **Always set `--labels "find-test-gaps"`** — skill name as label per beads output conventions
+3. **Self-review before presenting** — verify each gap has a realistic bug scenario; drop
+   speculative gaps
+4. **Confirm before creating br items** — present findings, wait for user approval
 
 </critical_rules>

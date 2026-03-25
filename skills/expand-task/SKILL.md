@@ -96,8 +96,10 @@ implement, verify).
 - **Medium task** (multiple files, new pattern): 4-7 steps
 - **Complex task** (cross-cutting, new architecture): 7-10 steps
 
-If a task needs more than 10 steps, it should probably be split into multiple tasks. Flag this to
-execute-plan rather than producing a sprawling plan.
+If a task needs more than 10 steps, it should be split. Instead of producing a sprawling plan,
+append a `## Split recommendation` section to the task's design field listing the natural split
+points and recommended subtask titles. Do not produce the expanded plan — execute-plan will handle
+the split.
 
 **Each step must include:**
 
@@ -220,10 +222,8 @@ produce the expanded plan — let execute-plan handle the split. </example>
 1. **Investigate before planning** — never produce steps referencing files you haven't verified
    exist
 2. **Every step has a verify command** — exact shell commands, not vague instructions
-3. **Append to design field** — follow beads history convention (`br show` first, then
-   `br update --design` with existing content plus expanded plan)
-4. **Skip if already expanded** — check for `## Expanded plan` section before doing work
-5. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
-6. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
+3. **Skip if already expanded** — check for `## Expanded plan` section before doing work
+4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
+5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
 
 </critical_rules>

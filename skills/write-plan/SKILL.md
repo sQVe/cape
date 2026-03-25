@@ -83,7 +83,30 @@ required:
 br create "Epic: [Feature Name]" \
   --type epic \
   --priority [0-4] \
-  --description "[full epic content from template]"
+  --labels "[skill-name]" \
+  --description "$(cat <<'EOF'
+## Requirements
+[Specific, testable statements derived from the design summary]
+- Requirement 1
+- Requirement 2
+
+## Durable decisions
+[Choices that survive refactors — routes, schemas, auth patterns, external boundaries]
+- Decision 1
+- Decision 2
+
+## Anti-patterns
+[What NOT to do, with reasoning]
+- NO X (reason: Y)
+
+## Success criteria
+[Objectively measurable outcomes]
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Tests passing
+- [ ] Pre-commit hooks passing
+EOF
+)"
 ```
 
 Create exactly one task as a child of the epic. The task should be a **vertical slice** — a thin
@@ -134,8 +157,8 @@ First task [id] is ready to execute.
 
 The epic has [N] requirements, [N] anti-patterns, and [N] success criteria.
 
-Optionally run `/cape:task-refinement` to stress-test the first task before executing.
-Run `/cape:execute-plan` to continue.
+Optionally stress-test the first task with `cape:task-refinement` before executing.
+Continue with `cape:execute-plan` to start building.
 ```
 
 </the_process>
@@ -162,7 +185,7 @@ User runs `/cape:write-plan` in a fresh conversation without brainstorming first
 **Wrong:** Start asking the user about requirements and architecture from scratch. This duplicates
 brainstorm and produces a weaker design without the research and assumption-challenge phases.
 
-**Right:** Tell the user: "No design summary found in conversation. Run `/cape:brainstorm` first to
+**Right:** Tell the user: "No design summary found in conversation. Load `cape:brainstorm` first to
 explore the idea, then come back to formalize it." Stop. </example>
 
 </examples>
@@ -181,9 +204,8 @@ explore the idea, then come back to formalize it." Stop. </example>
 
 1. **Require design context** -- do not create an epic without a brainstorm design summary
 2. **Use epic template** -- every section from `resources/epic-template.md` is required
-3. **Use `--description` flag** -- not `--design` (that flag doesn't exist on `br create`)
-4. **Create ONLY first task** -- subsequent tasks created iteratively
-5. **Stop after creation** -- present summary and wait for user to run execute-plan
-6. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
+3. **Create ONLY first task** -- subsequent tasks created iteratively
+4. **Stop after creation** -- present summary and wait for user to run execute-plan
+5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
 
 </critical_rules>

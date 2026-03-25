@@ -237,12 +237,6 @@ Ready for fix-bug when you want to address it.
 - Understanding architecture or patterns unrelated to the specific failure
 - Finding existing conventions before suggesting a fix direction
 
-## Dispatch `cape:notebox-researcher` (optional) when:
-
-- The bug involves a system the user has investigated or debugged before
-- The error pattern or module has appeared in past notes or journals
-- You want to check if past decisions or research are relevant to this bug
-
 ## Investigation protocol:
 
 1. Reproduce first -- tools confirm the symptom exists
@@ -342,7 +336,5 @@ instead of tracing the data flow.
 4. **Document dead ends** -- refuted hypotheses are recorded, not silently dropped
 5. **Always create a br bug issue** -- findings become a tracked issue, not just conversation text
 6. **Confirm before creating the issue** -- present summary and wait for user approval
-7. **Use `--description` on `br create`** -- `--design` does not exist on create
-8. **Always set `--labels "debug-issue"`** -- skill name as label per beads output conventions
 
 </critical_rules>

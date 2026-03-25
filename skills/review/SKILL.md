@@ -219,10 +219,10 @@ Use `AskUserQuestion` with context-appropriate options:
 When "Track as bugs" is selected, create a br bug for each critical and important finding:
 
 ```bash
-br create --type bug --priority P{severity} --title "{file}: {short_description}"
+br create --type bug --priority {severity} --title "{file}: {short_description}"
 ```
 
-Map severity: critical → P1, important → P2. Include the file path, line numbers, and suggestion in
+Map severity: critical → 1, important → 2. Include the file path, line numbers, and suggestion in
 the bug description. Skip suggestions — they don't warrant tracking.
 
 </the_process>
