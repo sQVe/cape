@@ -44,8 +44,6 @@ create a br bug issue with findings, always confirm before creating the issue. <
 
 ## Step 1: Reproduce and characterize
 
-**Announce:** "I'm using the debug-issue skill to investigate this systematically."
-
 **Clarify the symptom:**
 
 - What is the user observing? (error message, wrong output, crash, test failure)

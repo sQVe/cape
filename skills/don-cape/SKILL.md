@@ -125,12 +125,6 @@ not permission to skip brainstorm and write-plan. The chain determines how.
 
 **Load with the Skill tool.** Never work from memory. Skills evolve between sessions.
 
-**Announce usage.** Before using a skill, state which one and why:
-
-- "I'm using cape:brainstorm to refine your idea into a design."
-- "I'm using cape:debug-issue to investigate this systematically."
-- "I'm using cape:commit to stage and commit these changes."
-
 **Track checklists.** If a skill has a checklist, create TodoWrite todos for each item. Mental
 tracking leads to skipped steps.
 
@@ -149,11 +143,10 @@ passport.js already exists in the codebase.
 **Right:**
 
 1. Route: "build something new" → cape:brainstorm
-2. "I'm using cape:brainstorm to refine your requirements."
-3. Research codebase (finds passport.js), ask clarifying questions, propose approaches
-4. Present design summary
-5. "Run `/cape:write-plan` to formalize this into a br epic."
-6. STOP — do not start coding </example>
+2. Research codebase (finds passport.js), ask clarifying questions, propose approaches
+3. Present design summary
+4. "Run `/cape:write-plan` to formalize this into a br epic."
+5. STOP — do not start coding </example>
 
 <example>
 <scenario>User reports something broken</scenario>
@@ -166,10 +159,9 @@ cause (missing charset header in the middleware) remains.
 **Right:**
 
 1. Route: "something broken" → cape:debug-issue
-2. "I'm using cape:debug-issue to investigate this systematically."
-3. Reproduce, trace to root cause, create br bug with evidence
-4. Route: diagnosed bug → cape:fix-bug
-5. Write failing test, implement minimal fix, verify, commit </example>
+2. Reproduce, trace to root cause, create br bug with evidence
+3. Route: diagnosed bug → cape:fix-bug
+4. Write failing test, implement minimal fix, verify, commit </example>
 
 <example>
 <scenario>User gives a specific instruction that still needs the chain</scenario>
@@ -204,6 +196,5 @@ that the project already has an in-memory cache, creating a conflicting layer.
 2. **Use the Skill tool to load skills** — never work from memory
 3. **Follow workflow chains in order** — brainstorm before write-plan before execute-plan
 4. **STOP after brainstorm and write-plan** — wait for user to explicitly continue
-5. **Announce skill usage** — state which skill and why before starting
 
 </critical_rules>

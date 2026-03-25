@@ -41,8 +41,6 @@ are non-negotiable. </rigidity_level>
 
 ## Step 1: Determine scope
 
-**Announce:** "I'm using the review skill to analyze your changes."
-
 Parse the argument to determine what to review:
 
 | Argument          | Scope                                     |

@@ -41,8 +41,6 @@ for complex designs). The three steps and the interactive resolution are non-neg
 
 ## Step 1: Gather context
 
-**Announce:** "I'm using the challenge skill to surface hidden assumptions."
-
 Determine what's being challenged. Sources:
 
 - **Conversation context** — read back through the current discussion for designs, decisions, plans

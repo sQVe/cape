@@ -40,8 +40,6 @@ non-negotiable. How you run verification and what you include in the summary ada
 
 ## Step 1: Orient
 
-**Announce:** "I'm using the finish-epic skill to verify and close this epic."
-
 Find the epic and check its state:
 
 ```bash

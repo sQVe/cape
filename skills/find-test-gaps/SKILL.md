@@ -47,8 +47,6 @@ trivial code) is non-negotiable. </rigidity_level>
 
 ## Step 1: Resolve scope
 
-**Announce:** "I'm using the find-test-gaps skill to identify untested behavior in [scope]."
-
 The user specifies what to analyze. If their message doesn't include a clear scope, ask:
 
 ```

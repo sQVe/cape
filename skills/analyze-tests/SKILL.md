@@ -46,8 +46,6 @@ a graph is available. </rigidity_level>
 
 ## Step 1: Resolve scope and gather structural context
 
-**Announce:** "I'm using the analyze-tests skill to audit test quality in [scope]."
-
 If the user's message doesn't include a clear scope, ask:
 
 ```

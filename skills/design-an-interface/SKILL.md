@@ -45,8 +45,6 @@ to complexity. </rigidity_level>
 
 ## Step 1: Gather requirements
 
-**Announce:** "I'm using the design-an-interface skill to explore competing interface designs."
-
 **Research the codebase:**
 
 Dispatch `cape:codebase-investigator` to understand:

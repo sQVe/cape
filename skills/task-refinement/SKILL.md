@@ -41,8 +41,6 @@ How deep you go in each category adapts to the task's complexity and risk. </rig
 
 ## Step 1: Load the task
 
-**Announce:** "I'm using the task-refinement skill to stress-test this task before implementation."
-
 Identify the target task. If the user specified a task ID, use it. Otherwise, find the next ready
 task:
 

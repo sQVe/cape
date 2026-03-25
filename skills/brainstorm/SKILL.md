@@ -52,8 +52,6 @@ the next step until the user responds. The user may discuss, redirect, ask follo
 
 ## Step 1: Research and understand
 
-**Announce:** "I'm using the brainstorming skill to refine your idea into a design."
-
 **Gather context:**
 
 - Check recent commits, existing docs, codebase structure
