@@ -228,14 +228,11 @@ br create "Add missing tests for [module name]" \
 ## Goal
 Close [N] test gaps in [file path].
 
-## TDD classification
-REQUIRED — each gap is a specific untested behavior with a failing test to write.
+## Gaps
+1. [function] — [untested behavior]. Bug risk: [what breaks].
+2. [function] — [untested behavior]. Bug risk: [what breaks].
 
-## Behaviors
-- [function]: [untested behavior]. Bug risk: [what breaks].
-- [function]: [untested behavior]. Bug risk: [what breaks].
-
-## References
+## Implementation
 - Test file: [path to test file, existing or new]
 - Framework: [framework]
 - Follow [specific patterns from existing tests in the project]

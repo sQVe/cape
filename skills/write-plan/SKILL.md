@@ -90,27 +90,35 @@ Create exactly one task as a child of the epic. The task should be a **vertical 
 end-to-end path through all layers (schema, API, UI, tests), not a horizontal layer. A completed
 slice is independently demonstrable.
 
-Use the template and worked examples from `resources/task-template.md`. The first task must contain
-these sections:
-
-- `## Goal` — what this task delivers
-- `## TDD classification` — REQUIRED or EXEMPT with reasoning
-- `## Behaviors` — each behavior is one TDD cycle, listed in implementation order
-- `## Success criteria` — checkbox items including "Tests passing"
-
-The first task should also include:
-
-- `## Execution mode` — HITL or AFK
-- `## References` — 1-3 similar implementations or patterns (file:line)
-
-After creating the task, validate it:
-
 ```bash
-br show <task-id>
-```
+br create "Task 1: [Specific deliverable]" \
+  --type feature \
+  --priority [match epic] \
+  --parent [epic-id] \
+  --labels "[hitl or afk]" \
+  --description "$(cat <<'EOF'
+## Goal
+[What this task delivers — one clear outcome]
 
-Read the output and verify all sections are present. If any section is missing, the task is
-malformed — delete it with `br close <task-id>` and recreate following the template.
+## Execution mode
+[HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
+
+## Behaviors
+[Each behavior is one TDD cycle. List them in implementation order.]
+- [Behavior 1: "returns error when input is empty"]
+- [Behavior 2: "parses valid input into sections"]
+- ...
+
+## References
+[Point to 1-3 similar implementations or patterns: file:line]
+
+## Success criteria
+- [ ] [Specific, measurable outcome]
+- [ ] Tests passing
+- [ ] Pre-commit hooks passing
+EOF
+)"
+```
 
 **Why only one task?** Subsequent tasks should be created iteratively during execution. Each task
 reflects learnings from the previous one. Upfront task trees become brittle when assumptions change.
@@ -176,8 +184,6 @@ explore the idea, then come back to formalize it." Stop. </example>
 3. **Use `--description` flag** -- not `--design` (that flag doesn't exist on `br create`)
 4. **Create ONLY first task** -- subsequent tasks created iteratively
 5. **Stop after creation** -- present summary and wait for user to run execute-plan
-6. **Anti-patterns need reasoning** -- "NO X (reason: Y)", not just "NO X"
-7. **Validate task after creation** -- run `br show` and verify the output contains all sections
-   from `resources/task-template.md`; if sections are missing, delete and recreate
+6. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
 
 </critical_rules>

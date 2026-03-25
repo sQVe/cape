@@ -76,16 +76,8 @@ code. Expand-task investigates actual files and patterns, then appends a step-by
 exact file paths, line numbers, and verification commands to the task's design field. Skip this if
 the section already exists.
 
-**TDD gate.** Check the task's TDD classification before writing any production code:
-
-- **TDD-REQUIRED** (default): Load `cape:test-driven-development` with the Skill tool. Follow the
-  expanded plan's steps — each step maps to one red-green-refactor cycle. Do not write production
-  code without a failing test — without the RED phase, there is no proof the test can detect the
-  behavior's absence.
-- **TDD-EXEMPT** (config, strings, migrations — no assertable behavior): Execute steps directly.
-  Only valid when the task explicitly states `TDD classification: EXEMPT` with reasoning.
-
-If the task has no TDD classification, treat it as REQUIRED.
+Load `cape:test-driven-development` with the Skill tool before writing any production code. Each
+step in the expanded plan maps to one red-green-refactor cycle.
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
@@ -134,26 +126,29 @@ br show <epic-id>
 ```
 
 If a planned task is now redundant, close it with a reason. If a new task is needed, create one that
-reflects what you actually learned — not what you assumed at the start. Use the template and worked
-examples from `resources/task-template.md`. The task must contain these sections:
-
-- `## Goal` — what this task delivers
-- `## TDD classification` — REQUIRED or EXEMPT with reasoning
-- `## Behaviors` — each behavior is one TDD cycle, listed in implementation order
-- `## Success criteria` — checkbox items including "Tests passing"
-
-The task should also include:
-
-- `## Context` — key discoveries from the completed task
-
-After creating the task, validate it:
+reflects what you actually learned -- not what you assumed at the start:
 
 ```bash
-br show <task-id>
-```
+br create "Task N: [Informed next step]" \
+  --type task \
+  --parent <epic-id> \
+  --priority <match-epic> \
+  --description "$(cat <<'EOF'
+## Goal
+[What this task delivers, informed by previous task]
 
-Read the output and verify all five sections are present. If any section is missing, the task is
-malformed — delete it with `br close <task-id>` and recreate following the template.
+## Context
+[Key discoveries from the completed task]
+
+## Implementation
+[Steps based on current reality]
+
+## Success criteria
+- [ ] [Measurable outcomes]
+- [ ] Tests passing
+EOF
+)"
+```
 
 ---
 
@@ -223,73 +218,6 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 **Right:** Present the checkpoint. Context reloads are cheap. Mistakes from skipped review are not.
 </example>
 
-<example>
-<scenario>Task is TDD-REQUIRED but you skip straight to writing production files</scenario>
-
-Task has behaviors: "GET /api/health returns { status: ok }", "serve command accepts --port flag."
-You start writing HealthApi.ts, Api.ts, Http.ts, serve.ts directly without tests.
-
-**Wrong:** Write all production files, verify manually with curl, close the task. Zero tests
-written. The behaviors are never proven by automated tests. Regressions are invisible.
-
-**Right:** Load `cape:test-driven-development` first. Write a test for "GET /api/health returns {
-status: ok }" — watch it fail (RED). Write the minimal HealthApi + handler to pass it (GREEN).
-Refactor. Then next cycle for the serve command. Every behavior has a test that failed before the
-code existed. </example>
-
-<example>
-<scenario>Creating the next task with file-oriented sections instead of behaviors</scenario>
-
-After completing the scaffold task, you create the next task:
-
-**Wrong:**
-
-```bash
-br create "Health endpoint" --type task --parent br-1 --body "## What
-Wire the health endpoint.
-## Files
-- HealthApi.ts
-- Api.ts
-- Http.ts
-## Verification
-- curl returns ok"
-```
-
-Uses wrong sections (What/Files/Verification), wrong flag (`--body`), and describes files instead of
-behaviors. Expand-task cannot derive TDD cycles from a file list.
-
-**Right:**
-
-```bash
-br create "Task 3: Health endpoint" \
-  --type task --parent br-1 --priority 1 \
-  --description "$(cat <<'EOF'
-## Goal
-Wire GET /api/health returning { status: ok } via Effect HttpServer.
-
-## Context
-Task 2 created package stubs. Server and CLI have placeholder exports.
-
-## TDD classification
-REQUIRED — endpoint and CLI both have assertable behavior.
-
-## Behaviors
-- GET /api/health returns 200 with { status: "ok" }
-- GET /unknown returns 404
-- serve command starts server on default port 4400
-- serve --port flag overrides default
-
-## Success criteria
-- [ ] Each behavior has a failing test before implementation
-- [ ] vp test passes
-- [ ] vp check clean
-EOF
-)"
-```
-
-Uses correct sections from `resources/task-template.md`, correct `--description` flag, and describes
-behaviors that map directly to TDD cycles. </example>
-
 </examples>
 
 <agent_references>
@@ -334,12 +262,7 @@ If agents aren't available, continue manually with Glob/Grep/Read.
 6. **Orient from br state** -- never ask "where did we leave off"
 7. **Append outcome before closing** -- follow beads skill history convention (`br show` then
    `br update --design` with existing content + outcome)
-8. **TDD before production code** -- load `cape:test-driven-development` for TDD-REQUIRED tasks
-   before writing any non-test file; without the RED phase, the test proves nothing
-9. **Every task needs TDD classification** -- REQUIRED or EXEMPT with reasoning; default is
-   REQUIRED; without it, execute-plan cannot determine whether to load the TDD skill
-10. **Validate tasks after creation** -- run `br show` after `br create` and verify the output
-    contains all required sections from `resources/task-template.md`; if sections are missing,
-    delete and recreate
+8. **TDD before production code** -- load `cape:test-driven-development` before writing any
+   production file; no conditions, no exceptions unless the user says to skip
 
 </critical_rules>
