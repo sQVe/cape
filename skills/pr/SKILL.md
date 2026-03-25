@@ -5,7 +5,7 @@ description: >
   to open a PR — explicit requests ("create a PR", "open a pull request", "let's PR this",
   "/cape:pr") and implicit ones ("ship it", "ready for review", "push this up"). Also use when
   finish-epic completes and the user wants to publish their work. Runs automatable test plan items
-  before creating the PR. Do NOT use for reviewing someone else's PR (use pr-review) or committing
+  before creating the PR. Do NOT use for reviewing someone else's PR (use cape:review) or committing
   (use cape:commit).
 ---
 

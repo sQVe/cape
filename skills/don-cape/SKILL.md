@@ -125,9 +125,6 @@ not permission to skip brainstorm and write-plan. The chain determines how.
 
 **Load with the Skill tool.** Never work from memory. Skills evolve between sessions.
 
-**Track checklists.** If a skill has a checklist, create TodoWrite todos for each item. Mental
-tracking leads to skipped steps.
-
 </the_process>
 
 <examples>
