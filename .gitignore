@@ -1,4 +1,5 @@
 *-workspace/
 .beads/
+hooks/context/
 
 node_modules/
