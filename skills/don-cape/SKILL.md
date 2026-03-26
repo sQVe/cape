@@ -57,8 +57,7 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 
 - `cape:expand-task` — called by `execute-plan` to ground tasks in codebase reality before coding
 - `cape:test-driven-development` — mandatory before any production code. Loaded by `execute-plan` in
-  Step 2; user-prompt-submit hook serves as safety net for resumed sessions. `fix-bug` inlines
-  RED-GREEN directly
+  Step 2 and `fix-bug` in Step 3; user-prompt-submit hook serves as safety net for resumed sessions
 
 If nothing matches, proceed without a skill.
 

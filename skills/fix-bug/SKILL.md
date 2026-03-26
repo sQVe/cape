@@ -9,14 +9,14 @@ description: >
   specific defect (use cape:refactor).
 ---
 
-<skill_overview> Fix bugs end-to-end: adopt or create the br bug, reproduce, write a failing test,
-implement the minimal fix, verify, and close. Dispatches debug-issue for investigation when no br
-bug exists, then drives the fix through a RED-GREEN cycle with evidence-based closure.
+<skill_overview> Fix bugs end-to-end: adopt or create the br bug, reproduce, fix via
+`cape:test-driven-development`, verify, and close. Dispatches debug-issue for investigation when no
+br bug exists, then delegates the fix to the TDD skill with evidence-based closure.
 
 Core contract: every fix gets a regression test that fails before the fix and passes after.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The RED-GREEN cycle (failing test before code change) and
+<rigidity_level> LOW FREEDOM -- The TDD cycle (delegated to `cape:test-driven-development`) and
 evidence-based closure are non-negotiable. Investigation depth, test strategy, and fix approach
 adapt to context. </rigidity_level>
 
@@ -73,28 +73,8 @@ may be incomplete.
 
 ## Step 3: Fix the bug
 
-The bug's root cause from the br bug is your test target.
-
-**RED — Write a failing regression test:**
-
-Write a test that reproduces the bug. The failing test IS the bug reproduction. Dispatch
-`cape:test-runner` to run the test. It must fail. Inspect the failure:
-
-- **Right failure:** The assertion fires because the buggy behavior still exists. This is what you
-  want.
-- **Wrong failure:** Import error, syntax error, missing module, type error. Fix the test until the
-  failure comes from the assertion itself.
-
-Do not write any production code until you have a test that fails for the right reason.
-
-**GREEN — Fix the bug:**
-
-Write the minimum code to make the failing test pass. Dispatch `cape:test-runner` to confirm the
-test passes and the full suite still passes.
-
-**REFACTOR — Clean up if needed:**
-
-Look at the fix and its immediate surroundings. If nothing needs improvement, move on.
+The bug's root cause from the br bug is your test target. Load `cape:test-driven-development` with
+the Skill tool — the RED test reproduces the bug, GREEN fixes it, REFACTOR cleans up.
 
 **Scope guard:**
 
@@ -102,8 +82,6 @@ Look at the fix and its immediate surroundings. If nothing needs improvement, mo
 - Don't improve error handling elsewhere
 - Don't add features
 - Don't clean up unrelated tests
-
-If the full suite reveals new failures, investigate whether your fix caused them before proceeding.
 
 Dispatch `cape:bug-tracer` if the root cause from the br bug proves incomplete or a new failure path
 is discovered during the fix. Dispatch `cape:codebase-investigator` if you need to understand
@@ -165,6 +143,10 @@ path is discovered or the fix reveals deeper issues than the initial diagnosis f
 </agent_references>
 
 <skill_references>
+
+## Load `cape:test-driven-development` with the Skill tool when:
+
+- Step 3 begins — the bug's root cause is your test target
 
 ## Load `cape:debug-issue` with the Skill tool when:
 
