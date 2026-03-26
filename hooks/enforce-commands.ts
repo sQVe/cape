@@ -15,6 +15,8 @@ if (!command) {
   process.exit(0);
 }
 
+const violations: string[] = [];
+
 const deny = (reason: string) => {
   console.log(
     JSON.stringify({
@@ -28,12 +30,23 @@ const deny = (reason: string) => {
   process.exit(0);
 };
 
-const isBrCreate = /\bbr\s+create\b/.test(command);
-const isBrUpdate = /\bbr\s+update\b/.test(command);
+const denyAll = () => {
+  if (violations.length > 0) {
+    deny(violations.join(" "));
+  }
+};
+
+const cmdPrefix = /(?:^|&&|\|\||;)\s*/;
+const isBrCreate = new RegExp(`${cmdPrefix.source}br\\s+create\\b`).test(
+  command,
+);
+const isBrUpdate = new RegExp(`${cmdPrefix.source}br\\s+update\\b`).test(
+  command,
+);
 
 // 1: --design does not exist on br create
 if (isBrCreate && /--design\b/.test(command)) {
-  deny(
+  violations.push(
     "Use `--description` on `br create`, not `--design`. The `--design` flag only works on `br update`.",
   );
 }
@@ -64,10 +77,12 @@ if (isBrUpdate && /--design\b/.test(command)) {
 // 3: br create missing --type or --priority
 if (isBrCreate) {
   if (!/--type\b|(?:^|\s)-t(?:\s|$)/.test(command)) {
-    deny("Add `--type` to `br create` (epic, task, bug, or feature).");
+    violations.push(
+      "Add `--type` to `br create` (epic, task, bug, or feature).",
+    );
   }
   if (!/--priority\b|(?:^|\s)-p(?:\s|$)/.test(command)) {
-    deny("Add `--priority` to `br create` (0-4).");
+    violations.push("Add `--priority` to `br create` (0-4).");
   }
 }
 
@@ -78,31 +93,35 @@ if (isBrCreate && /--description\b/.test(command)) {
 
   if (type === "task") {
     if (!/##\s*Goal/i.test(command)) {
-      deny("Task descriptions need a `## Goal` header.");
+      violations.push("Task descriptions need a `## Goal` header.");
     }
     if (!/##\s*Behaviors/i.test(command)) {
-      deny(
+      violations.push(
         "Task descriptions need a `## Behaviors` header listing one behavior per TDD cycle.",
       );
     }
     if (!/##\s*Success criteria/i.test(command)) {
-      deny("Task descriptions need a `## Success criteria` header.");
+      violations.push(
+        "Task descriptions need a `## Success criteria` header.",
+      );
     }
   } else if (type === "bug") {
     if (
       !/##\s*Reproduction steps/i.test(command) &&
       !/##\s*Evidence/i.test(command)
     ) {
-      deny(
+      violations.push(
         "Bug descriptions need a `## Reproduction steps` or `## Evidence` header.",
       );
     }
   } else if (type === "epic") {
     if (!/##\s*Requirements/i.test(command)) {
-      deny("Epic descriptions need a `## Requirements` header.");
+      violations.push("Epic descriptions need a `## Requirements` header.");
     }
     if (!/##\s*Success criteria/i.test(command)) {
-      deny("Epic descriptions need a `## Success criteria` header.");
+      violations.push(
+        "Epic descriptions need a `## Success criteria` header.",
+      );
     }
   }
 }
@@ -170,5 +189,7 @@ if (/\bgh\s+pr\s+create\b/.test(command)) {
 
 // 9: --labels missing on br create
 if (isBrCreate && !/--labels\b|(?:^|\s)-l(?:\s|$)/.test(command)) {
-  deny("Add `--labels` to `br create` for categorization.");
+  violations.push("Add `--labels` to `br create` for categorization.");
 }
+
+denyAll();
