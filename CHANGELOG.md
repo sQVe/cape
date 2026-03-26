@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-26
+
+### Added
+
+- Commands: beads and finish-epic slash commands.
+- Hooks: `hooks/paths.ts` shared module for path constants.
+- Tests: short flag matching, atomic log processing, startup-only log clearing, TDD context
+  injection, non-matching extension edge cases.
+
+### Changed
+
+- Hooks: extract shared path constants into `hooks/paths.ts`, reducing duplication across all hooks.
+- Hooks: atomic edit-log processing in gentle-reminders (rename-read-unlink instead of
+  read-then-truncate).
+- Hooks: clear br-show-log only on session startup, not on resume/clear/compact.
+- Skills: condense verbose agent dispatch sections into compact protocol format.
+- Skills: move skill-to-skill calls into `<skill_references>` sections.
+- Skills: replace inline br command templates with `epic-template.md` references.
+- Execute-plan: load TDD skill explicitly in Step 2 before writing code.
+- Don-cape: update routing for finish-epic and commit triggers.
+
+### Fixed
+
+- Hooks: short flag regexes (`-t`, `-p`, `-l`) in enforce-commands matching inside words.
+
+## [1.2.0] - 2026-03-26
+
+### Added
+
+- Hooks: enforce-commands, gentle-reminders, track-br-show, and track-edits hooks.
+
+### Changed
+
+- Skills: improve wording, agent contracts, and remove redundant rules.
+- Skills: replace TDD classification gate with unconditional TDD loading.
+
 ## [1.1.0] - 2026-03-25
 
 ### Added
