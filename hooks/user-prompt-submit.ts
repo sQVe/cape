@@ -33,14 +33,6 @@ if (!isManagingBrTasks) {
 }
 
 const state = queryFlowState();
-if (state.inProgressTasks) {
-  contexts.push(
-    "<tdd-enforcement>There is an in-progress task. Before writing any production code, write a failing test first. " +
-      "RED: write test, watch it fail. GREEN: write minimal code to pass. REFACTOR: clean up while tests stay green. " +
-      "Load cape:test-driven-development with the Skill tool before writing any non-test file.</tdd-enforcement>",
-  );
-}
-
 const flowContext = deriveFlowContext(state);
 if (flowContext) {
   contexts.push(flowContext);
