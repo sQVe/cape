@@ -86,9 +86,10 @@ finish-epic.
 
 ### 2c: Code review
 
-Dispatch `cape:code-reviewer` to review the implementation against the epic's requirements,
-anti-patterns, and success criteria. The reviewer compares what was built against what was planned
-and flags deviations. Address any critical findings before proceeding.
+Dispatch `cape:code-reviewer` with the epic ID and the full branch diff. Pass only the contract
+(requirements, anti-patterns, success criteria) — not task implementation notes. The reviewer judges
+what was built against what was required, not what was intended. Address any critical findings
+before proceeding.
 
 ### 2d: Manual verification
 

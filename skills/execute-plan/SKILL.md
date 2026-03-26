@@ -177,8 +177,12 @@ clear context before continuing.
 **Next:** <next-id>: [Title and brief description]
 **Progress:** [X/Y epic success criteria met]
 
-Continue with `cape:execute-plan` to pick up the next task.
+Clear context with `/clear` before picking up the next task — br state has everything needed to
+orient. Then continue with `cape:execute-plan`.
 ```
+
+Context resets with structured handoffs (br state, expanded plans) produce better results than
+growing context. The next invocation orients from br state alone — no conversation history needed.
 
 Check the task's `## Execution mode` field (set by write-plan). **HITL (human-in-the-loop):**
 present checkpoint and stop as normal. **AFK (autonomous):** skip the stop — load `cape:commit`,
@@ -246,8 +250,10 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 
 ## `cape:code-reviewer` protocol:
 
-**Pass:** task ID (`br show <task-id>` output), epic ID, git diff for this task's changes. **Expect
-back:** verdict (pass/fail) with categorized findings (Critical/Important/Suggestion).
+**Pass:** epic ID (`br show <epic-id>` for requirements, anti-patterns, success criteria) and git
+diff for this task's changes. Do NOT pass the task's expanded plan or implementation notes — the
+reviewer judges code against the contract, not the implementation intent. **Expect back:** verdict
+(pass/fail) with categorized findings (Critical/Important/Suggestion).
 
 ## `cape:fact-checker` protocol:
 
