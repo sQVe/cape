@@ -6,7 +6,7 @@ description: >
   fixing a regression, patching broken behavior. Also use when the user has a br bug issue and wants
   to resolve it, or when they report a bug and want it fixed (not just investigated). Do NOT use for
   investigation-only (use debug-issue), feature work (use execute-plan), or refactoring without a
-  specific defect.
+  specific defect (use cape:refactor).
 ---
 
 <skill_overview> Fix bugs end-to-end: adopt or create the br bug, reproduce, write a failing test,
@@ -32,7 +32,7 @@ adapt to context. </rigidity_level>
 
 - Investigation only, no intent to fix (use debug-issue)
 - Feature work or enhancements (use execute-plan)
-- Refactoring without a specific defect (use brainstorm + write-plan + execute-plan)
+- Refactoring without a specific defect (use `cape:refactor`)
 
 </when_to_use>
 

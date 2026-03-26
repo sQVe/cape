@@ -5,10 +5,11 @@ description:
   user describes something to build, asks "how should I approach X", is unsure between approaches,
   or mentions adding/creating/building functionality. Also use when requirements are vague,
   architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
-  models, API patterns). Do NOT use for bug fixes, refactoring, executing existing plans, or tasks
-  where the implementation path is already clear. This skill researches the codebase, asks Socratic
-  questions, generates competing designs under different constraints, and produces a design summary
-  for `cape:write-plan` to formalize into a br epic.
+  models, API patterns). Do NOT use for bug fixes, refactoring where the target structure is clear
+  (use cape:refactor), executing existing plans, or tasks where the implementation path is already
+  clear. This skill researches the codebase, asks Socratic questions, generates competing designs
+  under different constraints, and produces a design summary for `cape:write-plan` to formalize into
+  a br epic.
 ---
 
 <skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
@@ -39,7 +40,7 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 
 - Executing existing plans with an epic already created
 - Fixing bugs
-- Simple refactoring where the implementation path is already clear
+- Refactoring with a clear target structure (use `cape:refactor`)
 - Requirements already crystal clear and epic exists </when_to_use>
 
 <the_process>

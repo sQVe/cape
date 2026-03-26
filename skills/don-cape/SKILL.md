@@ -9,8 +9,8 @@ description: >
 ---
 
 <skill_overview> Route every task to the right cape skill and enforce the order skills run in. Cape
-skills form chains — brainstorm feeds write-plan feeds execute-plan. Skipping a link breaks the
-chain.
+skills form three chains — build (brainstorm → write-plan → execute-plan), evolve (refactor →
+commit), and fix (debug-issue → fix-bug → commit). Skipping a link breaks the chain.
 
 Core contract: before acting on any user request, check the routing table. If a cape skill matches,
 load it with the Skill tool and follow it. </skill_overview>
@@ -35,7 +35,8 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | ------------------------------------------------------------------- | -------------------------- | ------------------------------- |
 | Build, add, create, implement something new                         | `cape:brainstorm`          | Starts the build chain          |
 | "How should I approach X", unclear requirements                     | `cape:brainstorm`          | Design before code              |
-| Large refactor requiring design decisions                           | `cape:brainstorm`          | When architecture is unclear    |
+| Refactor, extract, rename, move, inline, simplify, restructure      | `cape:refactor`            | Evolve chain — structure only   |
+| Large refactor requiring design decisions                           | `cape:brainstorm`          | When target design is unclear   |
 | Design an interface, API surface, module boundary, type contract    | `cape:design-an-interface` | Standalone or within brainstorm |
 | Formalize a design into an epic                                     | `cape:write-plan`          | Requires brainstorm output      |
 | "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`        | Picks up from br state          |
@@ -63,16 +64,16 @@ If nothing matches, proceed without a skill.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                        | Dispatched by                                                                                            | Purpose                                                                      |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                     | Trace execution backward from errors to root cause                           |
-| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug                                                                       | Review implementation against plan and standards                             |
-| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge | Explore codebase structure, find patterns, verify assumptions                |
-| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                | Verify claims and assumptions against codebase evidence                      |
-| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug                                                                         | Research external APIs, libraries, community practices                       |
-| `cape:notebox-researcher`    | brainstorm, debug-issue, task-refinement                                                                 | Surface past decisions and research from notes                               |
-| `cape:test-auditor`          | analyze-tests                                                                                            | Audit test quality for tautological tests, weak assertions, missing coverage |
-| `cape:test-runner`           | test-driven-development, finish-epic                                                                     | Run tests and hooks without polluting context                                |
+| Agent                        | Dispatched by                                                                                                      | Purpose                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                               | Trace execution backward from errors to root cause                           |
+| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug, refactor                                                                       | Review implementation against plan and standards                             |
+| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, refactor, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge | Explore codebase structure, find patterns, verify assumptions                |
+| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                          | Verify claims and assumptions against codebase evidence                      |
+| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug                                                                                   | Research external APIs, libraries, community practices                       |
+| `cape:notebox-researcher`    | brainstorm, debug-issue, task-refinement                                                                           | Surface past decisions and research from notes                               |
+| `cape:test-auditor`          | analyze-tests                                                                                                      | Audit test quality for tautological tests, weak assertions, missing coverage |
+| `cape:test-runner`           | test-driven-development, finish-epic, refactor                                                                     | Run tests and hooks without polluting context                                |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.
@@ -81,7 +82,7 @@ continues manually with Glob/Grep/Read/WebSearch.
 
 ## Step 2: Follow the chain
 
-Cape skills form two workflow chains. Each link hands off to the next. Don't skip links.
+Cape skills form three workflow chains. Each link hands off to the next. Don't skip links.
 
 **Build chain** — for new features, integrations, system changes:
 
@@ -101,6 +102,22 @@ brainstorm [challenge optional] → write-plan → STOP → [task-refinement] �
   - `commit` persists each completed unit of work
 - `finish-epic` verifies all success criteria, runs final checks, closes the epic
 - `commit` persists any remaining changes
+
+**Evolve chain** — for behavior-preserving structural improvement:
+
+```
+refactor → commit
+```
+
+- `refactor` verifies test safety net, names the transformation (Fowler vocabulary), executes in
+  small verified steps, confirms behavior preserved
+- `commit` persists the structural change
+
+Lightweight by design — no epic, no planning phase. The safety net is existing tests, not a design
+document. For restructurings where the target design is unclear, start with brainstorm instead.
+
+Also used mid-build-chain: when `execute-plan` hits tangled code that needs restructuring before a
+feature can land, it hands off to `refactor`, commits the structural change, then resumes.
 
 **Fix chain** — for bugs and defects:
 

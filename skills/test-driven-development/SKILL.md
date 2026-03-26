@@ -31,7 +31,7 @@ Don't use for:
 - Manual verification ("run the app and check")
 - Documentation-only changes
 - Configuration or environment changes
-- Pure refactoring with no behavioral change (use refactoring skills instead)
+- Pure refactoring with no behavioral change (use `cape:refactor`)
 
 </when_to_use>
 
