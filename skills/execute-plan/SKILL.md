@@ -88,9 +88,8 @@ Once an expanded plan exists, mark the task in-progress:
 br update <task-id> --status in_progress
 ```
 
-If the expanded plan involves writing production code with tests, load
-`cape:test-driven-development` with the Skill tool before writing any code. Follow its
-RED-GREEN-REFACTOR cycle — one behavior per cycle, no batching.
+Load `cape:test-driven-development` with the Skill tool before writing any production code. Follow
+its RED-GREEN-REFACTOR cycle — one behavior per cycle, no batching.
 
 If the code you need to modify is tangled — hard to add the new behavior without restructuring first
 — load `cape:refactor` with the Skill tool. Refactor commits the structural change separately, then
@@ -303,5 +302,6 @@ per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:li
 3. **Re-read the epic before changing course** -- rejected approaches were rejected for reasons
 4. **Complete all substeps before closing a task** -- partially done is not done
 5. **Orient from br state** -- never ask "where did we leave off"
+6. **Test before code** -- load `cape:test-driven-development` before writing any production code
 
 </critical_rules>

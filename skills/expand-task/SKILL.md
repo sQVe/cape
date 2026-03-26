@@ -86,7 +86,7 @@ from the task description or your imagination.
 ## Step 3: Produce the expanded plan
 
 Build a step-by-step plan where each step is a logical unit of work — small enough to verify
-independently, large enough to be meaningful. A step typically maps to one TDD cycle (write test,
+independently, large enough to be meaningful. Each step maps to one TDD cycle (write test,
 implement, verify).
 
 **Calibrate granularity to complexity:**

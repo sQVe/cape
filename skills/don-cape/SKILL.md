@@ -56,9 +56,9 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 **Internal skills** (called by other skills, not user-routed):
 
 - `cape:expand-task` — called by `execute-plan` to ground tasks in codebase reality before coding
-- `cape:test-driven-development` — loaded by `execute-plan` in Step 2 before writing code;
-  user-prompt-submit hook serves as safety net for resumed sessions. `fix-bug` inlines RED-GREEN
-  directly
+- `cape:test-driven-development` — mandatory before any production code. Loaded by `execute-plan` in
+  Step 2; user-prompt-submit hook serves as safety net for resumed sessions. `fix-bug` inlines
+  RED-GREEN directly
 
 If nothing matches, proceed without a skill.
 
