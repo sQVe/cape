@@ -64,7 +64,7 @@ describe("session-start", () => {
       await proc.exited;
 
       const result = JSON.parse(stdout);
-      expect(result.additionalContext).toBe("cape plugin loaded.");
+      expect(result.additionalContext).toContain("cape plugin loaded.");
     });
 
     it("should exit with code 0 when SKILL.md is missing", async () => {
@@ -78,6 +78,88 @@ describe("session-start", () => {
 
       const exitCode = await proc.exited;
       expect(exitCode).toBe(0);
+    });
+  });
+
+  describe("flow-context injection", () => {
+    const setupWithMockBr = (brScript: string) => {
+      tempDir = mkdtempSync(resolve(tmpdir(), "cape-session-start-"));
+      mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
+      writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "test skill content");
+      mkdirSync(resolve(tempDir, "bin"), { recursive: true });
+      writeFileSync(resolve(tempDir, "bin/br"), `#!/bin/sh\n${brScript}`, { mode: 0o755 });
+      return {
+        CLAUDE_PLUGIN_ROOT: tempDir,
+        PATH: `${resolve(tempDir, "bin")}:${process.env.PATH}`,
+      };
+    };
+
+    it("should inject flow-context with executing phase", async () => {
+      const env = setupWithMockBr(`case "$*" in
+  *"in_progress"*) echo "cape-abc task in_progress Do the thing" ;;
+esac`);
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...process.env, ...env },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const stdout = await new Response(proc.stdout).text();
+      await proc.exited;
+
+      const result = JSON.parse(stdout);
+      expect(result.additionalContext).toContain("<flow-context>");
+      expect(result.additionalContext).toContain("executing");
+    });
+
+    it("should inject idle phase when br returns empty", async () => {
+      const env = setupWithMockBr("");
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...process.env, ...env },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const stdout = await new Response(proc.stdout).text();
+      await proc.exited;
+
+      const result = JSON.parse(stdout);
+      expect(result.additionalContext).toContain("<flow-context>");
+      expect(result.additionalContext).toContain("idle");
+    });
+
+    it("should skip flow-context when br is unavailable", async () => {
+      const env = setupWithMockBr("exit 1");
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...process.env, ...env },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const stdout = await new Response(proc.stdout).text();
+      await proc.exited;
+
+      const result = JSON.parse(stdout);
+      expect(result.additionalContext).not.toContain("flow-context");
+    });
+
+    it("should preserve don-cape content alongside flow-context", async () => {
+      const env = setupWithMockBr(`case "$*" in
+  *"--type epic"*) echo "cape-epic1 epic open Build feature" ;;
+esac`);
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...process.env, ...env },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const stdout = await new Response(proc.stdout).text();
+      await proc.exited;
+
+      const result = JSON.parse(stdout);
+      expect(result.additionalContext).toContain("test skill content");
+      expect(result.additionalContext).toContain("<flow-context>");
+      expect(result.additionalContext).toContain("planning");
     });
   });
 
