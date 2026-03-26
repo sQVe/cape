@@ -1,3 +1,5 @@
+import { brQuery } from "./br";
+
 const input = await Bun.stdin.text();
 
 let skill = "";
@@ -30,18 +32,6 @@ const deny = (reason: string) => {
     }),
   );
   process.exit(0);
-};
-
-const brQuery = (args: string[]): string | null => {
-  try {
-    const result = Bun.spawnSync(["br", ...args], { timeout: 3000 });
-    if (result.exitCode !== 0) {
-      return null;
-    }
-    return result.stdout.toString().trim();
-  } catch {
-    return null;
-  }
 };
 
 if (skillName === "execute-plan") {

@@ -8,8 +8,7 @@ try {
   process.exit(0);
 }
 
-const closeMatch = command.match(/\bbr\s+close\b/);
-if (!closeMatch) {
+if (!/\bbr\s+close\b/.test(command)) {
   process.exit(0);
 }
 

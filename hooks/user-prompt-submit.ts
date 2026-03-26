@@ -1,3 +1,5 @@
+import { queryFlowState, deriveFlowContext } from "./br";
+
 const input = await Bun.stdin.text();
 
 let prompt = "";
@@ -30,20 +32,8 @@ if (!isManagingBrTasks) {
   }
 }
 
-const brQuery = (args: string[]): string | null => {
-  try {
-    const result = Bun.spawnSync(["br", ...args], { timeout: 3000 });
-    if (result.exitCode !== 0) {
-      return null;
-    }
-    return result.stdout.toString().trim();
-  } catch {
-    return null;
-  }
-};
-
-const inProgressTasks = brQuery(["list", "--status", "in_progress", "--type", "task"]);
-if (inProgressTasks) {
+const state = queryFlowState();
+if (state.inProgressTasks) {
   contexts.push(
     "<tdd-enforcement>There is an in-progress task. Before writing any production code, write a failing test first. " +
       "RED: write test, watch it fail. GREEN: write minimal code to pass. REFACTOR: clean up while tests stay green. " +
@@ -51,22 +41,9 @@ if (inProgressTasks) {
   );
 }
 
-const bugs = brQuery(["list", "--type", "bug", "--status", "open"]);
-const epics = brQuery(["list", "--type", "epic", "--status", "open"]);
-const brAvailable = bugs !== null || inProgressTasks !== null || epics !== null;
-
-if (brAvailable) {
-  let phase: string;
-  if (bugs) {
-    phase = "debugging";
-  } else if (inProgressTasks) {
-    phase = "executing";
-  } else if (epics) {
-    phase = "planning";
-  } else {
-    phase = "idle";
-  }
-  contexts.push(`<flow-context>Current phase: ${phase}</flow-context>`);
+const flowContext = deriveFlowContext(state);
+if (flowContext) {
+  contexts.push(flowContext);
 }
 
 if (skills.length === 0 && contexts.length === 0) {
