@@ -42,8 +42,8 @@ Check for a repo-specific template in order:
 2. `.github/PULL_REQUEST_TEMPLATE.md`
 3. `docs/pull_request_template.md`
 
-If found: read and use it as the structure, adapting the bundled template's guidelines to fit. If
-not found: use the bundled template at `resources/pr-template.md`.
+If found: read and use it as the structure, adapting the guidelines below to fit. If not found: use
+the default template format in step 5.
 
 ---
 
@@ -107,28 +107,32 @@ git diff <default-branch>...HEAD
 git log <default-branch>..HEAD --oneline
 ```
 
-Write the description following the detected template structure (step 1). Use the
-`elements-of-style:writing-clearly-and-concisely` skill for prose.
+Write the description following the detected template structure (step 1). If no repo template was
+found, use this default format exactly:
+
+!`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
+
+Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
 
 **Title:** conventional commit format — `type(scope): subject`
 
-**Description guidelines:**
+**Section guidelines:**
 
 - Write as if explaining to a colleague who knows the domain but not this code
-- Motivation: why this change, why now (1-3 sentences)
-- Changes: what was implemented with technical details
-- Link related issues with "Fixes #" or "Related to #"
+- **Motivation:** why this change, why now (1-3 sentences)
+- **Changes:** what was implemented with technical details
+- **Test plan (checkboxes):** commands to run NOW, before PR creation (e.g., `npm test`,
+  `curl localhost:3000/api`) — these are the gate
+- **Verification performed:** tests already run during development — evidence, not promises
+- **Deployment notes:** post-merge operational steps (migrations, cache flushes) — optional, omit if
+  none
+- **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
+  backend changes
+- **Issues:** link related issues with "Fixes #" or "Related to #"
 
-**Test plan — categorize items:**
-
-- **Test plan (checkboxes):** Commands to run NOW, before PR creation (e.g., `npm test`,
-  `curl localhost:3000/api`). These are the gate.
-- **Verification performed:** Tests already run during development — evidence, not promises
-- **Deployment notes:** Post-merge operational steps (migrations, cache flushes) — optional
-- **Manual verification:** RARE. Subjective judgment only (visual design, UX feel) — optional
-
-If no subjective items exist, omit manual verification entirely. Check coverage: happy path, edge
-cases, integration points, regression risks. If gaps found, add missing items.
+If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
+deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
+gaps found, add missing test plan items.
 
 ---
 

@@ -76,8 +76,9 @@ Ensure a beads workspace exists:
 br where 2>/dev/null || br init
 ```
 
-Create the `br` epic using the template from `resources/epic-template.md`. Every section is
-required:
+Create the `br` epic using this template (every section is required):
+
+!`cat "${CLAUDE_SKILL_DIR}/resources/epic-template.md"`
 
 ```bash
 br create "Epic: [Feature Name]" \
@@ -203,7 +204,7 @@ explore the idea, then come back to formalize it." Stop. </example>
 <critical_rules>
 
 1. **Require design context** -- do not create an epic without a brainstorm design summary
-2. **Use epic template** -- every section from `resources/epic-template.md` is required
+2. **Use epic template** -- every section from the injected template above is required
 3. **Create ONLY first task** -- subsequent tasks created iteratively
 4. **Stop after creation** -- present summary and wait for user to run execute-plan
 5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"

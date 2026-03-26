@@ -197,9 +197,13 @@ After user approval, create a br epic and one task per module.
 
 ### Epic
 
-Create a br epic following the structure in `resources/epic-template.md`. Populate Requirements from
-the identified gaps and bug risks, Anti-patterns from common test anti-patterns observed in scope,
-and Success criteria from the gap closure targets. Use `--type epic --priority 2`.
+Create a br epic following this template:
+
+!`cat "${CLAUDE_SKILL_DIR}/../write-plan/resources/epic-template.md"`
+
+Populate Requirements from the identified gaps and bug risks, Anti-patterns from common test
+anti-patterns observed in scope, and Success criteria from the gap closure targets. Use
+`--type epic --priority 2`.
 
 ### Tasks (one per module)
 

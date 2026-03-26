@@ -230,9 +230,12 @@ After user approval, create a br epic and one task per module.
 
 ### Epic
 
-Create a br epic following the structure in `resources/epic-template.md`. Populate Requirements from
-the RED/YELLOW findings, Anti-patterns from observed test smells, and Success criteria from the
-improvement targets. Use `--type epic --priority 2`.
+Create a br epic following this template:
+
+!`cat "${CLAUDE_SKILL_DIR}/../write-plan/resources/epic-template.md"`
+
+Populate Requirements from the RED/YELLOW findings, Anti-patterns from observed test smells, and
+Success criteria from the improvement targets. Use `--type epic --priority 2`.
 
 ### Tasks (one per module)
 
