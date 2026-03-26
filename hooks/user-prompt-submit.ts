@@ -20,6 +20,7 @@ const contexts: string[] = [];
 
 const isManagingBrTasks = /(?:split|merge|archiv).*\bbr-/i.test(lower);
 if (!isManagingBrTasks) {
+  // \bbr\b is safe: word boundaries prevent matching inside words like "abbreviation"
   const isBeads =
     /\bbr\b|\bbeads?\b|\.beads|issue.*(track|create|log)|track.*(bug|issue|finding|gap|these|them)|what.*(task|work).*next|batch.*(create|issue)|--design.*create|--description.*--design|\bgaps?\b.*\btrack/i.test(
       lower,

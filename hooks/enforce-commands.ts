@@ -1,10 +1,5 @@
 import { readFileSync } from "fs";
-import { resolve, dirname } from "path";
-
-const pluginRoot =
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(import.meta.path));
-const contextDir = resolve(pluginRoot, "hooks/context");
-const brShowLog = resolve(contextDir, "br-show-log.txt");
+import { brShowLog } from "./paths";
 
 const input = await Bun.stdin.text();
 
@@ -68,17 +63,17 @@ if (isBrUpdate && /--design\b/.test(command)) {
 
 // 3: br create missing --type or --priority
 if (isBrCreate) {
-  if (!/--type\b|-t\b/.test(command)) {
+  if (!/--type\b|(?:^|\s)-t(?:\s|$)/.test(command)) {
     deny("Add `--type` to `br create` (epic, task, bug, or feature).");
   }
-  if (!/--priority\b|-p\b/.test(command)) {
+  if (!/--priority\b|(?:^|\s)-p(?:\s|$)/.test(command)) {
     deny("Add `--priority` to `br create` (0-4).");
   }
 }
 
 // 4: description header validation per type
 if (isBrCreate && /--description\b/.test(command)) {
-  const typeMatch = command.match(/(?:--type\s+|-t\s+)(\w+)/);
+  const typeMatch = command.match(/(?:--type\s+|(?:^|\s)-t\s+)(\w+)/);
   const type = typeMatch?.[1];
 
   if (type === "task") {
@@ -174,6 +169,6 @@ if (/\bgh\s+pr\s+create\b/.test(command)) {
 }
 
 // 9: --labels missing on br create
-if (isBrCreate && !/--labels\b|-l\b/.test(command)) {
+if (isBrCreate && !/--labels\b|(?:^|\s)-l(?:\s|$)/.test(command)) {
   deny("Add `--labels` to `br create` for categorization.");
 }

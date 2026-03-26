@@ -1,17 +1,21 @@
-import { resolve, dirname } from "path";
+import { resolve } from "path";
 import { readFileSync, writeFileSync, mkdirSync } from "fs";
+import { pluginRoot, contextDir, brShowLog } from "./paths";
 
-const pluginRoot =
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(import.meta.path));
 const skillPath = resolve(pluginRoot, "skills/don-cape/SKILL.md");
-const contextDir = resolve(pluginRoot, "hooks/context");
-const brShowLog = resolve(contextDir, "br-show-log.txt");
 
 try {
   mkdirSync(contextDir, { recursive: true });
-  writeFileSync(brShowLog, "");
 } catch {
   // ignore
+}
+
+if (process.env.CAPE_CLEAR_LOGS) {
+  try {
+    writeFileSync(brShowLog, "");
+  } catch {
+    // ignore
+  }
 }
 
 let skill: string;

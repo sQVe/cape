@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { mkdtempSync, writeFileSync, mkdirSync, readFileSync, rmSync } from "fs";
+import { mkdtempSync, writeFileSync, mkdirSync, existsSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 
@@ -107,17 +107,45 @@ describe("gentle-reminders", () => {
     });
   });
 
+  describe("when non-matching extensions are edited", () => {
+    it("should not remind for .lua files", async () => {
+      writeLog("2024-01-01T00:00:00.000Z|/foo/bar.lua\n");
+
+      const { stdout } = await runHook();
+
+      expect(stdout).toBe("");
+    });
+
+    it("should not remind for .json files", async () => {
+      writeLog("2024-01-01T00:00:00.000Z|/foo/config.json\n");
+
+      const { stdout } = await runHook();
+
+      expect(stdout).toBe("");
+    });
+  });
+
+  describe("when test files are from different languages", () => {
+    it("should not remind when source has cross-language test file", async () => {
+      writeLog(
+        "2024-01-01T00:00:00.000Z|/foo/bar.ts\n2024-01-01T00:00:01.000Z|/foo/bar.test.py\n",
+      );
+
+      const { stdout } = await runHook();
+
+      expect(stdout).toBe("");
+    });
+  });
+
   describe("after running", () => {
-    it("should clear edit log after running", async () => {
+    it("should remove edit log after processing", async () => {
       writeLog("2024-01-01T00:00:00.000Z|/foo/bar.ts\n");
 
       await runHook();
 
-      const logContent = readFileSync(
-        join(tmpDir, "hooks", "context", "edit-log.txt"),
-        "utf-8",
-      );
-      expect(logContent).toBe("");
+      expect(
+        existsSync(join(tmpDir, "hooks", "context", "edit-log.txt")),
+      ).toBe(false);
     });
   });
 });

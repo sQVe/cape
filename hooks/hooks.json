@@ -2,7 +2,16 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup|resume|clear|compact",
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CAPE_CLEAR_LOGS=1 bun run ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.ts"
+          }
+        ]
+      },
+      {
+        "matcher": "resume|clear|compact",
         "hooks": [
           {
             "type": "command",

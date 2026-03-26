@@ -154,6 +154,24 @@ describe("enforce-commands", () => {
     });
   });
 
+  describe("short flags", () => {
+    it("should accept -t -p -l short flags", async () => {
+      const result = await runHook(
+        'br create -t task -p 2 -l foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
+      );
+
+      expectPass(result);
+    });
+
+    it("should accept mixed short and long flags", async () => {
+      const result = await runHook(
+        'br create --type task -p 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
+      );
+
+      expectPass(result);
+    });
+  });
+
   describe("rule 4: description header validation", () => {
     it("should deny task without ## Goal", async () => {
       const result = await runHook(

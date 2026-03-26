@@ -1,10 +1,5 @@
 import { mkdirSync, appendFileSync } from "fs";
-import { resolve, dirname } from "path";
-
-const pluginRoot =
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(import.meta.path));
-const contextDir = resolve(pluginRoot, "hooks/context");
-const brShowLog = resolve(contextDir, "br-show-log.txt");
+import { contextDir, brShowLog } from "./paths";
 
 const input = await Bun.stdin.text();
 

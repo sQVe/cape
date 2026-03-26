@@ -1,5 +1,7 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect, afterEach } from "bun:test";
+import { mkdtempSync, writeFileSync, rmSync } from "fs";
 import { join } from "path";
+import { tmpdir } from "os";
 
 const hookPath = join(import.meta.dir, "user-prompt-submit.ts");
 
@@ -74,6 +76,59 @@ describe("user-prompt-submit", () => {
   });
 
   describe("TDD enforcement", () => {
+    let tmpDir: string;
+
+    afterEach(() => {
+      if (tmpDir) {
+        rmSync(tmpDir, { recursive: true, force: true });
+        tmpDir = "";
+      }
+    });
+
+    it("should inject TDD context when in-progress tasks exist", async () => {
+      tmpDir = mkdtempSync(join(tmpdir(), "cape-tdd-"));
+      const fakeBr = join(tmpDir, "br");
+      writeFileSync(
+        fakeBr,
+        '#!/bin/sh\necho "cape-abc  task  in_progress  Do the thing"',
+        { mode: 0o755 },
+      );
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        stdin: new TextEncoder().encode(
+          JSON.stringify({ prompt: "implement the feature" }),
+        ),
+        stdout: "pipe",
+        stderr: "pipe",
+        env: { ...process.env, PATH: `${tmpDir}:${process.env.PATH}` },
+      });
+      await proc.exited;
+      const output = await new Response(proc.stdout).text();
+      const result = JSON.parse(output.trim());
+
+      expect(result.additionalContext).toContain("tdd-enforcement");
+    });
+
+    it("should not inject TDD context when no in-progress tasks", async () => {
+      tmpDir = mkdtempSync(join(tmpdir(), "cape-tdd-"));
+      const fakeBr = join(tmpDir, "br");
+      writeFileSync(fakeBr, "#!/bin/sh\n", { mode: 0o755 });
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        stdin: new TextEncoder().encode(
+          JSON.stringify({ prompt: "implement the feature" }),
+        ),
+        stdout: "pipe",
+        stderr: "pipe",
+        env: { ...process.env, PATH: `${tmpDir}:${process.env.PATH}` },
+      });
+      await proc.exited;
+      const output = await new Response(proc.stdout).text();
+      const result = JSON.parse(output.trim());
+
+      expect(result).toEqual({ decision: "approve" });
+    });
+
     it("should not crash when br is unavailable", async () => {
       const result = await runHook(JSON.stringify({ prompt: "some unrelated prompt" }));
 

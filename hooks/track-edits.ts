@@ -1,10 +1,5 @@
 import { mkdirSync, appendFileSync } from "fs";
-import { resolve, dirname } from "path";
-
-const pluginRoot =
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(import.meta.path));
-const contextDir = resolve(pluginRoot, "hooks/context");
-const logFile = resolve(contextDir, "edit-log.txt");
+import { contextDir, editLog } from "./paths";
 
 const input = await Bun.stdin.text();
 
@@ -21,4 +16,4 @@ if (!filePath) {
 }
 
 mkdirSync(contextDir, { recursive: true });
-appendFileSync(logFile, `${new Date().toISOString()}|${filePath}\n`);
+appendFileSync(editLog, `${new Date().toISOString()}|${filePath}\n`);

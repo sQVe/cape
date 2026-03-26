@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "fs";
 import { resolve } from "path";
 import { tmpdir } from "os";
 
@@ -78,6 +78,45 @@ describe("session-start", () => {
 
       const exitCode = await proc.exited;
       expect(exitCode).toBe(0);
+    });
+  });
+
+  describe("log clearing", () => {
+    it("should clear br-show-log.txt when CAPE_CLEAR_LOGS is set", async () => {
+      tempDir = mkdtempSync(resolve(tmpdir(), "cape-session-start-"));
+      mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
+      writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "content");
+      mkdirSync(resolve(tempDir, "hooks/context"), { recursive: true });
+      writeFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "cape-123\n");
+
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...process.env, CLAUDE_PLUGIN_ROOT: tempDir, CAPE_CLEAR_LOGS: "1" },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      await proc.exited;
+
+      const content = readFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "utf-8");
+      expect(content).toBe("");
+    });
+
+    it("should preserve br-show-log.txt when CAPE_CLEAR_LOGS is not set", async () => {
+      tempDir = mkdtempSync(resolve(tmpdir(), "cape-session-start-"));
+      mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
+      writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "content");
+      mkdirSync(resolve(tempDir, "hooks/context"), { recursive: true });
+      writeFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "cape-123\n");
+
+      const { CAPE_CLEAR_LOGS: _, ...env } = process.env;
+      const proc = Bun.spawn(["bun", "run", hookPath], {
+        env: { ...env, CLAUDE_PLUGIN_ROOT: tempDir },
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      await proc.exited;
+
+      const content = readFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "utf-8");
+      expect(content).toBe("cape-123\n");
     });
   });
 });

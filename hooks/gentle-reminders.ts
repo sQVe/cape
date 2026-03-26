@@ -1,21 +1,27 @@
-import { readFileSync, writeFileSync, mkdirSync } from "fs";
-import { resolve, dirname } from "path";
-
-const pluginRoot =
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(import.meta.path));
-const contextDir = resolve(pluginRoot, "hooks/context");
-const logFile = resolve(contextDir, "edit-log.txt");
+import { renameSync, readFileSync, unlinkSync, mkdirSync } from "fs";
+import { contextDir, editLog } from "./paths";
 
 mkdirSync(contextDir, { recursive: true });
 
+const processingFile = `${editLog}.processing`;
+try {
+  renameSync(editLog, processingFile);
+} catch {
+  process.exit(0);
+}
+
 let lines: string[] = [];
 try {
-  lines = readFileSync(logFile, "utf-8").trim().split("\n").filter(Boolean);
-} catch (error: unknown) {
-  if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-    process.exit(0);
+  lines = readFileSync(processingFile, "utf-8")
+    .trim()
+    .split("\n")
+    .filter(Boolean);
+} finally {
+  try {
+    unlinkSync(processingFile);
+  } catch {
+    // ignore cleanup failure
   }
-  throw error;
 }
 
 if (lines.length === 0) {
@@ -42,6 +48,3 @@ if (sourceFiles.length > 0 && testFiles.length === 0) {
 if (reminders.length > 0) {
   console.log(reminders.join("\n"));
 }
-
-// Clear the log after each check so reminders reflect the current response cycle
-writeFileSync(logFile, "");
