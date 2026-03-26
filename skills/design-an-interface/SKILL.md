@@ -201,21 +201,9 @@ the "Chosen approach" in the design summary. Rejected designs become "Approaches
 
 <agent_references>
 
-## Dispatch `cape:codebase-investigator` when:
+## 3-4 parallel design sub-agents:
 
-- Understanding existing interfaces the new one must coexist with
-- Finding callers, adjacent modules, naming conventions
-- Verifying that proposed signatures match language and framework idioms
-
-## Dispatch `cape:internet-researcher` when:
-
-- The interface involves well-known patterns (Repository, Builder, Strategy)
-- External API patterns or library conventions are relevant
-- Community best practices for the interface type exist
-
-## Dispatch 3-4 parallel design sub-agents:
-
-- Always — this is the core of the skill
+- Always dispatch — this is the core of the skill
 - Each receives requirements brief + research context + its constraint
 - Agent 4 (Ports & adapters) only when the interface mediates an external dependency
 

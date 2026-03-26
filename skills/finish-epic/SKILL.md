@@ -3,11 +3,11 @@ name: finish-epic
 user-invocable: false
 description: >
   Verify and close a br epic after all tasks are complete. Use when the user says "finish the epic",
-  "we're done", "close out the epic", "wrap this up", all tasks are done and the user wants to close
-  it, or execute-plan detects all success criteria appear met. Runs final verification (tests,
-  linting, hooks), checks every success criterion with evidence, executes manual verification steps
-  from the epic, appends an Outcome to the epic, and closes it. Also triggers on epic IDs combined
-  with closure intent. Do NOT use for implementing tasks (use execute-plan), creating plans (use
+  "we're done", "close out the epic", all tasks are done and the user wants to close it, or
+  execute-plan detects all success criteria appear met. Runs final verification (tests, linting,
+  hooks), checks every success criterion with evidence, executes manual verification steps from the
+  epic, appends an Outcome to the epic, and closes it. Also triggers on epic IDs combined with
+  closure intent. Do NOT use for implementing tasks (use execute-plan), creating plans (use
   write-plan), or git operations (merge/PR/push — user handles those).
 ---
 
@@ -144,22 +144,6 @@ Optionally load `cape:find-test-gaps` to verify test coverage before shipping.
 ```
 
 </the_process>
-
-<agent_references>
-
-## Dispatch `cape:test-runner` when:
-
-- Running the full test suite, linter, and pre-commit hooks in step 2a
-- Keeps verbose output out of the main context
-
-## Dispatch `cape:code-reviewer` when:
-
-- Step 2c: reviewing the implementation against epic requirements before closing
-- Flags deviations from the plan, anti-pattern violations, and quality issues
-
-If agents aren't available, run checks and review manually with Glob/Grep/Read.
-
-</agent_references>
 
 <examples>
 

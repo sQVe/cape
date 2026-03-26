@@ -312,43 +312,11 @@ Graph absence doesn't block the review — it just limits the analysis to what's
 <example>
 <scenario>Large change set, surgical review depth</scenario>
 
-User: "review staged"
+User: "review staged" — 14 files across a refactor.
 
-1. Scope: staged — 14 files changed across a refactor
-2. Graph shows 3 high-impact files (many dependents), rest are leaf changes
-3. Deep review on high-impact files, spot checks on the rest
-
-```
-## Review: staged (14 files, 23 in blast radius)
-
-**Verdict:** Needs changes
-**Risk:** Medium
-
-### Findings
-
-#### src/auth/middleware.ts
-
-**[Important]** L15: Token validation skips expiry check for refresh tokens
-Suggestion: Add expiry validation — refresh tokens should still expire
-Impact: 4 callers
-
-**[Suggestion]** L32: Consider extracting token parsing to a shared utility
-Impact: isolated
-
-#### src/routes/api.ts
-
-**[Suggestion]** L88: Unused import `validateRequest`
-
-### Test coverage gaps
-
-- refreshToken in src/auth/middleware.ts — no tests, 4 callers
-
-### Summary
-
-0 critical, 1 important, 2 suggestions
-```
-
-</example>
+Graph shows 3 high-impact files (many dependents), rest are leaf changes. Deep review on high-impact
+files, spot checks on the rest. Output uses multiple `#### file_path` sections under Findings, each
+with its own severity-tagged items. Same format as example 1, repeated per file. </example>
 
 </examples>
 

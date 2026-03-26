@@ -5,11 +5,11 @@ description: >
   use this skill whenever the user mentions test gaps, missing tests, untested code, test coverage
   for a specific scope, or wants to know what's not tested before a refactor or after shipping a
   feature. Triggers on any of these patterns: "find test gaps", "what's untested", "check test
-  coverage", "improve tests for", "we need tests for", "what's not covered", "test health", "missing
-  test cases", pointing at a directory and asking about its tests, mentioning they shipped something
-  and want to verify test completeness, or preparing for a refactor and wanting safety nets. This
-  skill is specifically about FINDING gaps (static analysis, source-to-test mapping, bug risk
-  assessment) — not about writing tests (use test-driven-development), auditing existing test
+  coverage", "improve tests for", "we need tests for", "what's not covered", "test completeness",
+  "missing test cases", pointing at a directory and asking about its tests, mentioning they shipped
+  something and want to verify test completeness, or preparing for a refactor and wanting safety
+  nets. This skill is specifically about FINDING gaps (static analysis, source-to-test mapping, bug
+  risk assessment) — not about writing tests (use test-driven-development), auditing existing test
   quality (use analyze-tests), debugging test failures (use debug-issue), or running a test suite.
   Even if the request seems simple, use this skill — it provides structured br output with
   per-module tasks that plain analysis does not.
@@ -197,28 +197,9 @@ After user approval, create a br epic and one task per module.
 
 ### Epic
 
-```bash
-br create "Epic: Close test gaps in [scope]" \
-  --type epic \
-  --priority 2 \
-  --description "$(cat <<'EOF'
-## Requirements
-- Every gap addresses a specific bug risk, not coverage percentage
-- Tests follow project conventions ([framework], [assertion style])
-- No tautological tests — each test must fail when the behavior breaks
-
-## Anti-patterns
-- Coverage porn: adding tests for trivial code to inflate numbers
-- Mock-heavy tests that verify wiring instead of behavior
-- Happy-path-only tests that miss the error paths this epic targets
-
-## Success criteria
-- [ ] All identified gaps have tests that catch the described bug
-- [ ] Tests follow project conventions
-- [ ] No test is tautological (would pass even if production code broke)
-EOF
-)"
-```
+Create a br epic following the structure in `resources/epic-template.md`. Populate Requirements from
+the identified gaps and bug risks, Anti-patterns from common test anti-patterns observed in scope,
+and Success criteria from the gap closure targets. Use `--type epic --priority 2`.
 
 ### Tasks (one per module)
 
@@ -249,33 +230,9 @@ EOF
 )"
 ```
 
-### Completion summary
-
-```
-Created br-N: "Epic: Close test gaps in [scope]"
-Tasks:
-  br-N.1: Add missing tests for permissions.ts (P1, 3 gaps)
-  br-N.2: Add missing tests for login.ts (P2, 2 gaps)
-
-Continue with `cape:execute-plan` to start implementing.
-```
+Present the created epic and tasks, then suggest `cape:execute-plan` to start implementing.
 
 </the_process>
-
-<agent_references>
-
-## Dispatch `cape:codebase-investigator` when:
-
-- Resolving scope: finding source files, test files, and naming conventions
-- Understanding module structure and test framework setup
-- Checking whether behavior is tested transitively through integration tests
-
-## Dispatch parallel subagents for step 2 when:
-
-- The scope contains many files — analyze modules concurrently
-- Each subagent reads one source file + its test file and returns gaps
-
-</agent_references>
 
 <examples>
 

@@ -47,8 +47,8 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`       | Standalone                      |
 | Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`           | Standalone                      |
 | Create a branch, start work on a branch                             | `cape:branch`              | Standalone                      |
-| Finish, wrap up, close out an epic, all tasks done                  | `cape:finish-epic`         | End of build chain              |
-| Commit, save changes                                                | `cape:commit`              | Standalone                      |
+| Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`         | End of build chain              |
+| Commit, save changes, wrap this up                                  | `cape:commit`              | Standalone                      |
 | Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`                  | Standalone                      |
 | Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`              | Standalone                      |
 | br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`               | Reference skill                 |
@@ -56,8 +56,9 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 **Internal skills** (called by other skills, not user-routed):
 
 - `cape:expand-task` — called by `execute-plan` to ground tasks in codebase reality before coding
-- `cape:test-driven-development` — loaded by `execute-plan` via user-prompt-submit hook; `fix-bug`
-  inlines RED-GREEN directly
+- `cape:test-driven-development` — loaded by `execute-plan` in Step 2 before writing code;
+  user-prompt-submit hook serves as safety net for resumed sessions. `fix-bug` inlines RED-GREEN
+  directly
 
 If nothing matches, proceed without a skill.
 

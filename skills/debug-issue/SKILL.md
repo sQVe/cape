@@ -216,33 +216,12 @@ Ready for fix-bug when you want to address it.
 
 <agent_references>
 
-## Dispatch `cape:bug-tracer` (primary) when:
-
-- Tracing execution backward from an error location
-- Finding what changed recently in affected files (`git log`, `git blame`)
-- Comparing working code paths with broken ones
-- Identifying instrumentation points and state to inspect
-- Binary searching through code when the failure point is unclear
-
-## Dispatch `cape:internet-researcher` when:
-
-- Error involves a third-party library or API
-- Behavior contradicts documentation
-- Checking for known issues or breaking changes in dependencies
-- Unfamiliar error messages or codes
-
-## Dispatch `cape:codebase-investigator` (secondary) when:
-
-- Bug-tracer needs broader context about how a system works
-- Understanding architecture or patterns unrelated to the specific failure
-- Finding existing conventions before suggesting a fix direction
-
 ## Investigation protocol:
 
-1. Reproduce first -- tools confirm the symptom exists
-2. Bug-tracer -- trace backward from error, check git history, compare working vs broken paths
-3. External evidence -- only when the bug may involve external factors
-4. Codebase-investigator -- fall back for broader code understanding when needed
+1. Reproduce first — tools confirm the symptom exists
+2. Bug-tracer — trace backward from error, check git history, compare working vs broken paths
+3. External evidence — only when the bug may involve external factors
+4. Codebase-investigator — fall back for broader code understanding when needed
 5. Never skip straight to external research without tracing the code first
 
 </agent_references>

@@ -50,8 +50,8 @@ Read the root cause, evidence, reproduction steps, and success criteria. This is
 
 **If no br bug exists** (user reports a new bug and wants it fixed):
 
-Dispatch the `cape:debug-issue` skill to investigate first. It will produce a br bug with root cause
-analysis, evidence, and reproduction steps. Once the br bug exists, read it and continue.
+Load `cape:debug-issue` with the Skill tool to investigate first. It will produce a br bug with root
+cause analysis, evidence, and reproduction steps. Once the br bug exists, read it and continue.
 
 Do not proceed to step 2 without a br bug that has a documented root cause.
 
@@ -157,35 +157,21 @@ After closing, load `cape:commit` with the Skill tool to commit the fix.
 
 <agent_references>
 
-## Dispatch `cape:debug-issue` skill when:
+## `cape:bug-tracer` re-dispatch:
+
+Dispatch only when the root cause from the br bug proves incomplete during the fix — a new failure
+path is discovered or the fix reveals deeper issues than the initial diagnosis found.
+
+</agent_references>
+
+<skill_references>
+
+## Load `cape:debug-issue` with the Skill tool when:
 
 - User reports a bug but no br bug exists yet
 - Investigation is needed before fixing can begin
 
-## Dispatch `cape:bug-tracer` when:
-
-- Root cause from the br bug proves incomplete during the fix
-- A new failure path is discovered that wasn't in the original investigation
-- The fix reveals deeper issues than the initial diagnosis found
-
-## Dispatch `cape:code-reviewer` when:
-
-- Fix is green and full suite passes — review the change before closing
-- Verify the fix addresses the root cause, not just the symptom
-
-## Dispatch `cape:codebase-investigator` when:
-
-- Understanding broader impact of the fix on other modules
-- Finding callers or dependents of the changed code
-- Checking if the same bug pattern exists elsewhere
-
-## Dispatch `cape:internet-researcher` when:
-
-- Fix involves external library behavior or undocumented APIs
-- Checking if a library bug has a known workaround or fix
-- Verifying expected behavior from upstream documentation
-
-</agent_references>
+</skill_references>
 
 <examples>
 

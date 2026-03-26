@@ -88,6 +88,10 @@ Once an expanded plan exists, mark the task in-progress:
 br update <task-id> --status in_progress
 ```
 
+If the expanded plan involves writing production code with tests, load
+`cape:test-driven-development` with the Skill tool before writing any code. Follow its
+RED-GREEN-REFACTOR cycle — one behavior per cycle, no batching.
+
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
 If you genuinely need to switch approaches, explain why the original reasoning no longer holds and
@@ -113,10 +117,10 @@ After closing the task, review and optionally challenge before planning the next
 **Review implementation:** Dispatch `cape:code-reviewer` to review the completed task against the
 epic's requirements and anti-patterns. Address any critical findings before creating the next task.
 
-**Challenge completed work (opt-in):** Ask: "Want me to run `cape:challenge` to check for scope
-creep or over-engineering, or proceed to the next task?" If the user accepts, run `cape:challenge`
-on what was just implemented, focusing on scope creep, unrequested features, and over-engineering.
-Skip for straightforward single-file changes.
+**Challenge completed work (opt-in):** Ask: "Want me to load `cape:challenge` to check for scope
+creep or over-engineering, or proceed to the next task?" If the user accepts, load `cape:challenge`
+with the Skill tool, focusing on scope creep, unrequested features, and over-engineering. Skip for
+straightforward single-file changes.
 
 **Verify claims:** Optionally dispatch `cape:fact-checker` if the task made specific claims about
 codebase structure, API behavior, or dependencies that should be confirmed before proceeding.
@@ -240,33 +244,22 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 
 <agent_references>
 
-## Dispatch `cape:code-reviewer` when:
+## `cape:code-reviewer` protocol:
 
-- A task is complete — review implementation against epic requirements before creating the next task
+**Pass:** task ID (`br show <task-id>` output), epic ID, git diff for this task's changes. **Expect
+back:** verdict (pass/fail) with categorized findings (Critical/Important/Suggestion).
 
-**Pass as context:**
+## `cape:fact-checker` protocol:
 
-- The task ID (`br show <task-id>` output) and epic ID
-- The git diff for this task's changes
+Dispatch when verifying that assumptions from expand-task still hold after implementation. **Pass:**
+specific claims to verify (file paths, function signatures, import relationships). **Expect back:**
+per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:line evidence.
 
-**Expect back:**
+</agent_references>
 
-- Verdict (pass/fail) with categorized findings (Critical/Important/Suggestion)
+<skill_references>
 
-## Dispatch `cape:fact-checker` when:
-
-- Task made specific claims about codebase structure or API behavior
-- Verifying that assumptions from expand-task still hold after implementation
-
-**Pass as context:**
-
-- The specific claims to verify (file paths, function signatures, import relationships)
-
-**Expect back:**
-
-- Per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:line evidence
-
-## Dispatch `cape:challenge` (opt-in) when:
+## Load `cape:challenge` with the Skill tool (opt-in) when:
 
 - Task is complete and touched multiple components or took longer than expected
 - User accepts the challenge offer from step 3
@@ -280,10 +273,7 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 
 - Challenge summary with confirmed constraints and rejected assumptions
 
-Note: expand-task dispatches `cape:codebase-investigator` on behalf of execute-plan during step 2.
-If agents aren't available, continue manually with Glob/Grep/Read.
-
-</agent_references>
+</skill_references>
 
 <key_principles>
 

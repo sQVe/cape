@@ -121,8 +121,9 @@ Do NOT proceed to Step 2 until the user responds.
 Assess whether the idea warrants divergent exploration or has an obvious path:
 
 - **Interface mode** — the core design question is about an interface, API surface, module boundary,
-  or type contract. Delegate to `cape:design-an-interface` instead of running divergent mode inline.
-  Its comparison and recommendation feed back as the chosen approach and approaches considered.
+  or type contract. Load `cape:design-an-interface` with the Skill tool instead of running divergent
+  mode inline. Its comparison and recommendation feed back as the chosen approach and approaches
+  considered.
 - **Divergent mode** — the idea touches multiple components, has competing viable approaches, or
   involves architectural decisions beyond interface shape. Dispatch 3 parallel design agents.
 - **Inline mode** — single-file change, one obvious pattern to follow, trivial scope. Propose 1-2
@@ -187,12 +188,12 @@ Iterate until the user signals satisfaction with a direction. Only then proceed 
 
 After the approach is selected, offer challenge:
 
-"Want me to run `cape:challenge` to stress-test this design for hidden assumptions, or skip straight
-to the design summary?"
+"Want me to load `cape:challenge` to stress-test this design for hidden assumptions, or skip
+straight to the design summary?"
 
 If the user wants challenge:
 
-- Run `cape:challenge` to surface hidden assumptions
+- Load `cape:challenge` with the Skill tool to surface hidden assumptions
 - Challenge walks each assumption interactively — one per turn — with researched recommendations
 - Confirmed assumptions become requirements or anti-patterns in the design summary
 - Rejected ones trigger scope reductions or requirement changes
@@ -247,39 +248,7 @@ Design summary complete. Next step: formalize into a br epic with `cape:write-pl
 
 <agent_references>
 
-## Dispatch `cape:codebase-investigator` when:
-
-- Understanding how existing features work
-- Finding where specific functionality lives
-- Identifying patterns to follow
-- Verifying assumptions about structure
-
-## Dispatch `cape:internet-researcher` when:
-
-- Finding current API documentation
-- Researching library capabilities
-- Comparing technology options
-- Finding official code examples
-
-## Dispatch `cape:notebox-researcher` when:
-
-- User mentions checking their notes or past research
-- User references a topic they may have explored before
-- You want to find past decisions relevant to the design
-
-## Dispatch `cape:design-an-interface` when (interface mode):
-
-- The core design question is about an interface, API surface, or module boundary
-- Multiple viable interface shapes exist and the choice drives the architecture
-- The user's idea is fundamentally about what callers should see
-
-Its recommendation feeds into the design summary as the chosen approach.
-
-## Dispatch 3 parallel design sub-agents when (divergent mode):
-
-- The idea touches multiple components or layers
-- Multiple viable approaches exist with real trade-offs
-- Architectural decisions need deliberate constraint exploration
+## Divergent mode — 3 parallel design sub-agents:
 
 Each sub-agent receives the same research context and designs under its assigned constraint:
 
@@ -296,6 +265,26 @@ If sub-agents aren't available, simulate constraints sequentially.
 3. Research yields nothing → ask user for direction
 
 </agent_references>
+
+<skill_references>
+
+## Load `cape:design-an-interface` with the Skill tool when (interface mode):
+
+- The core design question is about an interface, API surface, or module boundary
+- Multiple viable interface shapes exist and the choice drives the architecture
+- The user's idea is fundamentally about what callers should see
+
+Its recommendation feeds into the design summary as the chosen approach.
+
+## Load `cape:challenge` with the Skill tool when (opt-in):
+
+- User accepts the challenge offer from Step 3
+- The selected approach has assumptions worth stress-testing
+
+Challenge walks each assumption interactively — confirmed assumptions become requirements or
+anti-patterns in the design summary. Rejected ones trigger scope reductions.
+
+</skill_references>
 
 <examples>
 
@@ -347,22 +336,12 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 
 User: "Build a plugin system for our CLI tool"
 
-**Wrong:** Propose a single approach without exploring constraints. Misses that a minimal plugin
-interface would suffice for the three known plugins, while a flexible approach adds unnecessary
-complexity.
+**Wrong:** Propose a single approach without exploring constraints.
 
-**Right:**
-
-1. Research reveals 3 existing plugins hardcoded in `src/plugins/`
-2. CHECKPOINT: present research — 3 plugins, current loading pattern, no plugin interface
-3. User confirms scope: "just these 3, maybe 1-2 more later"
-4. Divergent mode — dispatch 3 design agents
-5. CHECKPOINT: compare approaches, recommend pragmatic
-6. User: "I like pragmatic but let's take the type contract from minimal"
-7. Refine hybrid approach
-8. Offer challenge — user accepts, surfaces plugin discovery assumption
-9. Design summary with anti-pattern "NO dependency injection framework (reason: 3 plugins don't
-   justify a DI container)" </example>
+**Right:** Research → CHECKPOINT (3 existing plugins found) → user confirms scope → divergent mode
+(3 agents) → CHECKPOINT (compare, recommend pragmatic) → user picks hybrid → challenge surfaces
+plugin discovery assumption → design summary with anti-pattern "NO DI framework (reason: 3 plugins
+don't justify it)". </example>
 
 <example>
 <scenario>Anti-patterns prevent implementation shortcuts</scenario>
@@ -397,7 +376,7 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
 4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
    simple ideas with obvious paths
-5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't run
+5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't load
    automatically
 6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
 7. **Stop after design summary** — present summary and wait for user to run write-plan

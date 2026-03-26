@@ -229,18 +229,6 @@ Continue through remaining branches until all resolved or user says "lock it". <
 
 </key_principles>
 
-<agent_references>
-
-## Dispatch `cape:codebase-investigator` when:
-
-- Researching codebase to self-answer questions before presenting assumptions
-- Verifying hidden dependency assumptions (library behavior, module structure)
-- Checking if assumed patterns actually exist in the codebase
-
-If agents aren't available, investigate manually with Glob/Grep/Read.
-
-</agent_references>
-
 <critical_rules>
 
 1. **One assumption per turn** — walk interactively, never batch-dump findings

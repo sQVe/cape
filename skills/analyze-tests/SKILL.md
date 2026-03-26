@@ -6,7 +6,7 @@ description: >
   effectiveness, tautological tests, coverage gaming, "are these tests any good", "audit tests",
   "review test quality", test rot, flaky tests, or wants to understand whether existing tests
   actually catch bugs. Also triggers on: "these tests feel useless", "coverage is high but bugs keep
-  shipping", "check if our tests are meaningful", pointing at a test file and asking if it's worth
+  shipping", "would these tests catch a real bug", pointing at a test file and asking if it's worth
   keeping. This skill audits EXISTING test quality — not finding missing tests (use find-test-gaps),
   writing new tests (use test-driven-development), or debugging test failures (use debug-issue).
 ---
@@ -230,29 +230,9 @@ After user approval, create a br epic and one task per module.
 
 ### Epic
 
-```bash
-br create "Epic: Improve test quality in [scope]" \
-  --type epic \
-  --priority 2 \
-  --description "$(cat <<'EOF'
-## Requirements
-- RED tests are removed or replaced with tests that verify actual behavior
-- YELLOW tests are strengthened with specific assertions and missing cases
-- Every replacement test follows TDD: write the failing test first, then verify it catches the bug
-
-## Anti-patterns
-- Replacing a tautological test with another tautological test
-- "Strengthening" by adding more weak assertions instead of one strong one
-- Blindly adding corner case tests without understanding the production code path
-
-## Success criteria
-- [ ] All RED tests removed or replaced
-- [ ] All YELLOW tests strengthened per findings
-- [ ] No replacement test is itself RED (verify by checking it fails when production code breaks)
-- [ ] Total test count may decrease — fewer good tests beat many bad ones
-EOF
-)"
-```
+Create a br epic following the structure in `resources/epic-template.md`. Populate Requirements from
+the RED/YELLOW findings, Anti-patterns from observed test smells, and Success criteria from the
+improvement targets. Use `--type epic --priority 2`.
 
 ### Tasks (one per module)
 
@@ -292,45 +272,20 @@ EOF
 )"
 ```
 
-### Completion summary
-
-```
-Created br-N: "Epic: Improve test quality in [scope]"
-Tasks:
-  br-N.1: Improve tests in login.test.ts (P1, 2 RED, 4 YELLOW)
-  br-N.2: Improve tests in session.test.ts (P2, 0 RED, 3 YELLOW)
-
-Continue with `cape:execute-plan` to start implementing.
-Optionally load `cape:find-test-gaps` to also find missing tests (this skill audits existing quality only).
-```
+Present the created epic and tasks, then suggest `cape:execute-plan` to start implementing.
 
 </the_process>
 
 <agent_references>
 
-## Dispatch `cape:codebase-investigator` when:
+## `cape:test-auditor` protocol:
 
-- Graph is unavailable: finding test conventions, source-to-test mappings, and test framework setup
-- Understanding module structure when graph coverage is incomplete
+**Pass:** production file path, corresponding test file path, graph findings (impact radius,
+callers). **Expect back:** per-test verdicts (RED/YELLOW/GREEN) with line references and fix
+descriptions.
 
-## Dispatch `cape:test-auditor` for step 2:
-
-Each dispatched subagent uses the test-auditor role to evaluate test quality: classifying tests as
-RED/YELLOW/GREEN, identifying anti-patterns, and returning categorized verdicts.
-
-**Pass as context:**
-
-- The production file path and its corresponding test file path
-- Graph findings (impact radius, callers) for the production code
-
-**Expect back:**
-
-- Per-test verdicts (RED/YELLOW/GREEN) with line references and fix descriptions
-
-## Dispatch parallel subagents for step 2 when:
-
-- Scope contains many test files — analyze modules concurrently
-- Each subagent reads one production file + its test file and returns categorized verdicts
+Dispatch parallel subagents when scope contains many test files — each reads one production file +
+its test file and returns categorized verdicts.
 
 </agent_references>
 

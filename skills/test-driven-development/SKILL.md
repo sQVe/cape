@@ -102,20 +102,10 @@ behaviors are implemented.
 
 <agent_references>
 
-## Dispatch `cape:test-runner` when:
+## `cape:test-runner` protocol:
 
-Running tests at any phase (RED, GREEN, REFACTOR). test-runner executes the command, captures
-output, and returns only the pass/fail summary with complete failure details.
-
-**Pass as context:**
-
-- The test command to run (single test for RED/GREEN, full suite for REFACTOR)
-- The working directory if not the repo root
-
-**Expect back:**
-
-- Pass/fail status with counts
-- Complete failure output for any failing tests (never truncated)
+**Pass:** test command (single test for RED/GREEN, full suite for REFACTOR), working directory.
+**Expect back:** pass/fail status with counts, complete failure output for any failing tests.
 
 </agent_references>
 
