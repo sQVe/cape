@@ -1,6 +1,5 @@
 ---
 name: finish-epic
-user-invocable: false
 description: >
   Verify and close a br epic after all tasks are complete. Use when the user says "finish the epic",
   "we're done", "close out the epic", all tasks are done and the user wants to close it, or

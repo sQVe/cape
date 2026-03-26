@@ -1,6 +1,5 @@
 ---
 name: expand-task
-user-invocable: false
 description: >
   Internal skill called by execute-plan before implementation begins. Takes a single br task and
   expands it into a concrete, zero-context implementation plan with exact file paths, line numbers,

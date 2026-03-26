@@ -1,6 +1,5 @@
 ---
 name: don-cape
-user-invocable: false
 description: >
   Meta-skill that activates cape's workflow system. Injected at session start — always active, never
   manually triggered. Routes every task to the right cape skill and enforces workflow chains:
