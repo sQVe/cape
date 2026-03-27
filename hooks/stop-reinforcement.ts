@@ -1,12 +1,7 @@
-const input = await Bun.stdin.text();
+import { parseStdin } from "./io";
 
-let command = "";
-try {
-  const data = JSON.parse(input);
-  command = data.tool_input?.command ?? "";
-} catch {
-  process.exit(0);
-}
+const data = await parseStdin<{ tool_input?: { command?: string } }>();
+const command = data.tool_input?.command ?? "";
 
 if (!/\bbr\s+close\b/.test(command)) {
   process.exit(0);

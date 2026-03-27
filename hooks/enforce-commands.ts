@@ -1,34 +1,15 @@
-import { readFileSync } from "fs";
-import { brShowLog } from "./paths";
+import { readFileSync, unlinkSync } from "fs";
+import { brShowLog, prConfirmationPath } from "./paths";
+import { parseStdin, deny } from "./io";
 
-const input = await Bun.stdin.text();
-
-let command = "";
-try {
-  const data = JSON.parse(input);
-  command = data.tool_input?.command ?? "";
-} catch {
-  process.exit(0);
-}
+const data = await parseStdin<{ tool_input?: { command?: string } }>();
+const command = data.tool_input?.command ?? "";
 
 if (!command) {
   process.exit(0);
 }
 
 const violations: string[] = [];
-
-const deny = (reason: string) => {
-  console.log(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "PreToolUse",
-        permissionDecision: "deny",
-        permissionDecisionReason: reason,
-      },
-    }),
-  );
-  process.exit(0);
-};
 
 const denyAll = () => {
   if (violations.length > 0) {
@@ -146,7 +127,7 @@ if (/\bgit\s+add\s+(?:-A|--all)\b/.test(command)) {
   deny("Stage specific files instead of `git add -A`.");
 }
 
-// 7 & 8: gh pr create from main/master or with uncommitted changes
+// 7-10: gh pr create guards
 if (/\bgh\s+pr\s+create\b/.test(command)) {
   try {
     const branchResult = Bun.spawnSync(
@@ -185,9 +166,50 @@ if (/\bgh\s+pr\s+create\b/.test(command)) {
   } catch {
     // git not available — skip
   }
+
+  // 9: body uses invented sections instead of the pr template
+  if (/--body\b/.test(command)) {
+    const inventedSections =
+      /\n##\s+(?:Summary|Root cause|Overview|Background|Description)\b/i.test(
+        command,
+      );
+    if (inventedSections) {
+      deny(
+        "PR description uses invented sections (e.g. ## Summary, ## Root cause). " +
+          "Follow the cape:pr template: use #### Motivation, #### Changes, #### Test plan, " +
+          "or the repo's own .github/pull_request_template.md.",
+      );
+    }
+  }
+
+  // 10: cape:pr gate — require user confirmation via AskUserQuestion before creating
+  try {
+    const content = readFileSync(prConfirmationPath, "utf-8").trim();
+    const timestamp = parseInt(content);
+    if (isNaN(timestamp) || Date.now() - timestamp > 10 * 60 * 1000) {
+      deny(
+        "PR creation requires user confirmation. " +
+          "The cape:pr skill must present the description and call AskUserQuestion " +
+          "before running gh pr create. Confirmation has expired or is missing.",
+      );
+    }
+    try {
+      unlinkSync(prConfirmationPath);
+    } catch {
+      // fine if already gone
+    }
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      deny(
+        "PR creation requires user confirmation. " +
+          "Load cape:pr, present the description, and get user approval before creating the PR.",
+      );
+    }
+    // other fs errors — allow through rather than block
+  }
 }
 
-// 9: --labels missing on br create
+// 11: --labels missing on br create
 if (isBrCreate && !/--labels\b|(?:^|\s)-l(?:\s|$)/.test(command)) {
   violations.push("Add `--labels` to `br create` for categorization.");
 }

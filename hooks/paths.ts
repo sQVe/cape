@@ -5,3 +5,4 @@ export const pluginRoot =
 export const contextDir = resolve(pluginRoot, "hooks/context");
 export const brShowLog = resolve(contextDir, "br-show-log.txt");
 export const tddState = resolve(contextDir, "tdd-state.json");
+export const prConfirmationPath = resolve(contextDir, "pr-confirmed.txt");

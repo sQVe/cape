@@ -1,14 +1,8 @@
 import { isTestCommand, writeTddState } from "./tdd";
+import { parseStdin } from "./io";
 
-const input = await Bun.stdin.text();
-
-let command = "";
-try {
-  const data = JSON.parse(input);
-  command = data.tool_input?.command ?? "";
-} catch {
-  process.exit(0);
-}
+const data = await parseStdin<{ tool_input?: { command?: string } }>();
+const command = data.tool_input?.command ?? "";
 
 if (!isTestCommand(command)) {
   process.exit(0);

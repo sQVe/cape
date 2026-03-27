@@ -2,18 +2,12 @@ import { existsSync } from "fs";
 import { isTestFile, isCodeFile, readTddState } from "./tdd";
 import { queryFlowState, deriveFlowContext } from "./br";
 import { tddState as statePath } from "./paths";
+import { parseStdin } from "./io";
 
 const TDD_STATE_TTL_MS = 10 * 60 * 1000;
 
-const input = await Bun.stdin.text();
-
-let filePath = "";
-try {
-  const data = JSON.parse(input);
-  filePath = data.tool_input?.file_path ?? "";
-} catch {
-  process.exit(0);
-}
+const data = await parseStdin<{ tool_input?: { file_path?: string } }>();
+const filePath = data.tool_input?.file_path ?? "";
 
 if (!filePath || isTestFile(filePath) || !isCodeFile(filePath)) {
   process.exit(0);

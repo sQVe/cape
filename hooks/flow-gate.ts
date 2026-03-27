@@ -1,14 +1,8 @@
 import { brQuery } from "./br";
+import { parseStdin, deny } from "./io";
 
-const input = await Bun.stdin.text();
-
-let skill = "";
-try {
-  const data = JSON.parse(input);
-  skill = data.tool_input?.skill ?? "";
-} catch {
-  process.exit(0);
-}
+const data = await parseStdin<{ tool_input?: { skill?: string } }>();
+const skill = data.tool_input?.skill ?? "";
 
 if (!skill) {
   process.exit(0);
@@ -20,19 +14,6 @@ const skillName = skill.replace(/^cape:/, "");
 if (!gatedSkills.includes(skillName)) {
   process.exit(0);
 }
-
-const deny = (reason: string) => {
-  console.log(
-    JSON.stringify({
-      hookSpecificOutput: {
-        hookEventName: "PreToolUse",
-        permissionDecision: "deny",
-        permissionDecisionReason: reason,
-      },
-    }),
-  );
-  process.exit(0);
-};
 
 if (skillName === "execute-plan") {
   const epics = brQuery(["list", "--type", "epic", "--status", "open"]);
