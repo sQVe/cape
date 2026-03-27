@@ -3,25 +3,24 @@ import { contextDir, prConfirmationPath } from "./paths";
 import { parseStdin } from "./io";
 
 interface Question {
+  question?: string;
   options?: Array<{ label: string }>;
 }
 
 const data = await parseStdin<{
-  tool_input?: { questions?: Question[] };
-  tool_response?: unknown;
+  tool_input?: { questions?: Question[]; answers?: Record<string, string> };
 }>();
 
-const labels = (data.tool_input?.questions ?? []).flatMap((q) =>
-  (q.options ?? []).map((o) => o.label),
-);
-const response = String(data.tool_response ?? "");
+const questions = data.tool_input?.questions ?? [];
+const answers = Object.values(data.tool_input?.answers ?? {});
 
-const isPrQuestion = labels.some((l) => /create pr|create draft/i.test(l));
+const isPrQuestion = questions.some((q) => /\bpr\b|pull request/i.test(q.question ?? ""));
 if (!isPrQuestion) {
   process.exit(0);
 }
 
-const confirmed = /create pr|create draft/i.test(response);
+const rejected = answers.some((a) => /cancel|abort|edit|revise/i.test(a));
+const confirmed = answers.length > 0 && !rejected;
 
 mkdirSync(contextDir, { recursive: true });
 
