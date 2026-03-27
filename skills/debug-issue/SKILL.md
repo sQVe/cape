@@ -40,6 +40,18 @@ create a br bug issue with findings, always confirm before creating the issue. <
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Reproduce BEFORE hypothesizing** — confirm the symptom with tools before forming theories
+2. **Never jump to a fix** — this skill investigates only; fixes belong to fix-bug
+3. **NEVER create a br bug without user approval** — present the investigation summary first, wait
+   for explicit confirmation. This is a gate.
+4. **Evidence for every conclusion** — no root cause claim without file:line references and
+   supporting evidence
+5. **Document dead ends** — refuted hypotheses are recorded, not silently dropped
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Reproduce and characterize
@@ -145,9 +157,11 @@ If root cause cannot be determined, document:
 - Where the investigation stalled and why
 - Suggested next steps for further investigation
 
-## Step 5: Document and create br issue
+## STOP — Step 5: Document and create br issue
 
-**Present findings for approval before creating the issue:**
+**You MUST stop here and get user approval before creating the br bug.**
+
+Present findings for approval:
 
 ```
 ## Investigation summary
@@ -160,7 +174,7 @@ If root cause cannot be determined, document:
 I'll create a br bug issue with these findings. Proceed?
 ```
 
-Wait for user approval, then create the issue:
+Do not call `br create` until the user responds. Wait for explicit approval, then create the issue:
 
 ```bash
 br create "Bug: [Concise root cause description]" \
@@ -305,15 +319,3 @@ instead of tracing the data flow.
   issue
 
 </key_principles>
-
-<critical_rules>
-
-1. **Reproduce BEFORE hypothesizing** -- confirm the symptom with tools before forming theories
-2. **Never jump to a fix** -- this skill investigates only; fixes belong to fix-bug
-3. **Evidence for every conclusion** -- no root cause claim without file:line references and
-   supporting evidence
-4. **Document dead ends** -- refuted hypotheses are recorded, not silently dropped
-5. **Always create a br bug issue** -- findings become a tracked issue, not just conversation text
-6. **Confirm before creating the issue** -- present summary and wait for user approval
-
-</critical_rules>

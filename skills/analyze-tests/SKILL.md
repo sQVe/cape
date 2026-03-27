@@ -42,6 +42,15 @@ a graph is available. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **NEVER create br items without user approval** — present findings first, ask explicitly, wait
+   for confirmation. This is the most important rule.
+2. **Self-review before presenting** — challenge your own REDs and GREENs to reduce false positives
+3. **Scope is user-controlled** — never expand analysis beyond what was asked
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Resolve scope and gather structural context
@@ -220,7 +229,8 @@ Found [N] RED and [M] YELLOW tests across [K] modules.
 Create a br epic with improvement tasks? I can drop any findings you disagree with.
 ```
 
-**STOP here.** Wait for user approval before creating br items.
+**STOP here.** You MUST wait for explicit user approval before creating br items. Do not call
+`br create` until the user responds.
 
 ---
 
@@ -367,11 +377,3 @@ without the production code and guess at quality.
   outcome
 
 </key_principles>
-
-<critical_rules>
-
-1. **Self-review before presenting** — challenge your own REDs and GREENs to reduce false positives
-2. **Confirm before creating br items** — present findings, wait for explicit user approval
-3. **Scope is user-controlled** — never expand analysis beyond what was asked
-
-</critical_rules>

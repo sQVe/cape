@@ -43,6 +43,18 @@ trivial code) is non-negotiable. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **NEVER create br items without user approval** — present findings first, ask explicitly, wait
+   for confirmation. This is the most important rule.
+2. **Always ask for scope if not provided** — never default to analyzing the entire codebase
+3. **Read source code before claiming gaps** — understand the actual behavior, don't guess from file
+   names
+4. **Self-review before presenting** — verify each gap has a realistic bug scenario; drop
+   speculative gaps
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Resolve scope
@@ -186,8 +198,9 @@ Found [N] gaps across [M] modules. Create a br epic with tasks for these? I can 
 drop any gaps you think aren't worth tracking.
 ```
 
-**STOP here.** Do not present br commands or create issues until the user responds. This is a gate —
-the user may want to drop gaps, reprioritize, or skip br entirely.
+**STOP here.** You MUST wait for explicit user approval before creating br items. Do not call
+`br create` until the user responds. The user may want to drop gaps, reprioritize, or skip br
+entirely.
 
 ---
 
@@ -305,14 +318,3 @@ the important behavior is tested.
 - **Confirm before creating** — present findings and wait for approval before creating br items
 
 </key_principles>
-
-<critical_rules>
-
-1. **Always ask for scope if not provided** — never default to analyzing the entire codebase
-2. **Read source code before claiming gaps** — understand the actual behavior, don't guess from file
-   names
-3. **Self-review before presenting** — verify each gap has a realistic bug scenario; drop
-   speculative gaps
-4. **Confirm before creating br items** — present findings, wait for user approval
-
-</critical_rules>

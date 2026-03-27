@@ -13,8 +13,9 @@ description: >
 format. Reads the diff, groups changes by concern, proposes staging and a message, then commits
 after approval. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt message style to project conventions. Rigid rules: always
-selective staging, always conventional format, always confirm before committing. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — Adapt message style and body depth to project conventions. The
+staging plan, conventional format, and user confirmation before committing are non-negotiable.
+</rigidity_level>
 
 <when_to_use>
 
@@ -36,6 +37,17 @@ selective staging, always conventional format, always confirm before committing.
   staging plan for review unless `--no-confirm` is also passed.
 
 </arguments>
+
+<critical_rules>
+
+1. **NEVER commit without user approval** — present the staging plan and message first, then wait
+   for confirmation. This is the most important rule.
+2. **Never skip hooks** — no `--no-verify` unless the user explicitly asks
+3. **One logical change per commit** — if the diff has mixed concerns, split
+4. **Conventional commit format** — `type(scope): subject` matching project conventions
+5. **Never amend without being asked** — always create new commits
+
+</critical_rules>
 
 <the_process>
 
@@ -134,10 +146,12 @@ the what.
 
 ---
 
-## Step 4: Confirm
+## STOP — Step 4: Confirm
+
+**You MUST stop here and get user approval before committing.**
 
 Wait for user approval. If the user edits the message or staging, apply their changes exactly. If
-they reject entirely, ask what they'd prefer.
+they reject entirely, ask what they'd prefer. Do not call `git commit` until the user approves.
 
 ---
 
@@ -230,16 +244,6 @@ The subject says what changed; the body explains why. </example>
 - **Confirm before committing** — always present the plan and wait for approval
 
 </key_principles>
-
-<critical_rules>
-
-1. **Never commit without user approval** — present message and staging first
-2. **Never skip hooks** — no `--no-verify` unless the user explicitly asks
-3. **One logical change per commit** — if the diff has mixed concerns, split
-4. **Conventional commit format** — `type(scope): subject` matching project conventions
-5. **Never amend without being asked** — always create new commits
-
-</critical_rules>
 
 <anti_patterns>
 

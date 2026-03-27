@@ -14,9 +14,9 @@ test plan. Detects repo PR templates, validates the branch, runs automatable tes
 creates the PR via `gh`. The test plan acts as a gate — all checkboxes must pass before the PR is
 created. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — The process order (detect template → validate → describe → test →
-create) is fixed. Description content and test plan items adapt to the specific changes. Template
-structure follows repo conventions when available, falls back to bundled template. </rigidity_level>
+<rigidity_level> HIGH RIGIDITY — Follow the process exactly as written. Every step must execute in
+order. Gates are non-negotiable. The description format comes from the detected template or the
+bundled template — never invent sections. </rigidity_level>
 
 <when_to_use>
 
@@ -32,6 +32,18 @@ structure follows repo conventions when available, falls back to bundled templat
 
 </when_to_use>
 
+<critical_rules>
+
+1. **NEVER call `gh pr create` without user confirmation** — present the full description to the
+   user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
+2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `gh pr create` runs
+3. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
+   (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
+4. **Use `gh pr create`** — not the GitHub API directly
+5. **Stop on failure** — report what failed, don't push through
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Detect PR template
@@ -42,8 +54,8 @@ Check for a repo-specific template in order:
 2. `.github/PULL_REQUEST_TEMPLATE.md`
 3. `docs/pull_request_template.md`
 
-If found: read and use it as the structure, adapting the guidelines below to fit. If not found: use
-the default template format in step 5.
+If found: read it and use its section structure for the description. If not found: use the bundled
+template in step 5.
 
 ---
 
@@ -74,8 +86,6 @@ git diff <default-branch>...HEAD --stat
 ---
 
 ## Step 3: Prepare branch
-
-Ensure the branch is ready for a PR:
 
 1. Check if branch tracks a remote: `git rev-parse --abbrev-ref @{upstream} 2>/dev/null`
 2. If no upstream, push with tracking: `git push -u origin HEAD`
@@ -108,7 +118,7 @@ git log <default-branch>..HEAD --oneline
 ```
 
 Write the description following the detected template structure (step 1). If no repo template was
-found, use this default format exactly:
+found, use this bundled template — match the sections and heading levels exactly:
 
 !`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
 
@@ -136,7 +146,9 @@ gaps found, add missing test plan items.
 
 ---
 
-## Step 6: Present and confirm (OUTPUT GATE)
+## STOP — Step 6: Present and confirm (OUTPUT GATE)
+
+**You MUST stop here and get user approval before proceeding.**
 
 Output the full PR:
 
@@ -152,7 +164,8 @@ options:
 - **Edit** — revise title or description
 - **Cancel** — abort
 
-Do not announce next steps or say "Let me..." after the separator. Present the plan, then ask.
+Do not announce next steps or say "Let me..." after the separator. Present the plan, then ask. Do
+not call any tools between outputting the description and calling `AskUserQuestion`.
 
 ---
 
@@ -219,35 +232,21 @@ Branch has 3 commits adding a caching layer. No repo PR template found.
 
 1. Detect template — none found, use bundled template
 2. Validate — on `feat/add-cache`, all committed, pushed
-3. Title: `feat(cache): add TTL-based query caching`
-4. Test plan: `[x] Run npm test`, `[x] Verify cache hit returns 200`, `[x] Verify TTL expiry`
-5. Present, user confirms "Create PR"
-6. Run tests — all pass
-7. `gh pr create` — success
-8. Report URL and summary </example>
+3. Write description using bundled template sections (Motivation, Changes, Test plan, Verification)
+4. **STOP** — present full PR to user, `AskUserQuestion` → user picks "Create PR"
+5. Run test plan: `[x] npm test`, `[x] verify cache hit returns 200`, `[x] verify TTL expiry`
+6. `gh pr create` — success
+7. Report URL and summary </example>
 
 <example>
 <scenario>Repo has its own PR template</scenario>
 
 `.github/pull_request_template.md` exists with sections: Summary, Testing, Screenshots.
 
-1. Read repo template — adapt description to match its structure
-2. Fill in Summary (maps to motivation + changes), Testing (maps to test plan), Screenshots (include
-   if visual changes, omit if backend)
-3. Test plan items still execute as a gate regardless of template structure </example>
-
-<example>
-<scenario>Test plan item fails</scenario>
-
-Test plan has 3 items. Second item (`npm test`) fails with 2 test failures.
-
-1. Execute item 1 — passes, mark `[x]`
-2. Execute item 2 (`npm test`) — fails
-3. Report: "Test plan blocked: `npm test` failed (2 failures in auth.test.ts)"
-4. Ask: Fix and retry, or Cancel
-5. User fixes tests, says "retry"
-6. Re-run item 2 — passes, mark `[x]`
-7. Continue to item 3 </example>
+1. Read repo template — write description matching its section structure exactly
+2. Fill in Summary, Testing, Screenshots (include if visual, omit if backend)
+3. **STOP** — present to user, get confirmation
+4. Test plan items still execute as a gate regardless of template structure </example>
 
 <example>
 <scenario>Uncommitted changes</scenario>
@@ -261,20 +260,11 @@ proceed. </example>
 
 <key_principles>
 
+- **Present before acting** — show the full PR and get approval before running tests or creating
 - **Test plan is the gate** — all checkboxes pass before the PR exists
 - **Detect, don't assume** — check for repo templates before falling back
+- **Follow the template** — use detected or bundled template sections, never invent your own
 - **Evidence over promises** — verification performed records what happened, not what should happen
 - **Conventional titles** — `type(scope): subject` matching project conventions
-- **Present before acting** — show the full PR and get approval before running tests or creating
 
 </key_principles>
-
-<critical_rules>
-
-1. **Never skip the test plan gate** — all checkboxes must be `[x]`
-2. **Never create without user confirmation** — present description and wait for approval
-3. **Use repo PR template when available** — don't override project conventions
-4. **Use `gh pr create`** — not the GitHub API directly
-5. **Stop on failure** — report what failed, don't push through
-
-</critical_rules>

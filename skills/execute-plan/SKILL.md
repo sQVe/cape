@@ -35,6 +35,18 @@ context. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **STOP after each task** — present the checkpoint and wait for the user to continue. Do not start
+   the next task without user input (unless AFK mode). This is the most important rule.
+2. **Epic requirements are immutable** — when blocked, research or ask; never weaken
+3. **Re-read the epic before changing course** — rejected approaches were rejected for reasons
+4. **Complete all substeps before closing a task** — partially done is not done
+5. **Orient from br state** — never ask "where did we leave off"
+6. **Test before code** — load `cape:test-driven-development` before writing any production code
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Orient
@@ -168,7 +180,9 @@ EOF
 
 ---
 
-## Step 4: Checkpoint
+## STOP — Step 4: Checkpoint
+
+**You MUST stop here and wait for user input before continuing (HITL mode).**
 
 Present a summary and stop. The user needs the chance to review your work, adjust the next task, and
 clear context before continuing.
@@ -294,14 +308,3 @@ per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:li
   the user
 
 </key_principles>
-
-<critical_rules>
-
-1. **Stop after each task** -- present checkpoint, wait for user to continue
-2. **Epic requirements are immutable** -- when blocked, research or ask; never weaken
-3. **Re-read the epic before changing course** -- rejected approaches were rejected for reasons
-4. **Complete all substeps before closing a task** -- partially done is not done
-5. **Orient from br state** -- never ask "where did we leave off"
-6. **Test before code** -- load `cape:test-driven-development` before writing any production code
-
-</critical_rules>

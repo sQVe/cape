@@ -17,9 +17,9 @@ The graph gives this skill something raw diffs can't: who calls what you changed
 this behaves differently, and which functions have no tests. One structurally-aware reviewer finds
 more than three blind ones. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — The process order (scope → graph → review → report → follow-up) is
-fixed. Depth and report detail adapt to the size of the change. The verdict and follow-up actions
-are non-negotiable. </rigidity_level>
+<rigidity_level> HIGH RIGIDITY — The process order (scope → graph → review → report → follow-up) is
+fixed. The report format (verdict first, grouped by file, severity-tagged findings) is
+non-negotiable. Depth adapts to change size. </rigidity_level>
 
 <when_to_use>
 
@@ -36,6 +36,23 @@ are non-negotiable. </rigidity_level>
 - Investigating a specific bug (use cape:debug-issue)
 
 </when_to_use>
+
+<critical_rules>
+
+1. **Always update the graph first** — stale graph = stale review. Run `build_or_update_graph_tool`
+   before `get_review_context_tool`.
+2. **Lead with the verdict** — never bury the conclusion in a wall of findings
+3. **NEVER invent report sections** — use the exact report format from step 4 (verdict, risk, scope,
+   findings grouped by file, test coverage gaps, summary)
+4. **Never offer to fix** — review and fix are separate concerns. Present findings, stop.
+5. **Check test coverage selectively** — use review context guidance for coverage gaps, query
+   `tests_for` only on high-impact changed functions. Untested + callers = highest risk.
+6. **Offer br tracking only for own code** — when reviewing others' PRs, just deliver the report
+7. **Always attempt the graph** — even for small changes, blast radius is cheap. Fall back to
+   diff-only when the graph returns 0 nodes (non-code repo) or is genuinely unavailable.
+8. **Check dependents of deleted files** — a deletion that breaks importers is a critical finding
+
+</critical_rules>
 
 <the_process>
 
@@ -139,7 +156,7 @@ as suggestions unless they create maintenance risk.
 
 ---
 
-## Step 4: Present the report (OUTPUT GATE)
+## STOP — Step 4: Present the report (OUTPUT GATE)
 
 Structure the report as follows. Lead with the verdict — the reader should know the outcome before
 reading details.
@@ -334,18 +351,3 @@ with its own severity-tagged items. Same format as example 1, repeated per file.
   still works, it just loses structural context.
 
 </key_principles>
-
-<critical_rules>
-
-1. **Always update the graph first** — stale graph = stale review. Run `build_or_update_graph_tool`
-   before `get_review_context_tool`.
-2. **Lead with the verdict** — never bury the conclusion in a wall of findings
-3. **Never offer to fix** — review and fix are separate concerns. Present findings, stop.
-4. **Check test coverage selectively** — use review context guidance for coverage gaps, query
-   `tests_for` only on high-impact changed functions. Untested + callers = highest risk.
-5. **Offer br tracking only for own code** — when reviewing others' PRs, just deliver the report
-6. **Always attempt the graph** — even for small changes, blast radius is cheap. Fall back to
-   diff-only when the graph returns 0 nodes (non-code repo) or is genuinely unavailable.
-7. **Check dependents of deleted files** — a deletion that breaks importers is a critical finding
-
-</critical_rules>
