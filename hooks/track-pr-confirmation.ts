@@ -2,11 +2,21 @@ import { mkdirSync, writeFileSync, unlinkSync } from "fs";
 import { contextDir, prConfirmationPath } from "./paths";
 import { parseStdin } from "./io";
 
-const data = await parseStdin<{ tool_input?: { options?: string[] }; tool_response?: unknown }>();
-const options = data.tool_input?.options ?? [];
+interface Question {
+  options?: Array<{ label: string }>;
+}
+
+const data = await parseStdin<{
+  tool_input?: { questions?: Question[] };
+  tool_response?: unknown;
+}>();
+
+const labels = (data.tool_input?.questions ?? []).flatMap((q) =>
+  (q.options ?? []).map((o) => o.label),
+);
 const response = String(data.tool_response ?? "");
 
-const isPrQuestion = options.some((o) => /create pr|create draft/i.test(o));
+const isPrQuestion = labels.some((l) => /create pr|create draft/i.test(l));
 if (!isPrQuestion) {
   process.exit(0);
 }
