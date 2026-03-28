@@ -53,7 +53,7 @@ const brQuery = (args: readonly string[]) =>
 
 const readStdin = () =>
   Effect.try({
-    try: () => readFileSync('/dev/stdin', 'utf-8').trim(),
+    try: () => readFileSync(0, 'utf-8').trim(),
     catch: () => new Error('failed to read stdin'),
   }).pipe(Effect.orElseSucceed(() => ''));
 
