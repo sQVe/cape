@@ -3,6 +3,10 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import {
   normalizeEventName,
+  postToolUseAskUserQuestion,
+  postToolUseBash,
+  postToolUseEdit,
+  postToolUseFailureBash,
   preToolUseBash,
   preToolUseSkill,
   sessionStart,
@@ -36,6 +40,30 @@ const hookRun = Command.make(
           result = yield* preToolUseBash();
         } else if (matcher === 'Skill') {
           result = yield* preToolUseSkill();
+        }
+        if (result != null) {
+          yield* Console.log(JSON.stringify(result));
+        }
+        break;
+      }
+      case 'PostToolUse': {
+        let result;
+        if (matcher === 'Bash') {
+          result = yield* postToolUseBash();
+        } else if (matcher === 'Edit') {
+          result = yield* postToolUseEdit();
+        } else if (matcher === 'AskUserQuestion') {
+          result = yield* postToolUseAskUserQuestion();
+        }
+        if (result != null) {
+          yield* Console.log(JSON.stringify(result));
+        }
+        break;
+      }
+      case 'PostToolUseFailure': {
+        let result;
+        if (matcher === 'Bash') {
+          result = yield* postToolUseFailureBash();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));

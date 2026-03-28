@@ -1,4 +1,23 @@
+import { basename, extname } from 'node:path';
+
 import { Effect, ServiceMap } from 'effect';
+
+const testFilePattern =
+  /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
+
+export const isTestFile = (filePath: string): boolean =>
+  testFilePattern.test(filePath) || testFilePattern.test(basename(filePath));
+
+const codeExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs', '.lua']);
+
+export const isCodeFile = (filePath: string): boolean => codeExtensions.has(extname(filePath));
+
+const testCommandPattern =
+  /(?:^|\s)(?:bun test|npm test|npx vitest|vitest|pytest|go test|cargo test|busted|python -m (?:pytest|unittest))(?:\s|$)/;
+
+export const isTestCommand = (command: string): boolean => testCommandPattern.test(command);
+
+const TDD_STATE_TTL_MS = 10 * 60 * 1000;
 
 interface FlowState {
   readonly bugs: string | null;
@@ -530,6 +549,160 @@ export const preToolUseSkill = () =>
     if (gate != null) {
       return yield* gate();
     }
+
+    return null;
+  });
+
+const parseFilePath = (input: string): string | null => {
+  try {
+    const data = JSON.parse(input);
+    return data.tool_input?.file_path ?? null;
+  } catch {
+    return null;
+  }
+};
+
+interface PrConfirmationInput {
+  questions: { question?: string }[];
+  answers: Record<string, string>;
+}
+
+const parsePrConfirmationInput = (input: string): PrConfirmationInput | null => {
+  try {
+    const data = JSON.parse(input);
+    return {
+      questions: data.tool_input?.questions ?? [],
+      answers: data.tool_input?.answers ?? {},
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const postToolUseBash = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const command = parseCommand(input);
+    if (!command) {
+      return null;
+    }
+
+    const root = service.pluginRoot();
+    const contextPath = `${root}/hooks/context`;
+
+    const showMatch = command.match(/\bbr\s+show\s+(\S+)/);
+    if (showMatch) {
+      yield* service.ensureDir(contextPath);
+      const existing = yield* service.readFile(`${contextPath}/br-show-log.txt`);
+      yield* service.writeFile(
+        `${contextPath}/br-show-log.txt`,
+        `${existing ?? ''}${showMatch[1]}\n`,
+      );
+    }
+
+    if (isTestCommand(command)) {
+      yield* service.ensureDir(contextPath);
+      yield* service.writeFile(
+        `${contextPath}/tdd-state.json`,
+        JSON.stringify({ phase: 'green', timestamp: Date.now() }),
+      );
+    }
+
+    return null;
+  });
+
+export const postToolUseEdit = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const filePath = parseFilePath(input);
+    if (!filePath || isTestFile(filePath) || !isCodeFile(filePath)) {
+      return null;
+    }
+
+    const flowState = yield* queryFlowState();
+    const flowContext = deriveFlowContext(flowState);
+    if (!flowContext) {
+      return null;
+    }
+
+    const isActivePhase = flowContext.includes('executing') || flowContext.includes('debugging');
+    if (!isActivePhase) {
+      return null;
+    }
+
+    const root = service.pluginRoot();
+    const stateContent = yield* service.readFile(`${root}/hooks/context/tdd-state.json`);
+    if (stateContent != null) {
+      try {
+        const state: { phase: string; timestamp: number } = JSON.parse(stateContent);
+        const isStale = Date.now() - state.timestamp > TDD_STATE_TTL_MS;
+        if (!isStale && state.phase === 'red') {
+          return null;
+        }
+      } catch {
+        // corrupted state — show reminder
+      }
+    }
+
+    return {
+      additionalContext: [
+        'TDD reminder: you are editing production code without a failing test.',
+        'Consider writing or updating a test first, then making it fail, before changing this code.',
+      ].join(' '),
+    };
+  });
+
+export const postToolUseAskUserQuestion = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const parsed = parsePrConfirmationInput(input);
+    if (!parsed) {
+      return null;
+    }
+
+    const isPrQuestion = parsed.questions.some((q) =>
+      /\bpr\b|pull request/i.test(q.question ?? ''),
+    );
+    if (!isPrQuestion) {
+      return null;
+    }
+
+    const answers = Object.values(parsed.answers);
+    const rejected = answers.some((a) => /cancel|abort|edit|revise/i.test(a));
+    const confirmed = answers.length > 0 && !rejected;
+
+    const root = service.pluginRoot();
+    const contextPath = `${root}/hooks/context`;
+    yield* service.ensureDir(contextPath);
+
+    if (confirmed) {
+      yield* service.writeFile(`${contextPath}/pr-confirmed.txt`, String(Date.now()));
+    } else {
+      yield* service.removeFile(`${contextPath}/pr-confirmed.txt`);
+    }
+
+    return null;
+  });
+
+export const postToolUseFailureBash = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const command = parseCommand(input);
+    if (!command || !isTestCommand(command)) {
+      return null;
+    }
+
+    const root = service.pluginRoot();
+    const contextPath = `${root}/hooks/context`;
+    yield* service.ensureDir(contextPath);
+    yield* service.writeFile(
+      `${contextPath}/tdd-state.json`,
+      JSON.stringify({ phase: 'red', timestamp: Date.now() }),
+    );
 
     return null;
   });
