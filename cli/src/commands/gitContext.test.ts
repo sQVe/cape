@@ -4,6 +4,7 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
+import { DetectService } from '../services/detect';
 import type { GitContext } from '../services/git';
 import { GitService, getGitContext } from '../services/git';
 
@@ -27,7 +28,11 @@ const makeErrorGitLayer = () =>
     getContext: () => Effect.fail(new Error('not a git repository')),
   });
 
-const testLayers = Layer.merge(NodeServices.layer, makeTestGitLayer());
+const stubDetectLayer = Layer.succeed(DetectService)({
+  detect: () => Effect.succeed([]),
+});
+
+const testLayers = Layer.mergeAll(NodeServices.layer, makeTestGitLayer(), stubDetectLayer);
 
 describe('git context command', () => {
   it('is wired as a subcommand of cape git', async () => {
