@@ -2,12 +2,11 @@ import { execSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
-import type { GitContext } from './git';
 import { GitService } from './git';
 
 const git = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' }).trim();
 
-const tryGit = (args: string): string | null => {
+const tryGit = (args: string) => {
   try {
     return git(args);
   } catch {
@@ -30,7 +29,7 @@ const detectMainBranch = () => {
   return 'main';
 };
 
-const getContext = (): Effect.Effect<GitContext, Error> =>
+const getContext = () =>
   Effect.try({
     try: () => {
       git('rev-parse --git-dir');
