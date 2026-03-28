@@ -30,6 +30,7 @@ const makeErrorGitLayer = () =>
 
 const stubDetectLayer = Layer.succeed(DetectService)({
   detect: () => Effect.succeed([]),
+  mapDirectory: () => Effect.succeed({}),
 });
 
 const testLayers = Layer.mergeAll(NodeServices.layer, makeTestGitLayer(), stubDetectLayer);

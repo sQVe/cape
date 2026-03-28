@@ -5,7 +5,14 @@ import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { DetectResult, DirectoryProbe } from '../services/detect';
-import { DetectService, detectEcosystems, getDetectResult } from '../services/detect';
+import {
+  DetectService,
+  buildSourceTestMap,
+  detectEcosystems,
+  getDetectResult,
+  isTestFile,
+  resolveTestPath,
+} from '../services/detect';
 import { GitService } from '../services/git';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
@@ -23,11 +30,13 @@ const makeTestDetectLayer = (results: DetectResult[] = []) =>
               },
             ],
       ),
+    mapDirectory: () => Effect.succeed({ 'src/foo.ts': 'src/foo.test.ts' }),
   });
 
 const makeErrorDetectLayer = () =>
   Layer.succeed(DetectService)({
     detect: () => Effect.fail(new Error('no ecosystem detected')),
+    mapDirectory: () => Effect.fail(new Error('no ecosystem detected')),
   });
 
 const makeProbe = (
@@ -74,13 +83,23 @@ describe('detect command wiring', () => {
       Effect.runPromise(run(['detect']).pipe(Effect.provide(errorCommandLayers))),
     ).rejects.toThrow('no ecosystem detected');
   });
+
+  it('accepts --map flag with directory argument', async () => {
+    await Effect.runPromise(run(['detect', '--map', '/tmp']).pipe(Effect.provide(commandLayers)));
+  });
+
+  it('outputs error JSON when --map fails', async () => {
+    await expect(
+      Effect.runPromise(run(['detect', '--map', '/tmp']).pipe(Effect.provide(errorCommandLayers))),
+    ).rejects.toThrow('no ecosystem detected');
+  });
 });
 
 describe('getDetectResult', () => {
   it('returns detection results from DetectService', async () => {
     const results = await Effect.runPromise(
       getDetectResult.pipe(Effect.provide(makeTestDetectLayer())),
-    ) as DetectResult[];
+    );
     expect(results).toHaveLength(1);
     expect(results[0].language).toBe('typescript');
   });
@@ -88,7 +107,7 @@ describe('getDetectResult', () => {
   it('propagates error when no ecosystem detected', async () => {
     const result = await Effect.runPromise(
       getDetectResult.pipe(Effect.provide(makeErrorDetectLayer()), Effect.result),
-    ) as Result.Result<DetectResult[], Error>;
+    );
     expect(Result.isFailure(result)).toBe(true);
   });
 });
@@ -290,6 +309,96 @@ describe('detectEcosystems', () => {
       expect(detectEcosystems(makeProbe(['Cargo.toml']))).toEqual([
         { language: 'rust', testFramework: 'cargo-test', linter: 'clippy', formatter: 'rustfmt' },
       ]);
+    });
+  });
+});
+
+describe('isTestFile', () => {
+  it('identifies .test.ts as a typescript test file', () => {
+    expect(isTestFile('typescript', 'src/foo.test.ts')).toBe(true);
+  });
+
+  it('identifies _test.go as a go test file', () => {
+    expect(isTestFile('go', 'pkg/foo_test.go')).toBe(true);
+  });
+
+  it('identifies _spec.lua as a lua test file', () => {
+    expect(isTestFile('lua', 'tests/foo_spec.lua')).toBe(true);
+  });
+
+  it('identifies test_ prefixed python files', () => {
+    expect(isTestFile('python', 'tests/test_foo.py')).toBe(true);
+  });
+
+  it('identifies _test.py suffixed python files', () => {
+    expect(isTestFile('python', 'tests/foo_test.py')).toBe(true);
+  });
+
+  it('returns false for rust files', () => {
+    expect(isTestFile('rust', 'src/main.rs')).toBe(false);
+  });
+
+  it('rejects regular source files', () => {
+    expect(isTestFile('typescript', 'src/foo.ts')).toBe(false);
+    expect(isTestFile('go', 'pkg/foo.go')).toBe(false);
+    expect(isTestFile('lua', 'lua/foo.lua')).toBe(false);
+    expect(isTestFile('python', 'src/foo.py')).toBe(false);
+  });
+});
+
+describe('resolveTestPath', () => {
+  it('maps .ts to co-located .test.ts', () => {
+    expect(resolveTestPath('typescript', 'src/foo.ts')).toBe('src/foo.test.ts');
+  });
+
+  it('maps .go to _test.go in same directory', () => {
+    expect(resolveTestPath('go', 'pkg/foo.go')).toBe('pkg/foo_test.go');
+  });
+
+  it('maps lua/ to tests/ with _spec suffix', () => {
+    expect(resolveTestPath('lua', 'lua/foo.lua')).toBe('tests/foo_spec.lua');
+  });
+
+  it('maps src/ python to tests/ with test_ prefix', () => {
+    expect(resolveTestPath('python', 'src/foo.py')).toBe('tests/test_foo.py');
+  });
+
+  it('maps rust to same file', () => {
+    expect(resolveTestPath('rust', 'src/main.rs')).toBe('src/main.rs');
+  });
+
+  it('returns null for unknown languages', () => {
+    expect(resolveTestPath('unknown', 'foo.txt')).toBeNull();
+  });
+});
+
+describe('buildSourceTestMap', () => {
+  it('maps typescript source files and excludes test files from source side', () => {
+    const ecosystems: DetectResult[] = [
+      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+    ];
+    const files = ['src/foo.ts', 'src/foo.test.ts', 'src/bar.ts'];
+    expect(buildSourceTestMap(ecosystems, files)).toEqual({
+      'src/foo.ts': 'src/foo.test.ts',
+      'src/bar.ts': 'src/bar.test.ts',
+    });
+  });
+
+  it('sets null for files not matching any ecosystem', () => {
+    const ecosystems: DetectResult[] = [
+      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+    ];
+    expect(buildSourceTestMap(ecosystems, ['README.md'])).toEqual({ 'README.md': null });
+  });
+
+  it('handles multiple ecosystems', () => {
+    const ecosystems: DetectResult[] = [
+      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+      { language: 'go', testFramework: 'go-test', linter: null, formatter: null },
+    ];
+    expect(buildSourceTestMap(ecosystems, ['src/foo.ts', 'pkg/bar.go'])).toEqual({
+      'src/foo.ts': 'src/foo.test.ts',
+      'pkg/bar.go': 'pkg/bar_test.go',
     });
   });
 });

@@ -155,10 +155,83 @@ export const detectEcosystems = (probe: DirectoryProbe) =>
     return results;
   }, []);
 
+export const isTestFile = (language: string, filePath: string) => {
+  if (language === 'typescript') {
+    return /\.(test|spec)\.(ts|tsx)$/.test(filePath);
+  }
+  if (language === 'go') {
+    return filePath.endsWith('_test.go');
+  }
+  if (language === 'lua') {
+    return filePath.endsWith('_spec.lua');
+  }
+  if (language === 'python') {
+    const fileName = filePath.split('/').pop() ?? '';
+    return fileName.startsWith('test_') || fileName.endsWith('_test.py');
+  }
+  return false;
+};
+
+export const resolveTestPath = (language: string, sourcePath: string) => {
+  if (language === 'typescript') {
+    const ext = sourcePath.endsWith('.tsx') ? '.tsx' : '.ts';
+    return sourcePath.replace(new RegExp(`\\${ext}$`), `.test${ext}`);
+  }
+  if (language === 'go') {
+    return sourcePath.replace(/\.go$/, '_test.go');
+  }
+  if (language === 'lua') {
+    return sourcePath.replace(/^lua\//, 'tests/').replace(/\.lua$/, '_spec.lua');
+  }
+  if (language === 'python') {
+    const parts = sourcePath.split('/');
+    const fileName = parts.pop() ?? '';
+    const dir = parts.join('/').replace(/^src/, 'tests');
+    return `${dir}/test_${fileName}`;
+  }
+  if (language === 'rust') {
+    return sourcePath;
+  }
+  return null;
+};
+
+const languageExtensions: Record<string, string[]> = {
+  typescript: ['.ts', '.tsx'],
+  go: ['.go'],
+  lua: ['.lua'],
+  python: ['.py'],
+  rust: ['.rs'],
+};
+
+const fileMatchesLanguage = (filePath: string, language: string) => {
+  const extensions = languageExtensions[language];
+  return extensions?.some((ext) => filePath.endsWith(ext)) ?? false;
+};
+
+export const buildSourceTestMap = (ecosystems: DetectResult[], files: string[]) => {
+  const map: Record<string, string | null> = {};
+
+  for (const file of files) {
+    const ecosystem = ecosystems.find(
+      (e) => fileMatchesLanguage(file, e.language) && !isTestFile(e.language, file),
+    );
+    if (ecosystem != null) {
+      map[file] = resolveTestPath(ecosystem.language, file);
+    } else if (!ecosystems.some((e) => isTestFile(e.language, file))) {
+      map[file] = null;
+    }
+  }
+
+  return map;
+};
+
 export class DetectService extends ServiceMap.Service<
   DetectService,
   {
     readonly detect: () => Effect.Effect<DetectResult[], Error>;
+    readonly mapDirectory: (
+      directory: string,
+    ) => Effect.Effect<Record<string, string | null>, Error>;
   }
 >()('DetectService') {}
 
