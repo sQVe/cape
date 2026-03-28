@@ -35,6 +35,7 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 describe('normalizeEventName', () => {
@@ -295,6 +296,7 @@ const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
     stubCommitLayer,
     stubBrLayer,
     stubPrLayer,
+    stubValidateLayer,
     hookLayer,
   );
 

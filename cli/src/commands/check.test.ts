@@ -14,6 +14,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
@@ -63,6 +64,7 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 );
 
 describe('check command wiring', () => {
@@ -88,6 +90,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed',
@@ -108,6 +111,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'no ecosystem detected',
@@ -124,6 +128,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'check execution failed',

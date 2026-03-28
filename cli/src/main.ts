@@ -7,7 +7,8 @@ import { detect } from './commands/detect';
 import { git } from './commands/git';
 import { hook } from './commands/hook';
 import { pr } from './commands/pr';
+import { validate } from './commands/validate';
 
 export const main = Command.make('cape').pipe(
-  Command.withSubcommands([br, check, commit, detect, git, hook, pr]),
+  Command.withSubcommands([br, check, commit, detect, git, hook, pr, validate]),
 );

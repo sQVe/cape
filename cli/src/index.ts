@@ -10,6 +10,7 @@ import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
 import { HookServiceLive } from './services/hookLive';
 import { PrServiceLive } from './services/prLive';
+import { ValidateServiceLive } from './services/validateLive';
 
 main.pipe(
   Command.run({ version: '0.1.0' }),
@@ -21,5 +22,6 @@ main.pipe(
   Effect.provide(GitServiceLive),
   Effect.provide(HookServiceLive),
   Effect.provide(PrServiceLive),
+  Effect.provide(ValidateServiceLive),
   NodeRuntime.runMain,
 );

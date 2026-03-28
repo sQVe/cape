@@ -18,6 +18,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const makeTestCommitLayer = () =>
@@ -41,6 +42,7 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 );
 
 describe('validateMessage', () => {

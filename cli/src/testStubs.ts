@@ -7,6 +7,7 @@ import { DetectService } from './services/detect';
 import { GitService } from './services/git';
 import { HookService } from './services/hook';
 import { PrService } from './services/pr';
+import { ValidateService } from './services/validate';
 
 export const stubGitLayer = Layer.succeed(GitService)({
   getContext: () =>
@@ -59,5 +60,11 @@ export const stubPrLayer = Layer.succeed(PrService)({
   fileExists: () => Effect.succeed(false),
   readFile: () => Effect.fail(new Error('no file')),
   readStdin: () => Effect.succeed(''),
+  gitRoot: () => Effect.succeed('/repo'),
+});
+
+export const stubValidateLayer = Layer.succeed(ValidateService)({
+  globFiles: () => Effect.succeed([]),
+  readFile: () => Effect.succeed(''),
   gitRoot: () => Effect.succeed('/repo'),
 });

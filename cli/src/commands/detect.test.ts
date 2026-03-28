@@ -20,6 +20,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
@@ -70,6 +71,7 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 );
 
 const errorCommandLayers = Layer.mergeAll(
@@ -81,6 +83,7 @@ const errorCommandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 );
 
 describe('detect command wiring', () => {

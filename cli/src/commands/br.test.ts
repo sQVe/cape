@@ -13,6 +13,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const makeBead = (overrides: Partial<BeadData> = {}) => ({
@@ -41,6 +42,7 @@ const makeCommandLayers = (brLayer = makeStubBrLayer()) =>
     stubCommitLayer,
     stubHookLayer,
     stubPrLayer,
+    stubValidateLayer,
     brLayer,
   );
 

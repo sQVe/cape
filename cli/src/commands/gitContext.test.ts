@@ -13,6 +13,7 @@ import {
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -44,6 +45,7 @@ const testLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubValidateLayer,
 );
 
 describe('git context command', () => {
