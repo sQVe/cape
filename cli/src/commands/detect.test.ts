@@ -4,8 +4,6 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
-import { CheckService } from '../services/check';
-import { CommitService } from '../services/commit';
 import type { DetectResult, DirectoryProbe } from '../services/detect';
 import {
   DetectService,
@@ -15,7 +13,7 @@ import {
   isTestFile,
   resolveTestPath,
 } from '../services/detect';
-import { GitService } from '../services/git';
+import { stubBrLayer, stubCheckLayer, stubCommitLayer, stubGitLayer } from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
   Layer.succeed(DetectService)({
@@ -56,31 +54,13 @@ const findByLanguage = (results: DetectResult[], language: string) =>
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const stubGitLayer = Layer.succeed(GitService)({
-  getContext: () =>
-    Effect.succeed({
-      mainBranch: 'main',
-      currentBranch: 'main',
-      status: [],
-      diffStat: '',
-      recentLog: [],
-    }),
-});
-
-const stubCheckLayer = Layer.succeed(CheckService)({
-  runChecks: () => Effect.succeed([]),
-});
-
-const stubCommitLayer = Layer.succeed(CommitService)({
-  stageAndCommit: () => Effect.succeed(undefined),
-});
-
 const commandLayers = Layer.mergeAll(
   NodeServices.layer,
   makeTestDetectLayer(),
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
+  stubBrLayer,
 );
 
 const errorCommandLayers = Layer.mergeAll(
@@ -89,6 +69,7 @@ const errorCommandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
+  stubBrLayer,
 );
 
 describe('detect command wiring', () => {

@@ -6,10 +6,9 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import type { CheckResult } from '../services/check';
 import { CheckService, getCheckResults, resolveCheckCommands } from '../services/check';
-import { CommitService } from '../services/commit';
 import type { DetectResult } from '../services/detect';
 import { DetectService } from '../services/detect';
-import { GitService } from '../services/git';
+import { stubBrLayer, stubCommitLayer, stubGitLayer } from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
   Layer.succeed(DetectService)({
@@ -47,22 +46,7 @@ const makeErrorCheckLayer = () =>
     runChecks: () => Effect.fail(new Error('check execution failed')),
   });
 
-const stubGitLayer = Layer.succeed(GitService)({
-  getContext: () =>
-    Effect.succeed({
-      mainBranch: 'main',
-      currentBranch: 'main',
-      status: [],
-      diffStat: '',
-      recentLog: [],
-    }),
-});
-
 const run = Command.runWith(main, { version: '0.1.0' });
-
-const stubCommitLayer = Layer.succeed(CommitService)({
-  stageAndCommit: () => Effect.succeed(undefined),
-});
 
 const commandLayers = Layer.mergeAll(
   NodeServices.layer,
@@ -70,6 +54,7 @@ const commandLayers = Layer.mergeAll(
   makeTestCheckLayer(),
   stubGitLayer,
   stubCommitLayer,
+  stubBrLayer,
 );
 
 describe('check command wiring', () => {
@@ -92,6 +77,7 @@ describe('check command wiring', () => {
       makeFailingCheckLayer([{ check: 'vitest', passed: false, output: 'FAIL' }]),
       stubGitLayer,
       stubCommitLayer,
+      stubBrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed',
@@ -109,6 +95,7 @@ describe('check command wiring', () => {
       makeTestCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
+      stubBrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'no ecosystem detected',
@@ -122,6 +109,7 @@ describe('check command wiring', () => {
       makeErrorCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
+      stubBrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'check execution failed',

@@ -4,11 +4,9 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
-import { CheckService } from '../services/check';
-import { CommitService } from '../services/commit';
-import { DetectService } from '../services/detect';
-import type { GitContext } from '../services/git';
 import { GitService, getGitContext } from '../services/git';
+import type { GitContext } from '../services/git';
+import { stubBrLayer, stubCheckLayer, stubCommitLayer, stubDetectLayer } from '../testStubs';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -30,25 +28,13 @@ const makeErrorGitLayer = () =>
     getContext: () => Effect.fail(new Error('not a git repository')),
   });
 
-const stubDetectLayer = Layer.succeed(DetectService)({
-  detect: () => Effect.succeed([]),
-  mapDirectory: () => Effect.succeed({}),
-});
-
-const stubCheckLayer = Layer.succeed(CheckService)({
-  runChecks: () => Effect.succeed([]),
-});
-
-const stubCommitLayer = Layer.succeed(CommitService)({
-  stageAndCommit: () => Effect.succeed(undefined),
-});
-
 const testLayers = Layer.mergeAll(
   NodeServices.layer,
   makeTestGitLayer(),
   stubDetectLayer,
   stubCheckLayer,
   stubCommitLayer,
+  stubBrLayer,
 );
 
 describe('git context command', () => {

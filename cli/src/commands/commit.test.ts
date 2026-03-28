@@ -4,7 +4,6 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
-import { CheckService } from '../services/check';
 import {
   CommitService,
   detectSensitiveFiles,
@@ -12,28 +11,7 @@ import {
   validateFiles,
   validateMessage,
 } from '../services/commit';
-import { DetectService } from '../services/detect';
-import { GitService } from '../services/git';
-
-const stubGitLayer = Layer.succeed(GitService)({
-  getContext: () =>
-    Effect.succeed({
-      mainBranch: 'main',
-      currentBranch: 'main',
-      status: [],
-      diffStat: '',
-      recentLog: [],
-    }),
-});
-
-const stubDetectLayer = Layer.succeed(DetectService)({
-  detect: () => Effect.succeed([]),
-  mapDirectory: () => Effect.succeed({}),
-});
-
-const stubCheckLayer = Layer.succeed(CheckService)({
-  runChecks: () => Effect.succeed([]),
-});
+import { stubBrLayer, stubCheckLayer, stubDetectLayer, stubGitLayer } from '../testStubs';
 
 const makeTestCommitLayer = () =>
   Layer.succeed(CommitService)({
@@ -53,6 +31,7 @@ const commandLayers = Layer.mergeAll(
   stubDetectLayer,
   stubCheckLayer,
   makeTestCommitLayer(),
+  stubBrLayer,
 );
 
 describe('validateMessage', () => {
@@ -233,6 +212,7 @@ describe('commit command wiring', () => {
       stubDetectLayer,
       stubCheckLayer,
       makeErrorCommitLayer('commit failed'),
+      stubBrLayer,
     );
     await expect(
       Effect.runPromise(
