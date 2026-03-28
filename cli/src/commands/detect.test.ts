@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { CheckService } from '../services/check';
+import { CommitService } from '../services/commit';
 import type { DetectResult, DirectoryProbe } from '../services/detect';
 import {
   DetectService,
@@ -70,11 +71,16 @@ const stubCheckLayer = Layer.succeed(CheckService)({
   runChecks: () => Effect.succeed([]),
 });
 
+const stubCommitLayer = Layer.succeed(CommitService)({
+  stageAndCommit: () => Effect.succeed(undefined),
+});
+
 const commandLayers = Layer.mergeAll(
   NodeServices.layer,
   makeTestDetectLayer(),
   stubGitLayer,
   stubCheckLayer,
+  stubCommitLayer,
 );
 
 const errorCommandLayers = Layer.mergeAll(
@@ -82,6 +88,7 @@ const errorCommandLayers = Layer.mergeAll(
   makeErrorDetectLayer(),
   stubGitLayer,
   stubCheckLayer,
+  stubCommitLayer,
 );
 
 describe('detect command wiring', () => {

@@ -1,0 +1,243 @@
+import { NodeServices } from '@effect/platform-node';
+import { Effect, Layer } from 'effect';
+import { Command } from 'effect/unstable/cli';
+import { describe, expect, it, vi } from 'vitest';
+
+import { main } from '../main';
+import { CheckService } from '../services/check';
+import {
+  CommitService,
+  detectSensitiveFiles,
+  stageAndCommit,
+  validateFiles,
+  validateMessage,
+} from '../services/commit';
+import { DetectService } from '../services/detect';
+import { GitService } from '../services/git';
+
+const stubGitLayer = Layer.succeed(GitService)({
+  getContext: () =>
+    Effect.succeed({
+      mainBranch: 'main',
+      currentBranch: 'main',
+      status: [],
+      diffStat: '',
+      recentLog: [],
+    }),
+});
+
+const stubDetectLayer = Layer.succeed(DetectService)({
+  detect: () => Effect.succeed([]),
+  mapDirectory: () => Effect.succeed({}),
+});
+
+const stubCheckLayer = Layer.succeed(CheckService)({
+  runChecks: () => Effect.succeed([]),
+});
+
+const makeTestCommitLayer = () =>
+  Layer.succeed(CommitService)({
+    stageAndCommit: () => Effect.succeed(undefined),
+  });
+
+const makeErrorCommitLayer = (message: string) =>
+  Layer.succeed(CommitService)({
+    stageAndCommit: () => Effect.fail(new Error(message)),
+  });
+
+const run = Command.runWith(main, { version: '0.1.0' });
+
+const commandLayers = Layer.mergeAll(
+  NodeServices.layer,
+  stubGitLayer,
+  stubDetectLayer,
+  stubCheckLayer,
+  makeTestCommitLayer(),
+);
+
+describe('validateMessage', () => {
+  it('accepts feat with scope', () => {
+    expect(validateMessage('feat(cli): add commit command')).toBeNull();
+  });
+
+  it('accepts fix without scope', () => {
+    expect(validateMessage('fix: resolve crash')).toBeNull();
+  });
+
+  it('accepts all allowed types', () => {
+    const types = [
+      'feat',
+      'fix',
+      'refactor',
+      'docs',
+      'test',
+      'chore',
+      'ci',
+      'perf',
+      'build',
+      'style',
+      'revert',
+    ];
+    for (const type of types) {
+      expect(validateMessage(`${type}: description`)).toBeNull();
+    }
+  });
+
+  it('rejects message without type prefix', () => {
+    expect(validateMessage('add new feature')).not.toBeNull();
+  });
+
+  it('rejects message with invalid type', () => {
+    expect(validateMessage('feature: add thing')).not.toBeNull();
+  });
+
+  it('rejects message without description after colon', () => {
+    expect(validateMessage('feat:')).not.toBeNull();
+  });
+
+  it('rejects empty message', () => {
+    expect(validateMessage('')).not.toBeNull();
+  });
+
+  it('rejects message with missing space after colon', () => {
+    expect(validateMessage('feat:no space')).not.toBeNull();
+  });
+});
+
+describe('validateFiles', () => {
+  it('accepts one or more specific files', () => {
+    expect(validateFiles(['src/foo.ts', 'src/bar.ts'])).toBeNull();
+  });
+
+  it('rejects dot as bulk staging', () => {
+    expect(validateFiles(['.'])).not.toBeNull();
+  });
+
+  it('rejects dot among other files', () => {
+    expect(validateFiles(['src/foo.ts', '.'])).not.toBeNull();
+  });
+});
+
+describe('detectSensitiveFiles', () => {
+  it('detects .env files', () => {
+    expect(detectSensitiveFiles(['.env', '.env.local'])).toEqual(['.env', '.env.local']);
+  });
+
+  it('detects credentials files', () => {
+    expect(detectSensitiveFiles(['credentials.json'])).toEqual(['credentials.json']);
+  });
+
+  it('detects secret files', () => {
+    expect(detectSensitiveFiles(['secret.yaml'])).toEqual(['secret.yaml']);
+  });
+
+  it('detects pem and key files', () => {
+    expect(detectSensitiveFiles(['server.pem', 'private.key'])).toEqual([
+      'server.pem',
+      'private.key',
+    ]);
+  });
+
+  it('returns empty for safe files', () => {
+    expect(detectSensitiveFiles(['src/foo.ts', 'README.md'])).toEqual([]);
+  });
+
+  it('filters mixed safe and sensitive files', () => {
+    expect(detectSensitiveFiles(['src/foo.ts', '.env', 'README.md'])).toEqual(['.env']);
+  });
+});
+
+describe('stageAndCommit', () => {
+  it('delegates to CommitService', async () => {
+    await Effect.runPromise(
+      stageAndCommit(['file.ts'], 'feat: thing').pipe(Effect.provide(makeTestCommitLayer())),
+    );
+  });
+
+  it('propagates service errors', async () => {
+    await expect(
+      Effect.runPromise(
+        stageAndCommit(['file.ts'], 'feat: thing').pipe(
+          Effect.provide(makeErrorCommitLayer('git failed')),
+        ),
+      ),
+    ).rejects.toThrow('git failed');
+  });
+});
+
+describe('commit command wiring', () => {
+  it('is wired as a subcommand of cape', async () => {
+    await Effect.runPromise(run(['commit', '--help']).pipe(Effect.provide(commandLayers)));
+  });
+
+  it('commits with valid message and files', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['commit', 'src/foo.ts', '-m', 'feat: add thing']).pipe(Effect.provide(commandLayers)),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({
+      message: 'feat: add thing',
+      files: ['src/foo.ts'],
+    });
+    consoleSpy.mockRestore();
+  });
+
+  it('commits multiple files', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['commit', 'a.ts', 'b.ts', '-m', 'fix: two files']).pipe(Effect.provide(commandLayers)),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.files).toEqual(['a.ts', 'b.ts']);
+    consoleSpy.mockRestore();
+  });
+
+  it('rejects invalid commit message with exit error', async () => {
+    await expect(
+      Effect.runPromise(
+        run(['commit', 'file.ts', '-m', 'bad message']).pipe(Effect.provide(commandLayers)),
+      ),
+    ).rejects.toThrow('invalid conventional commit format');
+  });
+
+  it('rejects bulk staging with dot', async () => {
+    await expect(
+      Effect.runPromise(
+        run(['commit', '.', '-m', 'feat: bulk']).pipe(Effect.provide(commandLayers)),
+      ),
+    ).rejects.toThrow('bulk staging');
+  });
+
+  it('warns on sensitive files to stderr but still commits', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['commit', '.env', '-m', 'feat: add config']).pipe(Effect.provide(commandLayers)),
+    );
+    const stderrOutput = stderrSpy.mock.calls.flat().join('');
+    expect(stderrOutput).toContain('.env');
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.message).toBe('feat: add config');
+    consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
+  });
+
+  it('rejects when service fails', async () => {
+    const layers = Layer.mergeAll(
+      NodeServices.layer,
+      stubGitLayer,
+      stubDetectLayer,
+      stubCheckLayer,
+      makeErrorCommitLayer('commit failed'),
+    );
+    await expect(
+      Effect.runPromise(
+        run(['commit', 'file.ts', '-m', 'feat: thing']).pipe(Effect.provide(layers)),
+      ),
+    ).rejects.toThrow('commit failed');
+  });
+});

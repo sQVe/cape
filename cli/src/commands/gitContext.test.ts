@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { CheckService } from '../services/check';
+import { CommitService } from '../services/commit';
 import { DetectService } from '../services/detect';
 import type { GitContext } from '../services/git';
 import { GitService, getGitContext } from '../services/git';
@@ -38,11 +39,16 @@ const stubCheckLayer = Layer.succeed(CheckService)({
   runChecks: () => Effect.succeed([]),
 });
 
+const stubCommitLayer = Layer.succeed(CommitService)({
+  stageAndCommit: () => Effect.succeed(undefined),
+});
+
 const testLayers = Layer.mergeAll(
   NodeServices.layer,
   makeTestGitLayer(),
   stubDetectLayer,
   stubCheckLayer,
+  stubCommitLayer,
 );
 
 describe('git context command', () => {

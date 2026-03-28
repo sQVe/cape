@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import type { CheckResult } from '../services/check';
 import { CheckService, getCheckResults, resolveCheckCommands } from '../services/check';
+import { CommitService } from '../services/commit';
 import type { DetectResult } from '../services/detect';
 import { DetectService } from '../services/detect';
 import { GitService } from '../services/git';
@@ -59,11 +60,16 @@ const stubGitLayer = Layer.succeed(GitService)({
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
+const stubCommitLayer = Layer.succeed(CommitService)({
+  stageAndCommit: () => Effect.succeed(undefined),
+});
+
 const commandLayers = Layer.mergeAll(
   NodeServices.layer,
   makeTestDetectLayer(),
   makeTestCheckLayer(),
   stubGitLayer,
+  stubCommitLayer,
 );
 
 describe('check command wiring', () => {
@@ -85,6 +91,7 @@ describe('check command wiring', () => {
       makeTestDetectLayer(),
       makeFailingCheckLayer([{ check: 'vitest', passed: false, output: 'FAIL' }]),
       stubGitLayer,
+      stubCommitLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed',
@@ -101,6 +108,7 @@ describe('check command wiring', () => {
       errorDetectLayer,
       makeTestCheckLayer(),
       stubGitLayer,
+      stubCommitLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'no ecosystem detected',
@@ -113,6 +121,7 @@ describe('check command wiring', () => {
       makeTestDetectLayer(),
       makeErrorCheckLayer(),
       stubGitLayer,
+      stubCommitLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'check execution failed',
