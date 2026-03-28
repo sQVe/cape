@@ -4,6 +4,7 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
+import { CheckService } from '../services/check';
 import type { DetectResult, DirectoryProbe } from '../services/detect';
 import {
   DetectService,
@@ -65,9 +66,23 @@ const stubGitLayer = Layer.succeed(GitService)({
     }),
 });
 
-const commandLayers = Layer.mergeAll(NodeServices.layer, makeTestDetectLayer(), stubGitLayer);
+const stubCheckLayer = Layer.succeed(CheckService)({
+  runChecks: () => Effect.succeed([]),
+});
 
-const errorCommandLayers = Layer.mergeAll(NodeServices.layer, makeErrorDetectLayer(), stubGitLayer);
+const commandLayers = Layer.mergeAll(
+  NodeServices.layer,
+  makeTestDetectLayer(),
+  stubGitLayer,
+  stubCheckLayer,
+);
+
+const errorCommandLayers = Layer.mergeAll(
+  NodeServices.layer,
+  makeErrorDetectLayer(),
+  stubGitLayer,
+  stubCheckLayer,
+);
 
 describe('detect command wiring', () => {
   it('is wired as a subcommand of cape', async () => {
