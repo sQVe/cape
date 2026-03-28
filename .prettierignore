@@ -1,1 +1,8 @@
+.beads
 .beads/
+*.ts
+*.tsx
+*.js
+*.jsx
+*.mts
+*.mjs

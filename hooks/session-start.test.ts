@@ -1,5 +1,11 @@
 import { describe, it, expect, afterEach } from "bun:test";
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "fs";
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  rmSync,
+} from "fs";
 import { resolve } from "path";
 import { tmpdir } from "os";
 
@@ -18,7 +24,10 @@ describe("session-start", () => {
     it("should output SKILL.md content as additionalContext", async () => {
       tempDir = mkdtempSync(resolve(tmpdir(), "cape-session-start-"));
       mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
-      writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "test skill content");
+      writeFileSync(
+        resolve(tempDir, "skills/don-cape/SKILL.md"),
+        "test skill content",
+      );
 
       const proc = Bun.spawn(["bun", "run", hookPath], {
         env: { ...process.env, CLAUDE_PLUGIN_ROOT: tempDir },
@@ -85,9 +94,14 @@ describe("session-start", () => {
     const setupWithMockBr = (brScript: string) => {
       tempDir = mkdtempSync(resolve(tmpdir(), "cape-session-start-"));
       mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
-      writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "test skill content");
+      writeFileSync(
+        resolve(tempDir, "skills/don-cape/SKILL.md"),
+        "test skill content",
+      );
       mkdirSync(resolve(tempDir, "bin"), { recursive: true });
-      writeFileSync(resolve(tempDir, "bin/br"), `#!/bin/sh\n${brScript}`, { mode: 0o755 });
+      writeFileSync(resolve(tempDir, "bin/br"), `#!/bin/sh\n${brScript}`, {
+        mode: 0o755,
+      });
       return {
         CLAUDE_PLUGIN_ROOT: tempDir,
         PATH: `${resolve(tempDir, "bin")}:${process.env.PATH}`,
@@ -169,16 +183,26 @@ esac`);
       mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
       writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "content");
       mkdirSync(resolve(tempDir, "hooks/context"), { recursive: true });
-      writeFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "cape-123\n");
+      writeFileSync(
+        resolve(tempDir, "hooks/context/br-show-log.txt"),
+        "cape-123\n",
+      );
 
       const proc = Bun.spawn(["bun", "run", hookPath], {
-        env: { ...process.env, CLAUDE_PLUGIN_ROOT: tempDir, CAPE_CLEAR_LOGS: "1" },
+        env: {
+          ...process.env,
+          CLAUDE_PLUGIN_ROOT: tempDir,
+          CAPE_CLEAR_LOGS: "1",
+        },
         stdout: "pipe",
         stderr: "pipe",
       });
       await proc.exited;
 
-      const content = readFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "utf-8");
+      const content = readFileSync(
+        resolve(tempDir, "hooks/context/br-show-log.txt"),
+        "utf-8",
+      );
       expect(content).toBe("");
     });
 
@@ -187,7 +211,10 @@ esac`);
       mkdirSync(resolve(tempDir, "skills/don-cape"), { recursive: true });
       writeFileSync(resolve(tempDir, "skills/don-cape/SKILL.md"), "content");
       mkdirSync(resolve(tempDir, "hooks/context"), { recursive: true });
-      writeFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "cape-123\n");
+      writeFileSync(
+        resolve(tempDir, "hooks/context/br-show-log.txt"),
+        "cape-123\n",
+      );
 
       const { CAPE_CLEAR_LOGS: _, ...env } = process.env;
       const proc = Bun.spawn(["bun", "run", hookPath], {
@@ -197,7 +224,10 @@ esac`);
       });
       await proc.exited;
 
-      const content = readFileSync(resolve(tempDir, "hooks/context/br-show-log.txt"), "utf-8");
+      const content = readFileSync(
+        resolve(tempDir, "hooks/context/br-show-log.txt"),
+        "utf-8",
+      );
       expect(content).toBe("cape-123\n");
     });
   });

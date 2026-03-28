@@ -32,20 +32,28 @@ const readBrShowLog = () =>
 describe("track-br-show", () => {
   describe("when command is br show", () => {
     it("should log bead ID when command is br show", async () => {
-      await runHook(JSON.stringify({ tool_input: { command: "br show cape-2vo" } }));
+      await runHook(
+        JSON.stringify({ tool_input: { command: "br show cape-2vo" } }),
+      );
 
       expect(readBrShowLog()).toContain("cape-2vo");
     });
 
     it("should create context directory if missing", async () => {
-      await runHook(JSON.stringify({ tool_input: { command: "br show cape-abc" } }));
+      await runHook(
+        JSON.stringify({ tool_input: { command: "br show cape-abc" } }),
+      );
 
       expect(existsSync(join(tmpDir, "hooks", "context"))).toBe(true);
     });
 
     it("should append multiple IDs", async () => {
-      await runHook(JSON.stringify({ tool_input: { command: "br show cape-111" } }));
-      await runHook(JSON.stringify({ tool_input: { command: "br show cape-222" } }));
+      await runHook(
+        JSON.stringify({ tool_input: { command: "br show cape-111" } }),
+      );
+      await runHook(
+        JSON.stringify({ tool_input: { command: "br show cape-222" } }),
+      );
 
       const log = readBrShowLog();
       expect(log).toContain("cape-111");
@@ -60,7 +68,9 @@ describe("track-br-show", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt"))).toBe(false);
+      expect(
+        existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt")),
+      ).toBe(false);
     });
 
     it("should exit silently when command is empty", async () => {
@@ -69,7 +79,9 @@ describe("track-br-show", () => {
       );
 
       expect(exitCode).toBe(0);
-      expect(existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt"))).toBe(false);
+      expect(
+        existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt")),
+      ).toBe(false);
     });
   });
 
@@ -78,7 +90,9 @@ describe("track-br-show", () => {
       const { exitCode } = await runHook("not json at all");
 
       expect(exitCode).toBe(0);
-      expect(existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt"))).toBe(false);
+      expect(
+        existsSync(join(tmpDir, "hooks", "context", "br-show-log.txt")),
+      ).toBe(false);
     });
   });
 });

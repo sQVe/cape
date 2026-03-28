@@ -18,7 +18,13 @@ interface FlowState {
 
 export const queryFlowState = (): FlowState => ({
   bugs: brQuery(["list", "--type", "bug", "--status", "open"]),
-  inProgressTasks: brQuery(["list", "--status", "in_progress", "--type", "task"]),
+  inProgressTasks: brQuery([
+    "list",
+    "--status",
+    "in_progress",
+    "--type",
+    "task",
+  ]),
   epics: brQuery(["list", "--type", "epic", "--status", "open"]),
 });
 

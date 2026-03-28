@@ -132,7 +132,12 @@ const detectGo = (probe: DirectoryProbe) => {
 const detectRust = (probe: DirectoryProbe) => {
   if (!probe.fileExists('Cargo.toml')) return null;
 
-  return { language: 'rust', testFramework: 'cargo-test', linter: 'clippy', formatter: 'rustfmt' };
+  return {
+    language: 'rust',
+    testFramework: 'cargo-test',
+    linter: 'clippy',
+    formatter: 'rustfmt',
+  };
 };
 
 const detectors: Detector[] = [

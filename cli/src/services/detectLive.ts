@@ -78,4 +78,7 @@ const mapDirectory = (directory: string) =>
       error instanceof Error ? error : new Error('mapping failed', { cause: error }),
   });
 
-export const DetectServiceLive = Layer.succeed(DetectService)({ detect, mapDirectory });
+export const DetectServiceLive = Layer.succeed(DetectService)({
+  detect,
+  mapDirectory,
+});

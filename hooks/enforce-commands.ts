@@ -82,9 +82,7 @@ if (isBrCreate && /--description\b/.test(command)) {
       );
     }
     if (!/##\s*Success criteria/i.test(command)) {
-      violations.push(
-        "Task descriptions need a `## Success criteria` header.",
-      );
+      violations.push("Task descriptions need a `## Success criteria` header.");
     }
   } else if (type === "bug") {
     if (
@@ -100,9 +98,7 @@ if (isBrCreate && /--description\b/.test(command)) {
       violations.push("Epic descriptions need a `## Requirements` header.");
     }
     if (!/##\s*Success criteria/i.test(command)) {
-      violations.push(
-        "Epic descriptions need a `## Success criteria` header.",
-      );
+      violations.push("Epic descriptions need a `## Success criteria` header.");
     }
   }
 }

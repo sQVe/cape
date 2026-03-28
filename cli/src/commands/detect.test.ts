@@ -133,7 +133,9 @@ describe('detectEcosystems', () => {
 
   it('detects multiple ecosystems in a monorepo', () => {
     const probe = makeProbe(['tsconfig.json', 'package.json', 'go.mod', '.golangci.yml'], {
-      'package.json': { devDependencies: { typescript: '^5', vitest: '^2', oxlint: '^0.16' } },
+      'package.json': {
+        devDependencies: { typescript: '^5', vitest: '^2', oxlint: '^0.16' },
+      },
     });
     const results = detectEcosystems(probe);
     expect(results).toHaveLength(2);
@@ -146,7 +148,12 @@ describe('detectEcosystems', () => {
     it('detects from tsconfig.json', () => {
       const results = detectEcosystems(makeProbe(['tsconfig.json']));
       expect(results).toEqual([
-        { language: 'typescript', testFramework: null, linter: null, formatter: null },
+        {
+          language: 'typescript',
+          testFramework: null,
+          linter: null,
+          formatter: null,
+        },
       ]);
     });
 
@@ -209,7 +216,12 @@ describe('detectEcosystems', () => {
   describe('lua', () => {
     it('detects from .stylua.toml', () => {
       expect(detectEcosystems(makeProbe(['.stylua.toml']))).toEqual([
-        { language: 'lua', testFramework: null, linter: null, formatter: 'stylua' },
+        {
+          language: 'lua',
+          testFramework: null,
+          linter: null,
+          formatter: 'stylua',
+        },
       ]);
     });
 
@@ -265,7 +277,9 @@ describe('detectEcosystems', () => {
     it('detects ruff from pyproject.toml tool section', () => {
       const py = findByLanguage(
         detectEcosystems(
-          makeProbe(['pyproject.toml'], { 'pyproject.toml': { tool: { ruff: {} } } }),
+          makeProbe(['pyproject.toml'], {
+            'pyproject.toml': { tool: { ruff: {} } },
+          }),
         ),
         'python',
       );
@@ -290,7 +304,9 @@ describe('detectEcosystems', () => {
         detectEcosystems(
           makeProbe(['pyproject.toml'], {
             'pyproject.toml': {
-              project: { 'optional-dependencies': { dev: ['pytest>=7.0', 'ruff'] } },
+              project: {
+                'optional-dependencies': { dev: ['pytest>=7.0', 'ruff'] },
+              },
             },
           }),
         ),
@@ -303,7 +319,12 @@ describe('detectEcosystems', () => {
   describe('go', () => {
     it('detects from go.mod with built-in test and formatter', () => {
       expect(detectEcosystems(makeProbe(['go.mod']))).toEqual([
-        { language: 'go', testFramework: 'go-test', linter: null, formatter: 'gofmt' },
+        {
+          language: 'go',
+          testFramework: 'go-test',
+          linter: null,
+          formatter: 'gofmt',
+        },
       ]);
     });
 
@@ -321,7 +342,12 @@ describe('detectEcosystems', () => {
   describe('rust', () => {
     it('detects from Cargo.toml with built-in tools', () => {
       expect(detectEcosystems(makeProbe(['Cargo.toml']))).toEqual([
-        { language: 'rust', testFramework: 'cargo-test', linter: 'clippy', formatter: 'rustfmt' },
+        {
+          language: 'rust',
+          testFramework: 'cargo-test',
+          linter: 'clippy',
+          formatter: 'rustfmt',
+        },
       ]);
     });
   });
@@ -389,7 +415,12 @@ describe('resolveTestPath', () => {
 describe('buildSourceTestMap', () => {
   it('maps typescript source files and excludes test files from source side', () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: null,
+        formatter: null,
+      },
     ];
     const files = ['src/foo.ts', 'src/foo.test.ts', 'src/bar.ts'];
     expect(buildSourceTestMap(ecosystems, files)).toEqual({
@@ -400,15 +431,32 @@ describe('buildSourceTestMap', () => {
 
   it('sets null for files not matching any ecosystem', () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: null,
+        formatter: null,
+      },
     ];
-    expect(buildSourceTestMap(ecosystems, ['README.md'])).toEqual({ 'README.md': null });
+    expect(buildSourceTestMap(ecosystems, ['README.md'])).toEqual({
+      'README.md': null,
+    });
   });
 
   it('handles multiple ecosystems', () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
-      { language: 'go', testFramework: 'go-test', linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: null,
+        formatter: null,
+      },
+      {
+        language: 'go',
+        testFramework: 'go-test',
+        linter: null,
+        formatter: null,
+      },
     ];
     expect(buildSourceTestMap(ecosystems, ['src/foo.ts', 'pkg/bar.go'])).toEqual({
       'src/foo.ts': 'src/foo.test.ts',

@@ -14,4 +14,6 @@ const stageAndCommit = (files: readonly string[], message: string) =>
       error instanceof Error ? error : new Error('commit failed', { cause: error }),
   });
 
-export const CommitServiceLive = Layer.succeed(CommitService)({ stageAndCommit });
+export const CommitServiceLive = Layer.succeed(CommitService)({
+  stageAndCommit,
+});

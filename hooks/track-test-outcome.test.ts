@@ -38,7 +38,9 @@ describe("track-test-outcome", () => {
   describe("when command is a test command", () => {
     it("writes green state for bun test", async () => {
       const { exitCode } = await runHook(
-        JSON.stringify({ tool_input: { command: "bun test hooks/tdd.test.ts" } }),
+        JSON.stringify({
+          tool_input: { command: "bun test hooks/tdd.test.ts" },
+        }),
       );
 
       expect(exitCode).toBe(0);
@@ -92,10 +94,9 @@ describe("track-test-outcome", () => {
 
   describe("when TDD_PHASE is red (PostToolUseFailure)", () => {
     it("writes red state for failing bun test", async () => {
-      await runHook(
-        JSON.stringify({ tool_input: { command: "bun test" } }),
-        { TDD_PHASE: "red" },
-      );
+      await runHook(JSON.stringify({ tool_input: { command: "bun test" } }), {
+        TDD_PHASE: "red",
+      });
 
       expect(readState()?.phase).toBe("red");
     });
@@ -110,10 +111,9 @@ describe("track-test-outcome", () => {
     });
 
     it("does not write state for non-test command even with TDD_PHASE=red", async () => {
-      await runHook(
-        JSON.stringify({ tool_input: { command: "echo hello" } }),
-        { TDD_PHASE: "red" },
-      );
+      await runHook(JSON.stringify({ tool_input: { command: "echo hello" } }), {
+        TDD_PHASE: "red",
+      });
 
       expect(readState()).toBeNull();
     });

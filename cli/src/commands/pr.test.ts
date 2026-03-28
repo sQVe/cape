@@ -71,7 +71,11 @@ describe('validatePrBody', () => {
   it('returns valid when all sections present', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
     const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works';
-    expect(validatePrBody(template, body)).toEqual({ valid: true, missing: [], extra: [] });
+    expect(validatePrBody(template, body)).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+    });
   });
 
   it('reports missing sections', () => {

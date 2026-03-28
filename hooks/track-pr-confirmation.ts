@@ -14,7 +14,9 @@ const data = await parseStdin<{
 const questions = data.tool_input?.questions ?? [];
 const answers = Object.values(data.tool_input?.answers ?? {});
 
-const isPrQuestion = questions.some((q) => /\bpr\b|pull request/i.test(q.question ?? ""));
+const isPrQuestion = questions.some((q) =>
+  /\bpr\b|pull request/i.test(q.question ?? ""),
+);
 if (!isPrQuestion) {
   process.exit(0);
 }

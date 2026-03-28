@@ -22,7 +22,10 @@ const readStdin = () =>
 
 const gitRoot = () =>
   Effect.try({
-    try: () => execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).trim(),
+    try: () =>
+      execFileSync('git', ['rev-parse', '--show-toplevel'], {
+        encoding: 'utf-8',
+      }).trim(),
     catch: (error) =>
       error instanceof Error ? error : new Error('not a git repository', { cause: error }),
   });

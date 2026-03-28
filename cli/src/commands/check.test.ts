@@ -134,7 +134,12 @@ describe('check command wiring', () => {
 describe('getCheckResults', () => {
   it('returns results from CheckService', async () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: 'vitest', linter: 'oxlint', formatter: 'oxfmt' },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: 'oxlint',
+        formatter: 'oxfmt',
+      },
     ];
     const results = await Effect.runPromise(
       getCheckResults(ecosystems).pipe(Effect.provide(makeTestCheckLayer())),
@@ -144,7 +149,12 @@ describe('getCheckResults', () => {
 
   it('propagates errors from CheckService', async () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: null,
+        formatter: null,
+      },
     ];
     const result = await Effect.runPromise(
       getCheckResults(ecosystems).pipe(Effect.provide(makeErrorCheckLayer()), Effect.result),
@@ -156,43 +166,78 @@ describe('getCheckResults', () => {
 describe('resolveCheckCommands', () => {
   it('maps typescript ecosystem with all tools to 3 commands', () => {
     const commands = resolveCheckCommands([
-      { language: 'typescript', testFramework: 'vitest', linter: 'oxlint', formatter: 'oxfmt' },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: 'oxlint',
+        formatter: 'oxfmt',
+      },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['vitest', 'oxlint', 'oxfmt']);
   });
 
   it('maps go ecosystem with null linter to 2 commands', () => {
     const commands = resolveCheckCommands([
-      { language: 'go', testFramework: 'go-test', linter: null, formatter: 'gofmt' },
+      {
+        language: 'go',
+        testFramework: 'go-test',
+        linter: null,
+        formatter: 'gofmt',
+      },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['go-test', 'gofmt']);
   });
 
   it('maps rust ecosystem to 3 commands', () => {
     const commands = resolveCheckCommands([
-      { language: 'rust', testFramework: 'cargo-test', linter: 'clippy', formatter: 'rustfmt' },
+      {
+        language: 'rust',
+        testFramework: 'cargo-test',
+        linter: 'clippy',
+        formatter: 'rustfmt',
+      },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['cargo-test', 'clippy', 'rustfmt']);
   });
 
   it('maps python with ruff as both linter and formatter', () => {
     const commands = resolveCheckCommands([
-      { language: 'python', testFramework: 'pytest', linter: 'ruff', formatter: 'ruff' },
+      {
+        language: 'python',
+        testFramework: 'pytest',
+        linter: 'ruff',
+        formatter: 'ruff',
+      },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['pytest', 'ruff', 'ruff format']);
   });
 
   it('skips all null tools', () => {
     const ecosystems: DetectResult[] = [
-      { language: 'typescript', testFramework: null, linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: null,
+        linter: null,
+        formatter: null,
+      },
     ];
     expect(resolveCheckCommands(ecosystems)).toEqual([]);
   });
 
   it('handles multiple ecosystems', () => {
     const commands = resolveCheckCommands([
-      { language: 'typescript', testFramework: 'vitest', linter: 'oxlint', formatter: 'oxfmt' },
-      { language: 'go', testFramework: 'go-test', linter: null, formatter: 'gofmt' },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: 'oxlint',
+        formatter: 'oxfmt',
+      },
+      {
+        language: 'go',
+        testFramework: 'go-test',
+        linter: null,
+        formatter: 'gofmt',
+      },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['vitest', 'oxlint', 'oxfmt', 'go-test', 'gofmt']);
   });
@@ -203,14 +248,24 @@ describe('resolveCheckCommands', () => {
 
   it('resolves correct command and args for vitest', () => {
     const commands = resolveCheckCommands([
-      { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
+      {
+        language: 'typescript',
+        testFramework: 'vitest',
+        linter: null,
+        formatter: null,
+      },
     ]);
     expect(commands).toEqual([{ label: 'vitest', command: 'npx', args: ['vitest', 'run'] }]);
   });
 
   it('resolves ruff format with correct args', () => {
     const commands = resolveCheckCommands([
-      { language: 'python', testFramework: null, linter: null, formatter: 'ruff' },
+      {
+        language: 'python',
+        testFramework: null,
+        linter: null,
+        formatter: 'ruff',
+      },
     ]);
     expect(commands).toEqual([
       { label: 'ruff format', command: 'ruff', args: ['format', '--check'] },
@@ -219,7 +274,12 @@ describe('resolveCheckCommands', () => {
 
   it('resolves golangci-lint for go linter', () => {
     const commands = resolveCheckCommands([
-      { language: 'go', testFramework: null, linter: 'golangci-lint', formatter: null },
+      {
+        language: 'go',
+        testFramework: null,
+        linter: 'golangci-lint',
+        formatter: null,
+      },
     ]);
     expect(commands).toEqual([{ label: 'golangci-lint', command: 'golangci-lint', args: ['run'] }]);
   });
