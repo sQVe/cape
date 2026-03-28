@@ -5,7 +5,9 @@ import { check } from './commands/check';
 import { commit } from './commands/commit';
 import { detect } from './commands/detect';
 import { git } from './commands/git';
+import { hook } from './commands/hook';
+import { pr } from './commands/pr';
 
 export const main = Command.make('cape').pipe(
-  Command.withSubcommands([br, check, commit, detect, git]),
+  Command.withSubcommands([br, check, commit, detect, git, hook, pr]),
 );

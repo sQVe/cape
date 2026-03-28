@@ -6,7 +6,14 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import { GitService, getGitContext } from '../services/git';
 import type { GitContext } from '../services/git';
-import { stubBrLayer, stubCheckLayer, stubCommitLayer, stubDetectLayer } from '../testStubs';
+import {
+  stubBrLayer,
+  stubCheckLayer,
+  stubCommitLayer,
+  stubDetectLayer,
+  stubHookLayer,
+  stubPrLayer,
+} from '../testStubs';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -35,6 +42,8 @@ const testLayers = Layer.mergeAll(
   stubCheckLayer,
   stubCommitLayer,
   stubBrLayer,
+  stubHookLayer,
+  stubPrLayer,
 );
 
 describe('git context command', () => {

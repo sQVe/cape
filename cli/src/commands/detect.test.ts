@@ -13,7 +13,14 @@ import {
   isTestFile,
   resolveTestPath,
 } from '../services/detect';
-import { stubBrLayer, stubCheckLayer, stubCommitLayer, stubGitLayer } from '../testStubs';
+import {
+  stubBrLayer,
+  stubCheckLayer,
+  stubCommitLayer,
+  stubGitLayer,
+  stubHookLayer,
+  stubPrLayer,
+} from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
   Layer.succeed(DetectService)({
@@ -61,6 +68,8 @@ const commandLayers = Layer.mergeAll(
   stubCheckLayer,
   stubCommitLayer,
   stubBrLayer,
+  stubHookLayer,
+  stubPrLayer,
 );
 
 const errorCommandLayers = Layer.mergeAll(
@@ -70,6 +79,8 @@ const errorCommandLayers = Layer.mergeAll(
   stubCheckLayer,
   stubCommitLayer,
   stubBrLayer,
+  stubHookLayer,
+  stubPrLayer,
 );
 
 describe('detect command wiring', () => {

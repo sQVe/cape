@@ -11,7 +11,14 @@ import {
   validateFiles,
   validateMessage,
 } from '../services/commit';
-import { stubBrLayer, stubCheckLayer, stubDetectLayer, stubGitLayer } from '../testStubs';
+import {
+  stubBrLayer,
+  stubCheckLayer,
+  stubDetectLayer,
+  stubGitLayer,
+  stubHookLayer,
+  stubPrLayer,
+} from '../testStubs';
 
 const makeTestCommitLayer = () =>
   Layer.succeed(CommitService)({
@@ -32,6 +39,8 @@ const commandLayers = Layer.mergeAll(
   stubCheckLayer,
   makeTestCommitLayer(),
   stubBrLayer,
+  stubHookLayer,
+  stubPrLayer,
 );
 
 describe('validateMessage', () => {
@@ -213,6 +222,8 @@ describe('commit command wiring', () => {
       stubCheckLayer,
       makeErrorCommitLayer('commit failed'),
       stubBrLayer,
+      stubHookLayer,
+      stubPrLayer,
     );
     await expect(
       Effect.runPromise(

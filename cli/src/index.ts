@@ -8,6 +8,8 @@ import { CheckServiceLive } from './services/checkLive';
 import { CommitServiceLive } from './services/commitLive';
 import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
+import { HookServiceLive } from './services/hookLive';
+import { PrServiceLive } from './services/prLive';
 
 main.pipe(
   Command.run({ version: '0.1.0' }),
@@ -17,5 +19,7 @@ main.pipe(
   Effect.provide(CommitServiceLive),
   Effect.provide(DetectServiceLive),
   Effect.provide(GitServiceLive),
+  Effect.provide(HookServiceLive),
+  Effect.provide(PrServiceLive),
   NodeRuntime.runMain,
 );

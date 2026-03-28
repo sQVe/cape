@@ -8,7 +8,13 @@ import type { CheckResult } from '../services/check';
 import { CheckService, getCheckResults, resolveCheckCommands } from '../services/check';
 import type { DetectResult } from '../services/detect';
 import { DetectService } from '../services/detect';
-import { stubBrLayer, stubCommitLayer, stubGitLayer } from '../testStubs';
+import {
+  stubBrLayer,
+  stubCommitLayer,
+  stubGitLayer,
+  stubHookLayer,
+  stubPrLayer,
+} from '../testStubs';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
   Layer.succeed(DetectService)({
@@ -55,6 +61,8 @@ const commandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCommitLayer,
   stubBrLayer,
+  stubHookLayer,
+  stubPrLayer,
 );
 
 describe('check command wiring', () => {
@@ -78,6 +86,8 @@ describe('check command wiring', () => {
       stubGitLayer,
       stubCommitLayer,
       stubBrLayer,
+      stubHookLayer,
+      stubPrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed',
@@ -96,6 +106,8 @@ describe('check command wiring', () => {
       stubGitLayer,
       stubCommitLayer,
       stubBrLayer,
+      stubHookLayer,
+      stubPrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'no ecosystem detected',
@@ -110,6 +122,8 @@ describe('check command wiring', () => {
       stubGitLayer,
       stubCommitLayer,
       stubBrLayer,
+      stubHookLayer,
+      stubPrLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'check execution failed',

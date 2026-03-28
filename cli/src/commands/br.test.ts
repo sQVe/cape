@@ -6,7 +6,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { main } from '../main';
 import { BrValidateService, validateSections } from '../services/brValidate';
 import type { BeadData } from '../services/brValidate';
-import { stubCheckLayer, stubCommitLayer, stubDetectLayer, stubGitLayer } from '../testStubs';
+import {
+  stubCheckLayer,
+  stubCommitLayer,
+  stubDetectLayer,
+  stubGitLayer,
+  stubHookLayer,
+  stubPrLayer,
+} from '../testStubs';
 
 const makeBead = (overrides: Partial<BeadData> = {}) => ({
   id: 'cape-test',
@@ -32,6 +39,8 @@ const makeCommandLayers = (brLayer = makeStubBrLayer()) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
+    stubHookLayer,
+    stubPrLayer,
     brLayer,
   );
 
