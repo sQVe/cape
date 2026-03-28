@@ -33,7 +33,13 @@ export const stubCommitLayer = Layer.succeed(CommitService)({
 });
 
 export const stubBrLayer = Layer.succeed(BrValidateService)({
-  show: () => Effect.succeed({ id: '', issue_type: 'task', description: '', design: null }),
+  show: () =>
+    Effect.succeed({
+      id: '',
+      issue_type: 'task',
+      description: '',
+      design: null,
+    }),
   updateDesign: () => Effect.succeed(undefined),
   readStdin: () => Effect.succeed(''),
 });
@@ -46,6 +52,7 @@ export const stubHookLayer = Layer.succeed(HookService)({
   ensureDir: () => Effect.succeed(undefined),
   brQuery: () => Effect.succeed(null),
   readStdin: () => Effect.succeed(''),
+  spawnGit: () => Effect.succeed(null),
 });
 
 export const stubPrLayer = Layer.succeed(PrService)({

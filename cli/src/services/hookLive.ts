@@ -42,8 +42,11 @@ const ensureDir = (path: string) =>
 const brQuery = (args: readonly string[]) =>
   Effect.try({
     try: () => {
-      const result = execFileSync('br', [...args], { encoding: 'utf-8', timeout: 3000 });
-      return result.trim() || null;
+      const result = execFileSync('br', [...args], {
+        encoding: 'utf-8',
+        timeout: 3000,
+      });
+      return result.trim();
     },
     catch: () => new Error('br query failed'),
   }).pipe(Effect.orElseSucceed(() => null));
@@ -54,6 +57,18 @@ const readStdin = () =>
     catch: () => new Error('failed to read stdin'),
   }).pipe(Effect.orElseSucceed(() => ''));
 
+const spawnGit = (args: readonly string[]) =>
+  Effect.try({
+    try: () => {
+      const result = execFileSync('git', [...args], {
+        encoding: 'utf-8',
+        timeout: 3000,
+      });
+      return result.trim() || null;
+    },
+    catch: () => new Error('git command failed'),
+  }).pipe(Effect.orElseSucceed(() => null));
+
 export const HookServiceLive = Layer.succeed(HookService)({
   pluginRoot,
   readFile,
@@ -62,4 +77,5 @@ export const HookServiceLive = Layer.succeed(HookService)({
   ensureDir,
   brQuery,
   readStdin,
+  spawnGit,
 });
