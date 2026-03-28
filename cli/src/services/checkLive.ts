@@ -2,15 +2,10 @@ import { spawnSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
-import type { CheckResult } from './check';
 import { CheckService, resolveCheckCommands } from './check';
 import type { DetectResult } from './detect';
 
-const executeCommand = (cmd: {
-  label: string;
-  command: string;
-  args: readonly string[];
-}): CheckResult => {
+const executeCommand = (cmd: { label: string; command: string; args: readonly string[] }) => {
   const result = spawnSync(cmd.command, [...cmd.args], {
     encoding: 'utf-8',
     stdio: ['pipe', 'pipe', 'pipe'],
