@@ -194,10 +194,13 @@ export const denyWith = (reason: string) => ({
   },
 });
 
+const parseString = (value: unknown): string | null =>
+  typeof value === 'string' ? value : null;
+
 const parseCommand = (input: string): string | null => {
   try {
     const data = JSON.parse(input);
-    return data.tool_input?.command ?? null;
+    return parseString(data.tool_input?.command);
   } catch {
     return null;
   }
@@ -206,7 +209,7 @@ const parseCommand = (input: string): string | null => {
 const parseSkillName = (input: string): string | null => {
   try {
     const data = JSON.parse(input);
-    return data.tool_input?.skill ?? null;
+    return parseString(data.tool_input?.skill);
   } catch {
     return null;
   }
@@ -556,7 +559,7 @@ export const preToolUseSkill = () =>
 const parseFilePath = (input: string): string | null => {
   try {
     const data = JSON.parse(input);
-    return data.tool_input?.file_path ?? null;
+    return parseString(data.tool_input?.file_path);
   } catch {
     return null;
   }
