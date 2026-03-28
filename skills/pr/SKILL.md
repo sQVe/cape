@@ -153,7 +153,7 @@ gaps found, add missing test plan items.
 Output the full PR:
 
 1. Title
-2. Full description with test plan
+2. Full description with test plan (render `- [ ]` checkboxes verbatim, not as bullet points)
 3. Which test plan items are automatable (backticked commands, URLs, assertions)
 
 End output with `---` separator. After the separator, immediately use `AskUserQuestion` with
@@ -186,6 +186,8 @@ All checkboxes must be `[x]` to proceed. Manual verification section is informat
 ---
 
 ## Step 8: Create PR (fix loop, max 3 attempts)
+
+**Gate:** Refuse to proceed if any test plan checkbox is still `[ ]`. Return to step 7.
 
 ```bash
 gh pr create --title "the title" --body "$(cat <<'EOF'
