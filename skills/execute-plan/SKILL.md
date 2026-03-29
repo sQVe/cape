@@ -116,9 +116,11 @@ get user confirmation. Then append a divergence log entry to the task's design f
 Before closing, append an Outcome section to the task's design field via
 `cape br design <task-id> "Outcome"`.
 
-Close the task only when all substeps are done:
+Close the task only when all substeps are done. Run `cape br close-check <task-id>` first to verify
+substasks are complete and checks pass, then close:
 
 ```bash
+cape br close-check <task-id>
 br close <task-id>
 ```
 
