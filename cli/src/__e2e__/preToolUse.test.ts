@@ -410,13 +410,33 @@ describe('skill gate: non-gated skills pass through', () => {
     'cape:beads',
     'cape:branch',
     'cape:brainstorm',
-    'cape:write-plan',
     'cape:pr',
     'cape:refactor',
   ])('allows non-gated skill %s', (skill) => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput(skill),
+      env,
+    );
+    expectPassThrough(result);
+  });
+});
+
+describe('skill gate: write-plan requires brainstorm artifact', () => {
+  it('denies write-plan when brainstorm-summary.txt is absent', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:write-plan'),
+      env,
+    );
+    expectDeny(result, 'brainstorm');
+  });
+
+  it('allows write-plan when brainstorm-summary.txt exists', () => {
+    writeFileSync(join(contextDir, 'brainstorm-summary.txt'), 'true');
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:write-plan'),
       env,
     );
     expectPassThrough(result);

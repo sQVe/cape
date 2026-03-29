@@ -239,6 +239,12 @@ to create the epic without re-asking brainstorm's questions.
 [What explored, what found, why abandoned]
 ```
 
+Signal brainstorm completion for the write-plan gate:
+
+```bash
+cape context set brainstorm-summary
+```
+
 **Stop and hand off:**
 
 ```
