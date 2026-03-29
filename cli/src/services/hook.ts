@@ -206,10 +206,19 @@ const parseCommand = (input: string): string | null => {
   }
 };
 
-const parseSkillName = (input: string): string | null => {
+interface SkillInput {
+  readonly name: string;
+  readonly args: string | null;
+}
+
+const parseSkillInput = (input: string): SkillInput | null => {
   try {
     const data = JSON.parse(input);
-    return parseString(data.tool_input?.skill);
+    const name = parseString(data.tool_input?.skill);
+    if (!name) {
+      return null;
+    }
+    return { name, args: parseString(data.tool_input?.args) };
   } catch {
     return null;
   }
@@ -487,7 +496,7 @@ const parseEpicStatusEntry = (raw: unknown): { epicId: string | null; openCount:
   return { epicId, openCount: total - closed };
 };
 
-const gateFinishEpic = () =>
+const gateFinishEpic = (targetEpicId: string | null) =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const output = yield* service.brQuery(['epic', 'status', '--json']);
@@ -501,6 +510,9 @@ const gateFinishEpic = () =>
       }
       for (const raw of epics) {
         const { epicId, openCount } = parseEpicStatusEntry(raw);
+        if (targetEpicId != null && epicId !== targetEpicId) {
+          continue;
+        }
         if (openCount > 0 && epicId != null) {
           return denyWith(
             `Epic ${epicId} still has ${openCount} open task(s). Close all tasks before running cape:finish-epic.`,
@@ -528,29 +540,32 @@ const gateFixBug = () =>
     return null;
   });
 
-const skillGates: Record<string, () => Effect.Effect<DenyResult, never, HookService>> = {
-  'execute-plan': gateExecutePlan,
-  'finish-epic': gateFinishEpic,
-  'fix-bug': gateFixBug,
+const skillGates: Record<
+  string,
+  (args: string | null) => Effect.Effect<DenyResult, never, HookService>
+> = {
+  'execute-plan': () => gateExecutePlan(),
+  'finish-epic': (args) => gateFinishEpic(args),
+  'fix-bug': () => gateFixBug(),
 };
 
 export const preToolUseSkill = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const input = yield* service.readStdin();
-    const skillName = parseSkillName(input);
-    if (!skillName) {
+    const skill = parseSkillInput(input);
+    if (!skill) {
       return null;
     }
 
-    const name = skillName.replace(/^cape:/, '');
+    const name = skill.name.replace(/^cape:/, '');
     if (!gatedSkills.has(name)) {
       return null;
     }
 
     const gate = skillGates[name];
     if (gate != null) {
-      return yield* gate();
+      return yield* gate(skill.args);
     }
 
     return null;

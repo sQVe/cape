@@ -370,7 +370,8 @@ describe('hook command wiring', () => {
 
 const bashStdin = (command: string) => JSON.stringify({ tool_input: { command } });
 
-const skillStdin = (skill: string) => JSON.stringify({ tool_input: { skill } });
+const skillStdin = (skill: string, args?: string) =>
+  JSON.stringify({ tool_input: { skill, ...(args != null ? { args } : {}) } });
 
 const expectDeny = (result: unknown, reasonSubstring: string) => {
   const r = result as {
@@ -850,6 +851,32 @@ describe('preToolUseSkill', () => {
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
+  });
+
+  it('allows finish-epic for target epic when other epics have open tasks', async () => {
+    const epicStatus = JSON.stringify([
+      { epic: { id: 'cape-other' }, total_children: 10, closed_children: 6 },
+      { epic: { id: 'cape-target' }, total_children: 5, closed_children: 5 },
+    ]);
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic', 'cape-target'),
+      brResponses: { 'epic status': epicStatus },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('denies finish-epic for target epic when it has open tasks', async () => {
+    const epicStatus = JSON.stringify([
+      { epic: { id: 'cape-other' }, total_children: 5, closed_children: 5 },
+      { epic: { id: 'cape-target' }, total_children: 5, closed_children: 3 },
+    ]);
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic', 'cape-target'),
+      brResponses: { 'epic status': epicStatus },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'cape-target');
   });
 
   it('denies fix-bug when no open bug exists', async () => {
