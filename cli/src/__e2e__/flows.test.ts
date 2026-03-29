@@ -259,4 +259,38 @@ describe('flow 5: full commit pipeline', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('bulk staging with');
   });
+
+  it('warns on sensitive files but still commits', () => {
+    writeFileSync(join(repoDir, '.env'), 'SECRET=abc\n');
+
+    const result = spawnSync('node', [BINARY, 'commit', '.env', '-m', 'feat: config'], {
+      encoding: 'utf-8',
+      cwd: repoDir,
+      timeout: 10_000,
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toContain('sensitive files');
+    expect(result.stderr).toContain('.env');
+
+    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
+      encoding: 'utf-8',
+    });
+    expect(log).toContain('feat: config');
+  });
+
+  it('fails with non-zero exit when file does not exist', () => {
+    const result = spawnSync(
+      'node',
+      [BINARY, 'commit', 'nonexistent.ts', '-m', 'feat: ghost'],
+      {
+        encoding: 'utf-8',
+        cwd: repoDir,
+        timeout: 10_000,
+      },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toBeTruthy();
+  });
 });

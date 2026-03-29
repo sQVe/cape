@@ -224,6 +224,28 @@ describe('event name normalization', () => {
     expect(pascal.status).toBe(0);
     expect(kebab.stdout).toBe(pascal.stdout);
   });
+
+  it('PascalCase UserPromptSubmit works the same as kebab-case', () => {
+    const stdin = JSON.stringify({ prompt: 'hello world' });
+
+    const kebab = cape(['hook', 'user-prompt-submit'], stdin, env);
+    const pascal = cape(['hook', 'UserPromptSubmit'], stdin, env);
+
+    expect(kebab.status).toBe(0);
+    expect(pascal.status).toBe(0);
+    expect(kebab.stdout).toBe(pascal.stdout);
+  });
+
+  it('PascalCase PostToolUseFailure works the same as kebab-case', () => {
+    const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
+
+    const kebab = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
+    const pascal = cape(['hook', 'PostToolUseFailure', '--matcher', 'Bash'], stdin, env);
+
+    expect(kebab.status).toBe(0);
+    expect(pascal.status).toBe(0);
+    expect(kebab.stdout).toBe(pascal.stdout);
+  });
 });
 
 describe('encoding edge cases', () => {
@@ -322,6 +344,14 @@ describe('non-string field types', () => {
   });
 });
 
+describe('post-tool-use AskUserQuestion with non-array questions', () => {
+  it('handles non-array questions field without crashing', () => {
+    const stdin = JSON.stringify({ tool_input: { questions: 42 } });
+    const result = cape(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion'], stdin, env);
+    expect(result.status).toBe(0);
+  });
+});
+
 describe('user-prompt-submit beads detection', () => {
   it('detects beads keyword and includes cape:beads in additionalContext', () => {
     const stdin = JSON.stringify({ prompt: 'show me br list' });
@@ -352,6 +382,18 @@ describe('user-prompt-submit intent routing', () => {
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
     expect(parsed.additionalContext).toContain('cape:execute-plan');
+  });
+
+  it('triggers multiple intents simultaneously', () => {
+    const stdin = JSON.stringify({
+      prompt: 'track this bug:\n  at Object.<anonymous> (/src/index.ts:42:10)',
+    });
+    const result = cape(['hook', 'user-prompt-submit'], stdin, env);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.decision).toBe('approve');
+    expect(parsed.additionalContext).toContain('cape:beads');
+    expect(parsed.additionalContext).toContain('cape:debug-issue');
   });
 
   it('passes through ambiguous input without routing', () => {

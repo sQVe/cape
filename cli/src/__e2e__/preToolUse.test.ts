@@ -90,6 +90,28 @@ describe('br create missing flags', () => {
   });
 });
 
+describe('br create short flags', () => {
+  it('allows br create with -t -p -l short flags', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br create -t task -p 2 -l foo'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+});
+
+describe('br create without --description', () => {
+  it('passes when --description is absent and all required flags present', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br create --type task --priority 2 --labels foo'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+});
+
 describe('br create --design flag', () => {
   it('denies --design on br create', () => {
     const result = cape(
@@ -275,6 +297,24 @@ describe('gh pr create body rules', () => {
     expectDeny(result, 'invented sections');
   });
 
+  it('denies ## Background section', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "\n## Background\nstuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectDeny(result, 'invented sections');
+  });
+
+  it('denies ## Description section', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "\n## Description\nstuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectDeny(result, 'invented sections');
+  });
+
   it('allows valid template headers', () => {
     writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
     const result = cape(
@@ -360,6 +400,16 @@ describe('br show requirement', () => {
     );
     expectDeny(result, 'br show');
   });
+
+  it('denies br update --design when br-show-log.txt has different IDs', () => {
+    writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-xyz\ncape-def\n');
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br update cape-abc --design "## New"'),
+      env,
+    );
+    expectDeny(result, 'br show');
+  });
 });
 
 describe('PR creation sub-guards', () => {
@@ -375,6 +425,16 @@ describe('PR creation sub-guards', () => {
   it('denies when pr-confirmed.txt has expired timestamp', () => {
     const elevenMinutesAgo = Date.now() - 11 * 60 * 1000;
     writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(elevenMinutesAgo));
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "stuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectDeny(result, 'expired');
+  });
+
+  it('denies when pr-confirmed.txt has corrupted content', () => {
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), 'not-a-number-garbage');
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('gh pr create --title "feat: test" --body "stuff"'),

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -94,6 +94,11 @@ describe('cape br close-check', () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('close-check');
   });
+
+  it('requires an id argument', () => {
+    const result = cape(['br', 'close-check']);
+    expect(result.status).not.toBe(0);
+  });
 });
 
 describe('cape epic verify', () => {
@@ -106,6 +111,11 @@ describe('cape epic verify', () => {
     const result = cape(['epic', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('verify');
+  });
+
+  it('requires an id argument', () => {
+    const result = cape(['epic', 'verify']);
+    expect(result.status).not.toBe(0);
   });
 });
 
@@ -211,6 +221,23 @@ describe('cape git diff', () => {
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('error');
   });
+
+  it('exits 1 with error for invalid scope', () => {
+    const result = cape(['git', 'diff', 'bogus'], { cwd: repoDir });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('invalid scope');
+  });
+
+  it('outputs branch diff against main', () => {
+    execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feat/test-branch']);
+    writeFileSync(join(repoDir, 'new.ts'), 'export const y = 1;\n');
+    execFileSync('git', ['-C', repoDir, 'add', 'new.ts']);
+    execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add new']);
+
+    const result = cape(['git', 'diff', 'branch'], { cwd: repoDir });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('new.ts');
+  });
 });
 
 describe('cape validate', () => {
@@ -273,6 +300,22 @@ describe('cape validate', () => {
       rmSync(badDir, { recursive: true, force: true });
     }
   });
+
+  it('exits 1 for unknown file type', () => {
+    const valTmpDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-val-XXXXXX')], {
+      encoding: 'utf-8',
+    }).trim();
+    const unknownFile = join(valTmpDir, 'random.txt');
+    writeFileSync(unknownFile, 'not a skill or agent\n');
+
+    try {
+      const result = cape(['validate', unknownFile]);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('Unknown file type');
+    } finally {
+      spawnSync('rm', ['-rf', valTmpDir]);
+    }
+  });
 });
 
 describe('cape commit', () => {
@@ -332,5 +375,194 @@ describe('cape commit', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const z = 3;\n');
     const result = cape(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
     expect(result.status).toBe(1);
+  });
+
+  it('succeeds with multiple files', () => {
+    writeFileSync(join(repoDir, 'a.ts'), 'export const a = 1;\n');
+    writeFileSync(join(repoDir, 'b.ts'), 'export const b = 2;\n');
+
+    const result = cape(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
+      cwd: repoDir,
+    });
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.files).toContain('a.ts');
+    expect(parsed.files).toContain('b.ts');
+
+    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
+      encoding: 'utf-8',
+    });
+    expect(log).toContain('feat: add two files');
+  });
+});
+
+describe('cape check', () => {
+  it('cape --help lists check subcommand', () => {
+    const result = cape(['--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('check');
+  });
+
+  it('exits 1 in a repo with no detected ecosystem', () => {
+    const emptyDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-check-XXXXXX')], {
+      encoding: 'utf-8',
+    }).trim();
+    execFileSync('git', ['init', emptyDir]);
+    execFileSync('git', ['-C', emptyDir, 'commit', '--allow-empty', '-m', 'initial']);
+
+    try {
+      const result = cape(['check'], { cwd: emptyDir });
+      expect(result.status).not.toBe(0);
+    } finally {
+      spawnSync('rm', ['-rf', emptyDir]);
+    }
+  });
+});
+
+describe('cape pr', () => {
+  describe('template', () => {
+    it('returns JSON with sections array', () => {
+      const result = cape(['pr', 'template']);
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed).toHaveProperty('sections');
+      expect(Array.isArray(parsed.sections)).toBe(true);
+      expect(parsed.sections.length).toBeGreaterThan(0);
+    });
+
+    it('includes source field indicating repo or default', () => {
+      const result = cape(['pr', 'template']);
+      expect(result.status).toBe(0);
+      const parsed = JSON.parse(result.stdout);
+      expect(['repo', 'default']).toContain(parsed.source);
+    });
+  });
+
+  describe('validate', () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+      tmpDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-pr-XXXXXX')], {
+        encoding: 'utf-8',
+      }).trim();
+    });
+
+    afterEach(() => {
+      spawnSync('rm', ['-rf', tmpDir]);
+    });
+
+    it('exits 1 when no file or --stdin provided', () => {
+      const result = cape(['pr', 'validate']);
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain('provide <file> or --stdin');
+    });
+
+    it('validates a PR body file with all sections present', () => {
+      const template = cape(['pr', 'template']);
+      const parsed = JSON.parse(template.stdout);
+      const body = parsed.sections.map((s: string) => `#### ${s}\n\nContent here.\n`).join('\n');
+      const bodyFile = join(tmpDir, 'pr-body.md');
+      writeFileSync(bodyFile, body);
+
+      const result = cape(['pr', 'validate', bodyFile]);
+      expect(result.status).toBe(0);
+      const validated = JSON.parse(result.stdout);
+      expect(validated.valid).toBe(true);
+      expect(validated.missing).toEqual([]);
+    });
+
+    it('reports missing sections for empty body', () => {
+      const bodyFile = join(tmpDir, 'empty-pr.md');
+      writeFileSync(bodyFile, 'No sections here.\n');
+
+      const result = cape(['pr', 'validate', bodyFile]);
+      expect(result.status).toBe(1);
+      const validated = JSON.parse(result.stdout.split('\n')[0]!);
+      expect(validated.valid).toBe(false);
+      expect(validated.missing.length).toBeGreaterThan(0);
+    });
+
+    it('reports extra sections not in template', () => {
+      const template = cape(['pr', 'template']);
+      const parsed = JSON.parse(template.stdout);
+      const body = [
+        ...parsed.sections.map((s: string) => `#### ${s}\n\nContent.\n`),
+        '#### Bonus section\n\nExtra.\n',
+      ].join('\n');
+      const bodyFile = join(tmpDir, 'extra-pr.md');
+      writeFileSync(bodyFile, body);
+
+      const result = cape(['pr', 'validate', bodyFile]);
+      expect(result.status).toBe(0);
+      const validated = JSON.parse(result.stdout);
+      expect(validated.valid).toBe(true);
+      expect(validated.extra).toContain('Bonus section');
+    });
+  });
+});
+
+describe('cape context', () => {
+  it('rejects invalid context name with uppercase', () => {
+    const result = cape(['context', 'set', 'InvalidName']);
+    expect(result.stderr).toContain('Invalid context name');
+  });
+
+  it('rejects invalid context name with spaces', () => {
+    const result = cape(['context', 'set', 'bad name']);
+    expect(result.stderr).toContain('Invalid context name');
+  });
+
+  it('rejects invalid context name with underscores', () => {
+    const result = cape(['context', 'set', 'bad_name']);
+    expect(result.stderr).toContain('Invalid context name');
+  });
+
+  it('accepts valid lowercase-hyphen context name', () => {
+    const contextFile = join(REPO_ROOT, 'cli', 'hooks', 'context', 'my-context-123.txt');
+    const result = cape(['context', 'set', 'my-context-123']);
+    try {
+      expect(result.stderr).not.toContain('Invalid context name');
+    } finally {
+      try { unlinkSync(contextFile); } catch { /* cleanup */ }
+    }
+  });
+
+  it('clear rejects invalid context name', () => {
+    const result = cape(['context', 'clear', 'BAD']);
+    expect(result.stderr).toContain('Invalid context name');
+  });
+});
+
+describe('cape br validate', () => {
+  it('exits 1 when neither id nor --type provided', () => {
+    const result = cape(['br', 'validate']);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('provide either <id> or --type');
+  });
+});
+
+describe('cape br design', () => {
+  it('cape br --help lists design subcommand', () => {
+    const result = cape(['br', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('design');
+  });
+});
+
+describe('cape detect --map', () => {
+  it('returns JSON mapping source files to test files', () => {
+    const result = cape(['detect', '--map', '.']);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(typeof parsed).toBe('object');
+    expect(Object.keys(parsed).length).toBeGreaterThan(0);
+  });
+
+  it('values are either a test path or null', () => {
+    const result = cape(['detect', '--map', '.']);
+    const parsed = JSON.parse(result.stdout);
+    for (const value of Object.values(parsed)) {
+      expect(value === null || typeof value === 'string').toBe(true);
+    }
   });
 });

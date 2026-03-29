@@ -650,8 +650,9 @@ interface PrConfirmationInput {
 const parsePrConfirmationInput = (input: string): PrConfirmationInput | null => {
   try {
     const data = JSON.parse(input);
+    const questions = data.tool_input?.questions;
     return {
-      questions: data.tool_input?.questions ?? [],
+      questions: Array.isArray(questions) ? questions : [],
       answers: data.tool_input?.answers ?? {},
     };
   } catch {

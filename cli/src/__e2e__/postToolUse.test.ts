@@ -186,6 +186,32 @@ describe('PostToolUse/Bash', () => {
     expect(state.timestamp).toBeGreaterThan(0);
   });
 
+  it('handles malformed JSON input gracefully', () => {
+    const result = cape(
+      ['hook', 'post-tool-use', '--matcher', 'Bash'],
+      'not json',
+      env,
+    );
+    expect(result.status).toBe(0);
+    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
+    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+  });
+
+  it('writes both br show log and TDD state for compound command', () => {
+    const stdin = JSON.stringify({
+      tool_input: { command: 'br show cape-abc && npx vitest run' },
+    });
+    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
+    expect(result.status).toBe(0);
+
+    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
+    expect(log).toContain('cape-abc');
+
+    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
+    expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
+  });
+
   it('returns null output (no stdout) for all commands', () => {
     const commands = ['ls -la', 'br show cape-1', 'npx vitest run'];
     for (const command of commands) {
@@ -417,6 +443,19 @@ describe('PostToolUse/AskUserQuestion', () => {
       tool_input: {
         questions: [{ question: 'Ready to open the PR?' }],
         answers: { q1: 'revise it first' },
+      },
+    });
+    cape(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion'], stdin, env);
+    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(false);
+  });
+
+  it('rejects when any answer contains a rejection keyword', () => {
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
+
+    const stdin = JSON.stringify({
+      tool_input: {
+        questions: [{ question: 'Create the PR?' }],
+        answers: { q1: 'yes', q2: 'cancel' },
       },
     });
     cape(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion'], stdin, env);
