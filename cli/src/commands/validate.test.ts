@@ -129,7 +129,20 @@ describe('validateSkillContent', () => {
   it('requires all four tags', () => {
     const content = '---\nname: x\ndescription: x\n---\n';
     const result = validateSkillContent('test.md', content);
-    expect(result.errors).toHaveLength(4);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('Missing required tag: <skill_overview>');
+    expect(result.errors).toContain('Missing required tag: <rigidity_level>');
+    expect(result.errors).toContain('Missing required tag: <when_to_use>');
+    expect(result.errors).toContain('Missing required tag: <critical_rules>');
+  });
+
+  it('detects whitespace-only tag as empty', () => {
+    const content = validSkill.replace(
+      /<skill_overview>[\s\S]*?<\/skill_overview>/,
+      '<skill_overview>   </skill_overview>',
+    );
+    const result = validateSkillContent('test.md', content);
+    expect(result.errors).toContain('Empty tag: <skill_overview>');
   });
 });
 
@@ -144,6 +157,18 @@ describe('validateAgentContent', () => {
     const content = validAgent.replace('model: opus\n', '');
     const result = validateAgentContent('test.md', content);
     expect(result.errors).toContain('Missing frontmatter field: model');
+  });
+
+  it('detects missing name field', () => {
+    const content = validAgent.replace('name: test-agent\n', '');
+    const result = validateAgentContent('test.md', content);
+    expect(result.errors).toContain('Missing frontmatter field: name');
+  });
+
+  it('detects missing description field', () => {
+    const content = validAgent.replace('description: A test agent\n', '');
+    const result = validateAgentContent('test.md', content);
+    expect(result.errors).toContain('Missing frontmatter field: description');
   });
 
   it('accepts Research approach as alternative heading', () => {

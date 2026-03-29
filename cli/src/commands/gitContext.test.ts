@@ -1,5 +1,5 @@
 import { NodeServices } from '@effect/platform-node';
-import { Effect, Layer, Result } from 'effect';
+import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
@@ -63,35 +63,9 @@ describe('git context command', () => {
 });
 
 describe('getGitContext', () => {
-  it('returns mainBranch from GitService', async () => {
-    const result = await Effect.runPromise(getGitContext.pipe(Effect.provide(makeTestGitLayer())));
-    expect(result.mainBranch).toBe('main');
-  });
-
-  it('returns currentBranch from GitService', async () => {
-    const result = await Effect.runPromise(getGitContext.pipe(Effect.provide(makeTestGitLayer())));
-    expect(result.currentBranch).toBe('feature/test');
-  });
-
-  it('returns status lines as array', async () => {
-    const result = await Effect.runPromise(getGitContext.pipe(Effect.provide(makeTestGitLayer())));
-    expect(result.status).toEqual(['M  file.ts', '?? new.ts']);
-  });
-
-  it('returns diffStat summary', async () => {
-    const result = await Effect.runPromise(getGitContext.pipe(Effect.provide(makeTestGitLayer())));
-    expect(result.diffStat).toBe(' 2 files changed, 10 insertions(+), 3 deletions(-)');
-  });
-
-  it('returns recentLog entries', async () => {
-    const result = await Effect.runPromise(getGitContext.pipe(Effect.provide(makeTestGitLayer())));
-    expect(result.recentLog).toEqual(['abc1234 feat: add thing', 'def5678 fix: broken thing']);
-  });
-
   it('propagates error when not in a git repo', async () => {
-    const result = await Effect.runPromise(
-      getGitContext.pipe(Effect.provide(makeErrorGitLayer()), Effect.result),
-    );
-    expect(Result.isFailure(result)).toBe(true);
+    await expect(
+      Effect.runPromise(getGitContext.pipe(Effect.provide(makeErrorGitLayer()))),
+    ).rejects.toThrow('not a git repository');
   });
 });

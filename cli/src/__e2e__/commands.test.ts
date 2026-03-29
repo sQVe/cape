@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -43,13 +43,6 @@ describe('cape --version', () => {
 });
 
 describe('cape detect', () => {
-  it('returns valid JSON array', () => {
-    const result = cape(['detect']);
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(Array.isArray(parsed)).toBe(true);
-  });
-
   it('each entry has language, testFramework, linter, formatter fields', () => {
     const result = cape(['detect']);
     const parsed = JSON.parse(result.stdout);
@@ -137,6 +130,24 @@ describe('cape validate', () => {
     }
     expect(parsed.results.length).toBeGreaterThan(0);
   });
+
+  it('exits 1 for a malformed skill file', () => {
+    const badDir = join(REPO_ROOT, 'skills', '_test_bad');
+    const badFile = join(badDir, 'SKILL.md');
+    mkdirSync(badDir, { recursive: true });
+    writeFileSync(badFile, 'no frontmatter no tags\n');
+
+    try {
+      const result = cape(['validate', badFile]);
+      expect(result.status).toBe(1);
+      const jsonLine = result.stdout.split('\n')[0]!;
+      const parsed = JSON.parse(jsonLine);
+      expect(parsed.failed).toBe(1);
+      expect(parsed.results[0].errors.length).toBeGreaterThan(0);
+    } finally {
+      rmSync(badDir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('cape commit', () => {
@@ -179,6 +190,11 @@ describe('cape commit', () => {
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive');
     expect(result.stderr).toContain('.env');
+
+    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
+      encoding: 'utf-8',
+    });
+    expect(log).toContain('feat: config');
   });
 
   it('rejects invalid conventional commit message', () => {

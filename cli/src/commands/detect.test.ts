@@ -91,10 +91,6 @@ describe('detect command wiring', () => {
     await Effect.runPromise(run(['detect', '--help']).pipe(Effect.provide(commandLayers)));
   });
 
-  it('cape --help lists detect subcommand', async () => {
-    await Effect.runPromise(run(['--help']).pipe(Effect.provide(commandLayers)));
-  });
-
   it('outputs error JSON when detection fails', async () => {
     await expect(
       Effect.runPromise(run(['detect']).pipe(Effect.provide(errorCommandLayers))),
@@ -117,8 +113,9 @@ describe('getDetectResult', () => {
     const results = await Effect.runPromise(
       getDetectResult.pipe(Effect.provide(makeTestDetectLayer())),
     );
-    expect(results).toHaveLength(1);
-    expect(results[0].language).toBe('typescript');
+    expect(results).toEqual([
+      { language: 'typescript', testFramework: 'vitest', linter: 'oxlint', formatter: 'oxfmt' },
+    ]);
   });
 
   it('propagates error when no ecosystem detected', async () => {
@@ -189,6 +186,15 @@ describe('detectEcosystems', () => {
 
     it('detects oxlint from .oxlintrc.json', () => {
       const results = detectEcosystems(makeProbe(['tsconfig.json', '.oxlintrc.json']));
+      expect(findByLanguage(results, 'typescript')?.linter).toBe('oxlint');
+    });
+
+    it('detects oxlint from devDependencies', () => {
+      const results = detectEcosystems(
+        makeProbe(['tsconfig.json', 'package.json'], {
+          'package.json': { devDependencies: { oxlint: '^0.16' } },
+        }),
+      );
       expect(findByLanguage(results, 'typescript')?.linter).toBe('oxlint');
     });
 
@@ -400,6 +406,10 @@ describe('resolveTestPath', () => {
 
   it('maps lua/ to tests/ with _spec suffix', () => {
     expect(resolveTestPath('lua', 'lua/foo.lua')).toBe('tests/foo_spec.lua');
+  });
+
+  it('keeps non-lua/ prefix and adds _spec suffix', () => {
+    expect(resolveTestPath('lua', 'plugin/foo.lua')).toBe('plugin/foo_spec.lua');
   });
 
   it('maps src/ python to tests/ with test_ prefix', () => {

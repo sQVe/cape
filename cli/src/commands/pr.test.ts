@@ -12,6 +12,7 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
+  stubValidateLayer,
 } from '../testStubs';
 
 const repoTemplate = [
@@ -48,6 +49,7 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     stubCommitLayer,
     stubBrLayer,
     stubHookLayer,
+    stubValidateLayer,
     prLayer,
   );
 
@@ -93,12 +95,6 @@ describe('validatePrBody', () => {
     expect(result.valid).toBe(true);
     expect(result.extra).toEqual(['Bonus']);
   });
-
-  it('returns valid true with empty missing even when extra sections exist', () => {
-    const template = ['Motivation'];
-    const body = '#### Motivation\nwhy\n#### Extra\nstuff';
-    expect(validatePrBody(template, body).valid).toBe(true);
-  });
 });
 
 describe('pr template command', () => {
@@ -131,6 +127,21 @@ describe('pr template command', () => {
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Summary', 'Test plan']);
     expect(result.content).toBe(repoTemplate);
+    consoleSpy.mockRestore();
+  });
+
+  it('finds uppercase PULL_REQUEST_TEMPLATE.md', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const prLayer = makeStubPrLayer({
+      '/repo/.github/PULL_REQUEST_TEMPLATE.md': repoTemplate,
+    });
+    await Effect.runPromise(
+      run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.source).toBe('repo');
+    expect(result.sections).toEqual(['Summary', 'Test plan']);
     consoleSpy.mockRestore();
   });
 
@@ -187,7 +198,7 @@ describe('pr validate command', () => {
       Effect.runPromise(
         run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow('Changes, Test plan');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result.valid).toBe(false);
@@ -212,6 +223,16 @@ describe('pr validate command', () => {
     const result = JSON.parse(output);
     expect(result).toEqual({ valid: true, missing: [], extra: [] });
     consoleSpy.mockRestore();
+  });
+
+  it('rejects when neither file nor --stdin provided', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(
+      Effect.runPromise(
+        run(['pr', 'validate']).pipe(Effect.provide(makeCommandLayers())),
+      ),
+    ).rejects.toThrow('provide <file> or --stdin');
+    stderrSpy.mockRestore();
   });
 
   it('validates against repo template when present', async () => {

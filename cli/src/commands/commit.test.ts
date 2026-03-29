@@ -78,7 +78,9 @@ describe('validateMessage', () => {
   });
 
   it('rejects message with invalid type', () => {
-    expect(validateMessage('feature: add thing')).not.toBeNull();
+    expect(validateMessage('feature: add thing')).toBe(
+      'invalid conventional commit format: "feature: add thing"',
+    );
   });
 
   it('rejects message without description after colon', () => {
@@ -90,7 +92,9 @@ describe('validateMessage', () => {
   });
 
   it('rejects message with missing space after colon', () => {
-    expect(validateMessage('feat:no space')).not.toBeNull();
+    expect(validateMessage('feat:no space')).toBe(
+      'invalid conventional commit format: "feat:no space"',
+    );
   });
 });
 
@@ -138,12 +142,6 @@ describe('detectSensitiveFiles', () => {
 });
 
 describe('stageAndCommit', () => {
-  it('delegates to CommitService', async () => {
-    await Effect.runPromise(
-      stageAndCommit(['file.ts'], 'feat: thing').pipe(Effect.provide(makeTestCommitLayer())),
-    );
-  });
-
   it('propagates service errors', async () => {
     await expect(
       Effect.runPromise(
@@ -181,7 +179,7 @@ describe('commit command wiring', () => {
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result.files).toEqual(['a.ts', 'b.ts']);
+    expect(result).toEqual({ message: 'fix: two files', files: ['a.ts', 'b.ts'] });
     consoleSpy.mockRestore();
   });
 
@@ -208,6 +206,7 @@ describe('commit command wiring', () => {
       run(['commit', '.env', '-m', 'feat: add config']).pipe(Effect.provide(commandLayers)),
     );
     const stderrOutput = stderrSpy.mock.calls.flat().join('');
+    expect(stderrOutput).toContain('warning: sensitive files');
     expect(stderrOutput).toContain('.env');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
@@ -226,6 +225,7 @@ describe('commit command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubValidateLayer,
     );
     await expect(
       Effect.runPromise(

@@ -15,7 +15,7 @@ const cape = (
   const result = spawnSync('node', [BINARY, ...args], {
     input: stdin,
     encoding: 'utf-8',
-    env: { ...process.env, ...env },
+    env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
     timeout: 10_000,
   });
   return {
@@ -140,38 +140,26 @@ describe('valid JSON but missing expected fields', () => {
     expect(result.stdout).toBe('');
   });
 
-  it('user-prompt-submit with empty prompt approves', () => {
+  it('user-prompt-submit with empty prompt approves without additionalContext', () => {
     const stdin = JSON.stringify({ prompt: '' });
     const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
-    expect(parsed.decision).toBe('approve');
+    expect(parsed).toEqual({ decision: 'approve' });
   });
 
-  it('user-prompt-submit with missing prompt field approves', () => {
+  it('user-prompt-submit with missing prompt field approves without additionalContext', () => {
     const stdin = JSON.stringify({ other: 'data' });
     const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
-    expect(parsed.decision).toBe('approve');
+    expect(parsed).toEqual({ decision: 'approve' });
   });
 });
 
 describe('unknown event names', () => {
   it('unknown-event exits 0 with no output', () => {
     const result = cape(['hook', 'unknown-event'], '{}', env);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-
-  it('completely-made-up exits 0 with no output', () => {
-    const result = cape(['hook', 'completely-made-up'], '{}', env);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-
-  it('empty-string-like event exits 0 with no output', () => {
-    const result = cape(['hook', 'x'], '{}', env);
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
   });
@@ -225,6 +213,7 @@ describe('event name normalization', () => {
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);
+    expect(kebab.stdout).toBe(pascal.stdout);
   });
 
   it('PascalCase SessionStart works the same as kebab-case', () => {
@@ -233,30 +222,25 @@ describe('event name normalization', () => {
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);
-    expect(JSON.parse(kebab.stdout)).toHaveProperty('additionalContext');
-    expect(JSON.parse(pascal.stdout)).toHaveProperty('additionalContext');
+    expect(kebab.stdout).toBe(pascal.stdout);
   });
 });
 
 describe('encoding edge cases', () => {
-  it('handles unicode in command without crashing', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo héllo wörld 日本語' } });
+  it('denies unicode command containing git add .', () => {
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git add .' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
   });
 
-  it('handles emoji in command without crashing', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 🚀🔥' } });
+  it('denies emoji command containing git add -A', () => {
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 🎉 && git add -A' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-
-  it('handles escaped null byte in JSON', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo \x00test' } });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
   });
 
   it('handles very long command without crashing', () => {
@@ -265,6 +249,15 @@ describe('encoding edge cases', () => {
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
+  });
+
+  it('denies very long command containing a denial trigger', () => {
+    const longArg = 'a'.repeat(50_000);
+    const stdin = JSON.stringify({ tool_input: { command: `echo ${longArg} && git add .` } });
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
   });
 });
 
@@ -329,18 +322,14 @@ describe('non-string field types', () => {
   });
 });
 
-describe('pre-tool-use Skill with ungated skill', () => {
-  it('allows non-gated cape skill', () => {
-    const stdin = JSON.stringify({ tool_input: { skill: 'cape:brainstorm' } });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], stdin, env);
+describe('user-prompt-submit beads detection', () => {
+  it('detects beads keyword and includes cape:beads in additionalContext', () => {
+    const stdin = JSON.stringify({ prompt: 'show me br list' });
+    const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-
-  it('allows non-cape skill', () => {
-    const stdin = JSON.stringify({ tool_input: { skill: 'other:something' } });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.decision).toBe('approve');
+    expect(parsed.additionalContext).toContain('cape:beads');
   });
 });
+

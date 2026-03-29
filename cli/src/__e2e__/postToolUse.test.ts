@@ -15,7 +15,7 @@ const cape = (
   const result = spawnSync('node', [BINARY, ...args], {
     input: stdin,
     encoding: 'utf-8',
-    env: { ...process.env, ...env },
+    env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
     timeout: 10_000,
   });
   return {
@@ -80,6 +80,15 @@ describe('PostToolUse/Bash', () => {
     expect(lines).toHaveLength(3);
   });
 
+  it('ignores br show with no ID argument', () => {
+    const stdin = JSON.stringify({
+      tool_input: { command: 'br show' },
+    });
+    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
+    expect(result.status).toBe(0);
+    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
+  });
+
   it('writes green TDD state for pytest', () => {
     const stdin = JSON.stringify({
       tool_input: { command: 'pytest tests/' },
@@ -89,6 +98,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for go test', () => {
@@ -99,6 +109,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for cargo test', () => {
@@ -109,6 +120,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for busted', () => {
@@ -119,6 +131,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for bun test', () => {
@@ -129,6 +142,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for python -m pytest', () => {
@@ -139,6 +153,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes green TDD state for npm test', () => {
@@ -149,6 +164,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('handles br show and test command in separate calls', () => {
@@ -167,6 +183,7 @@ describe('PostToolUse/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('returns null output (no stdout) for all commands', () => {
@@ -179,6 +196,10 @@ describe('PostToolUse/Bash', () => {
   });
 });
 
+// All Edit E2E tests hit the early-return path because `br` queries return no
+// executing/debugging flow context. The TDD reminder output path is only testable
+// at the unit level (in hook.test.ts). These tests verify graceful no-op behavior,
+// not reminder emission.
 describe('PostToolUse/Edit', () => {
   it('skips .test.ts files', () => {
     const stdin = JSON.stringify({
@@ -460,6 +481,7 @@ describe('PostToolUseFailure/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes red TDD state for go test failure', () => {
@@ -470,6 +492,7 @@ describe('PostToolUseFailure/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes red TDD state for cargo test failure', () => {
@@ -480,6 +503,7 @@ describe('PostToolUseFailure/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('writes red TDD state for busted failure', () => {
@@ -490,6 +514,7 @@ describe('PostToolUseFailure/Bash', () => {
 
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('produces no state change for non-test command failure', () => {
@@ -607,6 +632,7 @@ describe('TDD state transitions', () => {
 
     let state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
 
     const passStdin = JSON.stringify({
       tool_input: { command: 'npx vitest run' },
@@ -615,6 +641,7 @@ describe('TDD state transitions', () => {
 
     state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('transitions from green to red on test failure', () => {
@@ -625,6 +652,7 @@ describe('TDD state transitions', () => {
 
     let state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
+    expect(state.timestamp).toBeGreaterThan(0);
 
     const failStdin = JSON.stringify({
       tool_input: { command: 'npx vitest run' },
@@ -633,6 +661,7 @@ describe('TDD state transitions', () => {
 
     state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('red');
+    expect(state.timestamp).toBeGreaterThan(0);
   });
 
   it('overwrites timestamp on each transition', () => {

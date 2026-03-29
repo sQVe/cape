@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer, Result } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
 import type { CheckResult } from '../services/check';
@@ -68,16 +68,13 @@ const commandLayers = Layer.mergeAll(
 );
 
 describe('check command wiring', () => {
-  it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(run(['check', '--help']).pipe(Effect.provide(commandLayers)));
-  });
-
-  it('cape --help lists check subcommand', async () => {
-    await Effect.runPromise(run(['--help']).pipe(Effect.provide(commandLayers)));
-  });
-
   it('outputs JSON when all checks pass', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(run(['check']).pipe(Effect.provide(commandLayers)));
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual([{ check: 'vitest', passed: true, output: 'Tests passed' }]);
+    consoleSpy.mockRestore();
   });
 
   it('rejects when any check fails', async () => {
@@ -190,7 +187,10 @@ describe('resolveCheckCommands', () => {
         formatter: 'gofmt',
       },
     ]);
-    expect(commands.map((c) => c.label)).toEqual(['go-test', 'gofmt']);
+    expect(commands).toEqual([
+      { label: 'go-test', command: 'go', args: ['test', './...'] },
+      { label: 'gofmt', command: 'gofmt', args: ['-l', '.'] },
+    ]);
   });
 
   it('maps rust ecosystem to 3 commands', () => {
@@ -245,10 +245,6 @@ describe('resolveCheckCommands', () => {
       },
     ]);
     expect(commands.map((c) => c.label)).toEqual(['vitest', 'oxlint', 'oxfmt', 'go-test', 'gofmt']);
-  });
-
-  it('returns empty array for empty ecosystems', () => {
-    expect(resolveCheckCommands([])).toEqual([]);
   });
 
   it('resolves correct command and args for vitest', () => {

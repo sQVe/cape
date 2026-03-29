@@ -496,13 +496,6 @@ describe('checkBrRules', () => {
     expect(violations.some((v) => v.includes('## Success criteria'))).toBe(true);
   });
 
-  it('allows valid task with all required headers', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
-  });
-
   it('denies --status in-progress with hyphen', () => {
     const violations = checkBrRules('br update foo --status in-progress');
     expect(violations.some((v) => v.includes('in_progress'))).toBe(true);
@@ -1079,7 +1072,7 @@ describe('postToolUseBash', () => {
       writtenFiles,
     });
     await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('green');
     expect(state.timestamp).toBeTypeOf('number');
   });
@@ -1114,7 +1107,7 @@ describe('postToolUseEdit', () => {
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
-      expect((result as { additionalContext: string }).additionalContext).toContain('test');
+      expect((result as { additionalContext: string }).additionalContext).toContain('TDD reminder');
     });
 
     it('injects reminder when tests are green', async () => {
@@ -1130,6 +1123,7 @@ describe('postToolUseEdit', () => {
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
+      expect((result as { additionalContext: string }).additionalContext).toContain('TDD reminder');
     });
 
     it('does not inject reminder when tests are red', async () => {
@@ -1287,7 +1281,7 @@ describe('postToolUseAskUserQuestion', () => {
     });
     await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
     expect(writtenFiles['/test/hooks/context/pr-confirmed.txt']).toBeDefined();
-    const timestamp = Number.parseInt(writtenFiles['/test/hooks/context/pr-confirmed.txt']);
+    const timestamp = Number.parseInt(writtenFiles['/test/hooks/context/pr-confirmed.txt'] ?? '');
     expect(Number.isNaN(timestamp)).toBe(false);
   });
 
@@ -1402,7 +1396,7 @@ describe('postToolUseFailureBash', () => {
       writtenFiles,
     });
     await Effect.runPromise(postToolUseFailureBash().pipe(Effect.provide(layer)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
     expect(state.timestamp).toBeTypeOf('number');
   });
@@ -1414,7 +1408,7 @@ describe('postToolUseFailureBash', () => {
       writtenFiles,
     });
     await Effect.runPromise(postToolUseFailureBash().pipe(Effect.provide(layer)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
   });
 
@@ -1425,7 +1419,7 @@ describe('postToolUseFailureBash', () => {
       writtenFiles,
     });
     await Effect.runPromise(postToolUseFailureBash().pipe(Effect.provide(layer)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
   });
 
@@ -1436,7 +1430,7 @@ describe('postToolUseFailureBash', () => {
       writtenFiles,
     });
     await Effect.runPromise(postToolUseFailureBash().pipe(Effect.provide(layer)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
   });
 
@@ -1529,7 +1523,7 @@ describe('hook command - PostToolUse wiring', () => {
       ),
     );
     expect(consoleSpy.mock.calls).toHaveLength(0);
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
     consoleSpy.mockRestore();
   });
@@ -1562,7 +1556,7 @@ describe('hook command - PostToolUse wiring', () => {
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json']);
+    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
     expect(state.phase).toBe('red');
     consoleSpy.mockRestore();
   });

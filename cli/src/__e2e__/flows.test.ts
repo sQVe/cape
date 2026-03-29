@@ -15,7 +15,7 @@ const cape = (
   const result = spawnSync('node', [BINARY, ...args], {
     input: stdin,
     encoding: 'utf-8',
-    env: { ...process.env, ...env },
+    env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
     timeout: 10_000,
   });
   return {
@@ -94,6 +94,26 @@ describe('flow 2: PR confirmation gate with TTL', () => {
     expect(result.status).toBe(0);
   });
 
+  it('consumes confirmation token on PR creation', () => {
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
+
+    const prStdin = JSON.stringify({
+      tool_input: { command: 'gh pr create --title "feat: test" --body "#### Motivation\nstuff"' },
+    });
+    cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, {
+      ...env,
+      GIT_DIR: '/dev/null',
+    });
+    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(false);
+
+    const retryResult = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, {
+      ...env,
+      GIT_DIR: '/dev/null',
+    });
+    const parsed = JSON.parse(retryResult.stdout);
+    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
+  });
+
   it('denies PR creation after TTL expiry', () => {
     writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now() - 11 * 60 * 1000));
 
@@ -142,6 +162,25 @@ describe('flow 3: TDD red-green-refactor cycle', () => {
     const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
     expect(state.phase).toBe('green');
   });
+
+  it('suppresses TDD reminder when red phase is fresh', () => {
+    // postToolUseEdit checks queryFlowState() -> brQuery() to determine if we're in
+    // executing/debugging phase. In E2E, `br` is unavailable so queryFlowState returns
+    // nulls, deriveFlowContext returns null, and the reminder never fires regardless of
+    // TDD state. This test documents that a fresh red state produces no Edit output,
+    // but cannot verify the "fresh red suppresses reminder" path in isolation.
+    writeFileSync(
+      join(contextDir, 'tdd-state.json'),
+      JSON.stringify({ phase: 'red', timestamp: Date.now() }),
+    );
+
+    const editStdin = JSON.stringify({
+      tool_input: { file_path: '/src/index.ts' },
+    });
+    const result = cape(['hook', 'post-tool-use', '--matcher', 'Edit'], editStdin, env);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe('');
+  });
 });
 
 describe('flow 4: session-start clears stale state', () => {
@@ -159,13 +198,15 @@ describe('flow 4: session-start clears stale state', () => {
     const brLog = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
     expect(brLog).toBe('');
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(true);
   });
 
   it('produces additionalContext output', () => {
     const result = cape(['hook', 'session-start'], '', env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
-    expect(parsed).toHaveProperty('additionalContext');
+    expect(parsed.additionalContext).toEqual(expect.any(String));
+    expect(parsed.additionalContext.length).toBeGreaterThan(0);
   });
 });
 
@@ -206,6 +247,7 @@ describe('flow 5: full commit pipeline', () => {
       timeout: 10_000,
     });
     expect(result.status).toBe(1);
+    expect(result.stderr).toContain('invalid conventional commit format');
   });
 
   it('rejects bulk staging with dot', () => {
@@ -215,5 +257,6 @@ describe('flow 5: full commit pipeline', () => {
       timeout: 10_000,
     });
     expect(result.status).toBe(1);
+    expect(result.stderr).toContain('bulk staging with');
   });
 });

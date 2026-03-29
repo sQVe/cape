@@ -105,11 +105,11 @@ describe('validateSections', () => {
       expect(errors).toContain('missing section: Success criteria');
     });
 
-    it('validates feature type same as task', () => {
+    it('reports missing sections for feature type', () => {
       const description = '## Goal\ndo it';
-      const errors = validateSections('feature', description);
-      expect(errors).toContain('missing section: Behaviors');
-      expect(errors).toContain('missing section: Success criteria');
+      expect(validateSections('feature', description)).toEqual(
+        validateSections('task', description),
+      );
     });
   });
 
@@ -141,12 +141,6 @@ describe('validateSections', () => {
 });
 
 describe('br validate command', () => {
-  it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(
-      run(['br', 'validate', '--help']).pipe(Effect.provide(makeCommandLayers())),
-    );
-  });
-
   it('returns valid JSON for valid bead', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -170,7 +164,7 @@ describe('br validate command', () => {
           Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
         ),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow('missing section');
     consoleSpy.mockRestore();
   });
 
@@ -218,12 +212,6 @@ describe('br validate command', () => {
 });
 
 describe('br design command', () => {
-  it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(
-      run(['br', 'design', '--help']).pipe(Effect.provide(makeCommandLayers())),
-    );
-  });
-
   it('appends section to existing design', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     let updatedDesign = '';
@@ -269,14 +257,4 @@ describe('br design command', () => {
     consoleSpy.mockRestore();
   });
 
-  it('returns JSON result on success', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    await Effect.runPromise(
-      run(['br', 'design', 'cape-test', 'Section']).pipe(Effect.provide(makeCommandLayers())),
-    );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
-    expect(result).toEqual({ updated: true, id: 'cape-test' });
-    consoleSpy.mockRestore();
-  });
 });

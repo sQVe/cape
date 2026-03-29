@@ -15,7 +15,7 @@ const cape = (
   const result = spawnSync('node', [BINARY, ...args], {
     input: stdin,
     encoding: 'utf-8',
-    env: { ...process.env, ...env },
+    env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
     timeout: 10_000,
   });
   return {
@@ -274,6 +274,16 @@ describe('gh pr create body rules', () => {
     );
     expectDeny(result, 'invented sections');
   });
+
+  it('allows valid template headers', () => {
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --body "#### Motivation\nstuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectPassThrough(result);
+  });
 });
 
 describe('gh pr create from default branch', () => {
@@ -327,6 +337,69 @@ describe('br close stop-reinforcement', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.additionalContext).toContain('STOP');
+    expect(parsed.additionalContext).toContain('checkpoint');
+  });
+});
+
+describe('br show requirement', () => {
+  it('allows br update --design when br-show-log.txt contains the ID', () => {
+    writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-abc\n');
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br update cape-abc --design "## New"'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('denies br update --design when br-show-log.txt is missing', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br update cape-abc --design "## New"'),
+      env,
+    );
+    expectDeny(result, 'br show');
+  });
+});
+
+describe('PR creation sub-guards', () => {
+  it('denies when pr-confirmed.txt is missing', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "stuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectDeny(result, 'confirmation');
+  });
+
+  it('denies when pr-confirmed.txt has expired timestamp', () => {
+    const elevenMinutesAgo = Date.now() - 11 * 60 * 1000;
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(elevenMinutesAgo));
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "stuff"'),
+      { ...env, GIT_DIR: '/dev/null' },
+    );
+    expectDeny(result, 'expired');
+  });
+
+  it('denies when there are uncommitted changes', () => {
+    const repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-dirty-XXXXXX')], {
+      encoding: 'utf-8',
+    }).trim();
+    execFileSync('git', ['init', repoDir]);
+    execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feature']);
+    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    writeFileSync(join(repoDir, 'dirty.txt'), 'uncommitted');
+    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
+
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr create --title "feat: test" --body "stuff"'),
+      { ...env, GIT_DIR: join(repoDir, '.git'), GIT_WORK_TREE: repoDir },
+    );
+    expectDeny(result, 'Uncommitted');
+    spawnSync('rm', ['-rf', repoDir]);
   });
 });
 
