@@ -4,8 +4,10 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
+import type { BeadData, ChildStatus } from '../services/brValidate';
 import { BrValidateService, generateTemplate, validateSections } from '../services/brValidate';
-import type { BeadData } from '../services/brValidate';
+import type { CheckResult } from '../services/check';
+import { CheckService } from '../services/check';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -324,5 +326,84 @@ describe('br design command', () => {
     expect(updatedDesign).toBe('## First section\n\nfresh content');
     consoleSpy.mockRestore();
   });
+});
 
+describe('br close-check command', () => {
+  const makeCloseCheckLayers = (children: ChildStatus[], checks: CheckResult[]) => {
+    const brLayer = Layer.succeed(BrValidateService)({
+      show: () => Effect.succeed(makeBead()),
+      updateDesign: () => Effect.succeed(undefined),
+      readStdin: () => Effect.succeed(''),
+      listChildren: () => Effect.succeed(children),
+    });
+    const checkLayer = Layer.succeed(CheckService)({
+      runChecks: () => Effect.succeed(checks),
+    });
+    return Layer.mergeAll(
+      NodeServices.layer,
+      stubGitLayer,
+      stubDetectLayer,
+      stubCommitLayer,
+      stubHookLayer,
+      stubPrLayer,
+      stubValidateLayer,
+      brLayer,
+      checkLayer,
+    );
+  };
+
+  it('returns canClose:true when all subtasks closed and checks pass', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const children: ChildStatus[] = [
+      { id: 'test.1', title: 'Task 1', status: 'closed' },
+    ];
+    const checks: CheckResult[] = [{ check: 'vitest', passed: true, output: 'ok' }];
+    await Effect.runPromise(
+      run(['br', 'close-check', 'test-id']).pipe(
+        Effect.provide(makeCloseCheckLayers(children, checks)),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.canClose).toBe(true);
+    expect(result.openSubtasks).toEqual([]);
+    expect(result.checksPassed).toBe(true);
+    consoleSpy.mockRestore();
+  });
+
+  it('returns canClose:false when subtasks are open', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const children: ChildStatus[] = [
+      { id: 'test.1', title: 'Task 1', status: 'open' },
+    ];
+    await expect(
+      Effect.runPromise(
+        run(['br', 'close-check', 'test-id']).pipe(
+          Effect.provide(makeCloseCheckLayers(children, [])),
+        ),
+      ),
+    ).rejects.toThrow();
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.canClose).toBe(false);
+    expect(result.openSubtasks).toHaveLength(1);
+    consoleSpy.mockRestore();
+  });
+
+  it('returns canClose:false when checks fail', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
+    await expect(
+      Effect.runPromise(
+        run(['br', 'close-check', 'test-id']).pipe(
+          Effect.provide(makeCloseCheckLayers([], checks)),
+        ),
+      ),
+    ).rejects.toThrow();
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.canClose).toBe(false);
+    expect(result.checksPassed).toBe(false);
+    consoleSpy.mockRestore();
+  });
 });

@@ -88,6 +88,14 @@ describe('cape git context', () => {
   });
 });
 
+describe('cape br close-check', () => {
+  it('cape br --help lists close-check subcommand', () => {
+    const result = cape(['br', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('close-check');
+  });
+});
+
 describe('cape epic verify', () => {
   it('cape --help lists epic subcommand', () => {
     const result = cape(['--help']);

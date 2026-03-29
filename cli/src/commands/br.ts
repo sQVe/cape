@@ -4,11 +4,14 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 import {
   appendDesign,
   generateTemplate,
+  listChildren,
   readStdin,
   showBead,
   updateDesign,
   validateSections,
 } from '../services/brValidate';
+import { getCheckResults } from '../services/check';
+import { getDetectResult } from '../services/detect';
 
 const brValidate = Command.make(
   'validate',
@@ -72,6 +75,50 @@ const brTemplate = Command.make(
   }),
 );
 
+const brCloseCheck = Command.make(
+  'close-check',
+  {
+    id: Argument.string('id'),
+  },
+  Effect.fn(function* ({ id }) {
+    const children = yield* listChildren(id).pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const openSubtasks = children.filter((child) => child.status !== 'closed');
+
+    const ecosystems = yield* getDetectResult.pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const checkResults = yield* getCheckResults(ecosystems).pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const checksPassed = checkResults.every((r) => r.passed);
+    const canClose = openSubtasks.length === 0 && checksPassed;
+
+    const result = { canClose, openSubtasks, checksPassed, checkResults };
+    yield* Console.log(JSON.stringify(result, null, 2));
+
+    if (!canClose) {
+      yield* Effect.fail(new Error('close-check failed'));
+    }
+  }),
+);
+
 export const br = Command.make('br').pipe(
-  Command.withSubcommands([brValidate, brDesign, brTemplate]),
+  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck]),
 );
