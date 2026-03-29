@@ -230,6 +230,83 @@ export const buildSourceTestMap = (ecosystems: DetectResult[], files: string[]) 
   return map;
 };
 
+const CONFIG_PATTERNS = [
+  /^\.?\w*rc(\.\w+)?$/,
+  /\.config\.\w+$/,
+  /^tsconfig(\.\w+)?\.json$/,
+  /^jest\.config\.\w+$/,
+  /^vite\.config\.\w+$/,
+  /^vitest\.config\.\w+$/,
+  /^rollup\.config\.\w+$/,
+  /^webpack\.config\.\w+$/,
+  /^tailwind\.config\.\w+$/,
+  /^postcss\.config\.\w+$/,
+  /^\.eslintrc/,
+  /^\.prettierrc/,
+];
+
+const isConfigFile = (filePath: string) => {
+  const fileName = filePath.split('/').pop() ?? '';
+  return CONFIG_PATTERNS.some((pattern) => pattern.test(fileName));
+};
+
+const isTypeOnlyContent = (content: string) => {
+  const lines = content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('//') && !line.startsWith('/*'));
+
+  if (lines.length === 0) return false;
+
+  const hasExportedType = lines.some(
+    (line) =>
+      line.startsWith('export type ') ||
+      line.startsWith('export interface ') ||
+      line.startsWith('import type '),
+  );
+
+  if (!hasExportedType) return false;
+
+  const hasLogic = lines.some(
+    (line) =>
+      (line.startsWith('export const ') ||
+        line.startsWith('export function ') ||
+        line.startsWith('export default ') ||
+        line.startsWith('export class ') ||
+        line.startsWith('const ') ||
+        line.startsWith('let ') ||
+        line.startsWith('function ')) &&
+      !line.startsWith('export type ') &&
+      !line.startsWith('export interface '),
+  );
+
+  return !hasLogic;
+};
+
+const isBarrelExport = (content: string) => {
+  const lines = content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && !line.startsWith('//'));
+
+  if (lines.length === 0) return false;
+
+  return lines.every(
+    (line) =>
+      line.startsWith('export {') ||
+      line.startsWith('export *') ||
+      line.startsWith('export type {') ||
+      line.startsWith('}'),
+  );
+};
+
+export const isTrivialFile = (filePath: string, content: string) => {
+  if (isConfigFile(filePath)) return true;
+  if (isTypeOnlyContent(content)) return true;
+  if (isBarrelExport(content)) return true;
+  return false;
+};
+
 export class DetectService extends ServiceMap.Service<
   DetectService,
   {

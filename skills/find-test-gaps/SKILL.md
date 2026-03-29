@@ -109,7 +109,8 @@ possible using subagents.
 
 ### 2a. Apply the value filter
 
-Skip files that don't warrant tests. Testing these adds maintenance cost without catching bugs:
+Use `isTrivialFile` from `@cape/cli` (or read the file and apply the same heuristics) to skip files
+that don't warrant tests:
 
 - Type definitions, interfaces, enums without logic
 - Re-exports and barrel files

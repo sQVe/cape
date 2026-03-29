@@ -11,6 +11,7 @@ import {
   detectEcosystems,
   getDetectResult,
   isTestFile,
+  isTrivialFile,
   resolveTestPath,
 } from '../services/detect';
 import {
@@ -475,5 +476,44 @@ describe('buildSourceTestMap', () => {
       'src/foo.ts': 'src/foo.test.ts',
       'pkg/bar.go': 'pkg/bar_test.go',
     });
+  });
+});
+
+describe('isTrivialFile', () => {
+  it('detects type-only files', () => {
+    const content = `export interface User {\n  id: string;\n}\n\nexport type Role = 'admin' | 'user';\n`;
+    expect(isTrivialFile('src/types.ts', content)).toBe(true);
+  });
+
+  it('detects barrel exports', () => {
+    const content = `export { foo } from './foo';\nexport { bar } from './bar';\n`;
+    expect(isTrivialFile('src/index.ts', content)).toBe(true);
+  });
+
+  it('detects re-export barrels with export *', () => {
+    const content = `export * from './foo';\nexport * from './bar';\n`;
+    expect(isTrivialFile('src/index.ts', content)).toBe(true);
+  });
+
+  it('detects config files by name', () => {
+    expect(isTrivialFile('vite.config.ts', 'export default {}')).toBe(true);
+    expect(isTrivialFile('tsconfig.json', '{}')).toBe(true);
+    expect(isTrivialFile('.eslintrc.json', '{}')).toBe(true);
+    expect(isTrivialFile('jest.config.ts', 'export default {}')).toBe(true);
+  });
+
+  it('returns false for files with real logic', () => {
+    const content = `export const add = (a: number, b: number) => a + b;\n`;
+    expect(isTrivialFile('src/math.ts', content)).toBe(false);
+  });
+
+  it('returns false for files with mixed types and logic', () => {
+    const content = `export interface User { id: string; }\nexport const createUser = () => ({});\n`;
+    expect(isTrivialFile('src/user.ts', content)).toBe(false);
+  });
+
+  it('returns false for test files', () => {
+    const content = `import { describe, it } from 'vitest';\ndescribe('test', () => {});\n`;
+    expect(isTrivialFile('src/math.test.ts', content)).toBe(false);
   });
 });
