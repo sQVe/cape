@@ -73,6 +73,12 @@ may be incomplete.
 
 ## Step 3: Fix the bug
 
+Signal that a workflow is active (gates internal skills for direct invocation):
+
+```bash
+cape context set workflow-active
+```
+
 The bug's root cause from the br bug is your test target. Load `cape:test-driven-development` with
 the Skill tool — the RED test reproduces the bug, GREEN fixes it, REFACTOR cleans up.
 
@@ -126,6 +132,7 @@ Wait for user approval, then close:
 
 ```bash
 br close <bug-id>
+cape context clear workflow-active
 ```
 
 After closing, load `cape:commit` with the Skill tool to commit the fix.

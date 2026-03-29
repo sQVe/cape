@@ -443,6 +443,46 @@ describe('skill gate: write-plan requires brainstorm artifact', () => {
   });
 });
 
+describe('skill gate: internal skills require active workflow', () => {
+  it('denies expand-task when workflow-active.txt is absent', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:expand-task'),
+      env,
+    );
+    expectDeny(result, 'internal');
+  });
+
+  it('allows expand-task when workflow-active.txt exists', () => {
+    writeFileSync(join(contextDir, 'workflow-active.txt'), 'true');
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:expand-task'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('denies test-driven-development when workflow-active.txt is absent', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:test-driven-development'),
+      env,
+    );
+    expectDeny(result, 'internal');
+  });
+
+  it('allows test-driven-development when workflow-active.txt exists', () => {
+    writeFileSync(join(contextDir, 'workflow-active.txt'), 'true');
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:test-driven-development'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+});
+
 describe('multiple violations accumulate into one deny', () => {
   it('reports all missing flags in one deny for br create', () => {
     const result = cape(

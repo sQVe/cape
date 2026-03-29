@@ -15,6 +15,8 @@ import {
   denyWith,
   deriveFlowContext,
   detectBeadsSkill,
+  detectDebugIssue,
+  detectExecutePlan,
   isCodeFile,
   isTestCommand,
   isTestFile,
@@ -75,6 +77,72 @@ describe('detectBeadsSkill', () => {
 
   it('returns false for unrelated prompts', () => {
     expect(detectBeadsSkill('hello world')).toBe(false);
+  });
+});
+
+describe('detectDebugIssue', () => {
+  it('detects JS stack trace', () => {
+    const prompt = 'I got this error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
+    expect(detectDebugIssue(prompt)).toBe(true);
+  });
+
+  it('detects Python traceback', () => {
+    const prompt = 'Traceback (most recent call last)\n  File "app.py", line 10';
+    expect(detectDebugIssue(prompt)).toBe(true);
+  });
+
+  it('detects Go panic', () => {
+    expect(detectDebugIssue('panic: runtime error: index out of range')).toBe(true);
+  });
+
+  it('detects JS error names', () => {
+    expect(detectDebugIssue('TypeError: Cannot read properties of undefined')).toBe(true);
+  });
+
+  it('detects explicit error report', () => {
+    expect(detectDebugIssue("I'm getting an error when I run the build")).toBe(true);
+  });
+
+  it('detects broken/crashing language', () => {
+    expect(detectDebugIssue('this is broken after the last deploy')).toBe(true);
+  });
+
+  it('does not detect error discussion', () => {
+    expect(detectDebugIssue('how does error handling work in this codebase')).toBe(false);
+  });
+
+  it('does not detect figurative broken', () => {
+    expect(detectDebugIssue('this is broken into smaller pieces')).toBe(false);
+  });
+
+  it('does not detect unrelated prompts', () => {
+    expect(detectDebugIssue('add a new user endpoint')).toBe(false);
+  });
+});
+
+describe('detectExecutePlan', () => {
+  it('detects continue', () => {
+    expect(detectExecutePlan('continue')).toBe(true);
+  });
+
+  it('detects next task', () => {
+    expect(detectExecutePlan('next task')).toBe(true);
+  });
+
+  it('detects keep going', () => {
+    expect(detectExecutePlan('keep going')).toBe(true);
+  });
+
+  it('detects proceed', () => {
+    expect(detectExecutePlan('proceed')).toBe(true);
+  });
+
+  it('does not detect ambiguous continue', () => {
+    expect(detectExecutePlan('continue this discussion about APIs')).toBe(false);
+  });
+
+  it('does not detect unrelated prompts', () => {
+    expect(detectExecutePlan('add a new user endpoint')).toBe(false);
   });
 });
 
@@ -268,6 +336,39 @@ describe('userPromptSubmit', () => {
   it('approves with no context when nothing matches', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'hello' }),
+    });
+    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(result).toEqual({ decision: 'approve' });
+  });
+
+  it('injects debug-issue for stack trace', async () => {
+    const prompt = 'Error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt }),
+    });
+    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(result.additionalContext).toContain('cape:debug-issue');
+  });
+
+  it('injects execute-plan for continue', async () => {
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt: 'continue' }),
+    });
+    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(result.additionalContext).toContain('cape:execute-plan');
+  });
+
+  it('does not inject debug-issue for error discussion', async () => {
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt: 'how does error handling work' }),
+    });
+    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(result).toEqual({ decision: 'approve' });
+  });
+
+  it('does not inject execute-plan for ambiguous continue', async () => {
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt: 'continue this discussion about APIs' }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(result).toEqual({ decision: 'approve' });
@@ -926,6 +1027,40 @@ describe('preToolUseSkill', () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:write-plan'),
       files: { '/test/hooks/context/brainstorm-summary.txt': 'true' },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('denies expand-task when no workflow is active', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:expand-task'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'internal');
+  });
+
+  it('allows expand-task when workflow is active', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:expand-task'),
+      files: { '/test/hooks/context/workflow-active.txt': 'true' },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('denies test-driven-development when no workflow is active', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:test-driven-development'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'internal');
+  });
+
+  it('allows test-driven-development when workflow is active', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:test-driven-development'),
+      files: { '/test/hooks/context/workflow-active.txt': 'true' },
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();

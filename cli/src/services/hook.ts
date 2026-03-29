@@ -66,6 +66,26 @@ export const detectBeadsSkill = (prompt: string) => {
   return beadsPatterns.some((pattern) => pattern.test(prompt));
 };
 
+const errorPatterns = [
+  /(?:^|\n)\s*at\s+\S+\s+\(.*:\d+:\d+\)/,
+  /(?:^|\n)\s*File ".*", line \d+/,
+  /(?:^|\n)(?:panic|fatal|FATAL|PANIC):/,
+  /(?:^|\n)\S+Error:/,
+  /(?:^|\n)Traceback \(most recent call last\)/,
+  /(?:getting|seeing|hitting|got|have)\s+(?:an?\s+)?error/i,
+  /(?:this|it)\s+(?:is\s+)?(?:broken|crashing|failing)(?!\s+(?:into|down|up|to)\b)/i,
+];
+
+export const detectDebugIssue = (prompt: string) =>
+  errorPatterns.some((pattern) => pattern.test(prompt));
+
+const continuePatterns = [
+  /^(?:yes,?\s+)?(?:continue|keep going|carry on|next task|proceed|go ahead)\.?$/i,
+];
+
+export const detectExecutePlan = (prompt: string) =>
+  continuePatterns.some((pattern) => pattern.test(prompt));
+
 export const normalizeEventName = (name: string) => {
   if (name.includes('-')) {
     return name
@@ -162,6 +182,12 @@ export const userPromptSubmit = () =>
 
     if (detectBeadsSkill(prompt)) {
       skills.push('cape:beads');
+    }
+    if (detectDebugIssue(prompt)) {
+      skills.push('cape:debug-issue');
+    }
+    if (detectExecutePlan(prompt)) {
+      skills.push('cape:execute-plan');
     }
 
     const flowState = yield* queryFlowState();
@@ -453,7 +479,14 @@ export const preToolUseBash = () =>
     return null;
   });
 
-const gatedSkills = new Set(['execute-plan', 'finish-epic', 'fix-bug', 'write-plan']);
+const gatedSkills = new Set([
+  'execute-plan',
+  'expand-task',
+  'finish-epic',
+  'fix-bug',
+  'test-driven-development',
+  'write-plan',
+]);
 
 type DenyResult = ReturnType<typeof denyWith> | null;
 
@@ -553,13 +586,28 @@ const gateWritePlan = () =>
     return null;
   });
 
+const gateInternalSkill = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const contextPath = `${service.pluginRoot()}/hooks/context/workflow-active.txt`;
+    const content = yield* service.readFile(contextPath);
+    if (!content) {
+      return denyWith(
+        'This skill is internal to execute-plan / fix-bug and cannot be invoked directly.',
+      );
+    }
+    return null;
+  });
+
 const skillGates: Record<
   string,
   (args: string | null) => Effect.Effect<DenyResult, never, HookService>
 > = {
   'execute-plan': () => gateExecutePlan(),
+  'expand-task': () => gateInternalSkill(),
   'finish-epic': (args) => gateFinishEpic(args),
   'fix-bug': () => gateFixBug(),
+  'test-driven-development': () => gateInternalSkill(),
   'write-plan': () => gateWritePlan(),
 };
 

@@ -83,6 +83,12 @@ Read the task's details:
 br show <task-id>
 ```
 
+Signal that a workflow is active (gates internal skills for direct invocation):
+
+```bash
+cape context set workflow-active
+```
+
 If the task's design field does not already contain an `## Expanded plan` section, load
 `cape:expand-task` with the Skill tool to ground the task in codebase reality before writing any
 code. Expand-task investigates actual files and patterns, then appends a step-by-step plan with
@@ -122,6 +128,7 @@ substasks are complete and checks pass, then close:
 ```bash
 cape br close-check <task-id>
 br close <task-id>
+cape context clear workflow-active
 ```
 
 ---

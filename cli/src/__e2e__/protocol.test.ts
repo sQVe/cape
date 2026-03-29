@@ -333,3 +333,35 @@ describe('user-prompt-submit beads detection', () => {
   });
 });
 
+describe('user-prompt-submit intent routing', () => {
+  it('detects stack trace and includes cape:debug-issue', () => {
+    const stdin = JSON.stringify({
+      prompt: 'I got this:\n  at Object.<anonymous> (/src/index.ts:42:10)',
+    });
+    const result = cape(['hook', 'user-prompt-submit'], stdin, env);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.decision).toBe('approve');
+    expect(parsed.additionalContext).toContain('cape:debug-issue');
+  });
+
+  it('detects continue intent and includes cape:execute-plan', () => {
+    const stdin = JSON.stringify({ prompt: 'continue' });
+    const result = cape(['hook', 'user-prompt-submit'], stdin, env);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.decision).toBe('approve');
+    expect(parsed.additionalContext).toContain('cape:execute-plan');
+  });
+
+  it('passes through ambiguous input without routing', () => {
+    const stdin = JSON.stringify({ prompt: 'continue this discussion about APIs' });
+    const result = cape(['hook', 'user-prompt-submit'], stdin, env);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.decision).toBe('approve');
+    expect(parsed.additionalContext ?? '').not.toContain('cape:debug-issue');
+    expect(parsed.additionalContext ?? '').not.toContain('cape:execute-plan');
+  });
+});
+
