@@ -88,6 +88,35 @@ describe('cape git context', () => {
   });
 });
 
+describe('cape br template', () => {
+  it('outputs epic template with required sections', () => {
+    const result = cape(['br', 'template', '--type', 'epic']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('## Requirements');
+    expect(result.stdout).toContain('## Success criteria');
+    expect(result.stdout).toContain('## Anti-patterns');
+    expect(result.stdout).toContain('## Approach');
+  });
+
+  it('outputs task template', () => {
+    const result = cape(['br', 'template', '--type', 'task']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('## Goal');
+    expect(result.stdout).toContain('## Behaviors');
+  });
+
+  it('outputs bug template', () => {
+    const result = cape(['br', 'template', '--type', 'bug']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('## Reproduction steps');
+  });
+
+  it('exits 1 for unknown type', () => {
+    const result = cape(['br', 'template', '--type', 'unknown']);
+    expect(result.status).toBe(1);
+  });
+});
+
 describe('cape git validate-branch', () => {
   it('validates a well-formed branch name', () => {
     const result = cape(['git', 'validate-branch', 'feat/my-feature']);

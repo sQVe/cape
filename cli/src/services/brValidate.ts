@@ -33,6 +33,15 @@ export const validateSections = (type: string, description: string) => {
     .map((section) => `missing section: ${section}`);
 };
 
+export const generateTemplate = (type: string): string | null => {
+  const sections = requiredSections[type];
+  if (sections == null) {
+    return null;
+  }
+
+  return sections.map((section) => `## ${section}\n\n`).join('\n');
+};
+
 export const appendDesign = (existing: string | null, heading: string, content: string) => {
   const section = `## ${heading}\n\n${content}`;
   if (existing == null || existing.trim() === '') {

@@ -4,7 +4,7 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
-import { BrValidateService, validateSections } from '../services/brValidate';
+import { BrValidateService, generateTemplate, validateSections } from '../services/brValidate';
 import type { BeadData } from '../services/brValidate';
 import {
   stubCheckLayer,
@@ -207,6 +207,69 @@ describe('br validate command', () => {
     await expect(
       Effect.runPromise(run(['br', 'validate']).pipe(Effect.provide(makeCommandLayers()))),
     ).rejects.toThrow('provide either <id> or --type');
+    stderrSpy.mockRestore();
+  });
+});
+
+describe('generateTemplate', () => {
+  it('generates epic template with all required sections', () => {
+    const template = generateTemplate('epic');
+    expect(template).toContain('## Requirements');
+    expect(template).toContain('## Success criteria');
+    expect(template).toContain('## Anti-patterns');
+    expect(template).toContain('## Approach');
+  });
+
+  it('generates task template with all required sections', () => {
+    const template = generateTemplate('task');
+    expect(template).toContain('## Goal');
+    expect(template).toContain('## Behaviors');
+    expect(template).toContain('## Success criteria');
+  });
+
+  it('generates bug template with all required sections', () => {
+    const template = generateTemplate('bug');
+    expect(template).toContain('## Reproduction steps');
+    expect(template).toContain('## Expected behavior');
+    expect(template).toContain('## Actual behavior');
+  });
+
+  it('generates feature template same as task', () => {
+    expect(generateTemplate('feature')).toBe(generateTemplate('task'));
+  });
+
+  it('returns null for unknown type', () => {
+    expect(generateTemplate('unknown')).toBeNull();
+  });
+
+  it('generated template passes validation', () => {
+    for (const type of ['epic', 'task', 'feature', 'bug']) {
+      const template = generateTemplate(type)!;
+      expect(validateSections(type, template)).toEqual([]);
+    }
+  });
+});
+
+describe('br template command', () => {
+  it('outputs template for valid type', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['br', 'template', '--type', 'task']).pipe(Effect.provide(makeCommandLayers())),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    expect(output).toContain('## Goal');
+    expect(output).toContain('## Behaviors');
+    expect(output).toContain('## Success criteria');
+    consoleSpy.mockRestore();
+  });
+
+  it('exits with error for unknown type', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    await expect(
+      Effect.runPromise(
+        run(['br', 'template', '--type', 'unknown']).pipe(Effect.provide(makeCommandLayers())),
+      ),
+    ).rejects.toThrow();
     stderrSpy.mockRestore();
   });
 });

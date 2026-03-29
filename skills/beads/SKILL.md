@@ -305,6 +305,8 @@ makes findings trackable, prioritizable, and closeable.
    `refactor`, `debt`.
 6. **Validate after creation** — run `cape br validate <id>` after every `br create` to catch
    missing required sections.
+7. **Use `cape br template --type <type>`** to get the required section skeleton for a given issue
+   type when constructing descriptions.
 
 ### Template for skill output
 

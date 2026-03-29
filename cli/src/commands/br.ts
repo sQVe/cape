@@ -3,6 +3,7 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import {
   appendDesign,
+  generateTemplate,
   readStdin,
   showBead,
   updateDesign,
@@ -53,4 +54,24 @@ const brDesign = Command.make(
   }),
 );
 
-export const br = Command.make('br').pipe(Command.withSubcommands([brValidate, brDesign]));
+const brTemplate = Command.make(
+  'template',
+  {
+    type: Flag.string('type'),
+  },
+  Effect.fn(function* ({ type }) {
+    const template = generateTemplate(type);
+
+    if (template == null) {
+      const error = { error: `unknown type: ${type}. valid: epic, task, feature, bug` };
+      yield* Console.error(JSON.stringify(error));
+      return yield* Effect.fail(new Error(error.error));
+    }
+
+    yield* Console.log(template);
+  }),
+);
+
+export const br = Command.make('br').pipe(
+  Command.withSubcommands([brValidate, brDesign, brTemplate]),
+);
