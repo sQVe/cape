@@ -39,9 +39,9 @@ Don't use for:
 
 ## Step 0: Confirm test infrastructure
 
-Before writing anything, verify the project has a working test setup. Run the existing test suite to
-confirm tests execute. If there is no test runner, no test directory, or tests do not run — stop and
-tell the user. Do not bootstrap test infrastructure yourself.
+Before writing anything, verify the project has a working test setup. Run `cape check` to confirm
+tests execute. If there is no test runner, no test directory, or tests do not run — stop and tell
+the user. Do not bootstrap test infrastructure yourself.
 
 Identify the test framework and conventions from existing test files. Match them exactly — file
 naming, assertion style, describe/it structure, helper patterns.

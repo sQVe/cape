@@ -154,15 +154,10 @@ or reject each finding. Then apply the approved changes.
 Update the task:
 
 ```bash
-br show <task-id>
-br update <task-id> --design "$(cat <<'EOF'
-[existing design content]
-
-## Refinement (task-refinement)
+cat <<'EOF' | cape br design <task-id> "Refinement (task-refinement)"
 - [Category]: [What was found] → [What was changed]
 - [Category]: [What was found] → [What was changed]
 EOF
-)"
 ```
 
 Present completion:

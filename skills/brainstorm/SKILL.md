@@ -55,7 +55,7 @@ the next step until the user responds. The user may discuss, redirect, ask follo
 
 **Gather context:**
 
-- Check recent commits, existing docs, codebase structure
+- Run `cape git context` for recent commits and codebase state; check existing docs and structure
 - Dispatch `cape:codebase-investigator` to find existing patterns relevant to the idea
 - Dispatch `cape:internet-researcher` if the idea involves external APIs, libraries, or unfamiliar
   tech

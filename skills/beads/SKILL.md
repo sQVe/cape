@@ -173,7 +173,9 @@ br epic status                # Progress of all epics
 
 ```bash
 br update br-3 --status in_progress   # Start work
-br update br-3 --design "Updated design notes"
+cat <<'EOF' | cape br design br-3 "Design heading"
+Updated design notes
+EOF
 br update br-3 --priority 1           # Change priority
 br update br-3 --add-label "security"    # Add label
 br update br-3 --remove-label "security" # Remove label
@@ -231,11 +233,10 @@ br count --group-by status             # Count by status
 When updating a task's design field, preserve existing content and append new content. Never
 overwrite.
 
-### Read-before-write rule
+### Appending to design fields
 
-Before any `br update --design`, run `br show <id>` first. Capture the existing design content, then
-append new content to it. This applies to tasks only — epics keep immutable requirements per
-existing convention.
+Use `cape br design <id> <heading>` with content on stdin. It reads existing content and appends
+atomically. This applies to tasks only — epics keep immutable requirements per existing convention.
 
 ### Frozen sections
 
@@ -302,6 +303,8 @@ makes findings trackable, prioritizable, and closeable.
 5. **Use labels for categorization** — `--labels "test-gap,auth"`. Lowercase, hyphenated. Always
    include the skill name as a label. Common categories: `test-gap`, `pr-review`, `security`,
    `refactor`, `debt`.
+6. **Validate after creation** — run `cape br validate <id>` after every `br create` to catch
+   missing required sections.
 
 ### Template for skill output
 
@@ -372,8 +375,8 @@ individual issue status.
 **Wrong:** `br update br-3 --design "New approach: use Redis instead"` — overwrites the original
 plan. No record of what was tried or why it changed.
 
-**Right:** Read existing content with `br show br-3`, then append divergence entry:
-`br update br-3 --design "<existing content>\n\n## Divergence log\n\n### 2026-03-11: Switched to Redis\n**What changed:** ..."`.
+**Right:** Append a divergence entry atomically:
+`echo '### 2026-03-11: Switched to Redis\n**What changed:** ...' | cape br design br-3 "Divergence log"`.
 Original Goal and Implementation sections preserved. </example>
 
 </examples>
@@ -397,7 +400,6 @@ Original Goal and Implementation sections preserved. </example>
 5. **Skills create br items** — actionable findings become tracked issues, not just text
 6. **One issue per finding** — batch skills create separate issues, not checklists
 7. **Always set type and priority** — never leave these as defaults
-8. **Read before writing design** — `br show` before `br update --design`, preserve existing
-   content, append only
+8. **Append to design fields** — use `cape br design <id> <heading>` with content on stdin
 
 </critical_rules>

@@ -59,6 +59,9 @@ trivial code) is non-negotiable. </rigidity_level>
 
 ## Step 1: Resolve scope
 
+Run `cape check` to establish a baseline. If tests fail, report failures and stop — find gaps only
+when the existing suite is green.
+
 The user specifies what to analyze. If their message doesn't include a clear scope, ask:
 
 ```
@@ -216,7 +219,7 @@ Create a br epic following this template:
 
 Populate Requirements from the identified gaps and bug risks, Anti-patterns from common test
 anti-patterns observed in scope, and Success criteria from the gap closure targets. Use
-`--type epic --priority 2`.
+`--type epic --priority 2`. Run `cape br validate <epic-id>` after creation.
 
 ### Tasks (one per module)
 
@@ -245,6 +248,7 @@ Close [N] test gaps in [file path].
 - [ ] All tests fail when the described behavior breaks (not tautological)
 EOF
 )"
+cape br validate <task-id>
 ```
 
 Present the created epic and tasks, then suggest `cape:execute-plan` to start implementing.

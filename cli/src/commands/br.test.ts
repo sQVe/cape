@@ -116,21 +116,21 @@ describe('validateSections', () => {
   describe('bug validation', () => {
     it('returns no errors for valid bug', () => {
       const description = [
-        '## Observed',
+        '## Reproduction steps',
         'broken',
-        '## Expected',
+        '## Expected behavior',
         'working',
-        '## Steps to reproduce',
+        '## Actual behavior',
         '1. do thing',
       ].join('\n');
       expect(validateSections('bug', description)).toEqual([]);
     });
 
     it('reports missing sections', () => {
-      const description = '## Observed\nbroken';
+      const description = '## Reproduction steps\nbroken';
       const errors = validateSections('bug', description);
-      expect(errors).toContain('missing section: Expected');
-      expect(errors).toContain('missing section: Steps to reproduce');
+      expect(errors).toContain('missing section: Expected behavior');
+      expect(errors).toContain('missing section: Actual behavior');
     });
   });
 

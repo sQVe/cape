@@ -194,6 +194,12 @@ br create "Bug: [Concise root cause description]" \
 1. [Step to trigger]
 2. [Observe: symptom]
 
+## Expected behavior
+[What should happen]
+
+## Actual behavior
+[What happens instead]
+
 ## Dead ends investigated
 - [Hypothesis] - [why refuted]
 
@@ -205,6 +211,7 @@ br create "Bug: [Concise root cause description]" \
 - [ ] [Regression test added]
 EOF
 )"
+cape br validate <bug-id>
 ```
 
 **Priority assessment:**

@@ -123,22 +123,17 @@ the split.
 - **Verify** is an exact shell command. Not "run tests" — `npm test -- --grep 'auth strategy'` or
   `go test ./internal/auth/... -run TestGoogleStrategy`.
 
-**Include a final verification step** that runs the full relevant test suite and any pre-commit
-hooks, confirming the complete change works together.
+**Include a final verification step** that runs `cape check`, confirming the complete change works
+together.
 
 ---
 
 ## Step 4: Append to the task
 
-Read the task's current design field and append the expanded plan:
+Append the expanded plan to the task:
 
 ```bash
-br show <task-id>
-br update <task-id> --design "$(cat <<'EOF'
-[existing design content]
-
-## Expanded plan (expand-task)
-
+cat <<'EOF' | cape br design <task-id> "Expanded plan (expand-task)"
 ### Investigation findings
 
 **Files to modify:**
@@ -158,10 +153,8 @@ br update <task-id> --design "$(cat <<'EOF'
 [Steps from Step 3]
 
 ### Final verification
-`[full test suite command]`
-`[pre-commit hook command if applicable]`
+`cape check`
 EOF
-)"
 ```
 
 Control returns to execute-plan, which follows the expanded steps using TDD.

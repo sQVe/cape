@@ -59,8 +59,7 @@ Run four verification passes. All must pass before closing.
 
 ### 2a: Automated checks
 
-Dispatch `cape:test-runner` to run the project's full test suite, linter, and pre-commit hooks. This
-keeps verbose output out of the main context. Adapt commands to the project's tooling.
+Dispatch `cape:test-runner` to run `cape check`. This keeps verbose output out of the main context.
 
 If any fail, report the failures and stop. Don't close an epic with broken checks.
 
@@ -101,21 +100,15 @@ Skip this pass if the epic has no manual verification steps.
 
 ## Step 3: Summarize
 
-Append an Outcome section to the epic. Read existing content first, then append:
+Append an Outcome section to the epic:
 
 ```bash
-br show <epic-id>
-br update <epic-id> --design "$(cat <<'EOF'
-[existing design content]
-
-## Outcome
-
+cat <<'EOF' | cape br design <epic-id> "Outcome"
 **Completed:** YYYY-MM-DD
 **Tasks:** [N tasks completed]
 **Summary:** [2-3 sentences: what was built, key decisions, divergences from original design]
 **Verification:** All tests passing, all success criteria met[, manual verification passed]
 EOF
-)"
 ```
 
 ---

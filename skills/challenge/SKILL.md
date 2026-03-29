@@ -44,7 +44,7 @@ for complex designs). The three steps and the interactive resolution are non-neg
 Determine what's being challenged. Sources:
 
 - **Conversation context** — read back through the current discussion for designs, decisions, plans
-- **Code changes** — if post-implementation, review recent commits and diffs
+- **Code changes** — if post-implementation, run `cape git context` for recent commits and diffs
 - **br state** — if within a brainstorm or execute-plan flow, read the epic and current task
 - **User-provided artifact** — the user may point at a specific design doc, PR, or plan
 

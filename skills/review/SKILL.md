@@ -69,20 +69,17 @@ Parse the argument to determine what to review:
 | branch name       | Diff of that branch vs main               |
 | PR number         | Diff of PR branch vs its base             |
 
-**Detect main branch:**
+Run `cape check` as a pre-review gate. If it fails, report failures and stop — fix build/test errors
+before reviewing code.
+
+**Detect main branch and changed files:**
 
 ```bash
-git symbolic-ref refs/remotes/origin/HEAD 2> /dev/null | sed 's@^refs/remotes/origin/@@'
-```
-
-Fallback: `main`, then `master`.
-
-Run in parallel:
-
-```bash
+cape git context
 git diff --name-only [scope-flags]
-git status --porcelain | grep '^??' | cut -c 4-
 ```
+
+Use `mainBranch` from context output. Use `status` for untracked file detection.
 
 If no changed files found: "No changes found for scope: {scope}." Stop.
 
@@ -239,6 +236,7 @@ When "Track as bugs" is selected, create a br bug for each critical and importan
 
 ```bash
 br create --type bug --priority {severity} --title "{file}: {short_description}"
+cape br validate <bug-id>
 ```
 
 Map severity: critical → 1, important → 2. Include the file path, line numbers, and suggestion in

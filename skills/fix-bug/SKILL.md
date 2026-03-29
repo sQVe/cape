@@ -98,8 +98,7 @@ cause and verify no regressions were introduced.
 **Verify the original symptom is gone:** re-run the reproduction steps from step 2 and confirm they
 no longer trigger the bug.
 
-**Append an Outcome section to the br bug** (`br show` first, then `br update --design` with
-existing content plus the outcome):
+**Append an Outcome section to the br bug** via `cape br design <bug-id> "Outcome"`:
 
 ```
 ## Outcome

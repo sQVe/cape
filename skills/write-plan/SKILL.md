@@ -108,6 +108,7 @@ br create "Epic: [Feature Name]" \
 - [ ] Pre-commit hooks passing
 EOF
 )"
+cape br validate <epic-id>
 ```
 
 Create exactly one task as a child of the epic. The task should be a **vertical slice** — a thin
@@ -142,6 +143,7 @@ br create "Task 1: [Specific deliverable]" \
 - [ ] Pre-commit hooks passing
 EOF
 )"
+cape br validate <task-id>
 ```
 
 **Why only one task?** Subsequent tasks should be created iteratively during execution. Each task

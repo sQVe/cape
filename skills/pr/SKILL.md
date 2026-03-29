@@ -61,22 +61,12 @@ template in step 5.
 
 ## Step 2: Validate prerequisites
 
-Run in parallel:
-
-Detect the default branch:
-
 ```bash
-git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@'
-```
-
-Fall back to `main` if the command returns empty. Use this as `<default-branch>` throughout.
-
-```bash
-git rev-parse --abbrev-ref HEAD
-git status --short
-git log --oneline -10
+cape git context
 git diff <default-branch>...HEAD --stat
 ```
+
+Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 **Gate checks:**
 

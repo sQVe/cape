@@ -110,12 +110,11 @@ returns here. This keeps structural and behavioral changes in distinct commits.
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.
 If you genuinely need to switch approaches, explain why the original reasoning no longer holds and
-get user confirmation. Then append a divergence log entry to the task's design field per the beads
-skill history convention (`br show` first, then `br update --design` with existing content plus the
-new divergence entry).
+get user confirmation. Then append a divergence log entry to the task's design field via
+`cape br design <task-id> "Divergence"`.
 
-Before closing, append an Outcome section to the task's design field per the beads skill history
-convention (`br show` first, then `br update --design` with existing content plus the outcome).
+Before closing, append an Outcome section to the task's design field via
+`cape br design <task-id> "Outcome"`.
 
 Close the task only when all substeps are done:
 
@@ -176,6 +175,7 @@ br create "Task N: [Informed next step]" \
 - [ ] Tests passing
 EOF
 )"
+cape br validate <task-id>
 ```
 
 ---

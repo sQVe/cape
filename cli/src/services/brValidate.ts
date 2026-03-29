@@ -11,7 +11,7 @@ const requiredSections: Record<string, string[]> = {
   epic: ['Requirements', 'Success criteria', 'Anti-patterns', 'Approach'],
   task: ['Goal', 'Behaviors', 'Success criteria'],
   feature: ['Goal', 'Behaviors', 'Success criteria'],
-  bug: ['Observed', 'Expected', 'Steps to reproduce'],
+  bug: ['Reproduction steps', 'Expected behavior', 'Actual behavior'],
 };
 
 const extractHeadings = (content: string) =>

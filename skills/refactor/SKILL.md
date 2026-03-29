@@ -82,7 +82,7 @@ Present the plan to the user before executing.
 
 ## Step 2: Verify the safety net
 
-Run the existing test suite. Every test must pass before you change anything.
+Run `cape check`. Every test must pass before you change anything.
 
 ```
 Full suite: [PASS/FAIL] — [N] tests, [M] failures
@@ -117,7 +117,7 @@ break, you know exactly which change caused it.
 **For each step:**
 
 1. Make the structural change (one Extract, one Move, one Rename — not all three at once)
-2. Run the test suite
+2. Run `cape check`
 3. If green: continue to the next step
 4. If red: undo the step, understand why, try a smaller step or different approach
 
@@ -143,7 +143,7 @@ This is slower but achieves the same safety.
 
 ## Step 4: Verify and present
 
-Run the full test suite one final time.
+Run `cape check` one final time.
 
 ```
 ## Refactoring complete
@@ -282,8 +282,8 @@ needs coverage?" </example>
 
 1. **Full test suite must pass before any transformation** — pre-existing failures block the
    refactoring until resolved or explicitly acknowledged
-2. **Run tests after every step** — not just at the end. Each step must independently preserve
-   behavior
+2. **Run `cape check` after every step** — not just at the end. Each step must independently
+   preserve behavior
 3. **Never mix refactoring with behavior changes** — structural commits and behavioral commits are
    separate. If a refactoring reveals a bug, report it; don't fix it
 4. **Present the plan before executing multi-step refactorings** — the user approves the sequence of

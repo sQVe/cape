@@ -36,9 +36,7 @@ only rigid rule: always confirm the name before creating the branch. </rigidity_
 Check git state:
 
 ```bash
-git rev-parse --is-inside-work-tree 2>/dev/null
-git status --porcelain
-git branch --show-current
+cape git context
 ```
 
 If not in a git repo, stop and tell the user. If there are uncommitted changes, warn but don't

@@ -55,6 +55,9 @@ a graph is available. </rigidity_level>
 
 ## Step 1: Resolve scope and gather structural context
 
+Run `cape check` to establish a baseline. If tests fail, report failures and stop — audit test
+quality only when the suite is green.
+
 If the user's message doesn't include a clear scope, ask:
 
 ```
@@ -245,7 +248,8 @@ Create a br epic following this template:
 !`cat "${CLAUDE_SKILL_DIR}/../write-plan/resources/epic-template.md"`
 
 Populate Requirements from the RED/YELLOW findings, Anti-patterns from observed test smells, and
-Success criteria from the improvement targets. Use `--type epic --priority 2`.
+Success criteria from the improvement targets. Use `--type epic --priority 2`. Run
+`cape br validate <epic-id>` after creation.
 
 ### Tasks (one per module)
 
@@ -283,6 +287,7 @@ Fix [R] RED and [Y] YELLOW tests in [file path].
 - [ ] All replacement tests fail when production behavior breaks
 EOF
 )"
+cape br validate <task-id>
 ```
 
 Present the created epic and tasks, then suggest `cape:execute-plan` to start implementing.

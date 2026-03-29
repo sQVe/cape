@@ -53,19 +53,13 @@ staging plan, conventional format, and user confirmation before committing are n
 
 ## Step 1: Gather context
 
-Run these in parallel:
-
 ```bash
-git status --short
+cape git context
 git diff HEAD
-git log --oneline -10
 ```
 
-From git log, note the project's commit conventions — type prefixes used, whether scope is common,
-subject line style, whether bodies are used.
-
-Note: `git diff HEAD` does not show untracked new files. Check `git status` output for new files
-that should be included in the staging plan.
+From `recentLog`, note the project's commit conventions — type prefixes used, whether scope is
+common, subject line style, whether bodies are used.
 
 If there are no changes to commit, tell the user and stop.
 
@@ -240,7 +234,7 @@ The subject says what changed; the body explains why. </example>
 - **One logical change per commit** — split unrelated changes into separate commits
 - **Selective staging** — name files explicitly, never bulk-add
 - **Explain the why** — subjects describe the change, bodies explain the reasoning
-- **Match project style** — read recent git log and follow existing conventions
+- **Match project style** — read `recentLog` from context and follow existing conventions
 - **Confirm before committing** — always present the plan and wait for approval
 
 </key_principles>
