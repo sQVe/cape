@@ -60,14 +60,14 @@ non-negotiable. Depth adapts to change size. </rigidity_level>
 
 Parse the argument to determine what to review:
 
-| Argument          | Scope                                     |
-| ----------------- | ----------------------------------------- |
-| (none)            | Branch diff from merge-base + uncommitted |
-| `unstaged`        | `git diff` + untracked files              |
-| `staged`          | `git diff --staged`                       |
-| file path or glob | Specific files                            |
-| branch name       | Diff of that branch vs main               |
-| PR number         | Diff of PR branch vs its base             |
+| Argument          | Scope                                      |
+| ----------------- | ------------------------------------------ |
+| (none)            | `cape git diff pr` + untracked files       |
+| `unstaged`        | `cape git diff unstaged` + untracked files |
+| `staged`          | `cape git diff staged`                     |
+| file path or glob | Specific files                             |
+| branch name       | Diff of that branch vs main                |
+| PR number         | Diff of PR branch vs its base              |
 
 Run `cape check` as a pre-review gate. If it fails, report failures and stop — fix build/test errors
 before reviewing code.
@@ -76,8 +76,11 @@ before reviewing code.
 
 ```bash
 cape git context
-git diff --name-only [scope-flags]
+cape git diff [scope]
 ```
+
+Extract changed file names from the diff output. Use `status` from context for untracked file
+detection.
 
 Use `mainBranch` from context output. Use `status` for untracked file detection.
 

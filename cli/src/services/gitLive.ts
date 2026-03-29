@@ -2,9 +2,11 @@ import { execSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
+import type { DiffScope } from './git';
 import { GitService } from './git';
 
 const git = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' }).trim();
+const gitRaw = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' });
 
 const tryGit = (args: string) => {
   try {
@@ -45,4 +47,35 @@ const getContext = () =>
     catch: (error) => new Error('not a git repository', { cause: error }),
   });
 
-export const GitServiceLive = Layer.succeed(GitService)({ getContext });
+const resolveDiffArgs = (scope: DiffScope, mainBranch: string): string => {
+  switch (scope) {
+    case 'unstaged':
+      return 'diff';
+    case 'staged':
+      return 'diff --cached';
+    case 'branch':
+      return `diff ${mainBranch}...HEAD`;
+    case 'pr':
+      return `diff ${mainBranch}...HEAD`;
+  }
+};
+
+const getDiff = (scope: DiffScope) =>
+  Effect.try({
+    try: () => {
+      git('rev-parse --git-dir');
+
+      const mainBranch = detectMainBranch();
+      const branchDiff = gitRaw(resolveDiffArgs(scope, mainBranch));
+
+      if (scope === 'pr') {
+        const uncommitted = gitRaw('diff');
+        return branchDiff + uncommitted;
+      }
+
+      return branchDiff;
+    },
+    catch: (error) => new Error('not a git repository', { cause: error }),
+  });
+
+export const GitServiceLive = Layer.succeed(GitService)({ getContext, getDiff });

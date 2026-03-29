@@ -18,6 +18,7 @@ export const stubGitLayer = Layer.succeed(GitService)({
       diffStat: '',
       recentLog: [],
     }),
+  getDiff: () => Effect.succeed(''),
 });
 
 export const stubDetectLayer = Layer.succeed(DetectService)({

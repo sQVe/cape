@@ -88,6 +88,55 @@ describe('cape git context', () => {
   });
 });
 
+describe('cape git diff', () => {
+  let repoDir: string;
+
+  beforeEach(() => {
+    repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-diff-XXXXXX')], {
+      encoding: 'utf-8',
+    }).trim();
+    execFileSync('git', ['init', repoDir]);
+    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
+    execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
+    execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add file']);
+  });
+
+  afterEach(() => {
+    spawnSync('rm', ['-rf', repoDir]);
+  });
+
+  it('outputs unstaged diff by default', () => {
+    writeFileSync(join(repoDir, 'file.ts'), 'export const x = 2;\n');
+    const result = cape(['git', 'diff'], { cwd: repoDir });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('file.ts');
+  });
+
+  it('outputs staged diff', () => {
+    writeFileSync(join(repoDir, 'file.ts'), 'export const x = 3;\n');
+    execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
+    const result = cape(['git', 'diff', 'staged'], { cwd: repoDir });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('file.ts');
+  });
+
+  it('outputs empty when no changes', () => {
+    const result = cape(['git', 'diff'], { cwd: repoDir });
+    expect(result.status).toBe(0);
+    expect(result.stdout).toBe('');
+  });
+
+  it('exits 1 outside a git repo', () => {
+    const nonGitDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-nodiff-XXXXXX')], {
+      encoding: 'utf-8',
+    }).trim();
+    const result = cape(['git', 'diff'], { cwd: nonGitDir });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('error');
+  });
+});
+
 describe('cape validate', () => {
   it('returns JSON with passed and failed counts', () => {
     const result = cape(['validate']);

@@ -29,11 +29,13 @@ const makeTestGitLayer = (overrides: Partial<GitContext> = {}) =>
         recentLog: ['abc1234 feat: add thing', 'def5678 fix: broken thing'],
         ...overrides,
       }),
+    getDiff: () => Effect.succeed(''),
   });
 
 const makeErrorGitLayer = () =>
   Layer.succeed(GitService)({
     getContext: () => Effect.fail(new Error('not a git repository')),
+    getDiff: () => Effect.fail(new Error('not a git repository')),
   });
 
 const testLayers = Layer.mergeAll(

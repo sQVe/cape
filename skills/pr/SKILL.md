@@ -103,7 +103,7 @@ If none exist, skip.
 Read the full diff against the target branch:
 
 ```bash
-git diff <default-branch>...HEAD
+cape git diff branch
 git log <default-branch>..HEAD --oneline
 ```
 
