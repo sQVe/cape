@@ -18,7 +18,8 @@ import {
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const makeGitLayer = (result: BranchValidation = { valid: true, errors: [] }) =>
+const defaultValidation: BranchValidation = { valid: true, errors: [] };
+const makeGitLayer = (result = defaultValidation) =>
   Layer.succeed(GitService)({
     getContext: () =>
       Effect.succeed({

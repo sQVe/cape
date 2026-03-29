@@ -29,6 +29,7 @@ const makeStubBrLayer = (bead: BeadData = makeBead()) =>
     show: () => Effect.succeed(bead),
     updateDesign: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed('new content'),
+    listChildren: () => Effect.succeed([]),
   });
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -177,6 +178,7 @@ describe('br validate command', () => {
         Effect.succeed(
           '## Goal\ndo it\n\n## Behaviors\n- thing\n\n## Success criteria\n- [ ] works',
         ),
+      listChildren: () => Effect.succeed([]),
     });
     await Effect.runPromise(
       run(['br', 'validate', '--type', 'task']).pipe(Effect.provide(makeCommandLayers(brLayer))),
@@ -193,6 +195,7 @@ describe('br validate command', () => {
       show: () => Effect.succeed(makeBead()),
       updateDesign: () => Effect.succeed(undefined),
       readStdin: () => Effect.succeed('## Requirements\nstuff'),
+      listChildren: () => Effect.succeed([]),
     });
     await expect(
       Effect.runPromise(
@@ -285,6 +288,7 @@ describe('br design command', () => {
         return Effect.succeed(undefined);
       },
       readStdin: () => Effect.succeed('new content'),
+      listChildren: () => Effect.succeed([]),
     });
     await Effect.runPromise(
       run(['br', 'design', 'cape-test', 'New section']).pipe(
@@ -310,6 +314,7 @@ describe('br design command', () => {
         return Effect.succeed(undefined);
       },
       readStdin: () => Effect.succeed('fresh content'),
+      listChildren: () => Effect.succeed([]),
     });
     await Effect.runPromise(
       run(['br', 'design', 'cape-test', 'First section']).pipe(

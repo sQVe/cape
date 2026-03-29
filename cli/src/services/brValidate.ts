@@ -7,6 +7,12 @@ export interface BeadData {
   readonly design: string | null;
 }
 
+export interface ChildStatus {
+  readonly id: string;
+  readonly title: string;
+  readonly status: string;
+}
+
 const requiredSections: Record<string, string[]> = {
   epic: ['Requirements', 'Success criteria', 'Anti-patterns', 'Approach'],
   task: ['Goal', 'Behaviors', 'Success criteria'],
@@ -56,6 +62,7 @@ export class BrValidateService extends ServiceMap.Service<
     readonly show: (id: string) => Effect.Effect<BeadData, Error>;
     readonly updateDesign: (id: string, design: string) => Effect.Effect<void, Error>;
     readonly readStdin: () => Effect.Effect<string, Error>;
+    readonly listChildren: (id: string) => Effect.Effect<ChildStatus[], Error>;
   }
 >()('BrValidateService') {}
 
@@ -75,4 +82,10 @@ export const readStdin = () =>
   Effect.gen(function* () {
     const service = yield* BrValidateService;
     return yield* service.readStdin();
+  });
+
+export const listChildren = (id: string) =>
+  Effect.gen(function* () {
+    const service = yield* BrValidateService;
+    return yield* service.listChildren(id);
   });

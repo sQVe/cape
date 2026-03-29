@@ -37,31 +37,23 @@ non-negotiable. How you run verification and what you include in the summary ada
 
 <the_process>
 
-## Step 1: Orient
+## Step 1: Verify
 
-Find the epic and check its state:
+Run `cape epic verify <epic-id>` to check all tasks are closed and automated checks pass:
 
 ```bash
-br list --type epic --status open
-br show <epic-id>
-br list --status open --parent <epic-id>
+cape epic verify <epic-id>
 ```
 
-- **All tasks closed** — proceed to step 2
-- **Open tasks remain** — report which tasks are still open and stop; don't close open tasks just to
-  proceed
+- **verified: true** — proceed to step 1b
+- **openTasks not empty** — report which tasks are still open and stop
+- **checksPassed: false** — report failures and stop
 
 ---
 
-## Step 2: Verify
+## Step 2: Audit
 
-Run four verification passes. All must pass before closing.
-
-### 2a: Automated checks
-
-Dispatch `cape:test-runner` to run `cape check`. This keeps verbose output out of the main context.
-
-If any fail, report the failures and stop. Don't close an epic with broken checks.
+Run three additional verification passes. All must pass before closing.
 
 ### 2b: Success criteria audit
 

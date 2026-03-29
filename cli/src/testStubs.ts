@@ -45,6 +45,7 @@ export const stubBrLayer = Layer.succeed(BrValidateService)({
     }),
   updateDesign: () => Effect.succeed(undefined),
   readStdin: () => Effect.succeed(''),
+  listChildren: () => Effect.succeed([]),
 });
 
 export const stubHookLayer = Layer.succeed(HookService)({

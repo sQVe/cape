@@ -88,6 +88,19 @@ describe('cape git context', () => {
   });
 });
 
+describe('cape epic verify', () => {
+  it('cape --help lists epic subcommand', () => {
+    const result = cape(['--help']);
+    expect(result.stdout).toContain('epic');
+  });
+
+  it('cape epic --help lists verify subcommand', () => {
+    const result = cape(['epic', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('verify');
+  });
+});
+
 describe('cape br template', () => {
   it('outputs epic template with required sections', () => {
     const result = cape(['br', 'template', '--type', 'epic']);
