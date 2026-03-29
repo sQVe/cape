@@ -29,12 +29,14 @@ const makeTestGitLayer = (diffResult = 'diff --git a/file.ts b/file.ts') =>
         recentLog: [],
       }),
     getDiff: (_scope: DiffScope) => Effect.succeed(diffResult),
+    validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
   });
 
 const makeErrorGitLayer = () =>
   Layer.succeed(GitService)({
     getContext: () => Effect.fail(new Error('not a git repository')),
     getDiff: () => Effect.fail(new Error('not a git repository')),
+    validateBranch: () => Effect.fail(new Error('not a git repository')),
   });
 
 const makeScopeCapturingLayer = () => {
@@ -52,6 +54,7 @@ const makeScopeCapturingLayer = () => {
       captured = scope;
       return Effect.succeed(`diff for ${scope}`);
     },
+    validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
   });
   return { layer, getCaptured: () => captured };
 };

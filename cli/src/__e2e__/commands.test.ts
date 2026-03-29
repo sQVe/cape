@@ -88,6 +88,32 @@ describe('cape git context', () => {
   });
 });
 
+describe('cape git validate-branch', () => {
+  it('validates a well-formed branch name', () => {
+    const result = cape(['git', 'validate-branch', 'feat/my-feature']);
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.valid).toBe(true);
+    expect(parsed.errors).toEqual([]);
+  });
+
+  it('rejects a branch that already exists', () => {
+    const result = cape(['git', 'validate-branch', 'main']);
+    expect(result.status).toBe(1);
+    const parsed = JSON.parse(result.stdout.split('\n')[0]!);
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors.some((e: string) => e.includes('already exists'))).toBe(true);
+  });
+
+  it('warns on missing prefix', () => {
+    const result = cape(['git', 'validate-branch', 'no-prefix-branch']);
+    expect(result.status).toBe(1);
+    const parsed = JSON.parse(result.stdout.split('\n')[0]!);
+    expect(parsed.valid).toBe(false);
+    expect(parsed.errors.some((e: string) => e.includes('prefix'))).toBe(true);
+  });
+});
+
 describe('cape git diff', () => {
   let repoDir: string;
 

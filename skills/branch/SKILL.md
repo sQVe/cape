@@ -86,11 +86,12 @@ Examples:
 Present the generated name to the user. Once approved (or after applying their edits):
 
 ```bash
-git branch --list '<branch-name>'
+cape git validate-branch <branch-name>
 git checkout -b <branch-name>
 ```
 
-If the branch already exists, tell the user and ask: switch to it, pick a different name, or abort.
+If validation fails (existing branch, bad ref format, missing prefix), show the errors and ask: fix
+the name, pick a different name, or abort.
 
 </the_process>
 

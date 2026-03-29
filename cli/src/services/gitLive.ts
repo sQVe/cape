@@ -2,8 +2,8 @@ import { execSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
-import type { DiffScope } from './git';
-import { GitService } from './git';
+import type { BranchValidation, DiffScope } from './git';
+import { BRANCH_PREFIXES, GitService } from './git';
 
 const git = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' }).trim();
 const gitRaw = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' });
@@ -78,4 +78,38 @@ const getDiff = (scope: DiffScope) =>
     catch: (error) => new Error('not a git repository', { cause: error }),
   });
 
-export const GitServiceLive = Layer.succeed(GitService)({ getContext, getDiff });
+const validateBranch = (name: string) =>
+  Effect.try({
+    try: (): BranchValidation => {
+      git('rev-parse --git-dir');
+
+      const errors: string[] = [];
+
+      const refCheck = tryGit(`check-ref-format --branch ${name}`);
+      if (refCheck == null) {
+        errors.push(`invalid ref format: ${name}`);
+      }
+
+      const localExists = tryGit(`rev-parse --verify refs/heads/${name}`);
+      if (localExists != null) {
+        errors.push(`branch already exists locally: ${name}`);
+      }
+
+      const remoteExists = tryGit(`rev-parse --verify refs/remotes/origin/${name}`);
+      if (remoteExists != null) {
+        errors.push(`branch already exists on remote: ${name}`);
+      }
+
+      const hasPrefix = BRANCH_PREFIXES.some((prefix) => name.startsWith(prefix));
+      if (!hasPrefix) {
+        errors.push(
+          `missing conventional prefix (${BRANCH_PREFIXES.map((p) => p.replace('/', '')).join(', ')})`,
+        );
+      }
+
+      return { valid: errors.length === 0, errors };
+    },
+    catch: (error) => new Error('not a git repository', { cause: error }),
+  });
+
+export const GitServiceLive = Layer.succeed(GitService)({ getContext, getDiff, validateBranch });

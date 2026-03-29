@@ -19,6 +19,7 @@ export const stubGitLayer = Layer.succeed(GitService)({
       recentLog: [],
     }),
   getDiff: () => Effect.succeed(''),
+  validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
 });
 
 export const stubDetectLayer = Layer.succeed(DetectService)({
