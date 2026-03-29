@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "check": "vp check",
+    "typecheck": "tsc -p cli/tsconfig.json",
     "format": "vp fmt && prettier --write .",
     "format:check": "vp fmt --check && prettier --check .",
     "lint": "vp lint",
