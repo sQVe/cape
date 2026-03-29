@@ -273,9 +273,9 @@ describe('PostToolUse/Edit', () => {
     expect(result.stdout).toBe('');
   });
 
-  it('produces no output when no active flow phase (br unavailable)', () => {
+  it('produces no output for non-code file regardless of flow phase', () => {
     const stdin = JSON.stringify({
-      tool_input: { file_path: 'src/services/hook.ts' },
+      tool_input: { file_path: 'README.md' },
     });
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Edit'], stdin, env);
     expect(result.status).toBe(0);
