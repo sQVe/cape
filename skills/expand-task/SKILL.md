@@ -86,8 +86,8 @@ from the task description or your imagination.
 ## Step 3: Produce the expanded plan
 
 Build a step-by-step plan where each step is a logical unit of work — small enough to verify
-independently, large enough to be meaningful. Each step maps to one TDD cycle (write test,
-implement, verify).
+independently, large enough to be meaningful. Each step maps to one TDD cycle. The step defines WHAT
+behavior to add; TDD decides HOW to test it.
 
 **Calibrate granularity to complexity:**
 
@@ -103,7 +103,7 @@ the split.
 **Each step must include:**
 
 ```
-### Step N: [What this step delivers]
+### Step N: [What this step delivers — one testable behavior]
 
 **Pattern:** [file:line — the existing implementation to follow]
 
@@ -111,17 +111,19 @@ the split.
 - `path/to/file.ts:L23-30` — [what to change and why]
 - `path/to/new-file.ts` (new) — [what it contains, following pattern from X]
 
-**Test:** [specific test to write first — the RED in red-green-refactor]
-
 **Verify:** `[exact command to run]`
 ```
 
+- **Step title** names a single testable behavior. TDD designs the test — the title just states what
+  behavior to target.
 - **Pattern** references a real file the step should mirror. Omit if no relevant pattern exists.
 - **Changes** reference real files at real line numbers. For new files, name them following existing
   conventions found during investigation.
-- **Test** describes the specific test case for this step — feeds directly into TDD.
 - **Verify** is an exact shell command. Not "run tests" — `npm test -- --grep 'auth strategy'` or
   `go test ./internal/auth/... -run TestGoogleStrategy`.
+
+Do NOT include test descriptions in steps. Test design belongs to the TDD cycle's RED phase — it
+must emerge from the current state of the code, not from a plan written before implementation began.
 
 **Include a final verification step** that runs `cape check`, confirming the complete change works
 together.
@@ -206,6 +208,7 @@ produce the expanded plan — let execute-plan handle the split. </example>
 - **Pattern-first** — point to existing code as the template before describing changes
 - **Verification at every step** — each step has an exact command, not "run tests"
 - **Right-sized** — 2-4 steps for simple tasks, 7-10 for complex; flag splits beyond 10
+- **Behavior, not tests** — steps describe what behavior to add; TDD designs the tests
 
 </key_principles>
 
@@ -217,5 +220,6 @@ produce the expanded plan — let execute-plan handle the split. </example>
 3. **Skip if already expanded** — check for `## Expanded plan` section before doing work
 4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
 5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
+6. **No test prescriptions** — never describe what test to write; that's TDD's RED phase
 
 </critical_rules>

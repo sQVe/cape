@@ -106,8 +106,25 @@ Once an expanded plan exists, mark the task in-progress:
 br update <task-id> --status in_progress
 ```
 
-Load `cape:test-driven-development` with the Skill tool before writing any production code. Follow
-its RED-GREEN-REFACTOR cycle — one behavior per cycle, no batching.
+Load `cape:test-driven-development` with the Skill tool before writing any production code.
+
+Execute the expanded plan's steps as a sequential loop. Process one step at a time — do not read
+ahead to later steps.
+
+**For each step in the expanded plan:**
+
+1. **Scope** — Read only the current step's title and **Changes** field. These define the single
+   behavior for this iteration. Ignore all subsequent steps.
+2. **RED** — Write one failing test for the behavior described in the current step's title. Run it.
+   Confirm it fails for the right reason (assertion failure, not import/syntax error).
+3. **GREEN** — Write the minimum production code described in the current step's **Changes** to make
+   the test pass. Run the test. Run the full suite.
+4. **REFACTOR** — Improve what you just wrote. Run the full suite.
+5. **Gate** — Run the current step's **Verify** command. It must pass before you move to the next
+   step. If it fails, fix within this step — do not move on.
+
+Do not pre-read upcoming steps. Do not write tests for step N+1 during step N. Each loop iteration
+is self-contained: scope, red, green, refactor, gate.
 
 If the code you need to modify is tangled — hard to add the new behavior without restructuring first
 — load `cape:refactor` with the Skill tool. Refactor commits the structural change separately, then

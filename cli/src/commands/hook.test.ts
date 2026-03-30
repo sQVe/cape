@@ -1273,31 +1273,83 @@ describe('postToolUseEdit', () => {
   });
 
   describe('when editing test files', () => {
-    it('does not inject reminder for .test.ts files', async () => {
+    it('writes writing-test phase for first test file edit', async () => {
+      const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.test.ts'),
         brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+        writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
+      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+      expect(state.phase).toBe('writing-test');
     });
 
-    it('does not inject reminder for _test.go files', async () => {
+    it('warns on second test file edit without test run', async () => {
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts'),
+        brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+        files: {
+          '/test/hooks/context/tdd-state.json': JSON.stringify({
+            phase: 'writing-test',
+            timestamp: Date.now(),
+          }),
+        },
+      });
+      const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toHaveProperty('additionalContext');
+      expect((result as { additionalContext: string }).additionalContext).toContain('batching');
+    });
+
+    it('does not warn on test file edit after test run resets state to green', async () => {
+      const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/pkg/handler_test.go'),
         brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+        files: {
+          '/test/hooks/context/tdd-state.json': JSON.stringify({
+            phase: 'green',
+            timestamp: Date.now(),
+          }),
+        },
+        writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
+      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+      expect(state.phase).toBe('writing-test');
     });
 
-    it('does not inject reminder for _spec.lua files', async () => {
+    it('does not warn on test file edit after test run resets state to red', async () => {
+      const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/tests/parser_spec.lua'),
         brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+        files: {
+          '/test/hooks/context/tdd-state.json': JSON.stringify({
+            phase: 'red',
+            timestamp: Date.now(),
+          }),
+        },
+        writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
+      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+      expect(state.phase).toBe('writing-test');
+    });
+
+    it('does not track test file edits outside active phase', async () => {
+      const writtenFiles: Record<string, string> = {};
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts'),
+        brResponses: {},
+        writtenFiles,
+      });
+      const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+      expect(writtenFiles['/test/hooks/context/tdd-state.json']).toBeUndefined();
     });
   });
 

@@ -655,12 +655,39 @@ export const postToolUseBash = () =>
     return null;
   });
 
+const readTddState = (root: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const stateContent = yield* service.readFile(`${root}/hooks/context/tdd-state.json`);
+    if (stateContent == null) {
+      return null;
+    }
+    try {
+      const state: { phase: string; timestamp: number } = JSON.parse(stateContent);
+      const isStale = Date.now() - state.timestamp > TDD_STATE_TTL_MS;
+      return isStale ? null : state;
+    } catch {
+      return null;
+    }
+  });
+
+const writeTddState = (root: string, phase: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const contextPath = `${root}/hooks/context`;
+    yield* service.ensureDir(contextPath);
+    yield* service.writeFile(
+      `${contextPath}/tdd-state.json`,
+      JSON.stringify({ phase, timestamp: Date.now() }),
+    );
+  });
+
 export const postToolUseEdit = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const input = yield* service.readStdin();
     const filePath = parseFilePath(input);
-    if (!filePath || isTestFile(filePath) || !isCodeFile(filePath)) {
+    if (!filePath || !isCodeFile(filePath)) {
       return null;
     }
 
@@ -676,17 +703,23 @@ export const postToolUseEdit = () =>
     }
 
     const root = service.pluginRoot();
-    const stateContent = yield* service.readFile(`${root}/hooks/context/tdd-state.json`);
-    if (stateContent != null) {
-      try {
-        const state: { phase: string; timestamp: number } = JSON.parse(stateContent);
-        const isStale = Date.now() - state.timestamp > TDD_STATE_TTL_MS;
-        if (!isStale && state.phase === 'red') {
-          return null;
-        }
-      } catch {
-        // corrupted state — show reminder
+    const state = yield* readTddState(root);
+
+    if (isTestFile(filePath)) {
+      if (state?.phase === 'writing-test') {
+        return {
+          additionalContext: [
+            'TDD batching warning: you are writing another test before running the previous one.',
+            'Dispatch cape:test-runner now. One test at a time — write it, run it, then proceed.',
+          ].join(' '),
+        };
       }
+      yield* writeTddState(root, 'writing-test');
+      return null;
+    }
+
+    if (state?.phase === 'red') {
+      return null;
     }
 
     return {

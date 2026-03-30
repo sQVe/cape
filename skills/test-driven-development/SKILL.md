@@ -97,6 +97,13 @@ pass. If a test breaks during refactoring, undo the refactor and try a smaller s
 Go back to Step 1 with the next behavior. Each cycle adds one behavior. Continue until all required
 behaviors are implemented.
 
+**Before starting the next cycle, verify you are not batching:**
+
+- How many new test cases did I write in the last cycle? (Must be exactly 1.)
+- Did I run the test runner between writing the test and writing production code? (Must be yes.)
+- Am I about to write multiple tests for the next step? (Must be no — write one, run it, then decide
+  if the step needs another cycle.)
+
 </the_process>
 
 <agent_references>
@@ -173,6 +180,48 @@ REFACTOR: Extract duplicate-check into reusable query method
 The failing test is the proof that the bug existed. The passing test is the proof that the fix
 works. </example>
 
+<example>
+<scenario>Implementing three validation behaviors from an expanded plan</scenario>
+
+**Wrong (batching — the most common failure mode):**
+
+```
+Write test: "returns false for empty string"
+Write test: "returns true for valid email"
+Write test: "returns false for missing domain"
+— run tests — all three fail (function missing)
+— implement validateEmail with full regex
+— run tests — all three pass
+```
+
+All three tests were written before any production code. No test ever proved it could detect the
+absence of a single behavior — they all failed together for the same reason (function missing). The
+RED phase was meaningless.
+
+**Right (one cycle at a time):**
+
+```
+Cycle 1:
+  RED:      Write test: "returns false for empty string" → STOP → run → fails
+  GREEN:    Create validateEmail, return false → run → passes
+  REFACTOR: Nothing to improve yet
+
+Only now read the next step.
+
+Cycle 2:
+  RED:      Write test: "returns true for valid email" → STOP → run → fails (always returns false)
+  GREEN:    Add regex check → run → passes
+  REFACTOR: Extract regex to named constant
+
+Cycle 3:
+  RED:      Write test: "returns false for missing domain" → STOP → run → fails
+  GREEN:    Tighten regex → run → passes
+  REFACTOR: Simplify regex, consolidate test setup
+```
+
+The word STOP is literal. After writing one test, dispatch the test runner. That is the gate.
+</example>
+
 </examples>
 
 <key_principles>
@@ -199,11 +248,40 @@ works. </example>
    state. The assertion itself must fire and fail.
 3. **Run tests after every phase.** RED: test fails. GREEN: test passes, full suite passes.
    REFACTOR: full suite passes. No exceptions.
-4. **One behavior per cycle.** Do not write multiple tests and then implement them all at once. Each
-   cycle is atomic.
+4. **One behavior per cycle — mechanically enforced.** After writing test code, your immediate next
+   action is dispatching `cape:test-runner`. You must not write a second test, add a test helper for
+   a future behavior, or touch production code until the test runner has reported back. If you find
+   yourself writing two `it()`/`test()` blocks before running anything, you are batching — stop,
+   delete everything after the first test, and run it.
 5. **Stop if there is no test infrastructure.** Do not create test frameworks, runners, or
    configuration. Inform the user and let them set it up.
 6. **Do not skip the refactor phase.** Look at the code. If nothing needs improvement, that is fine
    — but you must look.
 
 </critical_rules>
+
+<anti_batching>
+
+## The batching failure mode
+
+When a multi-step plan is visible (from expand-task or your own mental plan), the strongest pull is
+to write all tests for all steps, then implement them together. This destroys the RED-GREEN-REFACTOR
+cycle even when each test individually looks correct.
+
+**How to detect you are batching:**
+
+- You are writing a second `it()` / `test()` block before the first one has been run
+- You are thinking about Step 2's test while still in Step 1
+- You have written test descriptions (even as comments) for behaviors you haven't cycled through yet
+- Your test file has multiple new test cases and none of them have been executed
+
+**The single-test gate:** After writing any test code, your next action MUST be dispatching
+`cape:test-runner`. No exceptions. Do not write a second test. Do not write a helper for a future
+test. Do not write production code. Run the test.
+
+**Plan tunnel vision:** When a multi-step plan exists, treat every step except the current one as
+invisible. Do not read ahead. Do not pre-plan test names for future steps. The next step's test must
+emerge from the code's state after the current step is complete, not from a plan written before
+implementation began.
+
+</anti_batching>
