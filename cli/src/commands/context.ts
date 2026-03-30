@@ -11,7 +11,7 @@ const contextSet = Command.make(
   Effect.fn(function* ({ name }) {
     if (!validateName(name)) {
       yield* Console.error(`Invalid context name: ${name}`);
-      return;
+      return yield* Effect.fail(new Error(`Invalid context name: ${name}`));
     }
     const service = yield* HookService;
     const contextPath = `${service.pluginRoot()}/hooks/context`;
@@ -30,7 +30,7 @@ const contextClear = Command.make(
   Effect.fn(function* ({ name }) {
     if (!validateName(name)) {
       yield* Console.error(`Invalid context name: ${name}`);
-      return;
+      return yield* Effect.fail(new Error(`Invalid context name: ${name}`));
     }
     const service = yield* HookService;
     yield* service.removeFile(`${service.pluginRoot()}/hooks/context/${name}.txt`);

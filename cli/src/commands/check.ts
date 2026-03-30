@@ -27,7 +27,7 @@ export const check = Command.make(
     yield* Console.log(JSON.stringify(results, null, 2));
 
     if (results.some((r) => !r.passed)) {
-      yield* Effect.die(new Error('checks failed'));
+      yield* Effect.fail(new Error('checks failed'));
     }
   }),
 ).pipe(

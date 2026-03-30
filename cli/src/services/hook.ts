@@ -663,7 +663,18 @@ const readTddState = (root: string) =>
       return null;
     }
     try {
-      const state: { phase: string; timestamp: number } = JSON.parse(stateContent);
+      const raw: unknown = JSON.parse(stateContent);
+      if (
+        typeof raw !== 'object' ||
+        raw == null ||
+        !('phase' in raw) ||
+        typeof raw.phase !== 'string' ||
+        !('timestamp' in raw) ||
+        typeof raw.timestamp !== 'number'
+      ) {
+        return null;
+      }
+      const state = { phase: raw.phase, timestamp: raw.timestamp };
       const isStale = Date.now() - state.timestamp > TDD_STATE_TTL_MS;
       return isStale ? null : state;
     } catch {

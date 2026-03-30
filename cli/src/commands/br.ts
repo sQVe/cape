@@ -13,6 +13,40 @@ import {
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
 
+export const runCloseReadinessCheck = (id: string) =>
+  Effect.fn(function* () {
+    const children = yield* listChildren(id).pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const openItems = children.filter((child) => child.status !== 'closed');
+
+    const ecosystems = yield* getDetectResult.pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const checkResults = yield* getCheckResults(ecosystems).pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const checksPassed = checkResults.every((r) => r.passed);
+    const ready = openItems.length === 0 && checksPassed;
+
+    return { ready, openItems, checksPassed, checkResults };
+  })();
+
 const brValidate = Command.make(
   'validate',
   {
@@ -93,39 +127,12 @@ const brCloseCheck = Command.make(
     id: Argument.string('id'),
   },
   Effect.fn(function* ({ id }) {
-    const children = yield* listChildren(id).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const { ready, openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
 
-    const openSubtasks = children.filter((child) => child.status !== 'closed');
-
-    const ecosystems = yield* getDetectResult.pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
-
-    const checkResults = yield* getCheckResults(ecosystems).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
-
-    const checksPassed = checkResults.every((r) => r.passed);
-    const canClose = openSubtasks.length === 0 && checksPassed;
-
-    const result = { canClose, openSubtasks, checksPassed, checkResults };
+    const result = { canClose: ready, openSubtasks: openItems, checksPassed, checkResults };
     yield* Console.log(JSON.stringify(result, null, 2));
 
-    if (!canClose) {
+    if (!ready) {
       yield* Effect.fail(new Error('close-check failed'));
     }
   }),

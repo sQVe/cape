@@ -1,14 +1,16 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
 import type { BranchValidation, DiffScope } from './git';
 import { BRANCH_PREFIXES, GitService } from './git';
 
-const git = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' }).trim();
-const gitRaw = (args: string) => execSync(`git ${args}`, { encoding: 'utf-8' });
+const git = (args: readonly string[]) =>
+  execFileSync('git', args, { encoding: 'utf-8' }).trim();
+const gitRaw = (args: readonly string[]) =>
+  execFileSync('git', args, { encoding: 'utf-8' });
 
-const tryGit = (args: string) => {
+const tryGit = (args: readonly string[]) => {
   try {
     return git(args);
   } catch {
@@ -17,13 +19,13 @@ const tryGit = (args: string) => {
 };
 
 const detectMainBranch = () => {
-  const ref = tryGit('symbolic-ref refs/remotes/origin/HEAD');
+  const ref = tryGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
   if (ref != null) {
     return ref.replace('refs/remotes/origin/', '');
   }
 
   for (const candidate of ['main', 'master']) {
-    if (tryGit(`rev-parse --verify ${candidate}`) != null) {
+    if (tryGit(['rev-parse', '--verify', candidate]) != null) {
       return candidate;
     }
   }
@@ -34,42 +36,42 @@ const detectMainBranch = () => {
 const getContext = () =>
   Effect.try({
     try: () => {
-      git('rev-parse --git-dir');
+      git(['rev-parse', '--git-dir']);
 
       return {
         mainBranch: detectMainBranch(),
-        currentBranch: git('branch --show-current'),
-        status: git('status --porcelain').split('\n').filter(Boolean),
-        diffStat: git('diff --stat'),
-        recentLog: git('log --oneline -n 10').split('\n').filter(Boolean),
+        currentBranch: git(['branch', '--show-current']),
+        status: git(['status', '--porcelain']).split('\n').filter(Boolean),
+        diffStat: git(['diff', '--stat']),
+        recentLog: git(['log', '--oneline', '-n', '10']).split('\n').filter(Boolean),
       };
     },
     catch: (error) => new Error('not a git repository', { cause: error }),
   });
 
-const resolveDiffArgs = (scope: DiffScope, mainBranch: string): string => {
+const resolveDiffArgs = (scope: DiffScope, mainBranch: string): readonly string[] => {
   switch (scope) {
     case 'unstaged':
-      return 'diff';
+      return ['diff'];
     case 'staged':
-      return 'diff --cached';
+      return ['diff', '--cached'];
     case 'branch':
-      return `diff ${mainBranch}...HEAD`;
+      return ['diff', `${mainBranch}...HEAD`];
     case 'pr':
-      return `diff ${mainBranch}...HEAD`;
+      return ['diff', `${mainBranch}...HEAD`];
   }
 };
 
 const getDiff = (scope: DiffScope) =>
   Effect.try({
     try: () => {
-      git('rev-parse --git-dir');
+      git(['rev-parse', '--git-dir']);
 
       const mainBranch = detectMainBranch();
       const branchDiff = gitRaw(resolveDiffArgs(scope, mainBranch));
 
       if (scope === 'pr') {
-        const uncommitted = gitRaw('diff');
+        const uncommitted = gitRaw(['diff']);
         return branchDiff + uncommitted;
       }
 
@@ -81,21 +83,21 @@ const getDiff = (scope: DiffScope) =>
 const validateBranch = (name: string) =>
   Effect.try({
     try: (): BranchValidation => {
-      git('rev-parse --git-dir');
+      git(['rev-parse', '--git-dir']);
 
       const errors: string[] = [];
 
-      const refCheck = tryGit(`check-ref-format --branch ${name}`);
+      const refCheck = tryGit(['check-ref-format', '--branch', name]);
       if (refCheck == null) {
         errors.push(`invalid ref format: ${name}`);
       }
 
-      const localExists = tryGit(`rev-parse --verify refs/heads/${name}`);
+      const localExists = tryGit(['rev-parse', '--verify', `refs/heads/${name}`]);
       if (localExists != null) {
         errors.push(`branch already exists locally: ${name}`);
       }
 
-      const remoteExists = tryGit(`rev-parse --verify refs/remotes/origin/${name}`);
+      const remoteExists = tryGit(['rev-parse', '--verify', `refs/remotes/origin/${name}`]);
       if (remoteExists != null) {
         errors.push(`branch already exists on remote: ${name}`);
       }

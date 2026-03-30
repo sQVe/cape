@@ -11,8 +11,16 @@ const parseBead = (output: string, id: string): BeadData => {
   if (!Array.isArray(parsed) || parsed.length === 0) {
     throw new Error(`bead not found: ${id}`);
   }
-  const [bead] = parsed;
-  return bead;
+  const bead: unknown = parsed[0];
+  if (!isRecord(bead)) {
+    throw new Error(`invalid bead data: ${id}`);
+  }
+  return {
+    id: toStr(bead.id, ''),
+    issue_type: toStr(bead.issue_type, ''),
+    description: toStr(bead.description, ''),
+    design: typeof bead.design === 'string' ? bead.design : null,
+  };
 };
 
 const show = (id: string) =>
