@@ -40,7 +40,7 @@ const brValidate = Command.make(
       return yield* Effect.fail(new Error(errors.join(', ')));
     }
   }),
-);
+).pipe(Command.withDescription('Validate required sections of a bead by id or piped stdin. Use after creating or editing a bead to ensure it has all required fields.'));
 
 const brDesign = Command.make(
   'design',
@@ -55,7 +55,7 @@ const brDesign = Command.make(
     yield* updateDesign(id, newDesign);
     yield* Console.log(JSON.stringify({ updated: true, id }));
   }),
-);
+).pipe(Command.withDescription('Append a design section to a bead. Use during brainstorm or write-plan to attach design content.'));
 
 const brTemplate = Command.make(
   'template',
@@ -73,7 +73,7 @@ const brTemplate = Command.make(
 
     yield* Console.log(template);
   }),
-);
+).pipe(Command.withDescription('Print a blank bead template for a given type (epic, task, feature, bug). Use when creating new beads.'));
 
 const brCloseCheck = Command.make(
   'close-check',
@@ -117,8 +117,10 @@ const brCloseCheck = Command.make(
       yield* Effect.fail(new Error('close-check failed'));
     }
   }),
-);
+).pipe(Command.withDescription('Check if a bead can be closed: all subtasks done and project checks pass. Use before closing a task or epic.'));
 
 export const br = Command.make('br').pipe(
+  Command.withDescription('Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.'),
   Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck]),
 );
+

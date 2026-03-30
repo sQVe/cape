@@ -12,5 +12,6 @@ import { pr } from './commands/pr';
 import { validate } from './commands/validate';
 
 export const main = Command.make('cape').pipe(
+  Command.withDescription('Cape CLI — opinionated Claude Code workflow tools.'),
   Command.withSubcommands([br, check, commit, context, detect, epic, git, hook, pr, validate]),
 );

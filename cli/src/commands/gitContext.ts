@@ -17,4 +17,4 @@ export const gitContext = Command.make(
 
     yield* Console.log(JSON.stringify(context, null, 2));
   }),
-);
+).pipe(Command.withDescription('Output current git state: branch, status, recent commits. Use to understand repo state before commits or PRs.'));

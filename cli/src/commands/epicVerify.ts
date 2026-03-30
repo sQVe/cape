@@ -47,4 +47,4 @@ export const epicVerify = Command.make(
       yield* Effect.fail(new Error('epic verification failed'));
     }
   }),
-);
+).pipe(Command.withDescription('Check if an epic can be closed: all child tasks done and project checks pass. Use before closing an epic.'));

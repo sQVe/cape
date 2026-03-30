@@ -100,4 +100,4 @@ export const validate = Command.make(
       return yield* Effect.die(new Error(`${failed} file(s) failed validation`));
     }
   }),
-);
+).pipe(Command.withDescription('Validate skill, agent, and command markdown files for required structure. Use to check cape definition files are well-formed.'));

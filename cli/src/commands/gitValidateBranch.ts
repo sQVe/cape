@@ -23,4 +23,4 @@ export const gitValidateBranch = Command.make(
       yield* Effect.fail(new Error(result.errors.join(', ')));
     }
   }),
-);
+).pipe(Command.withDescription('Validate a branch name against naming conventions. Use before creating a new branch.'));
