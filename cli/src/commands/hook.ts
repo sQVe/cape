@@ -3,7 +3,6 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import {
   normalizeEventName,
-  postToolUseAskUserQuestion,
   postToolUseBash,
   postToolUseEdit,
   postToolUseFailureBash,
@@ -52,8 +51,6 @@ const hookRun = Command.make(
           result = yield* postToolUseBash();
         } else if (matcher === 'Edit') {
           result = yield* postToolUseEdit();
-        } else if (matcher === 'AskUserQuestion') {
-          result = yield* postToolUseAskUserQuestion();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
@@ -74,6 +71,6 @@ const hookRun = Command.make(
         break;
     }
   }),
-);
+).pipe(Command.withDescription('Execute Claude Code hook handlers for lifecycle events (SessionStart, PreToolUse, PostToolUse, etc). Called by hook configuration, not directly.'));
 
 export const hook = hookRun;

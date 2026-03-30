@@ -73,75 +73,7 @@ describe('flow 1: br show then br update with design', () => {
   });
 });
 
-describe('flow 2: PR confirmation gate with TTL', () => {
-  it('allows PR creation after user confirmation', () => {
-    const confirmStdin = JSON.stringify({
-      tool_input: {
-        questions: [{ question: 'Ready to create the PR?' }],
-        answers: { q1: 'yes' },
-      },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion'], confirmStdin, env);
-    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(true);
-
-    const prStdin = JSON.stringify({
-      tool_input: { command: 'gh pr create --title "feat: test" --body "#### Motivation\nstuff"' },
-    });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, {
-      ...env,
-      GIT_DIR: '/dev/null',
-    });
-    expect(result.status).toBe(0);
-  });
-
-  it('consumes confirmation token on PR creation', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
-
-    const prStdin = JSON.stringify({
-      tool_input: { command: 'gh pr create --title "feat: test" --body "#### Motivation\nstuff"' },
-    });
-    cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, {
-      ...env,
-      GIT_DIR: '/dev/null',
-    });
-    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(false);
-
-    const retryResult = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, {
-      ...env,
-      GIT_DIR: '/dev/null',
-    });
-    const parsed = JSON.parse(retryResult.stdout);
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
-  });
-
-  it('denies PR creation after TTL expiry', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now() - 11 * 60 * 1000));
-
-    const prStdin = JSON.stringify({
-      tool_input: { command: 'gh pr create --title "feat: test" --body "stuff"' },
-    });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], prStdin, env);
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
-    expect(parsed.hookSpecificOutput.permissionDecisionReason).toContain('expired');
-  });
-
-  it('deletes confirmation on rejection', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
-
-    const rejectStdin = JSON.stringify({
-      tool_input: {
-        questions: [{ question: 'Create the PR?' }],
-        answers: { q1: 'cancel' },
-      },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion'], rejectStdin, env);
-    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(false);
-  });
-});
-
-describe('flow 3: TDD red-green-refactor cycle', () => {
+describe('flow 2: TDD red-green-refactor cycle', () => {
   it('tracks red phase on test failure, then shows TDD reminder on Edit', () => {
     const failStdin = JSON.stringify({
       tool_input: { command: 'npx vitest run' },
@@ -183,14 +115,13 @@ describe('flow 3: TDD red-green-refactor cycle', () => {
   });
 });
 
-describe('flow 4: session-start clears stale state', () => {
+describe('flow 3: session-start clears stale state', () => {
   it('clears all context files with --clear-logs', () => {
     writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-old\n');
     writeFileSync(
       join(contextDir, 'tdd-state.json'),
       JSON.stringify({ phase: 'red', timestamp: 0 }),
     );
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), '123');
 
     const result = cape(['hook', 'session-start', '--clear-logs'], '', env);
     expect(result.status).toBe(0);
@@ -198,7 +129,6 @@ describe('flow 4: session-start clears stale state', () => {
     const brLog = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
     expect(brLog).toBe('');
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
-    expect(existsSync(join(contextDir, 'pr-confirmed.txt'))).toBe(true);
   });
 
   it('produces additionalContext output', () => {
@@ -210,7 +140,7 @@ describe('flow 4: session-start clears stale state', () => {
   });
 });
 
-describe('flow 5: full commit pipeline', () => {
+describe('flow 4: full commit pipeline', () => {
   let repoDir: string;
 
   beforeEach(() => {

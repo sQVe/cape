@@ -21,7 +21,6 @@ import {
   isTestCommand,
   isTestFile,
   normalizeEventName,
-  postToolUseAskUserQuestion,
   postToolUseBash,
   postToolUseEdit,
   postToolUseFailureBash,
@@ -700,7 +699,6 @@ describe('checkPrCreationGuards', () => {
         'symbolic-ref': 'refs/remotes/origin/main',
         status: null,
       },
-      files: { '/test/hooks/context/pr-confirmed.txt': String(Date.now()) },
     });
     const violations = await Effect.runPromise(
       checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
@@ -715,7 +713,6 @@ describe('checkPrCreationGuards', () => {
         'symbolic-ref': 'refs/remotes/origin/main',
         status: 'M file.ts',
       },
-      files: { '/test/hooks/context/pr-confirmed.txt': String(Date.now()) },
     });
     const violations = await Effect.runPromise(
       checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
@@ -723,52 +720,18 @@ describe('checkPrCreationGuards', () => {
     expect(violations.some((v) => v.includes('Uncommitted changes'))).toBe(true);
   });
 
-  it('denies PR without confirmation file', async () => {
+  it('allows PR on feature branch with clean status', async () => {
     const layer = makeStubHookLayer({
       gitResponses: {
         'rev-parse': 'feature-branch',
         'symbolic-ref': 'refs/remotes/origin/main',
         status: '',
       },
-    });
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
-    );
-    expect(violations.some((v) => v.includes('user confirmation'))).toBe(true);
-  });
-
-  it('denies PR with expired confirmation', async () => {
-    const expiredTimestamp = String(Date.now() - 11 * 60 * 1000);
-    const layer = makeStubHookLayer({
-      gitResponses: {
-        'rev-parse': 'feature-branch',
-        'symbolic-ref': 'refs/remotes/origin/main',
-        status: '',
-      },
-      files: { '/test/hooks/context/pr-confirmed.txt': expiredTimestamp },
-    });
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
-    );
-    expect(violations.some((v) => v.includes('expired'))).toBe(true);
-  });
-
-  it('allows PR with valid confirmation on feature branch', async () => {
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      gitResponses: {
-        'rev-parse': 'feature-branch',
-        'symbolic-ref': 'refs/remotes/origin/main',
-        status: '',
-      },
-      files: { '/test/hooks/context/pr-confirmed.txt': String(Date.now()) },
-      removedFiles,
     });
     const violations = await Effect.runPromise(
       checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
     );
     expect(violations).toHaveLength(0);
-    expect(removedFiles).toContain('/test/hooks/context/pr-confirmed.txt');
   });
 
   it('returns empty for non-PR commands', async () => {
@@ -1216,11 +1179,6 @@ describe('isTestCommand', () => {
 const editStdin = (filePath: string) =>
   JSON.stringify({ tool_input: { file_path: filePath, old_string: 'old', new_string: 'new' } });
 
-const prQuestionStdin = (
-  questions: { question: string }[],
-  answers: Record<string, string>,
-) => JSON.stringify({ tool_input: { questions, answers } });
-
 describe('postToolUseBash', () => {
   it('tracks br show command by writing bead ID to br-show-log.txt', async () => {
     const writtenFiles: Record<string, string> = {};
@@ -1447,125 +1405,6 @@ describe('postToolUseEdit', () => {
   });
 });
 
-describe('postToolUseAskUserQuestion', () => {
-  it('writes pr-confirmed.txt on PR confirmation', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Ready to create the PR?' }],
-        { q1: 'Yes, create the PR' },
-      ),
-      writtenFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(writtenFiles['/test/hooks/context/pr-confirmed.txt']).toBeDefined();
-    const timestamp = Number.parseInt(writtenFiles['/test/hooks/context/pr-confirmed.txt'] ?? '');
-    expect(Number.isNaN(timestamp)).toBe(false);
-  });
-
-  it('deletes pr-confirmed.txt on PR rejection', async () => {
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Ready to create the PR?' }],
-        { q1: 'cancel' },
-      ),
-      removedFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/pr-confirmed.txt');
-  });
-
-  it('deletes pr-confirmed.txt on abort', async () => {
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Create pull request?' }],
-        { q1: 'abort' },
-      ),
-      removedFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/pr-confirmed.txt');
-  });
-
-  it('deletes pr-confirmed.txt on edit', async () => {
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Create pull request?' }],
-        { q1: 'edit the description' },
-      ),
-      removedFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/pr-confirmed.txt');
-  });
-
-  it('deletes pr-confirmed.txt when no answers provided', async () => {
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin([{ question: 'Create the PR?' }], {}),
-      removedFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/pr-confirmed.txt');
-  });
-
-  it('ignores non-PR questions', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'What color is the sky?' }],
-        { q1: 'blue' },
-      ),
-      writtenFiles,
-      removedFiles,
-    });
-    const result = await Effect.runPromise(
-      postToolUseAskUserQuestion().pipe(Effect.provide(layer)),
-    );
-    expect(result).toBeNull();
-    expect(Object.keys(writtenFiles)).toHaveLength(0);
-    expect(removedFiles).toHaveLength(0);
-  });
-
-  it('detects pull request keyword in question', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Ready to submit this pull request?' }],
-        { q1: 'Yes' },
-      ),
-      writtenFiles,
-    });
-    await Effect.runPromise(postToolUseAskUserQuestion().pipe(Effect.provide(layer)));
-    expect(writtenFiles['/test/hooks/context/pr-confirmed.txt']).toBeDefined();
-  });
-
-  it('returns null on invalid JSON', async () => {
-    const layer = makeStubHookLayer({ stdin: 'not json' });
-    const result = await Effect.runPromise(
-      postToolUseAskUserQuestion().pipe(Effect.provide(layer)),
-    );
-    expect(result).toBeNull();
-  });
-
-  it('returns null when questions field is missing', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ tool_input: {} }),
-      writtenFiles,
-    });
-    const result = await Effect.runPromise(
-      postToolUseAskUserQuestion().pipe(Effect.provide(layer)),
-    );
-    expect(result).toBeNull();
-    expect(Object.keys(writtenFiles)).toHaveLength(0);
-  });
-});
-
 describe('postToolUseFailureBash', () => {
   it('writes tdd-state.json with red phase for test commands', async () => {
     const writtenFiles: Record<string, string> = {};
@@ -1665,26 +1504,6 @@ describe('hook command - PostToolUse wiring', () => {
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result.additionalContext).toContain('TDD reminder');
-    consoleSpy.mockRestore();
-  });
-
-  it('routes post-tool-use --matcher AskUserQuestion without output', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const hookLayer = makeStubHookLayer({
-      stdin: prQuestionStdin(
-        [{ question: 'Create PR?' }],
-        { q1: 'Yes' },
-      ),
-      writtenFiles,
-    });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    await Effect.runPromise(
-      run(['hook', 'post-tool-use', '--matcher', 'AskUserQuestion']).pipe(
-        Effect.provide(makeCommandLayers(hookLayer)),
-      ),
-    );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
-    expect(writtenFiles['/test/hooks/context/pr-confirmed.txt']).toBeDefined();
     consoleSpy.mockRestore();
   });
 

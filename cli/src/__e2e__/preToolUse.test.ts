@@ -316,7 +316,6 @@ describe('gh pr create body rules', () => {
   });
 
   it('allows valid template headers', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('gh pr create --body "#### Motivation\nstuff"'),
@@ -343,8 +342,6 @@ describe('gh pr create from default branch', () => {
   });
 
   it('denies PR creation from default branch', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
-
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('gh pr create --title "feat: test" --body "#### Motivation\nstuff"'),
@@ -413,36 +410,6 @@ describe('br show requirement', () => {
 });
 
 describe('PR creation sub-guards', () => {
-  it('denies when pr-confirmed.txt is missing', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "stuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
-    );
-    expectDeny(result, 'confirmation');
-  });
-
-  it('denies when pr-confirmed.txt has expired timestamp', () => {
-    const elevenMinutesAgo = Date.now() - 11 * 60 * 1000;
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(elevenMinutesAgo));
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "stuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
-    );
-    expectDeny(result, 'expired');
-  });
-
-  it('denies when pr-confirmed.txt has corrupted content', () => {
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), 'not-a-number-garbage');
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "stuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
-    );
-    expectDeny(result, 'expired');
-  });
-
   it('denies when there are uncommitted changes', () => {
     const repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-dirty-XXXXXX')], {
       encoding: 'utf-8',
@@ -451,7 +418,6 @@ describe('PR creation sub-guards', () => {
     execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feature']);
     execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
     writeFileSync(join(repoDir, 'dirty.txt'), 'uncommitted');
-    writeFileSync(join(contextDir, 'pr-confirmed.txt'), String(Date.now()));
 
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],

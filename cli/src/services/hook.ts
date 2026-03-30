@@ -396,7 +396,6 @@ export const checkPrCreationGuards = (command: string) =>
 
     const violations: string[] = [];
     const service = yield* HookService;
-    const root = service.pluginRoot();
 
     const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
     if (branch != null) {
@@ -410,24 +409,6 @@ export const checkPrCreationGuards = (command: string) =>
     const status = yield* service.spawnGit(['status', '--short']);
     if (status != null && status !== '') {
       violations.push('Uncommitted changes detected. Commit changes before creating a PR.');
-    }
-
-    const confirmationContent = yield* service.readFile(`${root}/hooks/context/pr-confirmed.txt`);
-    if (confirmationContent == null) {
-      violations.push(
-        'PR creation requires user confirmation. ' +
-          'Load cape:pr, present the description, and get user approval before creating the PR.',
-      );
-    } else {
-      const timestamp = Number.parseInt(confirmationContent.trim());
-      if (Number.isNaN(timestamp) || Date.now() - timestamp > 10 * 60 * 1000) {
-        violations.push(
-          'PR creation requires user confirmation. ' +
-            'The cape:pr skill must present the description and call AskUserQuestion ' +
-            'before running gh pr create. Confirmation has expired or is missing.',
-        );
-      }
-      yield* service.removeFile(`${root}/hooks/context/pr-confirmed.txt`);
     }
 
     return violations;
@@ -642,23 +623,6 @@ const parseFilePath = (input: string): string | null => {
   }
 };
 
-interface PrConfirmationInput {
-  questions: { question?: string }[];
-  answers: Record<string, string>;
-}
-
-const parsePrConfirmationInput = (input: string): PrConfirmationInput | null => {
-  try {
-    const data = JSON.parse(input);
-    const questions = data.tool_input?.questions;
-    return {
-      questions: Array.isArray(questions) ? questions : [],
-      answers: data.tool_input?.answers ?? {},
-    };
-  } catch {
-    return null;
-  }
-};
 
 export const postToolUseBash = () =>
   Effect.gen(function* () {
@@ -735,38 +699,6 @@ export const postToolUseEdit = () =>
     };
   });
 
-export const postToolUseAskUserQuestion = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const input = yield* service.readStdin();
-    const parsed = parsePrConfirmationInput(input);
-    if (!parsed) {
-      return null;
-    }
-
-    const isPrQuestion = parsed.questions.some((q) =>
-      /\bpr\b|pull request/i.test(q.question ?? ''),
-    );
-    if (!isPrQuestion) {
-      return null;
-    }
-
-    const answers = Object.values(parsed.answers);
-    const rejected = answers.some((a) => /cancel|abort|edit|revise/i.test(a));
-    const confirmed = answers.length > 0 && !rejected;
-
-    const root = service.pluginRoot();
-    const contextPath = `${root}/hooks/context`;
-    yield* service.ensureDir(contextPath);
-
-    if (confirmed) {
-      yield* service.writeFile(`${contextPath}/pr-confirmed.txt`, String(Date.now()));
-    } else {
-      yield* service.removeFile(`${contextPath}/pr-confirmed.txt`);
-    }
-
-    return null;
-  });
 
 export const postToolUseFailureBash = () =>
   Effect.gen(function* () {
