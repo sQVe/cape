@@ -14,7 +14,7 @@ test plan. Detects repo PR templates, validates the branch, runs automatable tes
 creates the PR via `gh`. The test plan acts as a gate — all checkboxes must pass before the PR is
 created. </skill_overview>
 
-<rigidity_level> HIGH RIGIDITY — Follow the process exactly as written. Every step must execute in
+<rigidity_level> LOW FREEDOM — Follow the process exactly as written. Every step must execute in
 order. Gates are non-negotiable. The description format comes from the detected template or the
 bundled template — never invent sections. </rigidity_level>
 

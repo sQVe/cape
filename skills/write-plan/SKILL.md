@@ -119,7 +119,7 @@ slice is independently demonstrable.
 
 ```bash
 br create "Task 1: [Specific deliverable]" \
-  --type feature \
+  --type task \
   --priority [match epic] \
   --parent [epic-id] \
   --labels "[hitl or afk]" \

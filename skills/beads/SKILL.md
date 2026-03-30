@@ -287,7 +287,6 @@ makes findings trackable, prioritizable, and closeable.
 | `review`         | `bug` or `task` | "Bug: XSS in user input rendering"            |
 | `debug-issue`    | `bug`           | "Bug: Race condition in session cleanup"      |
 | `fix-bug`        | `bug`           | "Bug: Off-by-one in pagination offset"        |
-| `lint`           | `task`          | "Fix eslint violations in auth module"        |
 
 ### Conventions for skill-created issues
 

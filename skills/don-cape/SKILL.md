@@ -63,16 +63,16 @@ If nothing matches, proceed without a skill.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                        | Dispatched by                                                                                                      | Purpose                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                               | Trace execution backward from errors to root cause                           |
-| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug, refactor                                                                       | Review implementation against plan and standards                             |
-| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, refactor, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge | Explore codebase structure, find patterns, verify assumptions                |
-| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                          | Verify claims and assumptions against codebase evidence                      |
-| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug                                                                                   | Research external APIs, libraries, community practices                       |
-| `cape:notebox-researcher`    | brainstorm, debug-issue, task-refinement                                                                           | Surface past decisions and research from notes                               |
-| `cape:test-auditor`          | analyze-tests                                                                                                      | Audit test quality for tautological tests, weak assertions, missing coverage |
-| `cape:test-runner`           | test-driven-development, finish-epic, refactor                                                                     | Run tests and hooks without polluting context                                |
+| Agent                        | Dispatched by                                                                                                                           | Purpose                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                                                    | Trace execution backward from errors to root cause                           |
+| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug, refactor                                                                                            | Review implementation against plan and standards                             |
+| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, refactor, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge, design-an-interface | Explore codebase structure, find patterns, verify assumptions                |
+| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                                               | Verify claims and assumptions against codebase evidence                      |
+| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug, design-an-interface                                                                                   | Research external APIs, libraries, community practices                       |
+| `cape:notebox-researcher`    | task-refinement                                                                                                                         | Surface past decisions and research from notes                               |
+| `cape:test-auditor`          | analyze-tests                                                                                                                           | Audit test quality for tautological tests, weak assertions, missing coverage |
+| `cape:test-runner`           | test-driven-development, finish-epic, refactor                                                                                          | Run tests and hooks without polluting context                                |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.

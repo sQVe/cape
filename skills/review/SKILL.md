@@ -17,7 +17,7 @@ The graph gives this skill something raw diffs can't: who calls what you changed
 this behaves differently, and which functions have no tests. One structurally-aware reviewer finds
 more than three blind ones. </skill_overview>
 
-<rigidity_level> HIGH RIGIDITY — The process order (scope → graph → review → report → follow-up) is
+<rigidity_level> LOW FREEDOM — The process order (scope → graph → review → report → follow-up) is
 fixed. The report format (verdict first, grouped by file, severity-tagged findings) is
 non-negotiable. Depth adapts to change size. </rigidity_level>
 

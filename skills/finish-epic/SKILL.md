@@ -55,7 +55,7 @@ cape epic verify <epic-id>
 
 Run three additional verification passes. All must pass before closing.
 
-### 2b: Success criteria audit
+### 2a: Success criteria audit
 
 Read the epic's success criteria. For each criterion, find concrete evidence that it's met — test
 output, file existence, behavior you can demonstrate.
@@ -74,14 +74,14 @@ If any criterion is not met, report what's missing and stop. The user can create
 `br create` and load `cape:execute-plan` with the Skill tool to address the gap before retrying
 finish-epic.
 
-### 2c: Code review
+### 2b: Code review
 
 Dispatch `cape:code-reviewer` with the epic ID and the full branch diff. Pass only the contract
 (requirements, anti-patterns, success criteria) — not task implementation notes. The reviewer judges
 what was built against what was required, not what was intended. Address any critical findings
 before proceeding.
 
-### 2d: Manual verification
+### 2c: Manual verification
 
 If the epic specifies manual verification steps (e.g., "run the app and confirm X works", "verify
 the CLI outputs Y"), execute them and record the results.

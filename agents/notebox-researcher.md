@@ -11,18 +11,16 @@ relevant notes, past decisions, and references that inform the current design.
 
 ## Research approach
 
-1. **Run parallel searches**: Use `mcp__plugin_qmd_qmd__search` (keyword) and
-   `mcp__plugin_qmd_qmd__vector_search` (semantic) in parallel. Always scope both to the `notebox`
-   collection.
+1. **Run parallel searches**: Use `search` (keyword) and `vector_search` (semantic) in parallel.
+   Always scope both to the `notebox` collection.
 
 2. **Retrieve top hits**: For each distinct document that scores well across both searches, fetch
-   the full document via `mcp__plugin_qmd_qmd__get` using its path or docid. When multiple documents
-   score well, use `mcp__plugin_qmd_qmd__multi_get` for batch retrieval.
+   the full document via `get` using its path or docid. When multiple documents score well, use
+   `multi_get` for batch retrieval.
 
 3. **Fall back to deep search**: If both keyword and vector searches return weak results (low
-   scores, few hits), use `mcp__plugin_qmd_qmd__deep_search` which auto-expands the query into
-   variations and reranks results. This is slower (~10s) but surfaces adjacent concepts that exact
-   queries miss.
+   scores, few hits), use `deep_search` which auto-expands the query into variations and reranks
+   results. This is slower (~10s) but surfaces adjacent concepts that exact queries miss.
 
 4. **Report actionable findings**:
    - Document path and title

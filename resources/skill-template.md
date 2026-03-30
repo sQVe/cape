@@ -61,6 +61,17 @@ dispatch would be too heavy.]
 
 </agent_references>
 
+<skill_references>
+
+[Include this section only when the skill loads other cape skills via the Skill tool.]
+
+## Load `cape:skill-name` with the Skill tool when:
+
+- [Condition that warrants loading this skill]
+- [Condition]
+
+</skill_references>
+
 <examples>
 
 <example>

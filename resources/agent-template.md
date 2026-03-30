@@ -1,7 +1,7 @@
 ---
 name: agent-name
 description: Use this agent when [situation requiring this agent's expertise].
-model: haiku
+model: sonnet
 ---
 
 You are a [Role Name]. Your role is to [one sentence describing what the agent does and why].
