@@ -131,10 +131,10 @@ br create "Task 1: [Specific deliverable]" \
 [HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
 
 ## Behaviors
-[Each behavior is one TDD cycle. List them in implementation order.]
-- [Behavior 1: "returns error when input is empty"]
-- [Behavior 2: "parses valid input into sections"]
-- ...
+[Sequential — each becomes exactly one RED-GREEN-REFACTOR cycle. Never test or implement more than one at a time.]
+1. [Behavior 1: "returns error when input is empty"]
+2. [Behavior 2: "parses valid input into sections"]
+...
 
 ## References
 [Point to 1-3 similar implementations or patterns: file:line]

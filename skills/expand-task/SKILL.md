@@ -85,9 +85,9 @@ from the task description or your imagination.
 
 ## Step 3: Produce the expanded plan
 
-Build a step-by-step plan where each step is a logical unit of work — small enough to verify
-independently, large enough to be meaningful. Each step maps to one TDD cycle. The step defines WHAT
-behavior to add; TDD decides HOW to test it.
+Build a step-by-step plan where each step is exactly one TDD cycle — one behavior, one failing test,
+one implementation pass. Map each behavior from the task's `## Behaviors` section to its own step.
+The step defines WHAT behavior to add; TDD decides HOW to test it.
 
 **Calibrate granularity to complexity:**
 

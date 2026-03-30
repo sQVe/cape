@@ -48,13 +48,20 @@ naming, assertion style, describe/it structure, helper patterns.
 
 ## Step 1: RED — Write a failing test
 
-Write one test that describes the next behavior you need. The test should:
+Write exactly one `it()`/`test()` block for the next behavior. Not two. Not "all the obvious ones."
+One. When creating a new test file, write the `describe` scaffold and one `it()` block inside it.
+When adding to an existing test file, add one `it()` block.
+
+The test should:
 
 - Target a single, specific behavior
 - Read as a behavioral sentence ("returns error when input is empty")
 - Assert the expected outcome, not implementation details
 
-Dispatch `cape:test-runner` to run the test. It must fail. Inspect the failure output carefully:
+**STOP writing test code.** Dispatch `cape:test-runner` immediately. Do not write another `it()`
+block, a test helper for a future behavior, or any production code. The test runner is the gate.
+
+The test must fail. Inspect the failure output carefully:
 
 - **Right failure:** The assertion fires because the behavior does not exist yet. The test runs,
   reaches the assertion, and the assertion fails. This is what you want.
@@ -181,46 +188,40 @@ The failing test is the proof that the bug existed. The passing test is the proo
 works. </example>
 
 <example>
-<scenario>Implementing three validation behaviors from an expanded plan</scenario>
+<scenario>Creating a new test file for a module with multiple behaviors</scenario>
 
 **Wrong (batching — the most common failure mode):**
 
-```
-Write test: "returns false for empty string"
-Write test: "returns true for valid email"
-Write test: "returns false for missing domain"
-— run tests — all three fail (function missing)
-— implement validateEmail with full regex
-— run tests — all three pass
-```
+Write tool creates a test file with all foreseeable tests at once:
 
-All three tests were written before any production code. No test ever proved it could detect the
-absence of a single behavior — they all failed together for the same reason (function missing). The
-RED phase was meaningless.
-
-**Right (one cycle at a time):**
-
-```
-Cycle 1:
-  RED:      Write test: "returns false for empty string" → STOP → run → fails
-  GREEN:    Create validateEmail, return false → run → passes
-  REFACTOR: Nothing to improve yet
-
-Only now read the next step.
-
-Cycle 2:
-  RED:      Write test: "returns true for valid email" → STOP → run → fails (always returns false)
-  GREEN:    Add regex check → run → passes
-  REFACTOR: Extract regex to named constant
-
-Cycle 3:
-  RED:      Write test: "returns false for missing domain" → STOP → run → fails
-  GREEN:    Tighten regex → run → passes
-  REFACTOR: Simplify regex, consolidate test setup
+```typescript
+describe('buildItems', () => {
+  it('returns empty array for no input', () => { ... });
+  it('produces header followed by rows', () => { ... });
+  it('interleaves headers between groups', () => { ... });
+  it('preserves data in row items', () => { ... });
+  it('handles edge case X', () => { ... });
+});
 ```
 
-The word STOP is literal. After writing one test, dispatch the test runner. That is the gate.
-</example>
+All five tests fail together because the module doesn't exist. RED is meaningless — no single test
+proved it detects the absence of one behavior.
+
+**Right — cycle 1 creates the file with one `it()` block:**
+
+```typescript
+describe("buildItems", () => {
+  it("returns empty array for no input", () => {
+    expect(buildItems([])).toEqual([]);
+  });
+});
+```
+
+STOP. Run the test. It fails (module missing). Write the module with `return []`. Test passes.
+Refactor if needed. Only then write the second `it()` block via Edit.
+
+Each cycle adds one `it()` block to the existing file. The file grows incrementally, not all at
+once. </example>
 
 </examples>
 
@@ -242,17 +243,15 @@ The word STOP is literal. After writing one test, dispatch the test runner. That
 
 <critical_rules>
 
-1. **Never write production code without a failing test.** If you catch yourself writing code first,
+1. **Exactly one new `it()`/`test()` block per Write/Edit call.** Count the new test cases in what
+   you are about to write. If the count is not 1, delete extras before saving. This is the single
+   most important rule — every other TDD benefit depends on it.
+2. **Never write production code without a failing test.** If you catch yourself writing code first,
    stop, delete it, and write the test.
-2. **The test must fail for the right reason.** A compile error or import failure is not a valid RED
+3. **The test must fail for the right reason.** A compile error or import failure is not a valid RED
    state. The assertion itself must fire and fail.
-3. **Run tests after every phase.** RED: test fails. GREEN: test passes, full suite passes.
+4. **Run tests after every phase.** RED: test fails. GREEN: test passes, full suite passes.
    REFACTOR: full suite passes. No exceptions.
-4. **One behavior per cycle — mechanically enforced.** After writing test code, your immediate next
-   action is dispatching `cape:test-runner`. You must not write a second test, add a test helper for
-   a future behavior, or touch production code until the test runner has reported back. If you find
-   yourself writing two `it()`/`test()` blocks before running anything, you are batching — stop,
-   delete everything after the first test, and run it.
 5. **Stop if there is no test infrastructure.** Do not create test frameworks, runners, or
    configuration. Inform the user and let them set it up.
 6. **Do not skip the refactor phase.** Look at the code. If nothing needs improvement, that is fine
@@ -264,24 +263,14 @@ The word STOP is literal. After writing one test, dispatch the test runner. That
 
 ## The batching failure mode
 
-When a multi-step plan is visible (from expand-task or your own mental plan), the strongest pull is
-to write all tests for all steps, then implement them together. This destroys the RED-GREEN-REFACTOR
-cycle even when each test individually looks correct.
+The strongest pull is to write all foreseeable tests at once — especially when creating a new test
+file or when a multi-step plan is visible. This destroys TDD even when each test looks correct.
 
-**How to detect you are batching:**
+**Self-check before every Write/Edit of test code:** Count the new `it()`/`test()` blocks. If > 1,
+delete extras. A new test file with a `describe` and five `it()` blocks is batching. A new test file
+with a `describe` and one `it()` block is correct.
 
-- You are writing a second `it()` / `test()` block before the first one has been run
-- You are thinking about Step 2's test while still in Step 1
-- You have written test descriptions (even as comments) for behaviors you haven't cycled through yet
-- Your test file has multiple new test cases and none of them have been executed
-
-**The single-test gate:** After writing any test code, your next action MUST be dispatching
-`cape:test-runner`. No exceptions. Do not write a second test. Do not write a helper for a future
-test. Do not write production code. Run the test.
-
-**Plan tunnel vision:** When a multi-step plan exists, treat every step except the current one as
-invisible. Do not read ahead. Do not pre-plan test names for future steps. The next step's test must
-emerge from the code's state after the current step is complete, not from a plan written before
-implementation began.
+**Plan tunnel vision:** Treat every expanded-plan step except the current one as invisible. The next
+test emerges from code state after the current cycle completes, not from a plan.
 
 </anti_batching>
