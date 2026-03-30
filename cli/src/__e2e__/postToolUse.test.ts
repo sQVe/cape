@@ -187,11 +187,7 @@ describe('PostToolUse/Bash', () => {
   });
 
   it('handles malformed JSON input gracefully', () => {
-    const result = cape(
-      ['hook', 'post-tool-use', '--matcher', 'Bash'],
-      'not json',
-      env,
-    );
+    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], 'not json', env);
     expect(result.status).toBe(0);
     expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
@@ -406,21 +402,13 @@ describe('PostToolUseFailure/Bash', () => {
     const commands = ['npx vitest run', 'ls /nonexistent', 'cargo test'];
     for (const command of commands) {
       const stdin = JSON.stringify({ tool_input: { command } });
-      const result = cape(
-        ['hook', 'post-tool-use-failure', '--matcher', 'Bash'],
-        stdin,
-        env,
-      );
+      const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
       expect(result.stdout).toBe('');
     }
   });
 
   it('handles malformed JSON input gracefully', () => {
-    const result = cape(
-      ['hook', 'post-tool-use-failure', '--matcher', 'Bash'],
-      'not json',
-      env,
-    );
+    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], 'not json', env);
     expect(result.status).toBe(0);
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
   });
@@ -464,7 +452,6 @@ describe('context directory creation', () => {
     expect(existsSync(contextDir)).toBe(true);
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(true);
   });
-
 });
 
 describe('TDD state transitions', () => {

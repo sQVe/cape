@@ -6,7 +6,24 @@ export default defineConfig({
     '*.{json,md,yaml,yml,css}': 'prettier --write',
   },
   test: {
-    include: ['cli/src/**/*.test.ts', 'skills/**/*.test.ts'],
-    exclude: ['hooks/**', 'scripts/**', 'node_modules/**'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: ['cli/src/**/*.test.ts', 'skills/**/*.test.ts'],
+          exclude: ['cli/src/__e2e__/**', 'hooks/**', 'scripts/**', 'node_modules/**'],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'e2e',
+          include: ['cli/src/__e2e__/**/*.test.ts'],
+          testTimeout: 15_000,
+          fileParallelism: false,
+        },
+      },
+    ],
   },
 });

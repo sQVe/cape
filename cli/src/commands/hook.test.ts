@@ -825,17 +825,14 @@ describe('preToolUseBash', () => {
 });
 
 describe('preToolUseSkill', () => {
-  it.each([
-    'cape:commit',
-    'cape:review',
-    'cape:beads',
-    'cape:branch',
-    'cape:brainstorm',
-  ])('allows non-gated skill %s', async (skill) => {
-    const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
+  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:branch', 'cape:brainstorm'])(
+    'allows non-gated skill %s',
+    async (skill) => {
+      const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
+      const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    },
+  );
 
   it('passes through on invalid JSON', async () => {
     const layer = makeStubHookLayer({ stdin: 'not json' });
@@ -1168,12 +1165,9 @@ describe('isTestCommand', () => {
     expect(isTestCommand(cmd)).toBe(true);
   });
 
-  it.each(['echo hello', 'git status', 'npm install', 'bun run build'])(
-    'rejects "%s"',
-    (cmd) => {
-      expect(isTestCommand(cmd)).toBe(false);
-    },
-  );
+  it.each(['echo hello', 'git status', 'npm install', 'bun run build'])('rejects "%s"', (cmd) => {
+    expect(isTestCommand(cmd)).toBe(false);
+  });
 });
 
 const editStdin = (filePath: string) =>

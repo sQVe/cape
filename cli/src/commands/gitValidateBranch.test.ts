@@ -69,18 +69,14 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
 describe('git validate-branch command', () => {
   it('is wired as a subcommand of cape git', async () => {
     await Effect.runPromise(
-      run(['git', 'validate-branch', '--help']).pipe(
-        Effect.provide(testLayers(makeGitLayer())),
-      ),
+      run(['git', 'validate-branch', '--help']).pipe(Effect.provide(testLayers(makeGitLayer()))),
     );
   });
 
   it('passes branch name argument to service', async () => {
     const { layer, getCaptured } = makeCapturingLayer();
     await Effect.runPromise(
-      run(['git', 'validate-branch', 'feat/my-feature']).pipe(
-        Effect.provide(testLayers(layer)),
-      ),
+      run(['git', 'validate-branch', 'feat/my-feature']).pipe(Effect.provide(testLayers(layer))),
     );
     expect(getCaptured()).toBe('feat/my-feature');
   });

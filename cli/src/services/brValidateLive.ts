@@ -45,11 +45,9 @@ const readStdin = () =>
       error instanceof Error ? error : new Error('failed to read stdin', { cause: error }),
   });
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  v != null && typeof v === 'object';
+const isRecord = (v: unknown): v is Record<string, unknown> => v != null && typeof v === 'object';
 
-const toStr = (v: unknown, fallback: string): string =>
-  typeof v === 'string' ? v : fallback;
+const toStr = (v: unknown, fallback: string): string => (typeof v === 'string' ? v : fallback);
 
 const listChildren = (id: string) =>
   Effect.try({

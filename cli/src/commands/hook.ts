@@ -71,6 +71,10 @@ const hookRun = Command.make(
         break;
     }
   }),
-).pipe(Command.withDescription('Execute Claude Code hook handlers for lifecycle events (SessionStart, PreToolUse, PostToolUse, etc). Called by hook configuration, not directly.'));
+).pipe(
+  Command.withDescription(
+    'Execute Claude Code hook handlers for lifecycle events (SessionStart, PreToolUse, PostToolUse, etc). Called by hook configuration, not directly.',
+  ),
+);
 
 export const hook = hookRun;

@@ -105,9 +105,7 @@ describe('epic verify command', () => {
 
   it('returns verified:false when checks fail', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const children: ChildStatus[] = [
-      { id: 'test.1', title: 'Task 1', status: 'closed' },
-    ];
+    const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'closed' }];
     const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
     await expect(
       Effect.runPromise(

@@ -228,9 +228,7 @@ describe('pr validate command', () => {
   it('rejects when neither file nor --stdin provided', async () => {
     const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(
-      Effect.runPromise(
-        run(['pr', 'validate']).pipe(Effect.provide(makeCommandLayers())),
-      ),
+      Effect.runPromise(run(['pr', 'validate']).pipe(Effect.provide(makeCommandLayers()))),
     ).rejects.toThrow('provide <file> or --stdin');
     stderrSpy.mockRestore();
   });

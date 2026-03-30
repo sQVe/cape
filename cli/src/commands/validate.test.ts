@@ -214,7 +214,9 @@ describe('validateCommandContent', () => {
   it('detects missing skill reference', () => {
     const content = '---\ndescription: test\n---\nSome body without skill ref.';
     const result = validateCommandContent('test.md', content);
-    expect(result.errors).toContain("Body must reference a skill (expected 'Use the cape:' pattern)");
+    expect(result.errors).toContain(
+      "Body must reference a skill (expected 'Use the cape:' pattern)",
+    );
   });
 });
 
@@ -265,9 +267,7 @@ const makeCommandLayers = (validateLayer = makeTestValidateLayer()) =>
 
 describe('validate command wiring', () => {
   it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(
-      run(['validate', '--help']).pipe(Effect.provide(makeCommandLayers())),
-    );
+    await Effect.runPromise(run(['validate', '--help']).pipe(Effect.provide(makeCommandLayers())));
   });
 
   it('validates all types with no args', async () => {

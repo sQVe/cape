@@ -98,9 +98,7 @@ describe('git diff command', () => {
 
   it('passes branch scope to service', async () => {
     const { layer, getCaptured } = makeScopeCapturingLayer();
-    await Effect.runPromise(
-      run(['git', 'diff', 'branch']).pipe(Effect.provide(testLayers(layer))),
-    );
+    await Effect.runPromise(run(['git', 'diff', 'branch']).pipe(Effect.provide(testLayers(layer))));
     expect(getCaptured()).toBe('branch');
   });
 

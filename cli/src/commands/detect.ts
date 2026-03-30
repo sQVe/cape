@@ -32,4 +32,8 @@ export const detect = Command.make(
 
     yield* Console.log(JSON.stringify(results, null, 2));
   }),
-).pipe(Command.withDescription('Detect project ecosystems and their check commands. Use to discover what languages, frameworks, and tools are present.'));
+).pipe(
+  Command.withDescription(
+    'Detect project ecosystems and their check commands. Use to discover what languages, frameworks, and tools are present.',
+  ),
+);

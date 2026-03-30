@@ -17,7 +17,9 @@ import {
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const makeTestLayers = (overrides: { writtenFiles?: Record<string, string>; removedFiles?: string[] } = {}) => {
+const makeTestLayers = (
+  overrides: { writtenFiles?: Record<string, string>; removedFiles?: string[] } = {},
+) => {
   const { writtenFiles = {}, removedFiles = [] } = overrides;
   const hookLayer = Layer.succeed(HookService)({
     pluginRoot: () => '/test',
@@ -53,7 +55,9 @@ describe('context set', () => {
   it('writes context file to hooks/context/<name>.txt', async () => {
     const writtenFiles: Record<string, string> = {};
     await Effect.runPromise(
-      run(['context', 'set', 'brainstorm-summary']).pipe(Effect.provide(makeTestLayers({ writtenFiles }))),
+      run(['context', 'set', 'brainstorm-summary']).pipe(
+        Effect.provide(makeTestLayers({ writtenFiles })),
+      ),
     );
     expect(writtenFiles['/test/hooks/context/brainstorm-summary.txt']).toBe('true');
   });
@@ -63,7 +67,9 @@ describe('context clear', () => {
   it('removes context file at hooks/context/<name>.txt', async () => {
     const removedFiles: string[] = [];
     await Effect.runPromise(
-      run(['context', 'clear', 'brainstorm-summary']).pipe(Effect.provide(makeTestLayers({ removedFiles }))),
+      run(['context', 'clear', 'brainstorm-summary']).pipe(
+        Effect.provide(makeTestLayers({ removedFiles })),
+      ),
     );
     expect(removedFiles).toContain('/test/hooks/context/brainstorm-summary.txt');
   });

@@ -25,11 +25,9 @@ const cape = (
   };
 };
 
-const bashInput = (command: string) =>
-  JSON.stringify({ tool_input: { command } });
+const bashInput = (command: string) => JSON.stringify({ tool_input: { command } });
 
-const skillInput = (skill: string) =>
-  JSON.stringify({ tool_input: { skill } });
+const skillInput = (skill: string) => JSON.stringify({ tool_input: { skill } });
 
 const expectDeny = (result: { stdout: string; status: number }, reasonSubstring: string) => {
   expect(result.status).toBe(0);
@@ -233,11 +231,7 @@ describe('br update status guards', () => {
 
 describe('git bulk staging guards', () => {
   it('denies git add .', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git add .'),
-      env,
-    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], bashInput('git add .'), env);
     expectDeny(result, 'git add .');
   });
 
@@ -366,11 +360,7 @@ describe('br close stop-reinforcement', () => {
   });
 
   it('produces additionalContext for br close without arguments', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br close'),
-      env,
-    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], bashInput('br close'), env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.additionalContext).toContain('STOP');
@@ -439,11 +429,7 @@ describe('skill gate: non-gated skills pass through', () => {
     'cape:pr',
     'cape:refactor',
   ])('allows non-gated skill %s', (skill) => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
-      skillInput(skill),
-      env,
-    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput(skill), env);
     expectPassThrough(result);
   });
 });

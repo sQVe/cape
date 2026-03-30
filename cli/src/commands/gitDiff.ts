@@ -33,4 +33,8 @@ export const gitDiff = Command.make(
 
     yield* Console.log(diff);
   }),
-).pipe(Command.withDescription('Output git diff for a given scope (unstaged, staged, branch). Use to inspect changes before committing or reviewing.'));
+).pipe(
+  Command.withDescription(
+    'Output git diff for a given scope (unstaged, staged, branch). Use to inspect changes before committing or reviewing.',
+  ),
+);

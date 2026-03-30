@@ -32,23 +32,20 @@ const validateByType = (type: string, root: string) =>
     const results: ValidateResult[] = [];
 
     if (type === 'all' || type === 'skills') {
-      const r = yield* validateFiles(
-        join(root, 'skills/*/SKILL.md'),
-        (file, content) => validateSkillContent(relative(root, file), content),
+      const r = yield* validateFiles(join(root, 'skills/*/SKILL.md'), (file, content) =>
+        validateSkillContent(relative(root, file), content),
       );
       results.push(...r);
     }
     if (type === 'all' || type === 'agents') {
-      const r = yield* validateFiles(
-        join(root, 'agents/*.md'),
-        (file, content) => validateAgentContent(relative(root, file), content),
+      const r = yield* validateFiles(join(root, 'agents/*.md'), (file, content) =>
+        validateAgentContent(relative(root, file), content),
       );
       results.push(...r);
     }
     if (type === 'all' || type === 'commands') {
-      const r = yield* validateFiles(
-        join(root, 'commands/*.md'),
-        (file, content) => validateCommandContent(relative(root, file), content),
+      const r = yield* validateFiles(join(root, 'commands/*.md'), (file, content) =>
+        validateCommandContent(relative(root, file), content),
       );
       results.push(...r);
     }
@@ -100,4 +97,8 @@ export const validate = Command.make(
       return yield* Effect.die(new Error(`${failed} file(s) failed validation`));
     }
   }),
-).pipe(Command.withDescription('Validate skill, agent, and command markdown files for required structure. Use to check cape definition files are well-formed.'));
+).pipe(
+  Command.withDescription(
+    'Validate skill, agent, and command markdown files for required structure. Use to check cape definition files are well-formed.',
+  ),
+);

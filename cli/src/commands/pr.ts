@@ -10,7 +10,11 @@ const prTemplate = Command.make(
     const result = yield* findTemplate();
     yield* Console.log(JSON.stringify(result));
   }),
-).pipe(Command.withDescription('Find and output the PR template for this repo. Use to discover required PR sections.'));
+).pipe(
+  Command.withDescription(
+    'Find and output the PR template for this repo. Use to discover required PR sections.',
+  ),
+);
 
 const prValidate = Command.make(
   'validate',
@@ -39,7 +43,11 @@ const prValidate = Command.make(
       return yield* Effect.fail(new Error(result.missing.join(', ')));
     }
   }),
-).pipe(Command.withDescription('Validate a PR body against the repo template sections. Use before creating a PR to ensure completeness.'));
+).pipe(
+  Command.withDescription(
+    'Validate a PR body against the repo template sections. Use before creating a PR to ensure completeness.',
+  ),
+);
 
 export const pr = Command.make('pr').pipe(
   Command.withDescription('PR template discovery and body validation.'),

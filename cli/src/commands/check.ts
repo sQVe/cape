@@ -30,4 +30,8 @@ export const check = Command.make(
       yield* Effect.die(new Error('checks failed'));
     }
   }),
-).pipe(Command.withDescription('Run project checks (lint, typecheck, test) for all detected ecosystems. Use to verify code health before commits or closing tasks.'));
+).pipe(
+  Command.withDescription(
+    'Run project checks (lint, typecheck, test) for all detected ecosystems. Use to verify code health before commits or closing tasks.',
+  ),
+);

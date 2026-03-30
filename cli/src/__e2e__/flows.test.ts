@@ -210,15 +210,11 @@ describe('flow 4: full commit pipeline', () => {
   });
 
   it('fails with non-zero exit when file does not exist', () => {
-    const result = spawnSync(
-      'node',
-      [BINARY, 'commit', 'nonexistent.ts', '-m', 'feat: ghost'],
-      {
-        encoding: 'utf-8',
-        cwd: repoDir,
-        timeout: 10_000,
-      },
-    );
+    const result = spawnSync('node', [BINARY, 'commit', 'nonexistent.ts', '-m', 'feat: ghost'], {
+      encoding: 'utf-8',
+      cwd: repoDir,
+      timeout: 10_000,
+    });
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toBeTruthy();

@@ -220,8 +220,7 @@ export const denyWith = (reason: string) => ({
   },
 });
 
-const parseString = (value: unknown): string | null =>
-  typeof value === 'string' ? value : null;
+const parseString = (value: unknown): string | null => (typeof value === 'string' ? value : null);
 
 const parseCommand = (input: string): string | null => {
   try {
@@ -623,7 +622,6 @@ const parseFilePath = (input: string): string | null => {
   }
 };
 
-
 export const postToolUseBash = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -698,7 +696,6 @@ export const postToolUseEdit = () =>
       ].join(' '),
     };
   });
-
 
 export const postToolUseFailureBash = () =>
   Effect.gen(function* () {

@@ -42,4 +42,8 @@ export const commit = Command.make(
 
     yield* Console.log(JSON.stringify(result));
   }),
-).pipe(Command.withDescription('Stage files and create a git commit with message validation and sensitive-file detection. Use instead of raw git commit.'));
+).pipe(
+  Command.withDescription(
+    'Stage files and create a git commit with message validation and sensitive-file detection. Use instead of raw git commit.',
+  ),
+);

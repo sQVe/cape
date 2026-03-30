@@ -523,7 +523,11 @@ describe('cape context', () => {
     try {
       expect(result.stderr).not.toContain('Invalid context name');
     } finally {
-      try { unlinkSync(contextFile); } catch { /* cleanup */ }
+      try {
+        unlinkSync(contextFile);
+      } catch {
+        /* cleanup */
+      }
     }
   });
 

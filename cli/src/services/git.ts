@@ -17,14 +17,7 @@ export interface BranchValidation {
   readonly errors: string[];
 }
 
-export const BRANCH_PREFIXES = [
-  'feat/',
-  'fix/',
-  'chore/',
-  'refactor/',
-  'docs/',
-  'test/',
-] as const;
+export const BRANCH_PREFIXES = ['feat/', 'fix/', 'chore/', 'refactor/', 'docs/', 'test/'] as const;
 
 export class GitService extends ServiceMap.Service<
   GitService,

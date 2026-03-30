@@ -354,9 +354,7 @@ describe('br close-check command', () => {
 
   it('returns canClose:true when all subtasks closed and checks pass', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const children: ChildStatus[] = [
-      { id: 'test.1', title: 'Task 1', status: 'closed' },
-    ];
+    const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'closed' }];
     const checks: CheckResult[] = [{ check: 'vitest', passed: true, output: 'ok' }];
     await Effect.runPromise(
       run(['br', 'close-check', 'test-id']).pipe(
@@ -373,9 +371,7 @@ describe('br close-check command', () => {
 
   it('returns canClose:false when subtasks are open', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const children: ChildStatus[] = [
-      { id: 'test.1', title: 'Task 1', status: 'open' },
-    ];
+    const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'open' }];
     await expect(
       Effect.runPromise(
         run(['br', 'close-check', 'test-id']).pipe(

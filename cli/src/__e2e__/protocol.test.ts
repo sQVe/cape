@@ -182,11 +182,7 @@ describe('unknown matchers', () => {
 
   it('post-tool-use-failure with unknown matcher exits 0 silently', () => {
     const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
-    const result = cape(
-      ['hook', 'post-tool-use-failure', '--matcher', 'UnknownTool'],
-      stdin,
-      env,
-    );
+    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'UnknownTool'], stdin, env);
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
   });
@@ -406,4 +402,3 @@ describe('user-prompt-submit intent routing', () => {
     expect(parsed.additionalContext ?? '').not.toContain('cape:execute-plan');
   });
 });
-
