@@ -13,6 +13,7 @@ import {
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -50,6 +51,7 @@ const testLayers = Layer.mergeAll(
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
+  stubConformLayer,
 );
 
 describe('git context command', () => {

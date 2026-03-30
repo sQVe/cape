@@ -15,6 +15,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -46,6 +47,7 @@ const makeCommandLayers = (brLayer = makeStubBrLayer()) =>
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,
+    stubConformLayer,
     brLayer,
   );
 
@@ -347,6 +349,7 @@ describe('br close-check command', () => {
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
+      stubConformLayer,
       brLayer,
       checkLayer,
     );

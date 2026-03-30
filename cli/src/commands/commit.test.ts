@@ -18,6 +18,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -43,6 +44,7 @@ const commandLayers = Layer.mergeAll(
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
+  stubConformLayer,
 );
 
 describe('validateMessage', () => {
@@ -226,6 +228,7 @@ describe('commit command wiring', () => {
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
+      stubConformLayer,
     );
     await expect(
       Effect.runPromise(

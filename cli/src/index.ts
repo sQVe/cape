@@ -5,6 +5,7 @@ import { Command } from 'effect/unstable/cli';
 import { main } from './main';
 import { BrValidateServiceLive } from './services/brValidateLive';
 import { CheckServiceLive } from './services/checkLive';
+import { ConformServiceLive } from './services/conformLive';
 import { CommitServiceLive } from './services/commitLive';
 import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
@@ -17,6 +18,7 @@ main.pipe(
   Effect.provide(NodeServices.layer),
   Effect.provide(BrValidateServiceLive),
   Effect.provide(CheckServiceLive),
+  Effect.provide(ConformServiceLive),
   Effect.provide(CommitServiceLive),
   Effect.provide(DetectServiceLive),
   Effect.provide(GitServiceLive),

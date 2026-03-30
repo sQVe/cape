@@ -14,6 +14,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -65,6 +66,7 @@ const commandLayers = Layer.mergeAll(
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
+  stubConformLayer,
 );
 
 describe('check command wiring', () => {

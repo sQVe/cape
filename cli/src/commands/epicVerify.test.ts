@@ -14,6 +14,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -50,6 +51,7 @@ const testLayers = (
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,
+    stubConformLayer,
     brLayer,
     checkLayer,
   );

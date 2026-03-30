@@ -13,6 +13,7 @@ import {
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
+  stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -64,6 +65,7 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,
+    stubConformLayer,
   );
 
 describe('git validate-branch command', () => {
