@@ -53,15 +53,6 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook post-tool-use --matcher AskUserQuestion"
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
