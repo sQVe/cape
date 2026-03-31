@@ -2,6 +2,8 @@ import { basename, extname } from 'node:path';
 
 import { Effect, ServiceMap } from 'effect';
 
+import { logEvent } from '../eventLog';
+
 const testFilePattern =
   /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
 
@@ -199,6 +201,11 @@ export const userPromptSubmit = () =>
     if (skills.length === 0 && contexts.length === 0) {
       return { decision: 'approve' as const };
     }
+
+    logEvent(
+      'hook.UserPromptSubmit',
+      skills.length > 0 ? skills.join(', ') : 'flow-context',
+    );
 
     const parts: string[] = [];
     if (skills.length > 0) {
@@ -448,11 +455,13 @@ export const preToolUseBash = () =>
     violations.push(...prViolations);
 
     if (violations.length > 0) {
+      logEvent('hook.PreToolUse.Bash', violations.join(' '));
       return denyWith(violations.join(' '));
     }
 
     const stopMessage = checkStopReinforcement(command);
     if (stopMessage != null) {
+      logEvent('hook.PreToolUse.Bash', 'inject');
       return { additionalContext: stopMessage };
     }
 
@@ -607,7 +616,11 @@ export const preToolUseSkill = () =>
 
     const gate = skillGates[name];
     if (gate != null) {
-      return yield* gate(skill.args);
+      const result = yield* gate(skill.args);
+      if (result != null) {
+        logEvent('hook.PreToolUse.Skill', result.hookSpecificOutput.permissionDecisionReason);
+      }
+      return result;
     }
 
     return null;
@@ -718,6 +731,7 @@ export const postToolUseEdit = () =>
 
     if (isTestFile(filePath)) {
       if (state?.phase === 'writing-test') {
+        logEvent('hook.PostToolUse.Edit', 'tdd-batching');
         return {
           additionalContext: [
             'TDD batching warning: you are writing another test before running the previous one.',
@@ -733,6 +747,7 @@ export const postToolUseEdit = () =>
       return null;
     }
 
+    logEvent('hook.PostToolUse.Edit', 'tdd-reminder');
     return {
       additionalContext: [
         'TDD reminder: you are editing production code without a failing test.',

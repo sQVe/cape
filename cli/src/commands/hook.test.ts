@@ -1,9 +1,11 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { logEvent } from '../eventLog';
 import { main } from '../main';
+
 import {
   HookService,
   checkBrRules,
@@ -39,6 +41,10 @@ import {
   stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
+
+vi.mock('../eventLog', () => ({
+  logEvent: vi.fn(),
+}));
 
 describe('normalizeEventName', () => {
   it('converts kebab-case to PascalCase', () => {
@@ -1616,5 +1622,121 @@ describe('hook command - PostToolUse wiring', () => {
     );
     expect(consoleSpy.mock.calls).toHaveLength(0);
     consoleSpy.mockRestore();
+  });
+});
+
+describe('event logging', () => {
+  beforeEach(() => {
+    vi.mocked(logEvent).mockClear();
+  });
+
+  it('logs deny event for preToolUseBash violations', async () => {
+    const layer = makeStubHookLayer({ stdin: bashStdin('br create --design foo') });
+    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith(
+      'hook.PreToolUse.Bash',
+      expect.stringContaining('--description'),
+    );
+  });
+
+  it('logs inject event for preToolUseBash br close', async () => {
+    const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
+    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith('hook.PreToolUse.Bash', 'inject');
+  });
+
+  it('does not log for preToolUseBash pass-through', async () => {
+    const layer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
+    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
+  it('logs deny event for preToolUseSkill gate denial', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:execute-plan'),
+      brResponses: { '--type epic': '' },
+    });
+    await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith(
+      'hook.PreToolUse.Skill',
+      expect.stringContaining('brainstorm'),
+    );
+  });
+
+  it('does not log for preToolUseSkill pass-through', async () => {
+    const layer = makeStubHookLayer({ stdin: skillStdin('cape:commit') });
+    await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
+  it('logs inject event for userPromptSubmit skill detection', async () => {
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt: 'show br issues' }),
+    });
+    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith(
+      'hook.UserPromptSubmit',
+      expect.stringContaining('cape:beads'),
+    );
+  });
+
+  it('logs flow-context for userPromptSubmit when only flow context injected', async () => {
+    const layer = makeStubHookLayer({
+      stdin: JSON.stringify({ prompt: 'hello' }),
+      brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+    });
+    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith('hook.UserPromptSubmit', 'flow-context');
+  });
+
+  it('does not log for userPromptSubmit pass-through', async () => {
+    const layer = makeStubHookLayer({ stdin: JSON.stringify({ prompt: 'hello' }) });
+    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
+  it('logs tdd-reminder for postToolUseEdit production code edit', async () => {
+    const layer = makeStubHookLayer({
+      stdin: editStdin('/src/foo.ts'),
+      brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+    });
+    await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith('hook.PostToolUse.Edit', 'tdd-reminder');
+  });
+
+  it('logs tdd-batching for postToolUseEdit second test edit without run', async () => {
+    const layer = makeStubHookLayer({
+      stdin: editStdin('/src/foo.test.ts'),
+      brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+      files: {
+        '/test/hooks/context/tdd-state.json': JSON.stringify({
+          phase: 'writing-test',
+          timestamp: Date.now(),
+        }),
+      },
+    });
+    await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+    expect(logEvent).toHaveBeenCalledWith('hook.PostToolUse.Edit', 'tdd-batching');
+  });
+
+  it('does not log for postToolUseEdit when tests are red', async () => {
+    const layer = makeStubHookLayer({
+      stdin: editStdin('/src/foo.ts'),
+      brResponses: { in_progress: 'cape-abc task in_progress Do thing' },
+      files: {
+        '/test/hooks/context/tdd-state.json': JSON.stringify({
+          phase: 'red',
+          timestamp: Date.now(),
+        }),
+      },
+    });
+    await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+    expect(logEvent).not.toHaveBeenCalled();
+  });
+
+  it('does not log for sessionStart', async () => {
+    const layer = makeStubHookLayer();
+    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    expect(logEvent).not.toHaveBeenCalled();
   });
 });
