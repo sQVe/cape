@@ -2,6 +2,7 @@ import { NodeRuntime, NodeServices } from '@effect/platform-node';
 import { Effect } from 'effect';
 import { Command } from 'effect/unstable/cli';
 
+import { logEvent } from './eventLog';
 import { main } from './main';
 import { BrValidateServiceLive } from './services/brValidateLive';
 import { CheckServiceLive } from './services/checkLive';
@@ -12,6 +13,15 @@ import { GitServiceLive } from './services/gitLive';
 import { HookServiceLive } from './services/hookLive';
 import { PrServiceLive } from './services/prLive';
 import { ValidateServiceLive } from './services/validateLive';
+
+const skipCommands = new Set(['hook', 'stats']);
+const args = process.argv.slice(2);
+const cmdSegments = args.filter((a) => !a.startsWith('-'));
+const cmd = cmdSegments.join('.');
+
+if (cmd && cmdSegments[0] != null && !skipCommands.has(cmdSegments[0])) {
+  logEvent(cmd);
+}
 
 main.pipe(
   Command.run({ version: '0.1.0' }),
