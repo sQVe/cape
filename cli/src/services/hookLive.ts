@@ -8,7 +8,7 @@ import { HookService } from './hook';
 
 const pluginRoot = () =>
   // eslint-disable-next-line node/no-process-env
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(new URL(import.meta.url).pathname));
+  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(dirname(new URL(import.meta.url).pathname)));
 
 const readFile = (path: string) =>
   Effect.try({
