@@ -158,34 +158,36 @@ not call any tools between outputting the description and calling `AskUserQuesti
 
 ---
 
-## Step 7: Execute test plan
+## Step 7: Execute test plan and update description
 
-Run each test plan checkbox item sequentially:
+**You MUST execute every test plan checkbox item before proceeding. Do NOT skip this step.**
 
-1. Execute the command or verification
-2. Mark result immediately: `[x]` passed, `[ ]` failed
+For each checkbox item in the PR description:
+
+1. Run the command or verification
+2. Update the checkbox in your copy of the PR description: `- [x]` if passed, leave `- [ ]` if
+   failed
 3. On first failure:
    - Stop execution, report failure details
    - Ask user: **Fix and retry** or **Cancel**
    - Do NOT proceed to next item until current passes
 4. Continue until all items pass
 
-All checkboxes must be `[x]` to proceed. Manual verification section is informational only.
+After all items pass, you must have a **rewritten copy of the PR description** where every `- [ ]`
+is now `- [x]`. This rewritten description is what gets passed to `gh pr create` — not the original.
 
 ---
 
 ## Step 8: Create PR (fix loop, max 3 attempts)
 
-**Gate:** Refuse to proceed if any test plan checkbox is still `[ ]`. Return to step 7.
-
-Before creating, validate the description against the template:
+Validate the **rewritten** description (with `[x]` marks) against the template:
 
 ```bash
-echo '<description>' | cape pr validate --stdin
+echo '<rewritten-description>' | cape pr validate --stdin
 ```
 
-If validation fails (missing sections), fix the description and re-validate. Do not call
-`gh pr create` until validation passes.
+Validation rejects both missing sections AND unchecked boxes. If any `- [ ]` remains, validation
+fails — go back to step 7. Do not call `gh pr create` until validation passes.
 
 ```bash
 gh pr create --title "the title" --body "$(cat <<'EOF'

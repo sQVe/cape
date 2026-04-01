@@ -26,11 +26,23 @@ export const extractPrSections = (content: string) =>
     .filter((line) => /^#{2,4}\s/.test(line))
     .map((line) => line.replace(/^#{2,4}\s+/, '').trim());
 
+export const extractUncheckedBoxes = (body: string) =>
+  body
+    .split('\n')
+    .filter((line) => /^\s*- \[ \]/.test(line))
+    .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
+
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);
   const missing = templateSections.filter((s) => !bodySections.includes(s));
   const extra = bodySections.filter((s) => !templateSections.includes(s));
-  return { valid: missing.length === 0, missing, extra };
+  const unchecked = extractUncheckedBoxes(body);
+  return {
+    valid: missing.length === 0 && unchecked.length === 0,
+    missing,
+    extra,
+    unchecked,
+  };
 };
 
 export class PrService extends ServiceMap.Service<

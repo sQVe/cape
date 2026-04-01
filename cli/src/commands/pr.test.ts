@@ -4,7 +4,12 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
-import { extractPrSections, PrService, validatePrBody } from '../services/pr';
+import {
+  extractPrSections,
+  extractUncheckedBoxes,
+  PrService,
+  validatePrBody,
+} from '../services/pr';
 import {
   stubBrLayer,
   stubCheckLayer,
@@ -81,15 +86,40 @@ describe('extractPrSections', () => {
   });
 });
 
+describe('extractUncheckedBoxes', () => {
+  it('extracts unchecked checkbox labels', () => {
+    const body = '- [ ] run tests\n- [x] lint passes\n- [ ] build succeeds';
+    expect(extractUncheckedBoxes(body)).toEqual(['run tests', 'build succeeds']);
+  });
+
+  it('returns empty array when all boxes are checked', () => {
+    const body = '- [x] run tests\n- [x] lint passes';
+    expect(extractUncheckedBoxes(body)).toEqual([]);
+  });
+
+  it('returns empty array when no checkboxes exist', () => {
+    expect(extractUncheckedBoxes('plain text\nno boxes')).toEqual([]);
+  });
+});
+
 describe('validatePrBody', () => {
-  it('returns valid when all sections present', () => {
+  it('returns valid when all sections present and all boxes checked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
-    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works';
+    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
     expect(validatePrBody(template, body)).toEqual({
       valid: true,
       missing: [],
       extra: [],
+      unchecked: [],
     });
+  });
+
+  it('returns invalid when checkboxes are unchecked', () => {
+    const template = ['Motivation', 'Changes', 'Test plan'];
+    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works';
+    const result = validatePrBody(template, body);
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['works']);
   });
 
   it('reports missing sections', () => {
@@ -196,12 +226,12 @@ describe('pr validate command', () => {
     );
   });
 
-  it('returns valid when all default sections present', async () => {
+  it('returns valid when all default sections present and boxes checked', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works'),
+        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
     });
@@ -210,7 +240,28 @@ describe('pr validate command', () => {
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result).toEqual({ valid: true, missing: [], extra: [] });
+    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    consoleSpy.mockRestore();
+  });
+
+  it('rejects unchecked test plan boxes', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const prLayer = Layer.succeed(PrService)({
+      fileExists: () => Effect.succeed(false),
+      readFile: () =>
+        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works'),
+      readStdin: () => Effect.succeed(''),
+      gitRoot: () => Effect.succeed('/repo'),
+    });
+    await expect(
+      Effect.runPromise(
+        run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
+      ),
+    ).rejects.toThrow('unchecked test plan items');
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['works']);
     consoleSpy.mockRestore();
   });
 
@@ -241,7 +292,7 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.fail(new Error('should not read file')),
       readStdin: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works'),
+        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
       gitRoot: () => Effect.succeed('/repo'),
     });
     await Effect.runPromise(
@@ -249,7 +300,7 @@ describe('pr validate command', () => {
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result).toEqual({ valid: true, missing: [], extra: [] });
+    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
     consoleSpy.mockRestore();
   });
 
@@ -268,7 +319,7 @@ describe('pr validate command', () => {
       readFile: (path) =>
         path === '/repo/.github/pull_request_template.md'
           ? Effect.succeed(repoTemplate)
-          : Effect.succeed('#### Summary\nhere\n#### Test plan\n- [ ] works'),
+          : Effect.succeed('#### Summary\nhere\n#### Test plan\n- [x] works'),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
     });
@@ -277,7 +328,7 @@ describe('pr validate command', () => {
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result).toEqual({ valid: true, missing: [], extra: [] });
+    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
     consoleSpy.mockRestore();
   });
 });

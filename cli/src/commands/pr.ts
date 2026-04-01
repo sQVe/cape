@@ -3,6 +3,17 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
 
+const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
+  const parts: string[] = [];
+  if (result.missing.length > 0) {
+    parts.push(`missing sections: ${result.missing.join(', ')}`);
+  }
+  if (result.unchecked.length > 0) {
+    parts.push(`unchecked test plan items: ${result.unchecked.join(', ')}`);
+  }
+  return parts.join('; ');
+};
+
 const prTemplate = Command.make(
   'template',
   {},
@@ -40,7 +51,7 @@ const prValidate = Command.make(
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
-      return yield* Effect.fail(new Error(result.missing.join(', ')));
+      return yield* Effect.fail(new Error(formatValidationErrors(result)));
     }
   }),
 ).pipe(
