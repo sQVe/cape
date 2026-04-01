@@ -61,13 +61,23 @@ describe('extractPrSections', () => {
     expect(extractPrSections(content)).toEqual(['Motivation', 'Changes', 'Test plan']);
   });
 
-  it('returns empty array for content without h4 headings', () => {
-    expect(extractPrSections('## Not an h4\nsome text')).toEqual([]);
+  it('extracts h2 and h3 headings from content', () => {
+    const content = '## Summary\nstuff\n### Details\nmore\n## Risk\nchoice';
+    expect(extractPrSections(content)).toEqual(['Summary', 'Details', 'Risk']);
   });
 
-  it('ignores h2 and h3 headings', () => {
+  it('extracts headings at all supported levels', () => {
     const content = '## H2\n### H3\n#### H4\ntext';
-    expect(extractPrSections(content)).toEqual(['H4']);
+    expect(extractPrSections(content)).toEqual(['H2', 'H3', 'H4']);
+  });
+
+  it('returns empty array for content without headings', () => {
+    expect(extractPrSections('plain text\nno headings')).toEqual([]);
+  });
+
+  it('ignores h1 headings', () => {
+    const content = '# Title\n## Section\ntext';
+    expect(extractPrSections(content)).toEqual(['Section']);
   });
 });
 
@@ -144,6 +154,22 @@ describe('pr template command', () => {
     const result = JSON.parse(output);
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Summary', 'Test plan']);
+    consoleSpy.mockRestore();
+  });
+
+  it('extracts sections from h2 headings in repo template', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const h2Template = '## Summary\n\nDescribe.\n\n## Risk\n\n- [ ] Low\n';
+    const prLayer = makeStubPrLayer({
+      '/repo/.github/pull_request_template.md': h2Template,
+    });
+    await Effect.runPromise(
+      run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.source).toBe('repo');
+    expect(result.sections).toEqual(['Summary', 'Risk']);
     consoleSpy.mockRestore();
   });
 

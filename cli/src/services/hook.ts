@@ -3,6 +3,7 @@ import { basename, extname } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../eventLog';
+import { findTemplate } from './pr';
 
 const testFilePattern =
   /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
@@ -353,19 +354,25 @@ export const checkGitStagingRules = (command: string): string[] => {
   return violations;
 };
 
-export const checkPrBodyRules = (command: string): string[] => {
+export const checkPrBodyRules = (command: string, repoSections: readonly string[]): string[] => {
   if (!/\bgh\s+pr\s+create\b/.test(command)) {
     return [];
   }
   if (!/--body\b/.test(command)) {
     return [];
   }
-  if (/\n##\s+(?:Summary|Root cause|Overview|Background|Description)\b/i.test(command)) {
-    return [
-      'PR description uses invented sections (e.g. ## Summary, ## Root cause). ' +
-        'Follow the cape:pr template: use #### Motivation, #### Changes, #### Test plan, ' +
-        "or the repo's own .github/pull_request_template.md.",
-    ];
+  const repoSet = new Set(repoSections.map((s) => s.toLowerCase()));
+  const inventedPattern = /\n#{2,4}\s+([^\n]+)/gi;
+  let match;
+  while ((match = inventedPattern.exec(command)) !== null) {
+    const raw = (match[1] ?? '').replace(/["')}\]]+$/, '');
+    const heading = raw.trim().toLowerCase();
+    if (!repoSet.has(heading)) {
+      return [
+        `PR description heading "${raw.trim()}" is not in the repo template. ` +
+          'Run `cape pr template` to discover required sections, then match them exactly.',
+      ];
+    }
   }
   return [];
 };
@@ -440,10 +447,14 @@ export const preToolUseBash = () =>
       return null;
     }
 
+    const template = yield* findTemplate().pipe(
+      Effect.orElseSucceed(() => ({ source: 'default' as const, content: '', sections: [] })),
+    );
+
     const violations = [
       ...checkBrRules(command),
       ...checkGitStagingRules(command),
-      ...checkPrBodyRules(command),
+      ...checkPrBodyRules(command, template.sections),
     ];
 
     const brShowViolation = yield* checkBrShowRequirement(command);

@@ -48,14 +48,13 @@ bundled template — never invent sections. </rigidity_level>
 
 ## Step 1: Detect PR template
 
-Check for a repo-specific template in order:
+```bash
+cape pr template
+```
 
-1. `.github/pull_request_template.md`
-2. `.github/PULL_REQUEST_TEMPLATE.md`
-3. `docs/pull_request_template.md`
-
-If found: read it and use its section structure for the description. If not found: use the bundled
-template in step 5.
+This returns JSON with `source` ("repo" or "default"), `content` (raw template text), and `sections`
+(heading names). If `source` is "repo", use that template's section structure and heading levels for
+the description. If "default", use the bundled template in step 5.
 
 ---
 
@@ -179,6 +178,15 @@ All checkboxes must be `[x]` to proceed. Manual verification section is informat
 
 **Gate:** Refuse to proceed if any test plan checkbox is still `[ ]`. Return to step 7.
 
+Before creating, validate the description against the template:
+
+```bash
+echo '<description>' | cape pr validate --stdin
+```
+
+If validation fails (missing sections), fix the description and re-validate. Do not call
+`gh pr create` until validation passes.
+
 ```bash
 gh pr create --title "the title" --body "$(cat <<'EOF'
 <description>
@@ -222,23 +230,24 @@ Test plan: <passed>/<total> checks passed
 
 Branch has 3 commits adding a caching layer. No repo PR template found.
 
-1. Detect template — none found, use bundled template
+1. `cape pr template` → `source: "default"`, sections: Motivation, Changes, Test plan
 2. Validate — on `feat/add-cache`, all committed, pushed
 3. Write description using bundled template sections (Motivation, Changes, Test plan, Verification)
 4. **STOP** — present full PR to user, `AskUserQuestion` → user picks "Create PR"
 5. Run test plan: `[x] npm test`, `[x] verify cache hit returns 200`, `[x] verify TTL expiry`
-6. `gh pr create` — success
+6. `cape pr validate --stdin` passes → `gh pr create` — success
 7. Report URL and summary </example>
 
 <example>
 <scenario>Repo has its own PR template</scenario>
 
-`.github/pull_request_template.md` exists with sections: Summary, Testing, Screenshots.
+`cape pr template` → `source: "repo"`, sections: Summary, Testing, Screenshots.
 
-1. Read repo template — write description matching its section structure exactly
+1. Write description matching the repo template's section structure and heading levels exactly
 2. Fill in Summary, Testing, Screenshots (include if visual, omit if backend)
 3. **STOP** — present to user, get confirmation
-4. Test plan items still execute as a gate regardless of template structure </example>
+4. `cape pr validate --stdin` before `gh pr create`
+5. Test plan items still execute as a gate regardless of template structure </example>
 
 <example>
 <scenario>Uncommitted changes</scenario>

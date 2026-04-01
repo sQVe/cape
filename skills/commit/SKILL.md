@@ -151,11 +151,10 @@ they reject entirely, ask what they'd prefer. Do not call `git commit` until the
 
 ## Step 5: Execute
 
-Stage and commit in one turn:
+Stage and commit using the CLI:
 
 ```bash
-git add path/to/file.ts path/to/other.ts
-git commit -m "$(cat <<'EOF'
+cape commit path/to/file.ts path/to/other.ts -m "$(cat <<'EOF'
 type(scope): subject line
 
 Body if warranted.
@@ -163,11 +162,14 @@ EOF
 )"
 ```
 
+The CLI validates the message format, detects sensitive files, and stages + commits in one
+operation.
+
 If the commit **fails** (pre-commit hook, lint error):
 
 1. Analyze the failure output
 2. Auto-fix if possible (formatting, lint issues)
-3. Re-stage and re-attempt the commit
+3. Re-attempt the commit
 4. After 3 failures: report the issues and ask the user to fix manually
 
 After a successful commit, show:

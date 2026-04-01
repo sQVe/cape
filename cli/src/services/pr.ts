@@ -23,8 +23,8 @@ const defaultContent = [
 export const extractPrSections = (content: string) =>
   content
     .split('\n')
-    .filter((line) => line.startsWith('#### '))
-    .map((line) => line.replace(/^#### /, '').trim());
+    .filter((line) => /^#{2,4}\s/.test(line))
+    .map((line) => line.replace(/^#{2,4}\s+/, '').trim());
 
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);

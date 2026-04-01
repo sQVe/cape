@@ -222,7 +222,7 @@ const makeStubHookLayer = (
     removedFiles = [],
   } = overrides;
 
-  return Layer.succeed(HookService)({
+  const hookLayer = Layer.succeed(HookService)({
     pluginRoot: () => pluginRoot,
     readFile: (path) => Effect.succeed(files[path] ?? null),
     writeFile: (path, content) => {
@@ -254,6 +254,8 @@ const makeStubHookLayer = (
       return Effect.succeed(null);
     },
   });
+
+  return Layer.mergeAll(hookLayer, stubPrLayer);
 };
 
 describe('sessionStart', () => {
@@ -657,17 +659,37 @@ describe('checkGitStagingRules', () => {
 });
 
 describe('checkPrBodyRules', () => {
-  it('denies invented sections in PR body', () => {
-    const violations = checkPrBodyRules('gh pr create --body "\n## Summary\nstuff"');
-    expect(violations.some((v) => v.includes('invented sections'))).toBe(true);
+  it('denies headings not in repo template', () => {
+    const violations = checkPrBodyRules(
+      'gh pr create --body "\n## Summary\nstuff"',
+      ['Motivation', 'Changes'],
+    );
+    expect(violations.some((v) => v.includes('Summary'))).toBe(true);
+    expect(violations.some((v) => v.includes('not in the repo template'))).toBe(true);
+  });
+
+  it('allows headings that match repo template', () => {
+    expect(
+      checkPrBodyRules('gh pr create --body "\n## Summary\n## Risk\nstuff"', ['Summary', 'Risk']),
+    ).toHaveLength(0);
+  });
+
+  it('allows headings when repo template has those sections', () => {
+    expect(
+      checkPrBodyRules('gh pr create --body "\n#### Motivation\n#### Changes"', [
+        'Motivation',
+        'Changes',
+        'Test plan',
+      ]),
+    ).toHaveLength(0);
   });
 
   it('allows PR without --body flag', () => {
-    expect(checkPrBodyRules('gh pr create --title "feat: thing"')).toHaveLength(0);
+    expect(checkPrBodyRules('gh pr create --title "feat: thing"', [])).toHaveLength(0);
   });
 
   it('allows non-PR commands', () => {
-    expect(checkPrBodyRules('echo hello')).toHaveLength(0);
+    expect(checkPrBodyRules('echo hello', [])).toHaveLength(0);
   });
 });
 
