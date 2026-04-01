@@ -157,7 +157,7 @@ risk. Vertical slices prove the system works end-to-end sooner and are independe
 Clear the brainstorm artifact (consumed):
 
 ```bash
-cape context clear brainstorm-summary
+cape context clear brainstorm
 ```
 
 **Present completion summary and stop:**

@@ -242,7 +242,7 @@ to create the epic without re-asking brainstorm's questions.
 Signal brainstorm completion for the write-plan gate:
 
 ```bash
-cape context set brainstorm-summary
+cape context set brainstorm
 ```
 
 **Stop and hand off:**

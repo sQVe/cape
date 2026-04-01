@@ -1016,7 +1016,7 @@ describe('preToolUseSkill', () => {
   it('allows write-plan when brainstorm artifact exists', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:write-plan'),
-      files: { '/test/hooks/context/brainstorm-summary.txt': 'true' },
+      files: { '/test/hooks/context/brainstorm.txt': 'true' },
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();

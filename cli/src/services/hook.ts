@@ -576,7 +576,7 @@ const gateFixBug = () =>
 const gateWritePlan = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const contextPath = `${service.pluginRoot()}/hooks/context/brainstorm-summary.txt`;
+    const contextPath = `${service.pluginRoot()}/hooks/context/brainstorm.txt`;
     const content = yield* service.readFile(contextPath);
     if (!content) {
       return denyWith(

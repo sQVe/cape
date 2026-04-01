@@ -57,11 +57,11 @@ describe('context set', () => {
   it('writes context file to hooks/context/<name>.txt', async () => {
     const writtenFiles: Record<string, string> = {};
     await Effect.runPromise(
-      run(['context', 'set', 'brainstorm-summary']).pipe(
+      run(['context', 'set', 'brainstorm']).pipe(
         Effect.provide(makeTestLayers({ writtenFiles })),
       ),
     );
-    expect(writtenFiles['/test/hooks/context/brainstorm-summary.txt']).toBe('true');
+    expect(writtenFiles['/test/hooks/context/brainstorm.txt']).toBe('true');
   });
 });
 
@@ -69,10 +69,10 @@ describe('context clear', () => {
   it('removes context file at hooks/context/<name>.txt', async () => {
     const removedFiles: string[] = [];
     await Effect.runPromise(
-      run(['context', 'clear', 'brainstorm-summary']).pipe(
+      run(['context', 'clear', 'brainstorm']).pipe(
         Effect.provide(makeTestLayers({ removedFiles })),
       ),
     );
-    expect(removedFiles).toContain('/test/hooks/context/brainstorm-summary.txt');
+    expect(removedFiles).toContain('/test/hooks/context/brainstorm.txt');
   });
 });
