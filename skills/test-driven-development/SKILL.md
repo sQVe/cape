@@ -210,8 +210,8 @@ proved it detects the absence of one behavior.
 **Right — cycle 1 creates the file with one `it()` block:**
 
 ```typescript
-describe("buildItems", () => {
-  it("returns empty array for no input", () => {
+describe('buildItems', () => {
+  it('returns empty array for no input', () => {
     expect(buildItems([])).toEqual([]);
   });
 });

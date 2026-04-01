@@ -1,8 +1,9 @@
-.beads
-.beads/
-*.ts
-*.tsx
 *.js
 *.jsx
-*.mts
 *.mjs
+*.mts
+*.ts
+*.tsx
+.beads
+.beads/
+pnpm-lock.yaml
