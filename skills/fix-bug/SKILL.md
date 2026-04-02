@@ -128,12 +128,15 @@ no longer trigger the bug.
 Close this bug as FIXED?
 ```
 
-Wait for user approval, then close:
+Wait for user approval, then run close-check and close:
 
 ```bash
+cape br close-check <bug-id>
 cape br close <bug-id>
 cape context clear workflow-active
 ```
+
+If `close-check` fails, stop and report which checks failed — do not close.
 
 After closing, load `cape:commit` with the Skill tool to commit the fix.
 
@@ -216,5 +219,7 @@ query) remains exploitable.
 2. **Failing test before code change** -- RED before GREEN, always
 3. **Full test suite before closing** -- no regressions introduced
 4. **Confirm before closing** -- present fix summary and get user approval
+5. **Run close-check before close** -- `cape br close-check <bug-id>` must pass before
+   `cape br close <bug-id>`; if it fails, stop and report failures
 
 </critical_rules>
