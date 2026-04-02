@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { BINARY, cape } from './helpers';
+import { cape, capeCmd } from './helpers';
 
 let tmpDir: string;
 let contextDir: string;
@@ -111,11 +111,7 @@ describe('flow 4: full commit pipeline', () => {
   });
 
   it('commits with valid conventional message', () => {
-    const result = spawnSync('node', [BINARY, 'commit', 'file.ts', '-m', 'feat: add thing'], {
-      encoding: 'utf-8',
-      cwd: repoDir,
-      timeout: 10_000,
-    });
+    const result = capeCmd(['commit', 'file.ts', '-m', 'feat: add thing'], { cwd: repoDir });
     expect(result.status).toBe(0);
 
     const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
@@ -125,21 +121,13 @@ describe('flow 4: full commit pipeline', () => {
   });
 
   it('rejects invalid message format', () => {
-    const result = spawnSync('node', [BINARY, 'commit', 'file.ts', '-m', 'bad message'], {
-      encoding: 'utf-8',
-      cwd: repoDir,
-      timeout: 10_000,
-    });
+    const result = capeCmd(['commit', 'file.ts', '-m', 'bad message'], { cwd: repoDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('invalid conventional commit format');
   });
 
   it('rejects bulk staging with dot', () => {
-    const result = spawnSync('node', [BINARY, 'commit', '.', '-m', 'feat: bulk'], {
-      encoding: 'utf-8',
-      cwd: repoDir,
-      timeout: 10_000,
-    });
+    const result = capeCmd(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('bulk staging with');
   });
@@ -147,11 +135,7 @@ describe('flow 4: full commit pipeline', () => {
   it('warns on sensitive files but still commits', () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=abc\n');
 
-    const result = spawnSync('node', [BINARY, 'commit', '.env', '-m', 'feat: config'], {
-      encoding: 'utf-8',
-      cwd: repoDir,
-      timeout: 10_000,
-    });
+    const result = capeCmd(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive files');
@@ -164,11 +148,7 @@ describe('flow 4: full commit pipeline', () => {
   });
 
   it('fails with non-zero exit when file does not exist', () => {
-    const result = spawnSync('node', [BINARY, 'commit', 'nonexistent.ts', '-m', 'feat: ghost'], {
-      encoding: 'utf-8',
-      cwd: repoDir,
-      timeout: 10_000,
-    });
+    const result = capeCmd(['commit', 'nonexistent.ts', '-m', 'feat: ghost'], { cwd: repoDir });
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toBeTruthy();

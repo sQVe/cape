@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 
-export const BINARY = join(import.meta.dirname, '..', '..', 'dist', 'index.mjs');
+const BINARY = join(import.meta.dirname, '..', '..', 'dist', 'index.mjs');
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
 
 export const cape = (
@@ -36,8 +36,4 @@ export const capeCmd = (
     stderr: result.stderr.trim(),
     status: result.status ?? 1,
   };
-};
-
-export const inProcess = (): never => {
-  throw new Error('not implemented');
 };
