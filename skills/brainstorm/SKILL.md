@@ -53,6 +53,18 @@ the next step until the user responds. The user may discuss, redirect, ask follo
 
 ## Step 1: Research and understand
 
+**Check for ready work first:**
+
+Run `br ready` before doing anything else. If it returns tasks:
+
+1. Present the list: "You have N ready task(s): [list]. Did you mean to continue with execute-plan
+   instead of starting a new brainstorm?"
+2. Wait for user response:
+   - If they redirect to execute-plan: load `cape:execute-plan` with the Skill tool and stop
+   - If they confirm brainstorm intent: proceed with research below
+
+Skip this step only if `br ready` returns no tasks.
+
 **Gather context:**
 
 - Run `cape git context` for recent commits and codebase state; check existing docs and structure
