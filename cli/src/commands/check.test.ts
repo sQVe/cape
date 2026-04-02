@@ -94,6 +94,7 @@ describe('check command wiring', () => {
       stubPrLayer,
       stubTestLayer,
       stubValidateLayer,
+      stubConformLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed',
@@ -117,6 +118,7 @@ describe('check command wiring', () => {
       stubPrLayer,
       stubTestLayer,
       stubValidateLayer,
+      stubConformLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'no ecosystem detected',
@@ -135,6 +137,7 @@ describe('check command wiring', () => {
       stubPrLayer,
       stubTestLayer,
       stubValidateLayer,
+      stubConformLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'check execution failed',
@@ -266,6 +269,21 @@ describe('resolveCheckCommands', () => {
       },
     ]);
     expect(commands).toEqual([{ label: 'vitest', command: 'npx', args: ['vitest', 'run'] }]);
+  });
+
+  it('resolves vp test for vite-plus framework', () => {
+    const commands = resolveCheckCommands([
+      { language: 'typescript', testFramework: 'vite-plus', linter: null, formatter: null },
+    ]);
+    expect(commands).toEqual([{ label: 'vitest', command: 'npx', args: ['vp', 'test'] }]);
+  });
+
+  it('uses pnpm exec vp test for vite-plus with pnpm package manager', () => {
+    const commands = resolveCheckCommands(
+      [{ language: 'typescript', testFramework: 'vite-plus', linter: null, formatter: null }],
+      'pnpm',
+    );
+    expect(commands).toEqual([{ label: 'vitest', command: 'pnpm', args: ['exec', 'vp', 'test'] }]);
   });
 
   it('uses pnpm exec for vitest with pnpm package manager', () => {

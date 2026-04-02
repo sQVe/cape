@@ -70,6 +70,7 @@ const isTypescript = (probe: DirectoryProbe) => {
 };
 
 const detectTypescriptTestFramework = (probe: DirectoryProbe) => {
+  if (hasNodeDep(probe, 'vite-plus')) return 'vite-plus';
   if (hasNodeDep(probe, 'vitest')) return 'vitest';
   if (hasNodeDep(probe, 'jest')) return 'jest';
   return null;

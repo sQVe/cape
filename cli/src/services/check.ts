@@ -28,8 +28,14 @@ const nodeExecutor = (pm: string | null): { command: string; prefix: readonly st
   return { command: 'npx', prefix: [] };
 };
 
-const nodeTestCommand = (framework: 'vitest' | 'jest', pm: string | null): CheckCommand => {
+const nodeTestCommand = (
+  framework: 'vitest' | 'jest' | 'vite-plus',
+  pm: string | null,
+): CheckCommand => {
   const { command, prefix } = nodeExecutor(pm);
+  if (framework === 'vite-plus') {
+    return { label: 'vitest', command, args: [...prefix, 'vp', 'test'] };
+  }
   const extra = framework === 'vitest' ? ['run'] : [];
   return { label: framework, command, args: [...prefix, framework, ...extra] };
 };
@@ -66,7 +72,11 @@ export const resolveTestCommand = (
 ): CheckCommand | undefined => {
   for (const eco of ecosystems) {
     if (eco.testFramework == null) continue;
-    if (eco.testFramework === 'vitest' || eco.testFramework === 'jest') {
+    if (
+      eco.testFramework === 'vitest' ||
+      eco.testFramework === 'jest' ||
+      eco.testFramework === 'vite-plus'
+    ) {
       return nodeTestCommand(eco.testFramework, pm);
     }
     const cmd = testCommands[eco.testFramework];
@@ -80,7 +90,11 @@ export const resolveCheckCommands = (ecosystems: DetectResult[], pm: string | nu
 
   for (const eco of ecosystems) {
     if (eco.testFramework != null) {
-      if (eco.testFramework === 'vitest' || eco.testFramework === 'jest') {
+      if (
+        eco.testFramework === 'vitest' ||
+        eco.testFramework === 'jest' ||
+        eco.testFramework === 'vite-plus'
+      ) {
         commands.push(nodeTestCommand(eco.testFramework, pm));
       } else {
         const cmd = testCommands[eco.testFramework];

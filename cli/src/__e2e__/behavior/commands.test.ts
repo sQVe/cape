@@ -45,7 +45,7 @@ describe('cape detect', () => {
     const parsed = JSON.parse(result.stdout);
     const ts = parsed.find((e: { language: string }) => e.language === 'typescript');
     expect(ts).toBeDefined();
-    expect(ts.testFramework).toBe('vitest');
+    expect(ts.testFramework).toBe('vite-plus');
   });
 });
 

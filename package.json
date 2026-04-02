@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "pnpm --filter @cape/cli build",
     "check": "vp check",
     "typecheck": "tsc -p cli/tsconfig.json",
     "format": "vp fmt && prettier --write .",

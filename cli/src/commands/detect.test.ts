@@ -176,6 +176,15 @@ describe('detectEcosystems', () => {
       expect(findByLanguage(results, 'typescript')).toBeDefined();
     });
 
+    it('detects vite-plus from devDependencies and prefers it over vitest', () => {
+      const results = detectEcosystems(
+        makeProbe(['tsconfig.json', 'package.json'], {
+          'package.json': { devDependencies: { 'vite-plus': '^0.1.0', vitest: '^4.0.0' } },
+        }),
+      );
+      expect(findByLanguage(results, 'typescript')?.testFramework).toBe('vite-plus');
+    });
+
     it('detects vitest from devDependencies', () => {
       const results = detectEcosystems(
         makeProbe(['tsconfig.json', 'package.json'], {
