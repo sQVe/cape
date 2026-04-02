@@ -100,19 +100,19 @@ random rather than meaningful. When uncertain, run `br show <id>` — if it reso
 ### Creating issues
 
 ```bash
-br create "Epic: Feature Name" \
+cape br create "Epic: Feature Name" \
   --type epic \
   --priority 2 \
   --description "Full epic content here"
 
-br create "Task: Specific deliverable" \
+cape br create "Task: Specific deliverable" \
   --type task \
   --priority 2 \
   --parent <epic-id> \
   --labels "refactor,auth" \
   --description "Task details here"
 
-br create "Bug: Description of defect" \
+cape br create "Bug: Description of defect" \
   --type bug \
   --priority 1 \
   --description "## Reproduction steps
@@ -132,16 +132,16 @@ Quick capture (prints ID only):
 br q Fix flaky test in auth module -t bug -p 2 -l test-gap
 ```
 
-Use `--parent` on `br create` instead of a separate `br dep add` call:
+Use `--parent` on `cape br create` instead of a separate `br dep add` call:
 
 ```bash
-br create "Task" --type task --parent br-1 --description "..."
+cape br create "Task" --type task --parent br-1 --description "..."
 ```
 
 For multi-line descriptions, use heredoc to avoid shell escaping:
 
 ```bash
-br create "Task: Auth endpoints" \
+cape br create "Task: Auth endpoints" \
   --type task \
   --parent br-1 \
   --description "$(cat <<'EOF'
@@ -172,7 +172,7 @@ br epic status                # Progress of all epics
 ### Updating issues
 
 ```bash
-br update br-3 --status in_progress   # Start work
+cape br update br-3 --status in_progress   # Start work
 cat <<'EOF' | cape br design br-3 "Design heading"
 Updated design notes
 EOF
@@ -185,9 +185,7 @@ br update br-3 --set-labels "auth,api"   # Replace all labels
 ### Closing issues
 
 ```bash
-br close br-3                              # Complete
-br close br-3 --reason "Duplicate of br-7" # With reason
-br close br-3 --suggest-next               # Show newly unblocked
+cape br close br-3                         # Complete
 br reopen br-3                             # Reopen
 ```
 
@@ -264,7 +262,7 @@ changes, task abandoned or descoped, assumption proves wrong, unexpected discove
 
 ### Outcome
 
-Before closing a task with `br close`, append a summary of what actually shipped:
+Before closing a task with `cape br close`, append a summary of what actually shipped:
 
 ```markdown
 ## Outcome
@@ -310,7 +308,7 @@ makes findings trackable, prioritizable, and closeable.
 ### Template for skill output
 
 ```bash
-br create "Type: Concise finding" \
+cape br create "Type: Concise finding" \
   --type <bug|task|feature> \
   --priority <0-4> \
   --parent <epic-id-if-applicable> \
@@ -346,19 +344,19 @@ Skills that produce multiple findings (e.g., `find-test-gaps` finding 5 gaps) sh
 <example>
 <scenario>Creating an issue with --design instead of --description</scenario>
 
-**Wrong:** `br create "Task" --type task --design "details"` — `--design` does not exist on
-`br create`. The flag is silently ignored and the issue has no description.
+**Wrong:** `cape br create "Task" --type task --design "details"` — `--design` does not exist on
+`cape br create`. The flag is silently ignored and the issue has no description.
 
-**Right:** `br create "Task" --type task --description "details"` — use `--description` on create.
-`--design` only works on `br update`. </example>
+**Right:** `cape br create "Task" --type task --description "details"` — use `--description` on
+create. `--design` only works on `br update`. </example>
 
 <example>
 <scenario>Setting status with wrong values</scenario>
 
-**Wrong:** `br update br-3 --status in-progress` or `--status done` — hyphenated status and "done"
-are not valid values.
+**Wrong:** `cape br update br-3 --status in-progress` or `--status done` — hyphenated status and
+"done" are not valid values.
 
-**Right:** `br update br-3 --status in_progress` (underscore) or `br close br-3` (not
+**Right:** `cape br update br-3 --status in_progress` (underscore) or `cape br close br-3` (not
 `--status done`). Valid values: `open`, `in_progress`, `blocked`, `closed`. </example>
 
 <example>
@@ -367,7 +365,7 @@ are not valid values.
 **Wrong:** `br status br-3 --status in_progress` — `br status` shows a database overview, not
 individual issue status.
 
-**Right:** `br update br-3 --status in_progress` — use `br update` to change issue status.
+**Right:** `cape br update br-3 --status in_progress` — use `cape br update` to change issue status.
 </example>
 
 <example>
@@ -394,9 +392,9 @@ Original Goal and Implementation sections preserved. </example>
 
 <critical_rules>
 
-1. **Use `--description` on `br create`** — `--design` does not exist on create
+1. **Use `--description` on `cape br create`** — `--design` does not exist on create
 2. **Use underscores in status** — `in_progress` not `in-progress`
-3. **Use `br close` to complete** — not `--status done`
+3. **Use `cape br close` to complete** — not `--status done`
 4. **Check workspace exists** — `br where` before creating issues
 5. **Skills create br items** — actionable findings become tracked issues, not just text
 6. **One issue per finding** — batch skills create separate issues, not checklists

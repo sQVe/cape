@@ -62,7 +62,7 @@ Do not proceed to step 2 without a br bug that has a documented root cause.
 Run the reproduction steps from the br bug to confirm the symptom locally.
 
 ```bash
-br update <bug-id> --status in_progress
+cape br update <bug-id> --status in_progress
 ```
 
 If reproduction succeeds, you have a baseline. If reproduction fails, investigate why before
@@ -131,7 +131,7 @@ Close this bug as FIXED?
 Wait for user approval, then close:
 
 ```bash
-br close <bug-id>
+cape br close <bug-id>
 cape context clear workflow-active
 ```
 

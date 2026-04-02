@@ -627,3 +627,83 @@ describe('cape detect --map', () => {
     }
   });
 });
+
+describe('cape br update', () => {
+  it('cape br --help lists update subcommand', () => {
+    const result = cape(['br', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('update');
+  });
+
+  it('requires an id argument', () => {
+    const result = cape(['br', 'update']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('id');
+  });
+
+  it('rejects hyphenated status values', () => {
+    const result = cape(['br', 'update', 'bd-test', '--status', 'in-progress']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('in_progress');
+  });
+
+  it('rejects done as status and redirects to cape br close', () => {
+    const result = cape(['br', 'update', 'bd-test', '--status', 'done']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('cape br close');
+  });
+});
+
+describe('cape pr create', () => {
+  it('cape pr --help lists create subcommand', () => {
+    const result = cape(['pr', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('create');
+  });
+
+  it('requires --title flag', () => {
+    const result = cape(['pr', 'create', '--body', 'body text']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--title');
+  });
+
+  it('requires --body flag', () => {
+    const result = cape(['pr', 'create', '--title', 'My PR']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--body');
+  });
+});
+
+describe('cape git create-branch', () => {
+  it('cape git --help lists create-branch subcommand', () => {
+    const result = cape(['git', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('create-branch');
+  });
+
+  it('requires a name argument', () => {
+    const result = cape(['git', 'create-branch']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('name');
+  });
+
+  it('rejects names without conventional prefix', () => {
+    const result = cape(['git', 'create-branch', 'no-prefix-here']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('feat');
+  });
+});
+
+describe('cape test', () => {
+  it('cape --help lists test subcommand', () => {
+    const result = cape(['--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('test');
+  });
+
+  it('cape test --help describes TDD state output', () => {
+    const result = cape(['test', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('TDD state');
+  });
+});

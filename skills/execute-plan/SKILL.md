@@ -103,7 +103,7 @@ review.
 Once an expanded plan exists, mark the task in-progress:
 
 ```bash
-br update <task-id> --status in_progress
+cape br update <task-id> --status in_progress
 ```
 
 Load `cape:test-driven-development` with the Skill tool before writing any production code.
@@ -146,7 +146,7 @@ substasks are complete and checks pass, then close:
 
 ```bash
 cape br close-check <task-id>
-br close <task-id>
+cape br close <task-id>
 cape context clear workflow-active
 ```
 
@@ -184,7 +184,7 @@ If a planned task is now redundant, close it with a reason. If a new task is nee
 reflects what you actually learned -- not what you assumed at the start:
 
 ```bash
-br create "Task N: [Informed next step]" \
+cape br create "Task N: [Informed next step]" \
   --type task \
   --parent <epic-id> \
   --priority <match-epic> \

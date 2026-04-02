@@ -34,12 +34,12 @@ bundled template — never invent sections. </rigidity_level>
 
 <critical_rules>
 
-1. **NEVER call `gh pr create` without user confirmation** — present the full description to the
+1. **NEVER call `cape pr create` without user confirmation** — present the full description to the
    user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
-2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `gh pr create` runs
+2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
 3. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
-4. **Use `gh pr create`** — not the GitHub API directly
+4. **Use `cape pr create`** — not the GitHub API directly
 5. **Stop on failure** — report what failed, don't push through
 
 </critical_rules>
@@ -174,7 +174,8 @@ For each checkbox item in the PR description:
 4. Continue until all items pass
 
 After all items pass, you must have a **rewritten copy of the PR description** where every `- [ ]`
-is now `- [x]`. This rewritten description is what gets passed to `gh pr create` — not the original.
+is now `- [x]`. This rewritten description is what gets passed to `cape pr create` — not the
+original.
 
 ---
 
@@ -187,10 +188,10 @@ echo '<rewritten-description>' | cape pr validate --stdin
 ```
 
 Validation rejects both missing sections AND unchecked boxes. If any `- [ ]` remains, validation
-fails — go back to step 7. Do not call `gh pr create` until validation passes.
+fails — go back to step 7. Do not call `cape pr create` until validation passes.
 
 ```bash
-gh pr create --title "the title" --body "$(cat <<'EOF'
+cape pr create --title "the title" --body "$(cat <<'EOF'
 <description>
 EOF
 )"
@@ -237,7 +238,7 @@ Branch has 3 commits adding a caching layer. No repo PR template found.
 3. Write description using bundled template sections (Motivation, Changes, Test plan, Verification)
 4. **STOP** — present full PR to user, `AskUserQuestion` → user picks "Create PR"
 5. Run test plan: `[x] npm test`, `[x] verify cache hit returns 200`, `[x] verify TTL expiry`
-6. `cape pr validate --stdin` passes → `gh pr create` — success
+6. `cape pr validate --stdin` passes → `cape pr create` — success
 7. Report URL and summary </example>
 
 <example>
@@ -248,7 +249,7 @@ Branch has 3 commits adding a caching layer. No repo PR template found.
 1. Write description matching the repo template's section structure and heading levels exactly
 2. Fill in Summary, Testing, Screenshots (include if visual, omit if backend)
 3. **STOP** — present to user, get confirmation
-4. `cape pr validate --stdin` before `gh pr create`
+4. `cape pr validate --stdin` before `cape pr create`
 5. Test plan items still execute as a gate regardless of template structure </example>
 
 <example>

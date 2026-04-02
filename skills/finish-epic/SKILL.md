@@ -110,7 +110,7 @@ EOF
 Load `cape:commit` with the Skill tool to commit any remaining changes before closing.
 
 ```bash
-br close <epic-id>
+cape br close <epic-id>
 ```
 
 Present a completion report:
