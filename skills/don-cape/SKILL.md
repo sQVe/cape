@@ -31,28 +31,28 @@ Always active. Injected at session start via hook. Applies to every user message
 Before responding to any user message, scan this table. If a skill matches, load it with the Skill
 tool. **First match wins** — stop scanning after the first row whose intent matches.
 
-| User intent                                                         | Skill                      | Notes                           |
-| ------------------------------------------------------------------- | -------------------------- | ------------------------------- |
-| Build, add, create, implement something new                         | `cape:brainstorm`          | Starts the build chain          |
-| "How should I approach X", unclear requirements                     | `cape:brainstorm`          | Design before code              |
-| Refactor, extract, rename, move, inline, simplify, restructure      | `cape:refactor`            | Evolve chain — structure only   |
-| Large refactor requiring design decisions                           | `cape:brainstorm`          | When target design is unclear   |
-| Design an interface, API surface, module boundary, type contract    | `cape:design-an-interface` | Standalone or within brainstorm |
-| Formalize a design into an epic                                     | `cape:write-plan`          | Requires brainstorm output      |
-| "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`        | Picks up from br state          |
-| Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`         | Investigation only              |
-| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`             | Requires br bug to exist        |
-| Refine, stress-test, harden a task before executing                 | `cape:task-refinement`     | Between plan and execute        |
-| Find untested behavior, test gaps, what's untested                  | `cape:find-test-gaps`      | Standalone                      |
-| Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`       | Standalone                      |
-| Explain, "how does X work", "walk me through", codebase overview    | `cape:explain`             | Standalone                      |
-| Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`           | Standalone                      |
-| Create a branch, start work on a branch                             | `cape:branch`              | Standalone                      |
-| Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`         | End of build chain              |
-| Commit, save changes, wrap this up                                  | `cape:commit`              | Standalone                      |
-| Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`                  | Standalone                      |
-| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`              | Standalone                      |
-| br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`               | Reference skill                 |
+| User intent                                                         | Skill                      | Notes                                                                                   |
+| ------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
+| Build, add, create, implement something new                         | `cape:brainstorm`          | Starts the build chain                                                                  |
+| "How should I approach X", unclear requirements                     | `cape:brainstorm`          | Design before code                                                                      |
+| Refactor, extract, rename, move, inline, simplify, restructure      | `cape:refactor`            | Evolve chain — structure only                                                           |
+| Large refactor requiring design decisions                           | `cape:brainstorm`          | When target design is unclear                                                           |
+| Design an interface, API surface, module boundary, type contract    | `cape:design-an-interface` | Standalone or within brainstorm                                                         |
+| Formalize a design into an epic                                     | `cape:write-plan`          | Requires brainstorm output                                                              |
+| "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`        | Run `br ready` first; if empty + open epic exists, suggest finish-epic (see note below) |
+| Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`         | Investigation only                                                                      |
+| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`             | Requires br bug to exist                                                                |
+| Refine, stress-test, harden a task before executing                 | `cape:task-refinement`     | Between plan and execute                                                                |
+| Find untested behavior, test gaps, what's untested                  | `cape:find-test-gaps`      | Standalone                                                                              |
+| Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`       | Standalone                                                                              |
+| Explain, "how does X work", "walk me through", codebase overview    | `cape:explain`             | Standalone                                                                              |
+| Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`           | Standalone                                                                              |
+| Create a branch, start work on a branch                             | `cape:branch`              | Standalone                                                                              |
+| Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`         | End of build chain                                                                      |
+| Commit, save changes, wrap this up                                  | `cape:commit`              | Standalone                                                                              |
+| Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`                  | Standalone                                                                              |
+| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`              | Standalone                                                                              |
+| br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`               | Reference skill                                                                         |
 
 **Internal skills** (called by other skills, not user-routed):
 
@@ -61,6 +61,12 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
   Step 2 and `fix-bug` in Step 3; user-prompt-submit hook serves as safety net for resumed sessions
 
 If nothing matches, proceed without a skill.
+
+**"Continue / next task" pre-check:** Before loading `cape:execute-plan`, run `br ready`. If it
+returns tasks, load execute-plan as normal. If it returns empty, run
+`br list --status open --type epic`. If an open epic exists, surface it: "All tasks appear done —
+did you mean to run finish-epic?" The user can confirm finish-epic or override to load execute-plan
+anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
