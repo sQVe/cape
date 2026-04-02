@@ -298,36 +298,13 @@ export const denyTable: readonly DenyEntry[] = [
     message: 'Use `cape commit` instead of raw `git commit`.',
     tier: 'redirect',
   },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+create\b/,
-    message: 'Use `cape br create` instead of raw `br create`.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+q\b/,
-    message: 'Use `cape br q` to query beads.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/,
-    message: 'Use `cape br update` to change issue status.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+close\b/,
-    message: 'Use `cape br close` to close an issue.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /\bgh\s+pr\s+create\b/,
-    message: 'Use `cape pr create` instead of raw `gh pr create`.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/,
-    message: 'Use `cape git create-branch` to create a branch.',
-    tier: 'redirect',
-  },
+  // Re-enable as each cape command is implemented:
+  // { pattern: /(?<!\bcape\s)\bbr\s+create\b/, message: 'Use `cape br create` instead of raw `br create`.', tier: 'redirect' },
+  // { pattern: /(?<!\bcape\s)\bbr\s+q\b/, message: 'Use `cape br q` to query beads.', tier: 'redirect' },
+  // { pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/, message: 'Use `cape br update` to change issue status.', tier: 'redirect' },
+  // { pattern: /(?<!\bcape\s)\bbr\s+close\b/, message: 'Use `cape br close` to close an issue.', tier: 'redirect' },
+  // { pattern: /\bgh\s+pr\s+create\b/, message: 'Use `cape pr create` instead of raw `gh pr create`.', tier: 'redirect' },
+  // { pattern: /\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/, message: 'Use `cape git create-branch` to create a branch.', tier: 'redirect' },
   {
     pattern: /\bgit\s+reset\s+--hard\b/,
     message:

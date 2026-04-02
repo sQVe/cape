@@ -618,74 +618,17 @@ describe('preToolUseBash', () => {
       expectDeny(result, 'cape commit');
     });
 
-    it('denies raw br create', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('br create --type task') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br create');
-    });
-
-    it('denies raw br q', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('br q') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br q');
-    });
-
-    it('denies raw br update --status', async () => {
-      const layer = makeStubHookLayer({
-        stdin: bashStdin('br update cape-abc --status in_progress'),
-      });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br update');
-    });
-
-    it('allows br update without --status', async () => {
-      const layer = makeStubHookLayer({
-        stdin: bashStdin('br update cape-abc --design "new content"'),
-      });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    });
-
-    it('denies raw br close', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br close');
-    });
-
-    it.each(['cape br create --type task', 'cape br q', 'cape br update --status open', 'cape br close abc'])(
-      'passes through cape-prefixed br command: %s',
-      async (command) => {
-        const layer = makeStubHookLayer({ stdin: bashStdin(command) });
-        const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-        expect(result).toBeNull();
-      },
-    );
-
-    it('denies raw gh pr create', async () => {
-      const layer = makeStubHookLayer({
-        stdin: bashStdin('gh pr create --title "feat: test"'),
-      });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape pr create');
-    });
-
-    it('denies raw git checkout -b', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git checkout -b feat/foo') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape git create-branch');
-    });
-
-    it('denies raw git switch -c', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git switch -c feat/foo') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape git create-branch');
-    });
-
-    it('denies raw git branch <name>', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git branch feat/foo') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape git create-branch');
-    });
+    // Re-enable as each cape command is implemented:
+    // it('denies raw br create', ...)
+    // it('denies raw br q', ...)
+    // it('denies raw br update --status', ...)
+    // it('allows br update without --status', ...)
+    // it('denies raw br close', ...)
+    // it('passes through cape-prefixed br command', ...)
+    // it('denies raw gh pr create', ...)
+    // it('denies raw git checkout -b', ...)
+    // it('denies raw git switch -c', ...)
+    // it('denies raw git branch <name>', ...)
   });
 
   describe('block tier', () => {
@@ -1051,7 +994,7 @@ describe('preToolUseSkill', () => {
 describe('hook command - PreToolUse wiring', () => {
   it('routes pre-tool-use --matcher Bash to deny table', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br create --type task'),
+      stdin: bashStdin('git commit -m "feat: test"'),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1108,7 +1051,7 @@ describe('hook command - PreToolUse wiring', () => {
 
   it('accepts PascalCase PreToolUse event name', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br create --type task'),
+      stdin: bashStdin('git commit -m "feat: test"'),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1644,11 +1587,11 @@ describe('event logging', () => {
   });
 
   it('logs deny event for preToolUseBash deny table match', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('br create --type task') });
+    const layer = makeStubHookLayer({ stdin: bashStdin('git commit -m "feat: test"') });
     await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.PreToolUse.Bash',
-      expect.stringContaining('cape br create'),
+      expect.stringContaining('cape commit'),
     );
   });
 
