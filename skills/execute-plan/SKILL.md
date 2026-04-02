@@ -113,6 +113,8 @@ ahead to later steps.
 
 **For each step in the expanded plan:**
 
+0. **Reset TDD state** — Run `rm -f hooks/context/tdd-state.json` to clear TDD state from the
+   previous step. This ensures the TDD gate enforces a fresh red-green cycle for each step.
 1. **Scope** — Read only the current step's title and **Changes** field. These define the single
    behavior for this iteration. Ignore all subsequent steps.
 2. **RED** — Write one failing test for the behavior described in the current step's title. Run it.
