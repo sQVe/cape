@@ -79,11 +79,20 @@ Examples:
 - `fix/resolve-auth-timeout`
 - `chore/update-dependencies`
 
+After building the name, validate it:
+
+```bash
+cape git validate-branch <name>
+```
+
+If validation fails, parse the error, adjust the name, and re-validate before presenting. If
+re-validation still fails, show the error and ask the user to provide or adjust the name.
+
 ---
 
 ## Step 3: Confirm and create
 
-Present the generated name to the user. Once approved (or after applying their edits):
+Present the validated name to the user. Once approved (or after applying their edits):
 
 ```bash
 cape git create-branch <branch-name>
