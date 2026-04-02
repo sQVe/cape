@@ -44,6 +44,9 @@ context. </rigidity_level>
 4. **Complete all substeps before closing a task** — partially done is not done
 5. **Orient from br state** — never ask "where did we leave off"
 6. **Test before code** — load `cape:test-driven-development` before writing any production code
+7. **Task close exits in exactly one state** — (a) ready task exists → checkpoint to it; (b) no
+   ready task → create next task → checkpoint; (c) no more work → finish-epic. No other exit is
+   valid.
 
 </critical_rules>
 
@@ -154,6 +157,15 @@ cape context clear workflow-active
 
 ## Step 3: Reflect and plan
 
+First, check if a ready task already exists:
+
+```bash
+br ready --parent <epic-id>
+```
+
+- **Ready task exists** — skip task creation; go to Step 4 and checkpoint to that task
+- **No ready tasks** — run reflection below and decide: create a task or initiate finish-epic
+
 After closing the task, review and optionally challenge before planning the next step.
 
 **Review implementation:** Dispatch `cape:code-reviewer` to review the completed task against the
@@ -237,7 +249,7 @@ set, default to HITL.
 Load `cape:commit` with the Skill tool to commit the completed task, then stop (HITL) or continue
 (AFK).
 
-When all tasks are closed and all success criteria appear met:
+When all tasks are closed and `br ready --parent <epic-id>` returns empty:
 
 ```
 ## Checkpoint -- all tasks complete
