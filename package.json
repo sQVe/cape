@@ -9,7 +9,9 @@
     "format:check": "vp fmt --check && prettier --check .",
     "lint": "vp lint",
     "prepare": "vp config",
-    "test": "vp test"
+    "test": "vp test",
+    "test:unit": "vp test --project unit",
+    "test:e2e": "vp test --project e2e"
   },
   "devDependencies": {
     "@types/node": "22.15.29",

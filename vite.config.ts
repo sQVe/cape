@@ -20,6 +20,7 @@ export default defineConfig({
         test: {
           name: 'e2e',
           include: ['cli/src/__e2e__/**/*.test.ts'],
+          globalSetup: ['cli/src/__e2e__/globalSetup.ts'],
           testTimeout: 15_000,
           fileParallelism: false,
         },

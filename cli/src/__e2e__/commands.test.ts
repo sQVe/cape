@@ -3,30 +3,15 @@ import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { capeCmd } from './helpers';
+
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const BINARY = join(import.meta.dirname, '..', '..', 'dist', 'index.mjs');
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
-
-const cape = (
-  args: string[],
-  options: { cwd?: string } = {},
-): { stdout: string; stderr: string; status: number } => {
-  const result = spawnSync('node', [BINARY, ...args], {
-    encoding: 'utf-8',
-    cwd: options.cwd ?? REPO_ROOT,
-    timeout: 10_000,
-  });
-  return {
-    stdout: result.stdout.trim(),
-    stderr: result.stderr.trim(),
-    status: result.status ?? 1,
-  };
-};
 
 describe('cape --help', () => {
   it('lists all subcommands', () => {
-    const result = cape(['--help']);
+    const result = capeCmd(['--help']);
     expect(result.status).toBe(0);
     for (const sub of ['br', 'check', 'commit', 'detect', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
@@ -36,7 +21,7 @@ describe('cape --help', () => {
 
 describe('cape --version', () => {
   it('returns version string', () => {
-    const result = cape(['--version']);
+    const result = capeCmd(['--version']);
     expect(result.status).toBe(0);
     expect(result.stdout).toMatch(/^cape v\d+\.\d+\.\d+$/);
   });
@@ -44,7 +29,7 @@ describe('cape --version', () => {
 
 describe('cape detect', () => {
   it('each entry has language, testFramework, linter, formatter fields', () => {
-    const result = cape(['detect']);
+    const result = capeCmd(['detect']);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.length).toBeGreaterThan(0);
     for (const entry of parsed) {
@@ -56,7 +41,7 @@ describe('cape detect', () => {
   });
 
   it('detects typescript for the cape repo', () => {
-    const result = cape(['detect']);
+    const result = capeCmd(['detect']);
     const parsed = JSON.parse(result.stdout);
     const ts = parsed.find((e: { language: string }) => e.language === 'typescript');
     expect(ts).toBeDefined();
@@ -66,7 +51,7 @@ describe('cape detect', () => {
 
 describe('cape git context', () => {
   it('returns valid JSON with all expected fields', () => {
-    const result = cape(['git', 'context']);
+    const result = capeCmd(['git', 'context']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed).toHaveProperty('mainBranch');
@@ -82,7 +67,7 @@ describe('cape git context', () => {
     const nonGitDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-nogit-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
-    const result = cape(['git', 'context'], { cwd: nonGitDir });
+    const result = capeCmd(['git', 'context'], { cwd: nonGitDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('error');
   });
@@ -90,57 +75,57 @@ describe('cape git context', () => {
 
 describe('cape br close-check', () => {
   it('cape br --help lists close-check subcommand', () => {
-    const result = cape(['br', '--help']);
+    const result = capeCmd(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('close-check');
   });
 
   it('requires an id argument', () => {
-    const result = cape(['br', 'close-check']);
+    const result = capeCmd(['br', 'close-check']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br close', () => {
   it('cape br --help lists close subcommand', () => {
-    const result = cape(['br', '--help']);
+    const result = capeCmd(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('close');
   });
 
   it('requires an id argument', () => {
-    const result = cape(['br', 'close']);
+    const result = capeCmd(['br', 'close']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br create', () => {
   it('cape br --help lists create subcommand', () => {
-    const result = cape(['br', '--help']);
+    const result = capeCmd(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create');
   });
 
   it('errors when --type is missing', () => {
-    const result = cape(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
+    const result = capeCmd(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--type is required');
   });
 
   it('errors when --priority is missing', () => {
-    const result = cape(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
+    const result = capeCmd(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--priority is required');
   });
 
   it('errors when --labels is missing', () => {
-    const result = cape(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
+    const result = capeCmd(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--labels is required');
   });
 
   it('rejects --design flag', () => {
-    const result = cape([
+    const result = capeCmd([
       'br',
       'create',
       'Test',
@@ -160,25 +145,25 @@ describe('cape br create', () => {
 
 describe('cape epic verify', () => {
   it('cape --help lists epic subcommand', () => {
-    const result = cape(['--help']);
+    const result = capeCmd(['--help']);
     expect(result.stdout).toContain('epic');
   });
 
   it('cape epic --help lists verify subcommand', () => {
-    const result = cape(['epic', '--help']);
+    const result = capeCmd(['epic', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('verify');
   });
 
   it('requires an id argument', () => {
-    const result = cape(['epic', 'verify']);
+    const result = capeCmd(['epic', 'verify']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br template', () => {
   it('outputs epic template with required sections', () => {
-    const result = cape(['br', 'template', '--type', 'epic']);
+    const result = capeCmd(['br', 'template', '--type', 'epic']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Requirements');
     expect(result.stdout).toContain('## Success criteria');
@@ -187,27 +172,27 @@ describe('cape br template', () => {
   });
 
   it('outputs task template', () => {
-    const result = cape(['br', 'template', '--type', 'task']);
+    const result = capeCmd(['br', 'template', '--type', 'task']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Goal');
     expect(result.stdout).toContain('## Behaviors');
   });
 
   it('outputs bug template', () => {
-    const result = cape(['br', 'template', '--type', 'bug']);
+    const result = capeCmd(['br', 'template', '--type', 'bug']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Reproduction steps');
   });
 
   it('exits 1 for unknown type', () => {
-    const result = cape(['br', 'template', '--type', 'unknown']);
+    const result = capeCmd(['br', 'template', '--type', 'unknown']);
     expect(result.status).toBe(1);
   });
 });
 
 describe('cape git validate-branch', () => {
   it('validates a well-formed branch name', () => {
-    const result = cape(['git', 'validate-branch', 'feat/my-feature']);
+    const result = capeCmd(['git', 'validate-branch', 'feat/my-feature']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.valid).toBe(true);
@@ -215,7 +200,7 @@ describe('cape git validate-branch', () => {
   });
 
   it('rejects a branch that already exists', () => {
-    const result = cape(['git', 'validate-branch', 'main']);
+    const result = capeCmd(['git', 'validate-branch', 'main']);
     expect(result.status).toBe(1);
     const parsed = JSON.parse(result.stdout.split('\n')[0]!);
     expect(parsed.valid).toBe(false);
@@ -223,7 +208,7 @@ describe('cape git validate-branch', () => {
   });
 
   it('warns on missing prefix', () => {
-    const result = cape(['git', 'validate-branch', 'no-prefix-branch']);
+    const result = capeCmd(['git', 'validate-branch', 'no-prefix-branch']);
     expect(result.status).toBe(1);
     const parsed = JSON.parse(result.stdout.split('\n')[0]!);
     expect(parsed.valid).toBe(false);
@@ -251,7 +236,7 @@ describe('cape git diff', () => {
 
   it('outputs unstaged diff by default', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 2;\n');
-    const result = cape(['git', 'diff'], { cwd: repoDir });
+    const result = capeCmd(['git', 'diff'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('file.ts');
   });
@@ -259,13 +244,13 @@ describe('cape git diff', () => {
   it('outputs staged diff', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 3;\n');
     execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
-    const result = cape(['git', 'diff', 'staged'], { cwd: repoDir });
+    const result = capeCmd(['git', 'diff', 'staged'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('file.ts');
   });
 
   it('outputs empty when no changes', () => {
-    const result = cape(['git', 'diff'], { cwd: repoDir });
+    const result = capeCmd(['git', 'diff'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
   });
@@ -274,13 +259,13 @@ describe('cape git diff', () => {
     const nonGitDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-nodiff-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
-    const result = cape(['git', 'diff'], { cwd: nonGitDir });
+    const result = capeCmd(['git', 'diff'], { cwd: nonGitDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('error');
   });
 
   it('exits 1 with error for invalid scope', () => {
-    const result = cape(['git', 'diff', 'bogus'], { cwd: repoDir });
+    const result = capeCmd(['git', 'diff', 'bogus'], { cwd: repoDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('invalid scope');
   });
@@ -291,7 +276,7 @@ describe('cape git diff', () => {
     execFileSync('git', ['-C', repoDir, 'add', 'new.ts']);
     execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add new']);
 
-    const result = cape(['git', 'diff', 'branch'], { cwd: repoDir });
+    const result = capeCmd(['git', 'diff', 'branch'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('new.ts');
   });
@@ -299,7 +284,7 @@ describe('cape git diff', () => {
 
 describe('cape validate', () => {
   it('returns JSON with passed and failed counts', () => {
-    const result = cape(['validate']);
+    const result = capeCmd(['validate']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed).toHaveProperty('passed');
@@ -311,7 +296,7 @@ describe('cape validate', () => {
   });
 
   it('filters to only skill files with "skills" argument', () => {
-    const result = cape(['validate', 'skills']);
+    const result = capeCmd(['validate', 'skills']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -321,7 +306,7 @@ describe('cape validate', () => {
   });
 
   it('filters to only agent files with "agents" argument', () => {
-    const result = cape(['validate', 'agents']);
+    const result = capeCmd(['validate', 'agents']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -331,7 +316,7 @@ describe('cape validate', () => {
   });
 
   it('filters to only command files with "commands" argument', () => {
-    const result = cape(['validate', 'commands']);
+    const result = capeCmd(['validate', 'commands']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -347,7 +332,7 @@ describe('cape validate', () => {
     writeFileSync(badFile, 'no frontmatter no tags\n');
 
     try {
-      const result = cape(['validate', badFile]);
+      const result = capeCmd(['validate', badFile]);
       expect(result.status).toBe(1);
       const jsonLine = result.stdout.split('\n')[0]!;
       const parsed = JSON.parse(jsonLine);
@@ -366,7 +351,7 @@ describe('cape validate', () => {
     writeFileSync(unknownFile, 'not a skill or agent\n');
 
     try {
-      const result = cape(['validate', unknownFile]);
+      const result = capeCmd(['validate', unknownFile]);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain('Unknown file type');
     } finally {
@@ -391,13 +376,13 @@ describe('cape commit', () => {
   });
 
   it('exits 1 with no files argument', () => {
-    const result = cape(['commit', '-m', 'feat: x'], { cwd: repoDir });
+    const result = capeCmd(['commit', '-m', 'feat: x'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
   it('succeeds with valid file and message in a temp git repo', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
-    const result = cape(['commit', 'file.ts', '-m', 'feat: add thing'], { cwd: repoDir });
+    const result = capeCmd(['commit', 'file.ts', '-m', 'feat: add thing'], { cwd: repoDir });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.message).toBe('feat: add thing');
@@ -411,7 +396,7 @@ describe('cape commit', () => {
 
   it('warns on stderr about sensitive files', () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
-    const result = cape(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
+    const result = capeCmd(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive');
     expect(result.stderr).toContain('.env');
@@ -424,13 +409,13 @@ describe('cape commit', () => {
 
   it('rejects invalid conventional commit message', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const y = 2;\n');
-    const result = cape(['commit', 'file.ts', '-m', 'bad message'], { cwd: repoDir });
+    const result = capeCmd(['commit', 'file.ts', '-m', 'bad message'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
   it('rejects bulk staging with dot', () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const z = 3;\n');
-    const result = cape(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
+    const result = capeCmd(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
@@ -438,7 +423,7 @@ describe('cape commit', () => {
     writeFileSync(join(repoDir, 'a.ts'), 'export const a = 1;\n');
     writeFileSync(join(repoDir, 'b.ts'), 'export const b = 2;\n');
 
-    const result = cape(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
+    const result = capeCmd(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
       cwd: repoDir,
     });
     expect(result.status).toBe(0);
@@ -455,7 +440,7 @@ describe('cape commit', () => {
 
 describe('cape check', () => {
   it('cape --help lists check subcommand', () => {
-    const result = cape(['--help']);
+    const result = capeCmd(['--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('check');
   });
@@ -468,7 +453,7 @@ describe('cape check', () => {
     execFileSync('git', ['-C', emptyDir, 'commit', '--allow-empty', '-m', 'initial']);
 
     try {
-      const result = cape(['check'], { cwd: emptyDir });
+      const result = capeCmd(['check'], { cwd: emptyDir });
       expect(result.status).not.toBe(0);
     } finally {
       spawnSync('rm', ['-rf', emptyDir]);
@@ -479,7 +464,7 @@ describe('cape check', () => {
 describe('cape pr', () => {
   describe('template', () => {
     it('returns JSON with sections array', () => {
-      const result = cape(['pr', 'template']);
+      const result = capeCmd(['pr', 'template']);
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(parsed).toHaveProperty('sections');
@@ -488,7 +473,7 @@ describe('cape pr', () => {
     });
 
     it('includes source field indicating repo or default', () => {
-      const result = cape(['pr', 'template']);
+      const result = capeCmd(['pr', 'template']);
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(['repo', 'default']).toContain(parsed.source);
@@ -509,19 +494,19 @@ describe('cape pr', () => {
     });
 
     it('exits 1 when no file or --stdin provided', () => {
-      const result = cape(['pr', 'validate']);
+      const result = capeCmd(['pr', 'validate']);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain('provide <file> or --stdin');
     });
 
     it('validates a PR body file with all sections present', () => {
-      const template = cape(['pr', 'template']);
+      const template = capeCmd(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = parsed.sections.map((s: string) => `#### ${s}\n\nContent here.\n`).join('\n');
       const bodyFile = join(tmpDir, 'pr-body.md');
       writeFileSync(bodyFile, body);
 
-      const result = cape(['pr', 'validate', bodyFile]);
+      const result = capeCmd(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(0);
       const validated = JSON.parse(result.stdout);
       expect(validated.valid).toBe(true);
@@ -532,7 +517,7 @@ describe('cape pr', () => {
       const bodyFile = join(tmpDir, 'empty-pr.md');
       writeFileSync(bodyFile, 'No sections here.\n');
 
-      const result = cape(['pr', 'validate', bodyFile]);
+      const result = capeCmd(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(1);
       const validated = JSON.parse(result.stdout.split('\n')[0]!);
       expect(validated.valid).toBe(false);
@@ -540,7 +525,7 @@ describe('cape pr', () => {
     });
 
     it('reports extra sections not in template', () => {
-      const template = cape(['pr', 'template']);
+      const template = capeCmd(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = [
         ...parsed.sections.map((s: string) => `#### ${s}\n\nContent.\n`),
@@ -549,7 +534,7 @@ describe('cape pr', () => {
       const bodyFile = join(tmpDir, 'extra-pr.md');
       writeFileSync(bodyFile, body);
 
-      const result = cape(['pr', 'validate', bodyFile]);
+      const result = capeCmd(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(0);
       const validated = JSON.parse(result.stdout);
       expect(validated.valid).toBe(true);
@@ -560,23 +545,23 @@ describe('cape pr', () => {
 
 describe('cape context', () => {
   it('rejects invalid context name with uppercase', () => {
-    const result = cape(['context', 'set', 'InvalidName']);
+    const result = capeCmd(['context', 'set', 'InvalidName']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
   it('rejects invalid context name with spaces', () => {
-    const result = cape(['context', 'set', 'bad name']);
+    const result = capeCmd(['context', 'set', 'bad name']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
   it('rejects invalid context name with underscores', () => {
-    const result = cape(['context', 'set', 'bad_name']);
+    const result = capeCmd(['context', 'set', 'bad_name']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
   it('accepts valid lowercase-hyphen context name', () => {
     const contextFile = join(REPO_ROOT, 'cli', 'hooks', 'context', 'my-context-123.txt');
-    const result = cape(['context', 'set', 'my-context-123']);
+    const result = capeCmd(['context', 'set', 'my-context-123']);
     try {
       expect(result.stderr).not.toContain('Invalid context name');
     } finally {
@@ -589,14 +574,14 @@ describe('cape context', () => {
   });
 
   it('clear rejects invalid context name', () => {
-    const result = cape(['context', 'clear', 'BAD']);
+    const result = capeCmd(['context', 'clear', 'BAD']);
     expect(result.stderr).toContain('Invalid context name');
   });
 });
 
 describe('cape br validate', () => {
   it('exits 1 when neither id nor --type provided', () => {
-    const result = cape(['br', 'validate']);
+    const result = capeCmd(['br', 'validate']);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('provide either <id> or --type');
   });
@@ -604,7 +589,7 @@ describe('cape br validate', () => {
 
 describe('cape br design', () => {
   it('cape br --help lists design subcommand', () => {
-    const result = cape(['br', '--help']);
+    const result = capeCmd(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('design');
   });
@@ -612,7 +597,7 @@ describe('cape br design', () => {
 
 describe('cape detect --map', () => {
   it('returns JSON mapping source files to test files', () => {
-    const result = cape(['detect', '--map', '.']);
+    const result = capeCmd(['detect', '--map', '.']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(typeof parsed).toBe('object');
@@ -620,7 +605,7 @@ describe('cape detect --map', () => {
   });
 
   it('values are either a test path or null', () => {
-    const result = cape(['detect', '--map', '.']);
+    const result = capeCmd(['detect', '--map', '.']);
     const parsed = JSON.parse(result.stdout);
     for (const value of Object.values(parsed)) {
       expect(value === null || typeof value === 'string').toBe(true);
@@ -630,25 +615,25 @@ describe('cape detect --map', () => {
 
 describe('cape br update', () => {
   it('cape br --help lists update subcommand', () => {
-    const result = cape(['br', '--help']);
+    const result = capeCmd(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('update');
   });
 
   it('requires an id argument', () => {
-    const result = cape(['br', 'update']);
+    const result = capeCmd(['br', 'update']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('id');
   });
 
   it('rejects hyphenated status values', () => {
-    const result = cape(['br', 'update', 'bd-test', '--status', 'in-progress']);
+    const result = capeCmd(['br', 'update', 'bd-test', '--status', 'in-progress']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('in_progress');
   });
 
   it('rejects done as status and redirects to cape br close', () => {
-    const result = cape(['br', 'update', 'bd-test', '--status', 'done']);
+    const result = capeCmd(['br', 'update', 'bd-test', '--status', 'done']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('cape br close');
   });
@@ -656,19 +641,19 @@ describe('cape br update', () => {
 
 describe('cape pr create', () => {
   it('cape pr --help lists create subcommand', () => {
-    const result = cape(['pr', '--help']);
+    const result = capeCmd(['pr', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create');
   });
 
   it('requires --title flag', () => {
-    const result = cape(['pr', 'create', '--body', 'body text']);
+    const result = capeCmd(['pr', 'create', '--body', 'body text']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--title');
   });
 
   it('requires --body flag', () => {
-    const result = cape(['pr', 'create', '--title', 'My PR']);
+    const result = capeCmd(['pr', 'create', '--title', 'My PR']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--body');
   });
@@ -676,19 +661,19 @@ describe('cape pr create', () => {
 
 describe('cape git create-branch', () => {
   it('cape git --help lists create-branch subcommand', () => {
-    const result = cape(['git', '--help']);
+    const result = capeCmd(['git', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create-branch');
   });
 
   it('requires a name argument', () => {
-    const result = cape(['git', 'create-branch']);
+    const result = capeCmd(['git', 'create-branch']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('name');
   });
 
   it('rejects names without conventional prefix', () => {
-    const result = cape(['git', 'create-branch', 'no-prefix-here']);
+    const result = capeCmd(['git', 'create-branch', 'no-prefix-here']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('feat');
   });
@@ -696,13 +681,13 @@ describe('cape git create-branch', () => {
 
 describe('cape test', () => {
   it('cape --help lists test subcommand', () => {
-    const result = cape(['--help']);
+    const result = capeCmd(['--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('test');
   });
 
   it('cape test --help describes TDD state output', () => {
-    const result = cape(['test', '--help']);
+    const result = capeCmd(['test', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('TDD state');
   });
