@@ -818,7 +818,7 @@ describe('preToolUseBash', () => {
 });
 
 describe('preToolUseSkill', () => {
-  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:branch', 'cape:brainstorm'])(
+  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:branch', 'cape:brainstorm', 'cape:write-plan'])(
     'allows non-gated skill %s',
     async (skill) => {
       const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
@@ -964,23 +964,6 @@ describe('preToolUseSkill', () => {
 
   it('allows fix-bug when br fails', async () => {
     const layer = makeStubHookLayer({ stdin: skillStdin('cape:fix-bug') });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('denies write-plan when no brainstorm artifact exists', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:write-plan'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'brainstorm');
-  });
-
-  it('allows write-plan when brainstorm artifact exists', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:write-plan'),
-      files: { '/test/hooks/context/brainstorm.txt': 'true' },
-    });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });

@@ -37,10 +37,9 @@ non-negotiable. Validation depth and detail-filling adapt to the design's comple
 
 ## Step 1: Verify design context
 
-A PreToolUse hook gate enforces that `cape:brainstorm` was run before this skill loads. If you reach
-this step, the brainstorm artifact exists. Verify that a design summary exists in conversation
-context. If not (e.g., context was cleared after brainstorm), tell the user to run `cape:brainstorm`
-again and stop.
+Verify that a design summary exists in conversation context. If not, offer `cape:brainstorm` as an
+option to explore and lock a design — but acknowledge that an organic design developed in
+conversation is equally valid. If no design of any kind exists, stop and ask the user to share one.
 
 Review the design summary. Identify any gaps that would prevent creating a complete epic:
 
@@ -153,12 +152,6 @@ reflects learnings from the previous one. Upfront task trees become brittle when
 
 **Why vertical slices?** Horizontal tasks ("write all models", "write all tests") hide integration
 risk. Vertical slices prove the system works end-to-end sooner and are independently demoable.
-
-Clear the brainstorm artifact (consumed):
-
-```bash
-cape context clear brainstorm
-```
 
 **Present completion summary and stop:**
 

@@ -373,7 +373,6 @@ const gatedSkills = new Set([
   'finish-epic',
   'fix-bug',
   'test-driven-development',
-  'write-plan',
 ]);
 
 type DenyResult = ReturnType<typeof denyWith> | null;
@@ -461,19 +460,6 @@ const gateFixBug = () =>
     return null;
   });
 
-const gateWritePlan = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const contextPath = `${service.pluginRoot()}/hooks/context/brainstorm.txt`;
-    const content = yield* service.readFile(contextPath);
-    if (!content) {
-      return denyWith(
-        'No brainstorm artifact found. Run cape:brainstorm first to explore and lock a design.',
-      );
-    }
-    return null;
-  });
-
 const gateInternalSkill = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -496,7 +482,6 @@ const skillGates: Record<
   'finish-epic': (args) => gateFinishEpic(args),
   'fix-bug': () => gateFixBug(),
   'test-driven-development': () => gateInternalSkill(),
-  'write-plan': () => gateWritePlan(),
 };
 
 export const preToolUseSkill = () =>
