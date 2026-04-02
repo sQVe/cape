@@ -164,6 +164,7 @@ const brClose = Command.make(
 
     yield* service.ensureDir(`${root}/hooks/context`);
     yield* service.removeFile(`${root}/hooks/context/tdd-state.json`);
+    yield* service.removeFile(`${root}/hooks/context/flow-phase.json`);
     yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
     yield* service.writeFile(`${root}/hooks/context/workflow-active.txt`, '');
 
@@ -248,9 +249,103 @@ const brCreate = Command.make(
   ),
 );
 
+const derivePhase = (issueType: string) => {
+  if (issueType === 'bug') {
+    return 'debugging';
+  }
+  if (issueType === 'epic') {
+    return 'planning';
+  }
+  return 'executing';
+};
+
+const writeFlowPhase = (id: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const showOutput = yield* service.brQuery(['show', id, '--json']);
+    let phase = 'executing';
+    if (showOutput != null) {
+      try {
+        const data: unknown = JSON.parse(showOutput);
+        if (typeof data === 'object' && data != null && 'issue_type' in data && typeof data.issue_type === 'string') {
+          phase = derivePhase(data.issue_type);
+        }
+      } catch {
+        // fall through with default phase
+      }
+    }
+    const root = service.pluginRoot();
+    yield* service.ensureDir(`${root}/hooks/context`);
+    yield* service.writeFile(
+      `${root}/hooks/context/flow-phase.json`,
+      JSON.stringify({ phase, issueId: id, timestamp: Date.now() }),
+    );
+    return phase;
+  });
+
+const brUpdate = Command.make(
+  'update',
+  {
+    id: Argument.string('id'),
+    status: Flag.string('status').pipe(Flag.optional),
+    description: Flag.string('description').pipe(Flag.optional),
+    design: Flag.string('design').pipe(Flag.optional),
+    priority: Flag.string('priority').pipe(Flag.optional),
+    labels: Flag.string('labels').pipe(Flag.optional),
+  },
+  Effect.fn(function* ({ id, status, description, design, priority, labels }) {
+    if (status._tag === 'Some') {
+      const value = status.value;
+      if (value.includes('-')) {
+        const suggested = value.replace(/-/g, '_');
+        const error = { error: `Invalid status "${value}". Use "${suggested}" (underscore, not hyphen).` };
+        yield* Console.error(JSON.stringify(error));
+        return yield* Effect.fail(new Error(error.error));
+      }
+      if (value === 'done') {
+        const error = { error: 'Use `cape br close <id>` to close an issue instead of setting status to "done".' };
+        yield* Console.error(JSON.stringify(error));
+        return yield* Effect.fail(new Error(error.error));
+      }
+    }
+
+    const service = yield* HookService;
+    const args: string[] = ['update', id];
+    if (status._tag === 'Some') {
+      args.push('--status', status.value);
+    }
+    if (description._tag === 'Some') {
+      args.push('--description', description.value);
+    }
+    if (design._tag === 'Some') {
+      args.push('--design', design.value);
+    }
+    if (priority._tag === 'Some') {
+      args.push('--priority', priority.value);
+    }
+    if (labels._tag === 'Some') {
+      args.push('--labels', labels.value);
+    }
+
+    const output = yield* service.brQuery(args);
+    if (output == null) {
+      yield* Console.error(JSON.stringify({ error: `br update failed` }));
+      return yield* Effect.fail(new Error('br update failed'));
+    }
+
+    if (status._tag === 'Some') {
+      const phase = yield* writeFlowPhase(id);
+      yield* Console.log(JSON.stringify({ updated: true, id, phase }));
+      return;
+    }
+
+    yield* Console.log(JSON.stringify({ updated: true, id }));
+  }),
+).pipe(Command.withDescription('Update a bead issue with status validation and flow state tracking.'));
+
 export const br = Command.make('br').pipe(
   Command.withDescription(
     'Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.',
   ),
-  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate]),
+  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate, brUpdate]),
 );

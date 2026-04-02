@@ -49,6 +49,14 @@ const formatCommands: Record<string, CheckCommand> = {
   rustfmt: { label: 'rustfmt', command: 'cargo', args: ['fmt', '--check'] },
 };
 
+export const resolveTestCommand = (ecosystems: DetectResult[]): CheckCommand | undefined => {
+  for (const eco of ecosystems) {
+    const test = eco.testFramework != null ? testCommands[eco.testFramework] : undefined;
+    if (test != null) return test;
+  }
+  return undefined;
+};
+
 export const resolveCheckCommands = (ecosystems: DetectResult[]) => {
   const commands: CheckCommand[] = [];
 

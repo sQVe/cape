@@ -14,6 +14,7 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -32,6 +33,7 @@ const makeGitLayer = (result = defaultValidation) =>
       }),
     getDiff: () => Effect.succeed(''),
     validateBranch: () => Effect.succeed(result),
+    createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
   });
 
 const makeCapturingLayer = () => {
@@ -50,6 +52,7 @@ const makeCapturingLayer = () => {
       captured = name;
       return Effect.succeed({ valid: true, errors: [] });
     },
+    createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
   });
   return { layer, getCaptured: () => captured };
 };
@@ -64,6 +67,7 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
+    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
   );

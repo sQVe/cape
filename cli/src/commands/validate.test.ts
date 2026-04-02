@@ -20,6 +20,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubConformLayer,
+  stubTestLayer,
   stubPrLayer,
 } from '../testStubs';
 
@@ -263,6 +264,7 @@ const makeCommandLayers = (validateLayer = makeTestValidateLayer()) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
+    stubTestLayer,
     stubConformLayer,
     validateLayer,
   );

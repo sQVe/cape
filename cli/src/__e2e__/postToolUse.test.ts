@@ -89,103 +89,6 @@ describe('PostToolUse/Bash', () => {
     expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
   });
 
-  it('writes green TDD state for pytest', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'pytest tests/' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for go test', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'go test ./...' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for cargo test', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'cargo test' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for busted', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'busted spec/' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for bun test', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'bun test' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for python -m pytest', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'python -m pytest -v' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes green TDD state for npm test', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'npm test' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('handles br show and test command in separate calls', () => {
-    const showStdin = JSON.stringify({
-      tool_input: { command: 'br show cape-xyz' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], showStdin, env);
-
-    const testStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], testStdin, env);
-
-    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    expect(log).toContain('cape-xyz');
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
   it('handles malformed JSON input gracefully', () => {
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], 'not json', env);
     expect(result.status).toBe(0);
@@ -193,23 +96,8 @@ describe('PostToolUse/Bash', () => {
     expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
   });
 
-  it('writes both br show log and TDD state for compound command', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'br show cape-abc && npx vitest run' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-
-    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    expect(log).toContain('cape-abc');
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
   it('returns null output (no stdout) for all commands', () => {
-    const commands = ['ls -la', 'br show cape-1', 'npx vitest run'];
+    const commands = ['ls -la', 'br show cape-1'];
     for (const command of commands) {
       const stdin = JSON.stringify({ tool_input: { command } });
       const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
@@ -218,10 +106,8 @@ describe('PostToolUse/Bash', () => {
   });
 });
 
-// All Edit E2E tests hit the early-return path because `br` queries return no
-// executing/debugging flow context. The TDD reminder output path is only testable
-// at the unit level (in hook.test.ts). These tests verify graceful no-op behavior,
-// not reminder emission.
+// All Edit E2E tests hit the early-return path because no flow-phase.json exists.
+// The TDD reminder output path is only testable at the unit level (in hook.test.ts).
 describe('PostToolUse/Edit', () => {
   it('skips .test.ts files', () => {
     const stdin = JSON.stringify({
@@ -314,105 +200,6 @@ describe('PostToolUse/Edit', () => {
   });
 });
 
-describe('PostToolUseFailure/Bash', () => {
-  it('writes red TDD state for npx vitest failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes red TDD state for pytest failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'pytest -x tests/' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes red TDD state for go test failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'go test ./...' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes red TDD state for cargo test failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'cargo test' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('writes red TDD state for busted failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'busted spec/' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('produces no state change for non-test command failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'ls /nonexistent' },
-    });
-    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
-  });
-
-  it('produces no state change for build command failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'npm run build' },
-    });
-    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
-  });
-
-  it('produces no state change for git command failure', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'git push origin main' },
-    });
-    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
-  });
-
-  it('returns no stdout for all cases', () => {
-    const commands = ['npx vitest run', 'ls /nonexistent', 'cargo test'];
-    for (const command of commands) {
-      const stdin = JSON.stringify({ tool_input: { command } });
-      const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-      expect(result.stdout).toBe('');
-    }
-  });
-
-  it('handles malformed JSON input gracefully', () => {
-    const result = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], 'not json', env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
-  });
-});
 
 describe('context directory creation', () => {
   it('creates context directory when it does not exist for br show', () => {
@@ -429,84 +216,5 @@ describe('context directory creation', () => {
     expect(log).toContain('cape-new');
   });
 
-  it('creates context directory when it does not exist for test command', () => {
-    spawnSync('rm', ['-rf', contextDir]);
-
-    const stdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    expect(existsSync(contextDir)).toBe(true);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(true);
-  });
-
-  it('creates context directory when it does not exist for test failure', () => {
-    spawnSync('rm', ['-rf', contextDir]);
-
-    const stdin = JSON.stringify({
-      tool_input: { command: 'pytest' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-
-    expect(existsSync(contextDir)).toBe(true);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(true);
-  });
 });
 
-describe('TDD state transitions', () => {
-  it('transitions from red to green on test pass', () => {
-    const failStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], failStdin, env);
-
-    let state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-
-    const passStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], passStdin, env);
-
-    state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('transitions from green to red on test failure', () => {
-    const passStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], passStdin, env);
-
-    let state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-    expect(state.timestamp).toBeGreaterThan(0);
-
-    const failStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], failStdin, env);
-
-    state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-    expect(state.timestamp).toBeGreaterThan(0);
-  });
-
-  it('overwrites timestamp on each transition', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-
-    cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    const first = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    const second = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-
-    expect(second.timestamp).toBeGreaterThanOrEqual(first.timestamp);
-    expect(second.phase).toBe('green');
-  });
-});

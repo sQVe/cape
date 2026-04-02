@@ -5,9 +5,11 @@ import {
   normalizeEventName,
   postToolUseBash,
   postToolUseEdit,
-  postToolUseFailureBash,
+  postToolUseWrite,
   preToolUseBash,
+  preToolUseEdit,
   preToolUseSkill,
+  preToolUseWrite,
   sessionStart,
   userPromptSubmit,
 } from '../services/hook';
@@ -39,6 +41,10 @@ const hookRun = Command.make(
           result = yield* preToolUseBash();
         } else if (matcher === 'Skill') {
           result = yield* preToolUseSkill();
+        } else if (matcher === 'Edit') {
+          result = yield* preToolUseEdit();
+        } else if (matcher === 'Write') {
+          result = yield* preToolUseWrite();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
@@ -51,16 +57,8 @@ const hookRun = Command.make(
           result = yield* postToolUseBash();
         } else if (matcher === 'Edit') {
           result = yield* postToolUseEdit();
-        }
-        if (result != null) {
-          yield* Console.log(JSON.stringify(result));
-        }
-        break;
-      }
-      case 'PostToolUseFailure': {
-        let result;
-        if (matcher === 'Bash') {
-          result = yield* postToolUseFailureBash();
+        } else if (matcher === 'Write') {
+          result = yield* postToolUseWrite();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));

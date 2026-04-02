@@ -8,6 +8,7 @@ import { DetectService } from './services/detect';
 import { GitService } from './services/git';
 import { HookService } from './services/hook';
 import { PrService } from './services/pr';
+import { TestService } from './services/test';
 import { ValidateService } from './services/validate';
 
 export const stubGitLayer = Layer.succeed(GitService)({
@@ -21,6 +22,7 @@ export const stubGitLayer = Layer.succeed(GitService)({
     }),
   getDiff: () => Effect.succeed(''),
   validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
+  createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
 });
 
 export const stubDetectLayer = Layer.succeed(DetectService)({
@@ -58,6 +60,7 @@ export const stubHookLayer = Layer.succeed(HookService)({
   brQuery: () => Effect.succeed(null),
   readStdin: () => Effect.succeed(''),
   spawnGit: () => Effect.succeed(null),
+  fileExists: () => Effect.succeed(false),
 });
 
 export const stubPrLayer = Layer.succeed(PrService)({
@@ -65,12 +68,17 @@ export const stubPrLayer = Layer.succeed(PrService)({
   readFile: () => Effect.fail(new Error('no file')),
   readStdin: () => Effect.succeed(''),
   gitRoot: () => Effect.succeed('/repo'),
+  spawnGh: () => Effect.fail(new Error('no gh')),
 });
 
 export const stubValidateLayer = Layer.succeed(ValidateService)({
   globFiles: () => Effect.succeed([]),
   readFile: () => Effect.succeed(''),
   gitRoot: () => Effect.succeed('/repo'),
+});
+
+export const stubTestLayer = Layer.succeed(TestService)({
+  runTest: () => Effect.succeed({ passed: true, output: '' }),
 });
 
 export const stubConformLayer = Layer.succeed(ConformService)({

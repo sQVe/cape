@@ -19,6 +19,7 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -43,6 +44,7 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubTestLayer,
   stubValidateLayer,
   stubConformLayer,
 );
@@ -227,6 +229,7 @@ describe('commit command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
     );

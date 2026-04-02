@@ -71,34 +71,8 @@ describe('flow 1: br show then br update with design', () => {
   });
 });
 
-describe('flow 2: TDD red-green-refactor cycle', () => {
-  it('tracks red phase on test failure, then shows TDD reminder on Edit', () => {
-    const failStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    const failResult = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], failStdin, env);
-    expect(failResult.status).toBe(0);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('red');
-  });
-
-  it('tracks green phase on test success', () => {
-    const passStdin = JSON.stringify({
-      tool_input: { command: 'npx vitest run' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], passStdin, env);
-
-    const state = JSON.parse(readFileSync(join(contextDir, 'tdd-state.json'), 'utf-8'));
-    expect(state.phase).toBe('green');
-  });
-
-  it('suppresses TDD reminder when red phase is fresh', () => {
-    // postToolUseEdit checks queryFlowState() -> brQuery() to determine if we're in
-    // executing/debugging phase. In E2E, `br` is unavailable so queryFlowState returns
-    // nulls, deriveFlowContext returns null, and the reminder never fires regardless of
-    // TDD state. This test documents that a fresh red state produces no Edit output,
-    // but cannot verify the "fresh red suppresses reminder" path in isolation.
+describe('flow 2: TDD reminder on Edit', () => {
+  it('produces no TDD reminder without flow-phase.json', () => {
     writeFileSync(
       join(contextDir, 'tdd-state.json'),
       JSON.stringify({ phase: 'red', timestamp: Date.now() }),

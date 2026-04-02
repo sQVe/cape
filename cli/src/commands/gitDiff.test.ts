@@ -14,6 +14,7 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -31,6 +32,7 @@ const makeTestGitLayer = (diffResult = 'diff --git a/file.ts b/file.ts') =>
       }),
     getDiff: (_scope: DiffScope) => Effect.succeed(diffResult),
     validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
+    createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
   });
 
 const makeErrorGitLayer = () =>
@@ -38,6 +40,7 @@ const makeErrorGitLayer = () =>
     getContext: () => Effect.fail(new Error('not a git repository')),
     getDiff: () => Effect.fail(new Error('not a git repository')),
     validateBranch: () => Effect.fail(new Error('not a git repository')),
+    createBranch: () => Effect.fail(new Error('not a git repository')),
   });
 
 const makeScopeCapturingLayer = () => {
@@ -56,6 +59,7 @@ const makeScopeCapturingLayer = () => {
       return Effect.succeed(`diff for ${scope}`);
     },
     validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
+    createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
   });
   return { layer, getCaptured: () => captured };
 };
@@ -70,6 +74,7 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
+    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
   );

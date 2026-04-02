@@ -12,6 +12,7 @@ import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
 import { HookServiceLive } from './services/hookLive';
 import { PrServiceLive } from './services/prLive';
+import { TestServiceLive } from './services/testLive';
 import { ValidateServiceLive } from './services/validateLive';
 
 const skipCommands = new Set(['hook', 'stats']);
@@ -34,6 +35,7 @@ main.pipe(
   Effect.provide(GitServiceLive),
   Effect.provide(HookServiceLive),
   Effect.provide(PrServiceLive),
+  Effect.provide(TestServiceLive),
   Effect.provide(ValidateServiceLive),
   NodeRuntime.runMain,
 );

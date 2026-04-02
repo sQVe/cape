@@ -52,6 +52,7 @@ export class PrService extends ServiceMap.Service<
     readonly readFile: (path: string) => Effect.Effect<string, Error>;
     readonly readStdin: () => Effect.Effect<string, Error>;
     readonly gitRoot: () => Effect.Effect<string, Error>;
+    readonly spawnGh: (args: readonly string[]) => Effect.Effect<string, Error>;
   }
 >()('PrService') {}
 

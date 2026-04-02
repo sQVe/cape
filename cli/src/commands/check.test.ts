@@ -15,6 +15,7 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -65,6 +66,7 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
+  stubTestLayer,
   stubValidateLayer,
   stubConformLayer,
 );
@@ -89,6 +91,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
@@ -110,6 +113,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
@@ -127,6 +131,7 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
     );
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(

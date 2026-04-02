@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 
 import { Effect, Layer } from 'effect';
 
-import type { BranchValidation, DiffScope } from './git';
+import type { BranchCreation, BranchValidation, DiffScope } from './git';
 import { BRANCH_PREFIXES, GitService } from './git';
 
 const git = (args: readonly string[]) =>
@@ -114,4 +114,18 @@ const validateBranch = (name: string) =>
     catch: (error) => new Error('not a git repository', { cause: error }),
   });
 
-export const GitServiceLive = Layer.succeed(GitService)({ getContext, getDiff, validateBranch });
+const createBranch = (name: string) =>
+  Effect.try({
+    try: (): BranchCreation => {
+      git(['checkout', '-b', name]);
+      return { created: true, branch: name };
+    },
+    catch: (error) => new Error(`failed to create branch: ${name}`, { cause: error }),
+  });
+
+export const GitServiceLive = Layer.succeed(GitService)({
+  getContext,
+  getDiff,
+  validateBranch,
+  createBranch,
+});

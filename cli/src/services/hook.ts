@@ -3,6 +3,7 @@ import { basename, extname } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../eventLog';
+import { isTrivialFile } from './detect';
 
 const testFilePattern =
   /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
@@ -14,37 +15,9 @@ const codeExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs
 
 export const isCodeFile = (filePath: string): boolean => codeExtensions.has(extname(filePath));
 
-const testCommandPattern =
-  /(?:^|\s)(?:bun test|npm test|npx vitest|vitest|pytest|go test|cargo test|busted|python -m (?:pytest|unittest))(?:\s|$)/;
-
-export const isTestCommand = (command: string): boolean => testCommandPattern.test(command);
-
 const TDD_STATE_TTL_MS = 10 * 60 * 1000;
+const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
-interface FlowState {
-  readonly bugs: string | null;
-  readonly inProgressTasks: string | null;
-  readonly epics: string | null;
-}
-
-export const deriveFlowContext = (state: FlowState) => {
-  const brAvailable = state.bugs !== null || state.inProgressTasks !== null || state.epics !== null;
-  if (!brAvailable) {
-    return null;
-  }
-
-  let phase: string;
-  if (state.bugs) {
-    phase = 'debugging';
-  } else if (state.inProgressTasks) {
-    phase = 'executing';
-  } else if (state.epics) {
-    phase = 'planning';
-  } else {
-    phase = 'idle';
-  }
-  return `<flow-context>Current phase: ${phase}</flow-context>`;
-};
 
 const beadsPatterns = [
   /\bbr\b/i,
@@ -109,18 +82,36 @@ export class HookService extends ServiceMap.Service<
     readonly brQuery: (args: readonly string[]) => Effect.Effect<string | null>;
     readonly readStdin: () => Effect.Effect<string>;
     readonly spawnGit: (args: readonly string[]) => Effect.Effect<string | null>;
+    readonly fileExists: (path: string) => Effect.Effect<boolean>;
   }
 >()('HookService') {}
 
-export const queryFlowState = () =>
+
+export const readFlowPhase = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const [bugs, inProgressTasks, epics] = yield* Effect.all([
-      service.brQuery(['list', '--type', 'bug', '--status', 'open']),
-      service.brQuery(['list', '--status', 'in_progress', '--type', 'task']),
-      service.brQuery(['list', '--type', 'epic', '--status', 'open']),
-    ]);
-    return { bugs, inProgressTasks, epics };
+    const root = service.pluginRoot();
+    const content = yield* service.readFile(`${root}/hooks/context/flow-phase.json`);
+    if (content == null) {
+      return null;
+    }
+    try {
+      const raw: unknown = JSON.parse(content);
+      if (
+        typeof raw !== 'object' ||
+        raw == null ||
+        !('phase' in raw) ||
+        typeof raw.phase !== 'string' ||
+        !('timestamp' in raw) ||
+        typeof raw.timestamp !== 'number'
+      ) {
+        return null;
+      }
+      const isStale = Date.now() - raw.timestamp > FLOW_PHASE_TTL_MS;
+      return isStale ? null : raw.phase;
+    } catch {
+      return null;
+    }
   });
 
 export const clearLogs = () =>
@@ -141,8 +132,7 @@ export const sessionStart = (clearLogsFlag: boolean) =>
       yield* clearLogs();
     }
 
-    const flowState = yield* queryFlowState();
-    const flowContext = deriveFlowContext(flowState);
+    const flowPhase = yield* readFlowPhase();
 
     const skillPath = `${root}/skills/don-cape/SKILL.md`;
     const skill = yield* service.readFile(skillPath);
@@ -155,8 +145,8 @@ export const sessionStart = (clearLogsFlag: boolean) =>
     } else {
       parts.push('cape plugin loaded.');
     }
-    if (flowContext != null) {
-      parts.push(flowContext);
+    if (flowPhase != null) {
+      parts.push(`<flow-context>Current phase: ${flowPhase}</flow-context>`);
     }
 
     return { additionalContext: parts.join('\n\n') };
@@ -192,10 +182,9 @@ export const userPromptSubmit = () =>
       skills.push('cape:execute-plan');
     }
 
-    const flowState = yield* queryFlowState();
-    const flowContext = deriveFlowContext(flowState);
-    if (flowContext != null) {
-      contexts.push(flowContext);
+    const flowPhase = yield* readFlowPhase();
+    if (flowPhase != null) {
+      contexts.push(`<flow-context>Current phase: ${flowPhase}</flow-context>`);
     }
 
     if (skills.length === 0 && contexts.length === 0) {
@@ -305,14 +294,19 @@ export const denyTable: readonly DenyEntry[] = [
     tier: 'redirect',
   },
   // { pattern: /(?<!\bcape\s)\bbr\s+q\b/, message: 'Use `cape br q` to query beads.', tier: 'redirect' },
-  // { pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/, message: 'Use `cape br update` to change issue status.', tier: 'redirect' },
+  {
+    pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/,
+    message: 'Use `cape br update` to change issue status.',
+    tier: 'redirect',
+  },
   {
     pattern: /(?<!\bcape\s)\bbr\s+close\b/,
     message: 'Use `cape br close` to close an issue.',
     tier: 'redirect',
   },
-  // { pattern: /\bgh\s+pr\s+create\b/, message: 'Use `cape pr create` instead of raw `gh pr create`.', tier: 'redirect' },
-  // { pattern: /\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/, message: 'Use `cape git create-branch` to create a branch.', tier: 'redirect' },
+  { pattern: /(?<!\bcape\s)\bgh\s+pr\s+create\b/, message: 'Use `cape pr create` instead of raw `gh pr create`.', tier: 'redirect' },
+  { pattern: /(?<!\bcape\s)\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/, message: 'Use `cape git create-branch` to create a branch.', tier: 'redirect' },
+  { pattern: /(?<!\bcape\s)\b(?:npx vitest|vitest|bun test|npm test|pytest|go test|cargo test|busted|python -m (?:pytest|unittest))(?:\s|$)/, message: 'Use `cape test` to run tests so TDD state is tracked.', tier: 'redirect' },
   {
     pattern: /\bgit\s+reset\s+--hard\b/,
     message:
@@ -540,6 +534,25 @@ const parseFilePath = (input: string): string | null => {
   }
 };
 
+interface WriteInput {
+  readonly filePath: string;
+  readonly content: string;
+}
+
+const parseWriteInput = (input: string): WriteInput | null => {
+  try {
+    const data = JSON.parse(input);
+    const filePath = parseString(data.tool_input?.file_path);
+    const content = parseString(data.tool_input?.content);
+    if (!filePath || content == null) {
+      return null;
+    }
+    return { filePath, content };
+  } catch {
+    return null;
+  }
+};
+
 export const postToolUseBash = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -559,14 +572,6 @@ export const postToolUseBash = () =>
       yield* service.writeFile(
         `${contextPath}/br-show-log.txt`,
         `${existing ?? ''}${showMatch[1]}\n`,
-      );
-    }
-
-    if (isTestCommand(command)) {
-      yield* service.ensureDir(contextPath);
-      yield* service.writeFile(
-        `${contextPath}/tdd-state.json`,
-        JSON.stringify({ phase: 'green', timestamp: Date.now() }),
       );
     }
 
@@ -620,13 +625,12 @@ export const postToolUseEdit = () =>
       return null;
     }
 
-    const flowState = yield* queryFlowState();
-    const flowContext = deriveFlowContext(flowState);
-    if (!flowContext) {
+    const flowPhase = yield* readFlowPhase();
+    if (!flowPhase) {
       return null;
     }
 
-    const isActivePhase = flowContext.includes('executing') || flowContext.includes('debugging');
+    const isActivePhase = flowPhase === 'executing' || flowPhase === 'debugging';
     if (!isActivePhase) {
       return null;
     }
@@ -661,22 +665,122 @@ export const postToolUseEdit = () =>
     };
   });
 
-export const postToolUseFailureBash = () =>
+const checkTddGate = (
+  filePath: string,
+  isNewFile: boolean,
+  fileContent: string | null,
+) =>
+  Effect.gen(function* () {
+    if (!isCodeFile(filePath)) {
+      return null;
+    }
+    if (isTestFile(filePath)) {
+      return null;
+    }
+    if (isNewFile) {
+      return null;
+    }
+    if (fileContent != null && isTrivialFile(filePath, fileContent)) {
+      return null;
+    }
+
+    const flowPhase = yield* readFlowPhase();
+    if (!flowPhase) {
+      return null;
+    }
+    const isActivePhase = flowPhase === 'executing' || flowPhase === 'debugging';
+    if (!isActivePhase) {
+      return null;
+    }
+
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+    const state = yield* readTddState(root);
+
+    if (state?.phase === 'red' || state?.phase === 'green') {
+      return null;
+    }
+
+    const reason =
+      state?.phase === 'writing-test'
+        ? 'TDD gate: run the test before editing production code. Dispatch cape test-runner first.'
+        : 'TDD gate: write a failing test before editing production code. Load cape:test-driven-development.';
+
+    logEvent('hook.PreToolUse.Edit', reason);
+    return denyWith(reason);
+  });
+
+export const preToolUseEdit = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const input = yield* service.readStdin();
-    const command = parseCommand(input);
-    if (!command || !isTestCommand(command)) {
+    const filePath = parseFilePath(input);
+    if (!filePath) {
+      return null;
+    }
+
+    const fileContent = yield* service.readFile(filePath);
+    return yield* checkTddGate(filePath, false, fileContent);
+  });
+
+export const preToolUseWrite = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const writeInput = parseWriteInput(input);
+    if (!writeInput) {
+      return null;
+    }
+
+    const exists = yield* service.fileExists(writeInput.filePath);
+    return yield* checkTddGate(writeInput.filePath, !exists, writeInput.content);
+  });
+
+export const postToolUseWrite = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const input = yield* service.readStdin();
+    const writeInput = parseWriteInput(input);
+    if (!writeInput || !isCodeFile(writeInput.filePath)) {
+      return null;
+    }
+
+    const flowPhase = yield* readFlowPhase();
+    if (!flowPhase) {
+      return null;
+    }
+    const isActivePhase = flowPhase === 'executing' || flowPhase === 'debugging';
+    if (!isActivePhase) {
       return null;
     }
 
     const root = service.pluginRoot();
-    const contextPath = `${root}/hooks/context`;
-    yield* service.ensureDir(contextPath);
-    yield* service.writeFile(
-      `${contextPath}/tdd-state.json`,
-      JSON.stringify({ phase: 'red', timestamp: Date.now() }),
-    );
+    const state = yield* readTddState(root);
 
-    return null;
+    if (isTestFile(writeInput.filePath)) {
+      if (state?.phase === 'writing-test') {
+        logEvent('hook.PostToolUse.Write', 'tdd-batching');
+        return {
+          additionalContext: [
+            'TDD batching warning: you are writing another test before running the previous one.',
+            'Dispatch cape:test-runner now. One test at a time — write it, run it, then proceed.',
+          ].join(' '),
+        };
+      }
+      yield* writeTddState(root, 'writing-test');
+      return null;
+    }
+
+    if (state?.phase === 'red') {
+      return null;
+    }
+
+    logEvent('hook.PostToolUse.Write', 'tdd-reminder');
+    return {
+      additionalContext: [
+        'TDD reminder: you are editing production code without a failing test.',
+        'Consider writing or updating a test first, then making it fail, before changing this code.',
+      ].join(' '),
+    };
   });
+

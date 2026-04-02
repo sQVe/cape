@@ -13,6 +13,7 @@ import {
   stubGitLayer,
   stubPrLayer,
   stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -37,6 +38,7 @@ const makeTestLayers = (
     brQuery: () => Effect.succeed(null),
     readStdin: () => Effect.succeed(''),
     spawnGit: () => Effect.succeed(null),
+    fileExists: () => Effect.succeed(false),
   });
 
   return Layer.mergeAll(
@@ -47,6 +49,7 @@ const makeTestLayers = (
     stubCommitLayer,
     stubBrLayer,
     stubPrLayer,
+    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     hookLayer,

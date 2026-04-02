@@ -70,6 +70,8 @@ const spawnGit = (args: readonly string[]) =>
     catch: () => new Error('git command failed'),
   }).pipe(Effect.orElseSucceed(() => null));
 
+const fileExists = (path: string) => Effect.succeed(existsSync(path));
+
 export const HookServiceLive = Layer.succeed(HookService)({
   pluginRoot,
   readFile,
@@ -79,4 +81,5 @@ export const HookServiceLive = Layer.succeed(HookService)({
   brQuery,
   readStdin,
   spawnGit,
+  fileExists,
 });

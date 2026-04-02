@@ -14,6 +14,7 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -178,6 +179,7 @@ const makeCommandLayers = (conformLayer = makeTestConformLayer()) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
+    stubTestLayer,
     stubValidateLayer,
     conformLayer,
   );
@@ -207,6 +209,7 @@ describe('conform command wiring', () => {
           'diff --git a/src/index.ts b/src/index.ts\n--- a/src/index.ts\n+++ b/src/index.ts\n',
         ),
       validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
+      createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
     });
 
     await Effect.runPromise(
@@ -221,6 +224,7 @@ describe('conform command wiring', () => {
             stubBrLayer,
             stubHookLayer,
             stubPrLayer,
+            stubTestLayer,
             stubValidateLayer,
             conformLayer,
           ),

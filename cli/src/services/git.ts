@@ -17,6 +17,11 @@ export interface BranchValidation {
   readonly errors: string[];
 }
 
+export interface BranchCreation {
+  readonly created: boolean;
+  readonly branch: string;
+}
+
 export const BRANCH_PREFIXES = ['feat/', 'fix/', 'chore/', 'refactor/', 'docs/', 'test/'] as const;
 
 export class GitService extends ServiceMap.Service<
@@ -25,6 +30,7 @@ export class GitService extends ServiceMap.Service<
     readonly getContext: () => Effect.Effect<GitContext, Error>;
     readonly getDiff: (scope: DiffScope) => Effect.Effect<string, Error>;
     readonly validateBranch: (name: string) => Effect.Effect<BranchValidation, Error>;
+    readonly createBranch: (name: string) => Effect.Effect<BranchCreation, Error>;
   }
 >()('GitService') {}
 
@@ -46,4 +52,11 @@ export const getValidateBranch = (name: string) =>
     const git = yield* GitService;
 
     return yield* git.validateBranch(name);
+  });
+
+export const getCreateBranch = (name: string) =>
+  Effect.gen(function* () {
+    const git = yield* GitService;
+
+    return yield* git.createBranch(name);
   });
