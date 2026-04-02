@@ -3,7 +3,6 @@ import { basename, extname } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../eventLog';
-import { findTemplate } from './pr';
 
 const testFilePattern =
   /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
@@ -257,175 +256,96 @@ const parseSkillInput = (input: string): SkillInput | null => {
   }
 };
 
-const cmdPrefix = /(?:^|&&|\|\||;)\s*/;
-
-const checkBrCreateFlags = (command: string): string[] => {
-  const violations: string[] = [];
-
-  if (/--design\b/.test(command)) {
-    violations.push(
-      'Use `--description` on `br create`, not `--design`. The `--design` flag only works on `br update`.',
-    );
-  }
-  if (!/--type\b|(?:^|\s)-t(?:\s|$)/.test(command)) {
-    violations.push('Add `--type` to `br create` (epic, task, bug, or feature).');
-  }
-  if (!/--priority\b|(?:^|\s)-p(?:\s|$)/.test(command)) {
-    violations.push('Add `--priority` to `br create` (0-4).');
-  }
-  if (!/--labels\b|(?:^|\s)-l(?:\s|$)/.test(command)) {
-    violations.push('Add `--labels` to `br create` for categorization.');
-  }
-
-  return violations;
+export const stripQuotedContent = (command: string): string => {
+  let stripped = command;
+  stripped = stripped.replace(/<<-?\s*['"]?(\w+)['"]?\n[\s\S]*?\n\s*\1\b/g, '<<HEREDOC');
+  stripped = stripped.replace(/"[^"]*"/g, '""');
+  stripped = stripped.replace(/'[^']*'/g, "''");
+  return stripped;
 };
 
-const checkBrDescriptionHeaders = (command: string): string[] => {
-  if (!/--description\b/.test(command)) {
-    return [];
-  }
+type DenyTier = 'redirect' | 'block' | 'warn';
 
-  const typeMatch = command.match(/(?:--type\s+|(?:^|\s)-t\s+)(\w+)/);
-  const type = typeMatch?.[1];
-  const violations: string[] = [];
+interface DenyEntry {
+  readonly pattern: RegExp;
+  readonly message: string;
+  readonly tier: DenyTier;
+}
 
-  if (type === 'task') {
-    if (!/##\s*Goal/i.test(command)) {
-      violations.push('Task descriptions need a `## Goal` header.');
-    }
-    if (!/##\s*Behaviors/i.test(command)) {
-      violations.push(
-        'Task descriptions need a `## Behaviors` header listing one behavior per TDD cycle.',
-      );
-    }
-    if (!/##\s*Success criteria/i.test(command)) {
-      violations.push('Task descriptions need a `## Success criteria` header.');
-    }
-  } else if (type === 'bug') {
-    if (!/##\s*Reproduction steps/i.test(command) && !/##\s*Evidence/i.test(command)) {
-      violations.push('Bug descriptions need a `## Reproduction steps` or `## Evidence` header.');
-    }
-  } else if (type === 'epic') {
-    if (!/##\s*Requirements/i.test(command)) {
-      violations.push('Epic descriptions need a `## Requirements` header.');
-    }
-    if (!/##\s*Success criteria/i.test(command)) {
-      violations.push('Epic descriptions need a `## Success criteria` header.');
-    }
-  }
-
-  return violations;
-};
-
-const checkBrUpdateStatus = (command: string): string[] => {
-  const violations: string[] = [];
-
-  if (/--status\s+in-progress\b/.test(command)) {
-    violations.push(
-      'Use `--status in_progress` (underscore), not `--status in-progress` (hyphen).',
-    );
-  }
-  if (/--status\s+done\b/.test(command)) {
-    violations.push('Use `br close <id>` to complete an issue, not `--status done`.');
-  }
-
-  return violations;
-};
-
-export const checkBrRules = (command: string): string[] => {
-  const isBrCreate = new RegExp(`${cmdPrefix.source}br\\s+create\\b`).test(command);
-  const isBrUpdate = new RegExp(`${cmdPrefix.source}br\\s+update\\b`).test(command);
-
-  return [
-    ...(isBrCreate ? checkBrCreateFlags(command) : []),
-    ...(isBrCreate ? checkBrDescriptionHeaders(command) : []),
-    ...(isBrUpdate ? checkBrUpdateStatus(command) : []),
-  ];
-};
-
-export const checkGitStagingRules = (command: string): string[] => {
-  const violations: string[] = [];
-  if (/\bgit\s+add\s+\.(?:\s|$|;|&&|\|)/.test(command)) {
-    violations.push('Stage specific files instead of `git add .`.');
-  }
-  if (/\bgit\s+add\s+(?:-A|--all)\b/.test(command)) {
-    violations.push('Stage specific files instead of `git add -A`.');
-  }
-  return violations;
-};
-
-export const checkPrBodyRules = (command: string, repoSections: readonly string[]): string[] => {
-  if (!/\bgh\s+pr\s+create\b/.test(command)) {
-    return [];
-  }
-  if (!/--body\b/.test(command)) {
-    return [];
-  }
-  const repoSet = new Set(repoSections.map((s) => s.toLowerCase()));
-  const inventedPattern = /\n#{2,4}\s+([^\n]+)/gi;
-  let match;
-  while ((match = inventedPattern.exec(command)) !== null) {
-    const raw = (match[1] ?? '').replace(/["')}\]]+$/, '');
-    const heading = raw.trim().toLowerCase();
-    if (!repoSet.has(heading)) {
-      return [
-        `PR description heading "${raw.trim()}" is not in the repo template. ` +
-          'Run `cape pr template` to discover required sections, then match them exactly.',
-      ];
-    }
-  }
-  return [];
-};
-
-export const checkBrShowRequirement = (command: string) =>
-  Effect.gen(function* () {
-    if (!/(?:^|&&|\|\||;)\s*br\s+update\b/.test(command) || !/--design\b/.test(command)) {
-      return null;
-    }
-
-    const idMatch = command.match(/\bbr\s+update\s+(\S+)/);
-    if (!idMatch) {
-      return null;
-    }
-
-    const id = idMatch[1];
-    const service = yield* HookService;
-    const root = service.pluginRoot();
-    const content = yield* service.readFile(`${root}/hooks/context/br-show-log.txt`);
-
-    const recentShows = (content ?? '').trim().split('\n').filter(Boolean);
-    if (recentShows.some((line) => line.trim() === id)) {
-      return null;
-    }
-
-    return `Run \`br show ${id}\` first to read existing content before \`br update --design\`.`;
-  });
-
-export const checkPrCreationGuards = (command: string) =>
-  Effect.gen(function* () {
-    if (!/\bgh\s+pr\s+create\b/.test(command)) {
-      return [];
-    }
-
-    const violations: string[] = [];
-    const service = yield* HookService;
-
-    const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
-    if (branch != null) {
-      const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
-      if (branch === defaultBranch) {
-        violations.push(`Cannot create a PR from \`${branch}\`. Create a feature branch first.`);
-      }
-    }
-
-    const status = yield* service.spawnGit(['status', '--short']);
-    if (status != null && status !== '') {
-      violations.push('Uncommitted changes detected. Commit changes before creating a PR.');
-    }
-
-    return violations;
-  });
+export const denyTable: readonly DenyEntry[] = [
+  {
+    pattern: /\bgit\s+commit\b.*--amend\b/,
+    message: 'Commit amend is blocked. Create a new commit instead.',
+    tier: 'block',
+  },
+  {
+    pattern: /\bgit\s+push\b.*(?:--force\b(?!-)|-f\b)/,
+    message: 'Force push is blocked.',
+    tier: 'block',
+  },
+  {
+    pattern: /\bgh\s+pr\s+merge\b/,
+    message: 'PR merge via CLI is blocked. Merge through the GitHub UI.',
+    tier: 'block',
+  },
+  {
+    pattern: /\bgh\s+pr\s+close\b/,
+    message: 'PR close via CLI is blocked. Close through the GitHub UI.',
+    tier: 'block',
+  },
+  {
+    pattern: /\bgit\s+commit\b/,
+    message: 'Use `cape commit` instead of raw `git commit`.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bbr\s+create\b/,
+    message: 'Use `cape br create` instead of raw `br create`.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bbr\s+q\b/,
+    message: 'Use `cape br q` to query beads.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bbr\s+update\b.*--status\b/,
+    message: 'Use `cape br update` to change issue status.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bbr\s+close\b/,
+    message: 'Use `cape br close` to close an issue.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bgh\s+pr\s+create\b/,
+    message: 'Use `cape pr create` instead of raw `gh pr create`.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/,
+    message: 'Use `cape git create-branch` to create a branch.',
+    tier: 'redirect',
+  },
+  {
+    pattern: /\bgit\s+reset\s+--hard\b/,
+    message:
+      '`git reset --hard` discards uncommitted changes permanently. Consider `git stash` first.',
+    tier: 'warn',
+  },
+  {
+    pattern: /\bgit\s+checkout\s+--(?:\s|$)/,
+    message: '`git checkout --` discards working tree changes. Consider `git stash` first.',
+    tier: 'warn',
+  },
+  {
+    pattern: /\bgit\s+clean\b.*-f\b/,
+    message:
+      '`git clean -f` permanently removes untracked files. Consider `git clean -n` first.',
+    tier: 'warn',
+  },
+];
 
 export const checkStopReinforcement = (command: string): string | null => {
   if (!/\bbr\s+close\b/.test(command)) {
@@ -447,33 +367,33 @@ export const preToolUseBash = () =>
       return null;
     }
 
-    const template = yield* findTemplate().pipe(
-      Effect.orElseSucceed(() => ({ source: 'default' as const, content: '', sections: [] })),
-    );
+    const stripped = stripQuotedContent(command);
 
-    const violations = [
-      ...checkBrRules(command),
-      ...checkGitStagingRules(command),
-      ...checkPrBodyRules(command, template.sections),
-    ];
+    for (const entry of denyTable) {
+      if (!entry.pattern.test(stripped)) {
+        continue;
+      }
 
-    const brShowViolation = yield* checkBrShowRequirement(command);
-    if (brShowViolation != null) {
-      violations.push(brShowViolation);
+      if (entry.tier === 'warn') {
+        logEvent('hook.PreToolUse.Bash', 'inject');
+        return { additionalContext: entry.message };
+      }
+
+      logEvent('hook.PreToolUse.Bash', entry.message);
+      return denyWith(entry.message);
     }
 
-    const prViolations = yield* checkPrCreationGuards(command);
-    violations.push(...prViolations);
-
-    if (violations.length > 0) {
-      logEvent('hook.PreToolUse.Bash', violations.join(' '));
-      return denyWith(violations.join(' '));
-    }
-
-    const stopMessage = checkStopReinforcement(command);
-    if (stopMessage != null) {
-      logEvent('hook.PreToolUse.Bash', 'inject');
-      return { additionalContext: stopMessage };
+    if (/\bgit\s+push\b/.test(stripped)) {
+      const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+      if (branch != null) {
+        const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
+        const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
+        if (branch === defaultBranch) {
+          const message = `Cannot push from \`${branch}\`. Create a feature branch first.`;
+          logEvent('hook.PreToolUse.Bash', message);
+          return denyWith(message);
+        }
+      }
     }
 
     return null;

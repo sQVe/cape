@@ -61,15 +61,13 @@ describe('flow 1: br show then br update with design', () => {
     expect(updateResult.stdout).toBe('');
   });
 
-  it('denies br update without prior br show', () => {
+  it('passes through br update --design without prior br show', () => {
     const updateStdin = JSON.stringify({
       tool_input: { command: 'br update cape-abc --design "## New section"' },
     });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], updateStdin, env);
     expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
-    expect(parsed.hookSpecificOutput.permissionDecisionReason).toContain('br show');
+    expect(result.stdout).toBe('');
   });
 });
 

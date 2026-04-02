@@ -8,12 +8,8 @@ import { main } from '../main';
 
 import {
   HookService,
-  checkBrRules,
-  checkBrShowRequirement,
-  checkGitStagingRules,
-  checkPrBodyRules,
-  checkPrCreationGuards,
   checkStopReinforcement,
+  denyTable,
   denyWith,
   deriveFlowContext,
   detectBeadsSkill,
@@ -29,6 +25,7 @@ import {
   preToolUseBash,
   preToolUseSkill,
   sessionStart,
+  stripQuotedContent,
   userPromptSubmit,
 } from '../services/hook';
 import {
@@ -255,7 +252,7 @@ const makeStubHookLayer = (
     },
   });
 
-  return Layer.mergeAll(hookLayer, stubPrLayer);
+  return hookLayer;
 };
 
 describe('sessionStart', () => {
@@ -507,269 +504,63 @@ describe('denyWith', () => {
   });
 });
 
-describe('checkBrRules', () => {
-  it('denies --design on br create', () => {
-    const violations = checkBrRules('br create --design foo');
-    expect(violations.some((v) => v.includes('--description'))).toBe(true);
+describe('stripQuotedContent', () => {
+  it('removes double-quoted strings', () => {
+    expect(stripQuotedContent('echo "hello world"')).toBe('echo ""');
   });
 
-  it('allows --description on br create', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
+  it('removes single-quoted strings', () => {
+    expect(stripQuotedContent("echo 'hello world'")).toBe("echo ''");
   });
 
-  it('denies missing --type on br create', () => {
-    const violations = checkBrRules('br create --title foo');
-    expect(violations.some((v) => v.includes('--type'))).toBe(true);
+  it('removes heredoc bodies', () => {
+    const command = 'cat <<EOF\nbr create inside heredoc\nEOF';
+    const stripped = stripQuotedContent(command);
+    expect(stripped).not.toContain('br create');
   });
 
-  it('denies missing --priority on br create', () => {
-    const violations = checkBrRules('br create --type task --title foo');
-    expect(violations.some((v) => v.includes('--priority'))).toBe(true);
+  it('removes heredoc with quoted delimiter', () => {
+    const command = "cat <<'EOF'\nbr close inside heredoc\nEOF";
+    const stripped = stripQuotedContent(command);
+    expect(stripped).not.toContain('br close');
   });
 
-  it('allows br create with both --type and --priority', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
+  it('preserves unquoted command tokens', () => {
+    expect(stripQuotedContent('git commit -m "message"')).toBe('git commit -m ""');
   });
 
-  it('accepts -t -p -l short flags', () => {
-    const violations = checkBrRules(
-      'br create -t task -p 2 -l foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
+  it('handles mixed quoted and unquoted content', () => {
+    const command = 'br update foo --description "## Goal\nbr create inside desc"';
+    const stripped = stripQuotedContent(command);
+    expect(stripped).toContain('br update');
+    expect(stripped).not.toContain('br create');
   });
 
-  it('accepts mixed short and long flags', () => {
-    const violations = checkBrRules(
-      'br create --type task -p 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
+  it('handles empty string', () => {
+    expect(stripQuotedContent('')).toBe('');
   });
 
-  it('denies task without ## Goal', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Success criteria\nThing done"',
-    );
-    expect(violations.some((v) => v.includes('## Goal'))).toBe(true);
-  });
-
-  it('denies task without ## Behaviors', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Success criteria\nThing done"',
-    );
-    expect(violations.some((v) => v.includes('## Behaviors'))).toBe(true);
-  });
-
-  it('denies task without ## Success criteria', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X"',
-    );
-    expect(violations.some((v) => v.includes('## Success criteria'))).toBe(true);
-  });
-
-  it('denies bug without ## Reproduction steps or ## Evidence', () => {
-    const violations = checkBrRules(
-      'br create --type bug --priority 2 --labels foo --description "## Summary\nBroken"',
-    );
-    expect(violations.some((v) => v.includes('## Reproduction steps'))).toBe(true);
-  });
-
-  it('allows bug with ## Reproduction steps', () => {
-    const violations = checkBrRules(
-      'br create --type bug --priority 2 --labels foo --description "## Reproduction steps\nSteps here"',
-    );
-    expect(violations).toHaveLength(0);
-  });
-
-  it('allows bug with ## Evidence', () => {
-    const violations = checkBrRules(
-      'br create --type bug --priority 2 --labels foo --description "## Evidence\nScreenshot here"',
-    );
-    expect(violations).toHaveLength(0);
-  });
-
-  it('denies epic without ## Requirements', () => {
-    const violations = checkBrRules(
-      'br create --type epic --priority 2 --labels foo --description "## Success criteria\nDone"',
-    );
-    expect(violations.some((v) => v.includes('## Requirements'))).toBe(true);
-  });
-
-  it('denies epic without ## Success criteria', () => {
-    const violations = checkBrRules(
-      'br create --type epic --priority 2 --labels foo --description "## Requirements\nNeeds this"',
-    );
-    expect(violations.some((v) => v.includes('## Success criteria'))).toBe(true);
-  });
-
-  it('denies --status in-progress with hyphen', () => {
-    const violations = checkBrRules('br update foo --status in-progress');
-    expect(violations.some((v) => v.includes('in_progress'))).toBe(true);
-  });
-
-  it('allows --status in_progress with underscore', () => {
-    const violations = checkBrRules('br update foo --status in_progress');
-    expect(violations).toHaveLength(0);
-  });
-
-  it('denies --status done', () => {
-    const violations = checkBrRules('br update foo --status done');
-    expect(violations.some((v) => v.includes('br close'))).toBe(true);
-  });
-
-  it('denies missing --labels on br create', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --description "## Goal\nDo\n## Behaviors\n- Adds X\n## Success criteria\nDone"',
-    );
-    expect(violations.some((v) => v.includes('--labels'))).toBe(true);
-  });
-
-  it('allows --labels present', () => {
-    const violations = checkBrRules(
-      'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-    );
-    expect(violations).toHaveLength(0);
+  it('handles command with no quotes', () => {
+    expect(stripQuotedContent('git status')).toBe('git status');
   });
 });
 
-describe('checkGitStagingRules', () => {
-  it('denies git add .', () => {
-    const violations = checkGitStagingRules('git add .');
-    expect(violations.some((v) => v.includes('git add .'))).toBe(true);
+describe('denyTable', () => {
+  it('is a readonly array of pattern/message/tier objects', () => {
+    for (const entry of denyTable) {
+      expect(entry.pattern).toBeInstanceOf(RegExp);
+      expect(typeof entry.message).toBe('string');
+      expect(['redirect', 'block', 'warn']).toContain(entry.tier);
+    }
   });
 
-  it('denies git add -A', () => {
-    const violations = checkGitStagingRules('git add -A');
-    expect(violations.some((v) => v.includes('git add -A'))).toBe(true);
-  });
-
-  it('denies git add --all', () => {
-    const violations = checkGitStagingRules('git add --all');
-    expect(violations.some((v) => v.includes('git add -A'))).toBe(true);
-  });
-
-  it('allows git add with specific file', () => {
-    expect(checkGitStagingRules('git add specific-file.ts')).toHaveLength(0);
-  });
-});
-
-describe('checkPrBodyRules', () => {
-  it('denies headings not in repo template', () => {
-    const violations = checkPrBodyRules(
-      'gh pr create --body "\n## Summary\nstuff"',
-      ['Motivation', 'Changes'],
+  it('has block entries before redirect entries', () => {
+    const firstRedirect = denyTable.findIndex((e) => e.tier === 'redirect');
+    const lastBlock = denyTable.reduce(
+      (acc, e, i) => (e.tier === 'block' ? i : acc),
+      -1,
     );
-    expect(violations.some((v) => v.includes('Summary'))).toBe(true);
-    expect(violations.some((v) => v.includes('not in the repo template'))).toBe(true);
-  });
-
-  it('allows headings that match repo template', () => {
-    expect(
-      checkPrBodyRules('gh pr create --body "\n## Summary\n## Risk\nstuff"', ['Summary', 'Risk']),
-    ).toHaveLength(0);
-  });
-
-  it('allows headings when repo template has those sections', () => {
-    expect(
-      checkPrBodyRules('gh pr create --body "\n#### Motivation\n#### Changes"', [
-        'Motivation',
-        'Changes',
-        'Test plan',
-      ]),
-    ).toHaveLength(0);
-  });
-
-  it('allows PR without --body flag', () => {
-    expect(checkPrBodyRules('gh pr create --title "feat: thing"', [])).toHaveLength(0);
-  });
-
-  it('allows non-PR commands', () => {
-    expect(checkPrBodyRules('echo hello', [])).toHaveLength(0);
-  });
-});
-
-describe('checkBrShowRequirement', () => {
-  it('denies br update --design without prior br show', async () => {
-    const layer = makeStubHookLayer();
-    const result = await Effect.runPromise(
-      checkBrShowRequirement('br update foo-123 --design bar').pipe(Effect.provide(layer)),
-    );
-    expect(result).toContain('br show foo-123');
-  });
-
-  it('allows br update --design when id is in br-show-log.txt', async () => {
-    const layer = makeStubHookLayer({
-      files: { '/test/hooks/context/br-show-log.txt': 'foo-123\n' },
-    });
-    const result = await Effect.runPromise(
-      checkBrShowRequirement('br update foo-123 --design bar').pipe(Effect.provide(layer)),
-    );
-    expect(result).toBeNull();
-  });
-
-  it('returns null for non-br-update commands', async () => {
-    const layer = makeStubHookLayer();
-    const result = await Effect.runPromise(
-      checkBrShowRequirement('echo hello').pipe(Effect.provide(layer)),
-    );
-    expect(result).toBeNull();
-  });
-});
-
-describe('checkPrCreationGuards', () => {
-  it('denies PR from default branch', async () => {
-    const layer = makeStubHookLayer({
-      gitResponses: {
-        'rev-parse': 'main',
-        'symbolic-ref': 'refs/remotes/origin/main',
-        status: null,
-      },
-    });
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
-    );
-    expect(violations.some((v) => v.includes('Cannot create a PR from'))).toBe(true);
-  });
-
-  it('denies PR with uncommitted changes', async () => {
-    const layer = makeStubHookLayer({
-      gitResponses: {
-        'rev-parse': 'feature-branch',
-        'symbolic-ref': 'refs/remotes/origin/main',
-        status: 'M file.ts',
-      },
-    });
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
-    );
-    expect(violations.some((v) => v.includes('Uncommitted changes'))).toBe(true);
-  });
-
-  it('allows PR on feature branch with clean status', async () => {
-    const layer = makeStubHookLayer({
-      gitResponses: {
-        'rev-parse': 'feature-branch',
-        'symbolic-ref': 'refs/remotes/origin/main',
-        status: '',
-      },
-    });
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('gh pr create').pipe(Effect.provide(layer)),
-    );
-    expect(violations).toHaveLength(0);
-  });
-
-  it('returns empty for non-PR commands', async () => {
-    const layer = makeStubHookLayer();
-    const violations = await Effect.runPromise(
-      checkPrCreationGuards('echo hello').pipe(Effect.provide(layer)),
-    );
-    expect(violations).toHaveLength(0);
+    expect(lastBlock).toBeLessThan(firstRedirect);
   });
 });
 
@@ -820,37 +611,228 @@ describe('preToolUseBash', () => {
     expect(result).toBeNull();
   });
 
-  it('denies --design on br create', async () => {
-    const layer = makeStubHookLayer({
-      stdin: bashStdin('br create --design foo'),
+  describe('redirect tier', () => {
+    it('denies raw git commit', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git commit -m "feat: add"') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape commit');
     });
-    const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expectDeny(result, '--description');
+
+    it('denies raw br create', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br create --type task') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape br create');
+    });
+
+    it('denies raw br q', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br q') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape br q');
+    });
+
+    it('denies raw br update --status', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('br update cape-abc --status in_progress'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape br update');
+    });
+
+    it('allows br update without --status', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('br update cape-abc --design "new content"'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('denies raw br close', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape br close');
+    });
+
+    it('denies raw gh pr create', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('gh pr create --title "feat: test"'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape pr create');
+    });
+
+    it('denies raw git checkout -b', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git checkout -b feat/foo') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape git create-branch');
+    });
+
+    it('denies raw git switch -c', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git switch -c feat/foo') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape git create-branch');
+    });
+
+    it('denies raw git branch <name>', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git branch feat/foo') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape git create-branch');
+    });
   });
 
-  it('denies bulk git staging', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('git add .') });
-    const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expectDeny(result, 'git add .');
+  describe('block tier', () => {
+    it('blocks git push --force', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git push --force origin main') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'Force push');
+    });
+
+    it('blocks git push -f', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git push -f origin main') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'Force push');
+    });
+
+    it('allows git push --force-with-lease', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push --force-with-lease origin feat'),
+        gitResponses: { 'rev-parse': 'feat', 'symbolic-ref': 'refs/remotes/origin/main' },
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('blocks gh pr merge', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('gh pr merge 42') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'merge');
+    });
+
+    it('blocks gh pr close', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('gh pr close 42') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'close');
+    });
+
+    it('blocks git commit --amend', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git commit --amend') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'amend');
+    });
   });
 
-  it('outputs additionalContext for br close', async () => {
-    const layer = makeStubHookLayer({
-      stdin: bashStdin('br close cape-2v2.3'),
+  describe('warn tier', () => {
+    it('warns on git reset --hard', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git reset --hard HEAD~1') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toHaveProperty('additionalContext');
+      expect((result as { additionalContext: string }).additionalContext).toContain('reset --hard');
     });
-    const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expect(result).toHaveProperty('additionalContext');
-    expect((result as { additionalContext: string }).additionalContext).toContain('STOP');
+
+    it('warns on git checkout --', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git checkout -- src/foo.ts') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toHaveProperty('additionalContext');
+      expect((result as { additionalContext: string }).additionalContext).toContain('checkout --');
+    });
+
+    it('warns on git clean -f', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git clean -f') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toHaveProperty('additionalContext');
+      expect((result as { additionalContext: string }).additionalContext).toContain('clean -f');
+    });
   });
 
-  it('passes through fully valid br create command', async () => {
-    const layer = makeStubHookLayer({
-      stdin: bashStdin(
-        'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- Adds X\n## Success criteria\nThing done"',
-      ),
+  describe('push branch check', () => {
+    it('denies push from default branch', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push origin main'),
+        gitResponses: {
+          'rev-parse': 'main',
+          'symbolic-ref': 'refs/remotes/origin/main',
+        },
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'Cannot push');
     });
-    const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
+
+    it('allows push from feature branch', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push origin feat/foo'),
+        gitResponses: {
+          'rev-parse': 'feat/foo',
+          'symbolic-ref': 'refs/remotes/origin/main',
+        },
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('pass-through', () => {
+    it('allows read-only br commands', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br show cape-abc') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows br list', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br list') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows br update without --status', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('br update cape-abc --description "new"'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows git status', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git status') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows npm install', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('npm install') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows git branch -d (deletion)', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('git branch -d old-branch') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('stripQuotedContent integration', () => {
+    it('does not false-positive on br create inside double quotes', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('echo "br create should not trigger"'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('does not false-positive on br create inside single quotes', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin("echo 'br create should not trigger'"),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('does not false-positive on denied patterns inside heredocs', async () => {
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('cat <<EOF\nbr create inside heredoc\ngit commit too\nEOF'),
+      });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
   });
 });
 
@@ -1058,9 +1040,9 @@ describe('preToolUseSkill', () => {
 });
 
 describe('hook command - PreToolUse wiring', () => {
-  it('routes pre-tool-use --matcher Bash to enforce-commands', async () => {
+  it('routes pre-tool-use --matcher Bash to deny table', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br create --design foo'),
+      stdin: bashStdin('br create --type task'),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1117,7 +1099,7 @@ describe('hook command - PreToolUse wiring', () => {
 
   it('accepts PascalCase PreToolUse event name', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br create --design foo'),
+      stdin: bashStdin('br create --type task'),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1652,17 +1634,17 @@ describe('event logging', () => {
     vi.mocked(logEvent).mockClear();
   });
 
-  it('logs deny event for preToolUseBash violations', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('br create --design foo') });
+  it('logs deny event for preToolUseBash deny table match', async () => {
+    const layer = makeStubHookLayer({ stdin: bashStdin('br create --type task') });
     await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.PreToolUse.Bash',
-      expect.stringContaining('--description'),
+      expect.stringContaining('cape br create'),
     );
   });
 
-  it('logs inject event for preToolUseBash br close', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
+  it('logs inject event for preToolUseBash warn tier', async () => {
+    const layer = makeStubHookLayer({ stdin: bashStdin('git reset --hard HEAD') });
     await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith('hook.PreToolUse.Bash', 'inject');
   });

@@ -190,7 +190,7 @@ describe('unknown matchers', () => {
 
 describe('event name normalization', () => {
   it('PascalCase PreToolUse works the same as kebab-case', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'git add .' } });
+    const stdin = JSON.stringify({ tool_input: { command: 'br create --type task' } });
 
     const kebab = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     const pascal = cape(['hook', 'PreToolUse', '--matcher', 'Bash'], stdin, env);
@@ -245,16 +245,16 @@ describe('event name normalization', () => {
 });
 
 describe('encoding edge cases', () => {
-  it('denies unicode command containing git add .', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git add .' } });
+  it('denies unicode command containing denial trigger', () => {
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && br create --type task' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
   });
 
-  it('denies emoji command containing git add -A', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 🎉 && git add -A' } });
+  it('denies emoji command containing denial trigger', () => {
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 🎉 && git commit -m "feat"' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
@@ -271,7 +271,9 @@ describe('encoding edge cases', () => {
 
   it('denies very long command containing a denial trigger', () => {
     const longArg = 'a'.repeat(50_000);
-    const stdin = JSON.stringify({ tool_input: { command: `echo ${longArg} && git add .` } });
+    const stdin = JSON.stringify({
+      tool_input: { command: `echo ${longArg} && br create --type bug` },
+    });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);

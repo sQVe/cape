@@ -42,6 +42,13 @@ const expectPassThrough = (result: { stdout: string; status: number }) => {
   expect(result.stdout).toBe('');
 };
 
+const expectWarn = (result: { stdout: string; status: number }, contextSubstring: string) => {
+  expect(result.status).toBe(0);
+  const parsed = JSON.parse(result.stdout);
+  expect(parsed.additionalContext).toContain(contextSubstring);
+  return parsed;
+};
+
 let tmpDir: string;
 let contextDir: string;
 let env: Record<string, string>;
@@ -59,267 +66,184 @@ afterEach(() => {
   spawnSync('rm', ['-rf', tmpDir]);
 });
 
-describe('br create missing flags', () => {
-  it('denies br create missing --type', () => {
+describe('redirect tier', () => {
+  it('denies raw git commit', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --priority 2 --labels foo'),
+      bashInput('git commit -m "feat: add"'),
       env,
     );
-    expectDeny(result, '--type');
+    expectDeny(result, 'cape commit');
   });
 
-  it('denies br create missing --priority', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --type task --labels foo'),
-      env,
-    );
-    expectDeny(result, '--priority');
-  });
-
-  it('denies br create missing --labels', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --type task --priority 2'),
-      env,
-    );
-    expectDeny(result, '--labels');
-  });
-});
-
-describe('br create short flags', () => {
-  it('allows br create with -t -p -l short flags', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create -t task -p 2 -l foo'),
-      env,
-    );
-    expectPassThrough(result);
-  });
-});
-
-describe('br create without --description', () => {
-  it('passes when --description is absent and all required flags present', () => {
+  it('denies raw br create', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('br create --type task --priority 2 --labels foo'),
       env,
     );
-    expectPassThrough(result);
+    expectDeny(result, 'cape br create');
   });
-});
 
-describe('br create --design flag', () => {
-  it('denies --design on br create', () => {
+  it('denies raw br q', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --design "## New section" --type task --priority 2 --labels foo'),
+      bashInput('br q'),
       env,
     );
-    expectDeny(result, '--description');
-  });
-});
-
-describe('br create description header validation', () => {
-  it('denies task missing ## Goal', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type task --priority 2 --labels foo --description "## Behaviors\n- X\n## Success criteria\nDone"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Goal');
+    expectDeny(result, 'cape br q');
   });
 
-  it('denies task missing ## Behaviors', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Success criteria\nDone"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Behaviors');
-  });
-
-  it('denies task missing ## Success criteria', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- X"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Success criteria');
-  });
-
-  it('allows task with all required headers', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type task --priority 2 --labels foo --description "## Goal\nDo thing\n## Behaviors\n- X\n## Success criteria\nDone"',
-      ),
-      env,
-    );
-    expectPassThrough(result);
-  });
-
-  it('denies bug without ## Reproduction steps or ## Evidence', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type bug --priority 2 --labels foo --description "## Summary\nBroken"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Reproduction steps');
-  });
-
-  it('denies epic without ## Requirements', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type epic --priority 2 --labels foo --description "## Success criteria\nDone"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Requirements');
-  });
-
-  it('denies epic without ## Success criteria', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput(
-        'br create --type epic --priority 2 --labels foo --description "## Requirements\nStuff"',
-      ),
-      env,
-    );
-    expectDeny(result, '## Success criteria');
-  });
-});
-
-describe('br update status guards', () => {
-  it('denies --status in-progress (hyphen)', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br update cape-abc --status in-progress'),
-      env,
-    );
-    expectDeny(result, 'in_progress');
-  });
-
-  it('denies --status done', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br update cape-abc --status done'),
-      env,
-    );
-    expectDeny(result, 'br close');
-  });
-
-  it('allows --status in_progress (underscore)', () => {
+  it('denies raw br update --status', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('br update cape-abc --status in_progress'),
       env,
     );
-    expectPassThrough(result);
-  });
-});
-
-describe('git bulk staging guards', () => {
-  it('denies git add .', () => {
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], bashInput('git add .'), env);
-    expectDeny(result, 'git add .');
+    expectDeny(result, 'cape br update');
   });
 
-  it('denies git add -A', () => {
+  it('allows br update without --status', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git add -A'),
-      env,
-    );
-    expectDeny(result, 'git add -A');
-  });
-
-  it('denies git add --all', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git add --all'),
-      env,
-    );
-    expectDeny(result, 'git add -A');
-  });
-
-  it('allows git add with specific file', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git add src/foo.ts'),
+      bashInput('br update cape-abc --design "## New section"'),
       env,
     );
     expectPassThrough(result);
   });
-});
 
-describe('gh pr create body rules', () => {
-  it('denies invented sections in PR body', () => {
+  it('denies raw br close', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "\n## Summary\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
+      bashInput('br close cape-2v2.3'),
+      env,
     );
-    expectDeny(result, 'invented sections');
+    expectDeny(result, 'cape br close');
   });
 
-  it('denies ## Root cause section', () => {
+  it('denies raw gh pr create', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "\n## Root cause\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
+      bashInput('gh pr create --title "feat: test" --body "stuff"'),
+      env,
     );
-    expectDeny(result, 'invented sections');
+    expectDeny(result, 'cape pr create');
   });
 
-  it('denies ## Overview section', () => {
+  it('denies raw git checkout -b', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "\n## Overview\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
+      bashInput('git checkout -b feat/foo'),
+      env,
     );
-    expectDeny(result, 'invented sections');
+    expectDeny(result, 'cape git create-branch');
   });
 
-  it('denies ## Background section', () => {
+  it('denies raw git switch -c', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "\n## Background\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
+      bashInput('git switch -c feat/foo'),
+      env,
     );
-    expectDeny(result, 'invented sections');
+    expectDeny(result, 'cape git create-branch');
   });
 
-  it('denies ## Description section', () => {
+  it('denies raw git branch <name>', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "\n## Description\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
+      bashInput('git branch feat/foo'),
+      env,
     );
-    expectDeny(result, 'invented sections');
-  });
-
-  it('allows valid template headers', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --body "#### Motivation\nstuff"'),
-      { ...env, GIT_DIR: '/dev/null' },
-    );
-    expectPassThrough(result);
+    expectDeny(result, 'cape git create-branch');
   });
 });
 
-describe('gh pr create from default branch', () => {
+describe('block tier', () => {
+  it('blocks git push --force', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git push --force origin main'),
+      env,
+    );
+    expectDeny(result, 'Force push');
+  });
+
+  it('blocks git push -f', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git push -f'),
+      env,
+    );
+    expectDeny(result, 'Force push');
+  });
+
+  it('blocks gh pr merge', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr merge 42'),
+      env,
+    );
+    expectDeny(result, 'merge');
+  });
+
+  it('blocks gh pr close', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('gh pr close 42'),
+      env,
+    );
+    expectDeny(result, 'close');
+  });
+
+  it('blocks git commit --amend', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git commit --amend'),
+      env,
+    );
+    expectDeny(result, 'amend');
+  });
+
+  it('blocks git commit --amend even with -m', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git commit -m "fix" --amend'),
+      env,
+    );
+    expectDeny(result, 'amend');
+  });
+});
+
+describe('warn tier', () => {
+  it('warns on git reset --hard', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git reset --hard HEAD~1'),
+      env,
+    );
+    expectWarn(result, 'reset --hard');
+  });
+
+  it('warns on git checkout --', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git checkout -- src/foo.ts'),
+      env,
+    );
+    expectWarn(result, 'checkout --');
+  });
+
+  it('warns on git clean -f', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git clean -f'),
+      env,
+    );
+    expectWarn(result, 'clean -f');
+  });
+});
+
+describe('push branch check', () => {
   let repoDir: string;
 
   beforeEach(() => {
@@ -335,87 +259,121 @@ describe('gh pr create from default branch', () => {
     spawnSync('rm', ['-rf', repoDir]);
   });
 
-  it('denies PR creation from default branch', () => {
+  it('denies push from default branch', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "#### Motivation\nstuff"'),
+      bashInput('git push origin main'),
       { ...env, GIT_DIR: join(repoDir, '.git'), GIT_WORK_TREE: repoDir },
     );
-    expectDeny(result, 'Cannot create a PR from');
+    expectDeny(result, 'Cannot push');
   });
 });
 
-describe('br close stop-reinforcement', () => {
-  it('produces additionalContext for br close', () => {
+describe('stripQuotedContent prevents false positives', () => {
+  it('does not false-positive on br create inside double quotes', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br close cape-2v2.3'),
-      env,
-    );
-    expect(result.status).toBe(0);
-    expect(result.stdout).not.toBe('');
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.additionalContext).toContain('STOP');
-    expect(parsed.additionalContext).toContain('checkpoint');
-  });
-
-  it('produces additionalContext for br close without arguments', () => {
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], bashInput('br close'), env);
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.additionalContext).toContain('STOP');
-    expect(parsed.additionalContext).toContain('checkpoint');
-  });
-});
-
-describe('br show requirement', () => {
-  it('allows br update --design when br-show-log.txt contains the ID', () => {
-    writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-abc\n');
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br update cape-abc --design "## New"'),
+      bashInput('echo "br create should not trigger"'),
       env,
     );
     expectPassThrough(result);
   });
 
-  it('denies br update --design when br-show-log.txt is missing', () => {
+  it('does not false-positive on git commit inside single quotes', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br update cape-abc --design "## New"'),
+      bashInput("echo 'git commit should not trigger'"),
       env,
     );
-    expectDeny(result, 'br show');
+    expectPassThrough(result);
   });
 
-  it('denies br update --design when br-show-log.txt has different IDs', () => {
-    writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-xyz\ncape-def\n');
+  it('does not false-positive on patterns inside heredocs', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br update cape-abc --design "## New"'),
+      bashInput('cat <<EOF\nbr create\ngit commit\nEOF'),
       env,
     );
-    expectDeny(result, 'br show');
+    expectPassThrough(result);
+  });
+
+  it('does not false-positive on br create inside --description value', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br update cape-abc --description "br create is mentioned here"'),
+      env,
+    );
+    expectPassThrough(result);
   });
 });
 
-describe('PR creation sub-guards', () => {
-  it('denies when there are uncommitted changes', () => {
-    const repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-dirty-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', repoDir]);
-    execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feature']);
-    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
-    writeFileSync(join(repoDir, 'dirty.txt'), 'uncommitted');
-
+describe('pass-through for benign commands', () => {
+  it('allows echo', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('gh pr create --title "feat: test" --body "stuff"'),
-      { ...env, GIT_DIR: join(repoDir, '.git'), GIT_WORK_TREE: repoDir },
+      bashInput('echo hello'),
+      env,
     );
-    expectDeny(result, 'Uncommitted');
-    spawnSync('rm', ['-rf', repoDir]);
+    expectPassThrough(result);
+  });
+
+  it('allows npm install', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('npm install'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('allows br show', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br show cape-abc'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('allows br list', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br list'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('allows git status', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git status'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('allows git branch -d (deletion)', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git branch -d old-branch'),
+      env,
+    );
+    expectPassThrough(result);
+  });
+
+  it('does not block git push --force-with-lease as force push', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('git push --force-with-lease origin feat'),
+      env,
+    );
+    if (result.stdout) {
+      const parsed = JSON.parse(result.stdout);
+      expect(parsed.hookSpecificOutput?.permissionDecisionReason ?? '').not.toContain(
+        'Force push',
+      );
+    }
   });
 });
 
@@ -489,68 +447,6 @@ describe('skill gate: internal skills require active workflow', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:test-driven-development'),
-      env,
-    );
-    expectPassThrough(result);
-  });
-});
-
-describe('multiple violations accumulate into one deny', () => {
-  it('reports all missing flags in one deny for br create', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --design "stuff"'),
-      env,
-    );
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
-    const reason = parsed.hookSpecificOutput.permissionDecisionReason;
-    expect(reason).toContain('--description');
-    expect(reason).toContain('--type');
-    expect(reason).toContain('--priority');
-    expect(reason).toContain('--labels');
-  });
-
-  it('reports both header and flag violations together', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br create --type task --priority 2 --description "## Goal\nDo thing"'),
-      env,
-    );
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.hookSpecificOutput.permissionDecision).toBe('deny');
-    const reason = parsed.hookSpecificOutput.permissionDecisionReason;
-    expect(reason).toContain('--labels');
-    expect(reason).toContain('## Behaviors');
-    expect(reason).toContain('## Success criteria');
-  });
-});
-
-describe('pass-through for benign commands', () => {
-  it('allows echo', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('echo hello'),
-      env,
-    );
-    expectPassThrough(result);
-  });
-
-  it('allows npm install', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('npm install'),
-      env,
-    );
-    expectPassThrough(result);
-  });
-
-  it('allows git commit', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git commit -m "feat: test"'),
       env,
     );
     expectPassThrough(result);
