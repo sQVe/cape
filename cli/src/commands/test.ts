@@ -2,7 +2,7 @@ import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { resolveTestCommand } from '../services/check';
-import { getDetectResult, isTestFile, resolveTestPath } from '../services/detect';
+import { getDetectResult, getPackageManager, isTestFile, resolveTestPath } from '../services/detect';
 import { HookService } from '../services/hook';
 import { runTest } from '../services/test';
 
@@ -17,7 +17,8 @@ export const test = Command.make(
       }),
     );
 
-    const testCommand = resolveTestCommand(ecosystems);
+    const packageManager = yield* getPackageManager;
+    const testCommand = resolveTestCommand(ecosystems, packageManager);
     if (testCommand == null) {
       const result = { error: 'no test runner detected' };
       yield* Console.error(JSON.stringify(result));

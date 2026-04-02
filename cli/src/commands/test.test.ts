@@ -30,6 +30,7 @@ const makeDetectLayer = (ecosystems: DetectResult[] = []) =>
           : [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
       ),
     mapDirectory: () => Effect.succeed({}),
+    packageManager: () => Effect.succeed(null),
   });
 
 const makeTestLayer = (passed: boolean, output = '') =>
@@ -208,6 +209,38 @@ describe('resolveTestCommand', () => {
       { language: 'typescript', testFramework: 'vitest', linter: null, formatter: null },
     ]);
     expect(cmd).toEqual({ label: 'vitest', command: 'npx', args: ['vitest', 'run'] });
+  });
+
+  it('uses pnpm exec for pnpm package manager', () => {
+    const cmd = resolveTestCommand(
+      [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
+      'pnpm',
+    );
+    expect(cmd).toEqual({ label: 'vitest', command: 'pnpm', args: ['exec', 'vitest', 'run'] });
+  });
+
+  it('uses yarn exec for yarn package manager', () => {
+    const cmd = resolveTestCommand(
+      [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
+      'yarn',
+    );
+    expect(cmd).toEqual({ label: 'vitest', command: 'yarn', args: ['exec', 'vitest', 'run'] });
+  });
+
+  it('uses bun x for bun package manager', () => {
+    const cmd = resolveTestCommand(
+      [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
+      'bun',
+    );
+    expect(cmd).toEqual({ label: 'vitest', command: 'bun', args: ['x', 'vitest', 'run'] });
+  });
+
+  it('uses pnpm exec for jest with pnpm', () => {
+    const cmd = resolveTestCommand(
+      [{ language: 'typescript', testFramework: 'jest', linter: null, formatter: null }],
+      'pnpm',
+    );
+    expect(cmd).toEqual({ label: 'jest', command: 'pnpm', args: ['exec', 'jest'] });
   });
 
   it('returns go test for go ecosystem', () => {

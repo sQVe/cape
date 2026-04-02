@@ -11,6 +11,7 @@ import {
   detectEcosystems,
   getDetectResult,
   isTestFile,
+  detectPackageManager,
   isTrivialFile,
   resolveTestPath,
 } from '../services/detect';
@@ -42,12 +43,14 @@ const makeTestDetectLayer = (results: DetectResult[] = []) =>
             ],
       ),
     mapDirectory: () => Effect.succeed({ 'src/foo.ts': 'src/foo.test.ts' }),
+    packageManager: () => Effect.succeed(null),
   });
 
 const makeErrorDetectLayer = () =>
   Layer.succeed(DetectService)({
     detect: () => Effect.fail(new Error('no ecosystem detected')),
     mapDirectory: () => Effect.fail(new Error('no ecosystem detected')),
+    packageManager: () => Effect.succeed(null),
   });
 
 const makeProbe = (
@@ -366,6 +369,32 @@ describe('detectEcosystems', () => {
         },
       ]);
     });
+  });
+});
+
+describe('detectPackageManager', () => {
+  it('detects pnpm from pnpm-lock.yaml', () => {
+    expect(detectPackageManager(makeProbe(['pnpm-lock.yaml']))).toBe('pnpm');
+  });
+
+  it('detects yarn from yarn.lock', () => {
+    expect(detectPackageManager(makeProbe(['yarn.lock']))).toBe('yarn');
+  });
+
+  it('detects bun from bun.lockb', () => {
+    expect(detectPackageManager(makeProbe(['bun.lockb']))).toBe('bun');
+  });
+
+  it('detects npm from package-lock.json', () => {
+    expect(detectPackageManager(makeProbe(['package-lock.json']))).toBe('npm');
+  });
+
+  it('returns null when no lock file', () => {
+    expect(detectPackageManager(makeProbe())).toBeNull();
+  });
+
+  it('prefers pnpm over yarn when both lock files exist', () => {
+    expect(detectPackageManager(makeProbe(['pnpm-lock.yaml', 'yarn.lock']))).toBe('pnpm');
   });
 });
 

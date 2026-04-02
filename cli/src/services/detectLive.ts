@@ -5,7 +5,13 @@ import { Effect, Layer } from 'effect';
 import { parse as parseToml } from 'smol-toml';
 
 import type { DirectoryProbe } from './detect';
-import { DetectService, buildSourceTestMap, detectEcosystems, isRecord } from './detect';
+import {
+  DetectService,
+  buildSourceTestMap,
+  detectEcosystems,
+  detectPackageManager,
+  isRecord,
+} from './detect';
 
 const createProbe = (directory: string): DirectoryProbe => ({
   fileExists: (name) => existsSync(join(directory, name)),
@@ -81,4 +87,5 @@ const mapDirectory = (directory: string) =>
 export const DetectServiceLive = Layer.succeed(DetectService)({
   detect,
   mapDirectory,
+  packageManager: () => Effect.succeed(detectPackageManager(createProbe(process.cwd()))),
 });

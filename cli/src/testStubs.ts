@@ -28,6 +28,7 @@ export const stubGitLayer = Layer.succeed(GitService)({
 export const stubDetectLayer = Layer.succeed(DetectService)({
   detect: () => Effect.succeed([]),
   mapDirectory: () => Effect.succeed({}),
+  packageManager: () => Effect.succeed(null),
 });
 
 export const stubCheckLayer = Layer.succeed(CheckService)({

@@ -1,9 +1,11 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
 import { CheckService, resolveCheckCommands } from './check';
 import type { DetectResult } from './detect';
+import { detectPackageManager } from './detect';
 
 const executeCommand = (cmd: { label: string; command: string; args: readonly string[] }) => {
   const result = spawnSync(cmd.command, [...cmd.args], {
@@ -16,10 +18,13 @@ const executeCommand = (cmd: { label: string; command: string; args: readonly st
   return { check: cmd.label, passed: result.status === 0, output };
 };
 
+const fileProbe = { fileExists: existsSync, directoryExists: () => false, readConfig: () => null };
+
 const runChecks = (ecosystems: DetectResult[]) =>
   Effect.try({
     try: () => {
-      const commands = resolveCheckCommands(ecosystems);
+      const pm = detectPackageManager(fileProbe);
+      const commands = resolveCheckCommands(ecosystems, pm);
       return commands.map(executeCommand);
     },
     catch: (error) =>

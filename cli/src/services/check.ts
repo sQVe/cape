@@ -15,12 +15,23 @@ export interface CheckCommand {
 }
 
 const testCommands: Record<string, CheckCommand> = {
-  vitest: { label: 'vitest', command: 'npx', args: ['vitest', 'run'] },
-  jest: { label: 'jest', command: 'npx', args: ['jest'] },
   'go-test': { label: 'go-test', command: 'go', args: ['test', './...'] },
   busted: { label: 'busted', command: 'busted', args: [] },
   pytest: { label: 'pytest', command: 'pytest', args: [] },
   'cargo-test': { label: 'cargo-test', command: 'cargo', args: ['test'] },
+};
+
+const nodeExecutor = (pm: string | null): { command: string; prefix: readonly string[] } => {
+  if (pm === 'pnpm') return { command: 'pnpm', prefix: ['exec'] };
+  if (pm === 'yarn') return { command: 'yarn', prefix: ['exec'] };
+  if (pm === 'bun') return { command: 'bun', prefix: ['x'] };
+  return { command: 'npx', prefix: [] };
+};
+
+const nodeTestCommand = (framework: 'vitest' | 'jest', pm: string | null): CheckCommand => {
+  const { command, prefix } = nodeExecutor(pm);
+  const extra = framework === 'vitest' ? ['run'] : [];
+  return { label: framework, command, args: [...prefix, framework, ...extra] };
 };
 
 const lintCommands: Record<string, CheckCommand> = {
@@ -49,20 +60,33 @@ const formatCommands: Record<string, CheckCommand> = {
   rustfmt: { label: 'rustfmt', command: 'cargo', args: ['fmt', '--check'] },
 };
 
-export const resolveTestCommand = (ecosystems: DetectResult[]): CheckCommand | undefined => {
+export const resolveTestCommand = (
+  ecosystems: DetectResult[],
+  pm: string | null = null,
+): CheckCommand | undefined => {
   for (const eco of ecosystems) {
-    const test = eco.testFramework != null ? testCommands[eco.testFramework] : undefined;
-    if (test != null) return test;
+    if (eco.testFramework == null) continue;
+    if (eco.testFramework === 'vitest' || eco.testFramework === 'jest') {
+      return nodeTestCommand(eco.testFramework, pm);
+    }
+    const cmd = testCommands[eco.testFramework];
+    if (cmd != null) return cmd;
   }
   return undefined;
 };
 
-export const resolveCheckCommands = (ecosystems: DetectResult[]) => {
+export const resolveCheckCommands = (ecosystems: DetectResult[], pm: string | null = null) => {
   const commands: CheckCommand[] = [];
 
   for (const eco of ecosystems) {
-    const test = eco.testFramework != null ? testCommands[eco.testFramework] : undefined;
-    if (test != null) commands.push(test);
+    if (eco.testFramework != null) {
+      if (eco.testFramework === 'vitest' || eco.testFramework === 'jest') {
+        commands.push(nodeTestCommand(eco.testFramework, pm));
+      } else {
+        const cmd = testCommands[eco.testFramework];
+        if (cmd != null) commands.push(cmd);
+      }
+    }
 
     const lint = eco.linter != null ? lintCommands[eco.linter] : undefined;
     if (lint != null) commands.push(lint);

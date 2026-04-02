@@ -307,6 +307,16 @@ export const isTrivialFile = (filePath: string, content: string) => {
   return false;
 };
 
+export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
+
+export const detectPackageManager = (probe: DirectoryProbe): PackageManager | null => {
+  if (probe.fileExists('pnpm-lock.yaml')) return 'pnpm';
+  if (probe.fileExists('yarn.lock')) return 'yarn';
+  if (probe.fileExists('bun.lockb')) return 'bun';
+  if (probe.fileExists('package-lock.json')) return 'npm';
+  return null;
+};
+
 export class DetectService extends ServiceMap.Service<
   DetectService,
   {
@@ -314,6 +324,7 @@ export class DetectService extends ServiceMap.Service<
     readonly mapDirectory: (
       directory: string,
     ) => Effect.Effect<Record<string, string | null>, Error>;
+    readonly packageManager: () => Effect.Effect<PackageManager | null>;
   }
 >()('DetectService') {}
 
@@ -321,4 +332,9 @@ export const getDetectResult = Effect.gen(function* () {
   const service = yield* DetectService;
 
   return yield* service.detect();
+});
+
+export const getPackageManager = Effect.gen(function* () {
+  const service = yield* DetectService;
+  return yield* service.packageManager();
 });
