@@ -77,6 +77,10 @@ describe('validateMessage', () => {
     }
   });
 
+  it('accepts message with body after blank line', () => {
+    expect(validateMessage('fix(hook): remove gate\n\nDelete gateWritePlan().')).toBeNull();
+  });
+
   it('rejects message without type prefix', () => {
     expect(validateMessage('add new feature')).not.toBeNull();
   });

@@ -11,7 +11,8 @@ export interface CommitResult {
 }
 
 export const validateMessage = (message: string) => {
-  if (!conventionalPattern.test(message)) {
+  const subject = message.split('\n')[0] ?? '';
+  if (!conventionalPattern.test(subject)) {
     return `invalid conventional commit format: "${message}"`;
   }
   return null;
