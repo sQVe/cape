@@ -12,6 +12,7 @@ import {
 } from '../services/brValidate';
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
+import { HookService } from '../services/hook';
 
 export const runCloseReadinessCheck = (id: string) =>
   Effect.fn(function* () {
@@ -142,9 +143,37 @@ const brCloseCheck = Command.make(
   ),
 );
 
+const stopMessage = [
+  'A task was just closed via `br close`.',
+  'STOP working immediately. Present a checkpoint summary and wait for user input.',
+  'Do not start the next task or make further code changes.',
+].join(' ');
+
+const brClose = Command.make(
+  'close',
+  { id: Argument.string('id') },
+  Effect.fn(function* ({ id }) {
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+
+    const output = yield* service.brQuery(['close', id]);
+    if (output == null) {
+      yield* Console.error(JSON.stringify({ error: `failed to close ${id}` }));
+      return yield* Effect.fail(new Error(`failed to close ${id}`));
+    }
+
+    yield* service.ensureDir(`${root}/hooks/context`);
+    yield* service.removeFile(`${root}/hooks/context/tdd-state.json`);
+    yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
+    yield* service.writeFile(`${root}/hooks/context/workflow-active.txt`, '');
+
+    yield* Console.log(JSON.stringify({ closed: true, id, stopMessage }));
+  }),
+).pipe(Command.withDescription('Close a bead issue and reset workflow state files.'));
+
 export const br = Command.make('br').pipe(
   Command.withDescription(
     'Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.',
   ),
-  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck]),
+  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose]),
 );

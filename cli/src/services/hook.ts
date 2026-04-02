@@ -302,7 +302,11 @@ export const denyTable: readonly DenyEntry[] = [
   // { pattern: /(?<!\bcape\s)\bbr\s+create\b/, message: 'Use `cape br create` instead of raw `br create`.', tier: 'redirect' },
   // { pattern: /(?<!\bcape\s)\bbr\s+q\b/, message: 'Use `cape br q` to query beads.', tier: 'redirect' },
   // { pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/, message: 'Use `cape br update` to change issue status.', tier: 'redirect' },
-  // { pattern: /(?<!\bcape\s)\bbr\s+close\b/, message: 'Use `cape br close` to close an issue.', tier: 'redirect' },
+  {
+    pattern: /(?<!\bcape\s)\bbr\s+close\b/,
+    message: 'Use `cape br close` to close an issue.',
+    tier: 'redirect',
+  },
   // { pattern: /\bgh\s+pr\s+create\b/, message: 'Use `cape pr create` instead of raw `gh pr create`.', tier: 'redirect' },
   // { pattern: /\bgit\s+(?:checkout\s+-b|switch\s+(?:-c|--create)\s|branch\s+(?!-)\w)/, message: 'Use `cape git create-branch` to create a branch.', tier: 'redirect' },
   {
@@ -323,17 +327,6 @@ export const denyTable: readonly DenyEntry[] = [
     tier: 'warn',
   },
 ];
-
-export const checkStopReinforcement = (command: string): string | null => {
-  if (!/\bbr\s+close\b/.test(command)) {
-    return null;
-  }
-  return [
-    'A task was just closed via `br close`.',
-    'STOP working immediately. Present a checkpoint summary and wait for user input.',
-    'Do not start the next task or make further code changes.',
-  ].join(' ');
-};
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {

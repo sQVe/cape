@@ -8,6 +8,7 @@ import type { BeadData, ChildStatus } from '../services/brValidate';
 import { BrValidateService, generateTemplate, validateSections } from '../services/brValidate';
 import type { CheckResult } from '../services/check';
 import { CheckService } from '../services/check';
+import { HookService } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -404,5 +405,88 @@ describe('br close-check command', () => {
     expect(result.canClose).toBe(false);
     expect(result.checksPassed).toBe(false);
     consoleSpy.mockRestore();
+  });
+});
+
+describe('br close command', () => {
+  const makeCloseLayer = (brCloseOutput: string | null) => {
+    const writtenFiles: Record<string, string> = {};
+    const removedFiles: string[] = [];
+    const hookLayer = Layer.succeed(HookService)({
+      pluginRoot: () => '/test',
+      readFile: () => Effect.succeed(null),
+      writeFile: (path, content) => {
+        writtenFiles[path] = content;
+        return Effect.succeed(undefined);
+      },
+      removeFile: (path) => {
+        removedFiles.push(path);
+        return Effect.succeed(undefined);
+      },
+      ensureDir: () => Effect.succeed(undefined),
+      brQuery: (args) => {
+        if (args[0] === 'close') {
+          return Effect.succeed(brCloseOutput);
+        }
+        return Effect.succeed(null);
+      },
+      readStdin: () => Effect.succeed(''),
+      spawnGit: () => Effect.succeed(null),
+    });
+    return { hookLayer, writtenFiles, removedFiles };
+  };
+
+  const makeCloseLayers = (hookLayer: Layer.Layer<HookService>) =>
+    Layer.mergeAll(
+      NodeServices.layer,
+      stubGitLayer,
+      stubDetectLayer,
+      stubCheckLayer,
+      stubCommitLayer,
+      stubPrLayer,
+      stubValidateLayer,
+      stubConformLayer,
+      makeStubBrLayer(),
+      hookLayer,
+    );
+
+  it('closes issue and returns structured JSON', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer } = makeCloseLayer('✓ Closed bd-test');
+    await Effect.runPromise(
+      run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.closed).toBe(true);
+    expect(result.id).toBe('bd-test');
+    expect(result.stopMessage).toContain('STOP');
+    consoleSpy.mockRestore();
+  });
+
+  it('cleans up state files on close', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles, removedFiles } = makeCloseLayer('✓ Closed bd-test');
+    await Effect.runPromise(
+      run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
+    );
+    expect(removedFiles).toContain('/test/hooks/context/tdd-state.json');
+    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
+    expect(writtenFiles['/test/hooks/context/workflow-active.txt']).toBe('');
+    consoleSpy.mockRestore();
+  });
+
+  it('returns error JSON when br close fails', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCloseLayer(null);
+    await expect(
+      Effect.runPromise(
+        run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
+      ),
+    ).rejects.toThrow('failed to close bd-test');
+    const output = stderrSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.error).toContain('failed to close');
+    stderrSpy.mockRestore();
   });
 });

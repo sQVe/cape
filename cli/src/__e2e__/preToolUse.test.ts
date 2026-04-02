@@ -81,7 +81,23 @@ describe('redirect tier', () => {
   // it('denies raw br q', ...)
   // it('denies raw br update --status', ...)
   // it('allows br update without --status', ...)
-  // it('denies raw br close', ...)
+  it('denies raw br close', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('br close cape-2v2.3'),
+      env,
+    );
+    expectDeny(result, 'cape br close');
+  });
+
+  it('passes through cape br close', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput('cape br close cape-2v2.3'),
+      env,
+    );
+    expectPassThrough(result);
+  });
   // it('denies raw gh pr create', ...)
   // it('denies raw git checkout -b', ...)
   // it('denies raw git switch -c', ...)

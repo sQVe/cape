@@ -101,6 +101,19 @@ describe('cape br close-check', () => {
   });
 });
 
+describe('cape br close', () => {
+  it('cape br --help lists close subcommand', () => {
+    const result = cape(['br', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('close');
+  });
+
+  it('requires an id argument', () => {
+    const result = cape(['br', 'close']);
+    expect(result.status).not.toBe(0);
+  });
+});
+
 describe('cape epic verify', () => {
   it('cape --help lists epic subcommand', () => {
     const result = cape(['--help']);

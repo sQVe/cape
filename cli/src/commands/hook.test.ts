@@ -8,7 +8,6 @@ import { main } from '../main';
 
 import {
   HookService,
-  checkStopReinforcement,
   denyTable,
   denyWith,
   deriveFlowContext,
@@ -564,33 +563,6 @@ describe('denyTable', () => {
   });
 });
 
-describe('checkStopReinforcement', () => {
-  it('outputs message for br close', () => {
-    const result = checkStopReinforcement('br close cape-2v2.3');
-    expect(result).toContain('STOP');
-  });
-
-  it('outputs message for br close without arguments', () => {
-    const result = checkStopReinforcement('br close');
-    expect(result).toContain('STOP');
-  });
-
-  it('returns null for non-br-close commands', () => {
-    expect(checkStopReinforcement('echo hello')).toBeNull();
-  });
-
-  it('returns null for br show', () => {
-    expect(checkStopReinforcement('br show cape-2v2')).toBeNull();
-  });
-
-  it('returns null for br update --status closed', () => {
-    expect(checkStopReinforcement('br update cape-2v2.3 --status closed')).toBeNull();
-  });
-
-  it('returns null for empty command', () => {
-    expect(checkStopReinforcement('')).toBeNull();
-  });
-});
 
 describe('preToolUseBash', () => {
   it('passes through non-matching commands', async () => {
@@ -623,8 +595,17 @@ describe('preToolUseBash', () => {
     // it('denies raw br q', ...)
     // it('denies raw br update --status', ...)
     // it('allows br update without --status', ...)
-    // it('denies raw br close', ...)
-    // it('passes through cape-prefixed br command', ...)
+    it('denies raw br close', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expectDeny(result, 'cape br close');
+    });
+
+    it('passes through cape br close', async () => {
+      const layer = makeStubHookLayer({ stdin: bashStdin('cape br close cape-2v2.3') });
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
     // it('denies raw gh pr create', ...)
     // it('denies raw git checkout -b', ...)
     // it('denies raw git switch -c', ...)
