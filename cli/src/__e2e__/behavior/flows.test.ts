@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { cape, capeCmd } from './helpers';
+import { cape, capeCmd } from '../helpers';
 
 let tmpDir: string;
 let contextDir: string;

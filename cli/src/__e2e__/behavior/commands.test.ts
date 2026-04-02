@@ -3,15 +3,15 @@ import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { capeCmd } from './helpers';
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
+import { inProcess } from '../helpers';
+
+const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
 
 describe('cape --help', () => {
-  it('lists all subcommands', () => {
-    const result = capeCmd(['--help']);
+  it('lists all subcommands', async () => {
+    const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
     for (const sub of ['br', 'check', 'commit', 'detect', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
@@ -20,16 +20,16 @@ describe('cape --help', () => {
 });
 
 describe('cape --version', () => {
-  it('returns version string', () => {
-    const result = capeCmd(['--version']);
+  it('returns version string', async () => {
+    const result = await inProcess(['--version']);
     expect(result.status).toBe(0);
     expect(result.stdout).toMatch(/^cape v\d+\.\d+\.\d+$/);
   });
 });
 
 describe('cape detect', () => {
-  it('each entry has language, testFramework, linter, formatter fields', () => {
-    const result = capeCmd(['detect']);
+  it('each entry has language, testFramework, linter, formatter fields', async () => {
+    const result = await inProcess(['detect']);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.length).toBeGreaterThan(0);
     for (const entry of parsed) {
@@ -40,8 +40,8 @@ describe('cape detect', () => {
     }
   });
 
-  it('detects typescript for the cape repo', () => {
-    const result = capeCmd(['detect']);
+  it('detects typescript for the cape repo', async () => {
+    const result = await inProcess(['detect']);
     const parsed = JSON.parse(result.stdout);
     const ts = parsed.find((e: { language: string }) => e.language === 'typescript');
     expect(ts).toBeDefined();
@@ -50,8 +50,8 @@ describe('cape detect', () => {
 });
 
 describe('cape git context', () => {
-  it('returns valid JSON with all expected fields', () => {
-    const result = capeCmd(['git', 'context']);
+  it('returns valid JSON with all expected fields', async () => {
+    const result = await inProcess(['git', 'context']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed).toHaveProperty('mainBranch');
@@ -63,69 +63,70 @@ describe('cape git context', () => {
     expect(Array.isArray(parsed.recentLog)).toBe(true);
   });
 
-  it('exits 1 outside a git repo', () => {
+  it('exits 1 outside a git repo', async () => {
     const nonGitDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-nogit-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
-    const result = capeCmd(['git', 'context'], { cwd: nonGitDir });
+    const result = await inProcess(['git', 'context'], { cwd: nonGitDir });
+    spawnSync('rm', ['-rf', nonGitDir]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('error');
   });
 });
 
 describe('cape br close-check', () => {
-  it('cape br --help lists close-check subcommand', () => {
-    const result = capeCmd(['br', '--help']);
+  it('cape br --help lists close-check subcommand', async () => {
+    const result = await inProcess(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('close-check');
   });
 
-  it('requires an id argument', () => {
-    const result = capeCmd(['br', 'close-check']);
+  it('requires an id argument', async () => {
+    const result = await inProcess(['br', 'close-check']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br close', () => {
-  it('cape br --help lists close subcommand', () => {
-    const result = capeCmd(['br', '--help']);
+  it('cape br --help lists close subcommand', async () => {
+    const result = await inProcess(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('close');
   });
 
-  it('requires an id argument', () => {
-    const result = capeCmd(['br', 'close']);
+  it('requires an id argument', async () => {
+    const result = await inProcess(['br', 'close']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br create', () => {
-  it('cape br --help lists create subcommand', () => {
-    const result = capeCmd(['br', '--help']);
+  it('cape br --help lists create subcommand', async () => {
+    const result = await inProcess(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create');
   });
 
-  it('errors when --type is missing', () => {
-    const result = capeCmd(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
+  it('errors when --type is missing', async () => {
+    const result = await inProcess(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--type is required');
   });
 
-  it('errors when --priority is missing', () => {
-    const result = capeCmd(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
+  it('errors when --priority is missing', async () => {
+    const result = await inProcess(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--priority is required');
   });
 
-  it('errors when --labels is missing', () => {
-    const result = capeCmd(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
+  it('errors when --labels is missing', async () => {
+    const result = await inProcess(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--labels is required');
   });
 
-  it('rejects --design flag', () => {
-    const result = capeCmd([
+  it('rejects --design flag', async () => {
+    const result = await inProcess([
       'br',
       'create',
       'Test',
@@ -144,26 +145,26 @@ describe('cape br create', () => {
 });
 
 describe('cape epic verify', () => {
-  it('cape --help lists epic subcommand', () => {
-    const result = capeCmd(['--help']);
+  it('cape --help lists epic subcommand', async () => {
+    const result = await inProcess(['--help']);
     expect(result.stdout).toContain('epic');
   });
 
-  it('cape epic --help lists verify subcommand', () => {
-    const result = capeCmd(['epic', '--help']);
+  it('cape epic --help lists verify subcommand', async () => {
+    const result = await inProcess(['epic', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('verify');
   });
 
-  it('requires an id argument', () => {
-    const result = capeCmd(['epic', 'verify']);
+  it('requires an id argument', async () => {
+    const result = await inProcess(['epic', 'verify']);
     expect(result.status).not.toBe(0);
   });
 });
 
 describe('cape br template', () => {
-  it('outputs epic template with required sections', () => {
-    const result = capeCmd(['br', 'template', '--type', 'epic']);
+  it('outputs epic template with required sections', async () => {
+    const result = await inProcess(['br', 'template', '--type', 'epic']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Requirements');
     expect(result.stdout).toContain('## Success criteria');
@@ -171,44 +172,44 @@ describe('cape br template', () => {
     expect(result.stdout).toContain('## Approach');
   });
 
-  it('outputs task template', () => {
-    const result = capeCmd(['br', 'template', '--type', 'task']);
+  it('outputs task template', async () => {
+    const result = await inProcess(['br', 'template', '--type', 'task']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Goal');
     expect(result.stdout).toContain('## Behaviors');
   });
 
-  it('outputs bug template', () => {
-    const result = capeCmd(['br', 'template', '--type', 'bug']);
+  it('outputs bug template', async () => {
+    const result = await inProcess(['br', 'template', '--type', 'bug']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('## Reproduction steps');
   });
 
-  it('exits 1 for unknown type', () => {
-    const result = capeCmd(['br', 'template', '--type', 'unknown']);
+  it('exits 1 for unknown type', async () => {
+    const result = await inProcess(['br', 'template', '--type', 'unknown']);
     expect(result.status).toBe(1);
   });
 });
 
 describe('cape git validate-branch', () => {
-  it('validates a well-formed branch name', () => {
-    const result = capeCmd(['git', 'validate-branch', 'feat/my-feature']);
+  it('validates a well-formed branch name', async () => {
+    const result = await inProcess(['git', 'validate-branch', 'feat/my-feature']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.valid).toBe(true);
     expect(parsed.errors).toEqual([]);
   });
 
-  it('rejects a branch that already exists', () => {
-    const result = capeCmd(['git', 'validate-branch', 'main']);
+  it('rejects a branch that already exists', async () => {
+    const result = await inProcess(['git', 'validate-branch', 'main']);
     expect(result.status).toBe(1);
     const parsed = JSON.parse(result.stdout.split('\n')[0]!);
     expect(parsed.valid).toBe(false);
     expect(parsed.errors.some((e: string) => e.includes('already exists'))).toBe(true);
   });
 
-  it('warns on missing prefix', () => {
-    const result = capeCmd(['git', 'validate-branch', 'no-prefix-branch']);
+  it('warns on missing prefix', async () => {
+    const result = await inProcess(['git', 'validate-branch', 'no-prefix-branch']);
     expect(result.status).toBe(1);
     const parsed = JSON.parse(result.stdout.split('\n')[0]!);
     expect(parsed.valid).toBe(false);
@@ -234,57 +235,58 @@ describe('cape git diff', () => {
     spawnSync('rm', ['-rf', repoDir]);
   });
 
-  it('outputs unstaged diff by default', () => {
+  it('outputs unstaged diff by default', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 2;\n');
-    const result = capeCmd(['git', 'diff'], { cwd: repoDir });
+    const result = await inProcess(['git', 'diff'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('file.ts');
   });
 
-  it('outputs staged diff', () => {
+  it('outputs staged diff', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 3;\n');
     execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
-    const result = capeCmd(['git', 'diff', 'staged'], { cwd: repoDir });
+    const result = await inProcess(['git', 'diff', 'staged'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('file.ts');
   });
 
-  it('outputs empty when no changes', () => {
-    const result = capeCmd(['git', 'diff'], { cwd: repoDir });
+  it('outputs empty when no changes', async () => {
+    const result = await inProcess(['git', 'diff'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
   });
 
-  it('exits 1 outside a git repo', () => {
+  it('exits 1 outside a git repo', async () => {
     const nonGitDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-nodiff-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
-    const result = capeCmd(['git', 'diff'], { cwd: nonGitDir });
+    const result = await inProcess(['git', 'diff'], { cwd: nonGitDir });
+    spawnSync('rm', ['-rf', nonGitDir]);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('error');
   });
 
-  it('exits 1 with error for invalid scope', () => {
-    const result = capeCmd(['git', 'diff', 'bogus'], { cwd: repoDir });
+  it('exits 1 with error for invalid scope', async () => {
+    const result = await inProcess(['git', 'diff', 'bogus'], { cwd: repoDir });
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('invalid scope');
   });
 
-  it('outputs branch diff against main', () => {
+  it('outputs branch diff against main', async () => {
     execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feat/test-branch']);
     writeFileSync(join(repoDir, 'new.ts'), 'export const y = 1;\n');
     execFileSync('git', ['-C', repoDir, 'add', 'new.ts']);
     execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add new']);
 
-    const result = capeCmd(['git', 'diff', 'branch'], { cwd: repoDir });
+    const result = await inProcess(['git', 'diff', 'branch'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('new.ts');
   });
 });
 
 describe('cape validate', () => {
-  it('returns JSON with passed and failed counts', () => {
-    const result = capeCmd(['validate']);
+  it('returns JSON with passed and failed counts', async () => {
+    const result = await inProcess(['validate']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed).toHaveProperty('passed');
@@ -295,8 +297,8 @@ describe('cape validate', () => {
     expect(parsed.passed).toBeGreaterThan(0);
   });
 
-  it('filters to only skill files with "skills" argument', () => {
-    const result = capeCmd(['validate', 'skills']);
+  it('filters to only skill files with "skills" argument', async () => {
+    const result = await inProcess(['validate', 'skills']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -305,8 +307,8 @@ describe('cape validate', () => {
     expect(parsed.results.length).toBeGreaterThan(0);
   });
 
-  it('filters to only agent files with "agents" argument', () => {
-    const result = capeCmd(['validate', 'agents']);
+  it('filters to only agent files with "agents" argument', async () => {
+    const result = await inProcess(['validate', 'agents']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -315,8 +317,8 @@ describe('cape validate', () => {
     expect(parsed.results.length).toBeGreaterThan(0);
   });
 
-  it('filters to only command files with "commands" argument', () => {
-    const result = capeCmd(['validate', 'commands']);
+  it('filters to only command files with "commands" argument', async () => {
+    const result = await inProcess(['validate', 'commands']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     for (const entry of parsed.results) {
@@ -325,14 +327,14 @@ describe('cape validate', () => {
     expect(parsed.results.length).toBeGreaterThan(0);
   });
 
-  it('exits 1 for a malformed skill file', () => {
+  it('exits 1 for a malformed skill file', async () => {
     const badDir = join(REPO_ROOT, 'skills', '_test_bad');
     const badFile = join(badDir, 'SKILL.md');
     mkdirSync(badDir, { recursive: true });
     writeFileSync(badFile, 'no frontmatter no tags\n');
 
     try {
-      const result = capeCmd(['validate', badFile]);
+      const result = await inProcess(['validate', badFile]);
       expect(result.status).toBe(1);
       const jsonLine = result.stdout.split('\n')[0]!;
       const parsed = JSON.parse(jsonLine);
@@ -343,7 +345,7 @@ describe('cape validate', () => {
     }
   });
 
-  it('exits 1 for unknown file type', () => {
+  it('exits 1 for unknown file type', async () => {
     const valTmpDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-val-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
@@ -351,7 +353,7 @@ describe('cape validate', () => {
     writeFileSync(unknownFile, 'not a skill or agent\n');
 
     try {
-      const result = capeCmd(['validate', unknownFile]);
+      const result = await inProcess(['validate', unknownFile]);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain('Unknown file type');
     } finally {
@@ -375,14 +377,16 @@ describe('cape commit', () => {
     spawnSync('rm', ['-rf', repoDir]);
   });
 
-  it('exits 1 with no files argument', () => {
-    const result = capeCmd(['commit', '-m', 'feat: x'], { cwd: repoDir });
+  it('exits 1 with no files argument', async () => {
+    const result = await inProcess(['commit', '-m', 'feat: x'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
-  it('succeeds with valid file and message in a temp git repo', () => {
+  it('succeeds with valid file and message in a temp git repo', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
-    const result = capeCmd(['commit', 'file.ts', '-m', 'feat: add thing'], { cwd: repoDir });
+    const result = await inProcess(['commit', 'file.ts', '-m', 'feat: add thing'], {
+      cwd: repoDir,
+    });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.message).toBe('feat: add thing');
@@ -394,9 +398,9 @@ describe('cape commit', () => {
     expect(log).toContain('feat: add thing');
   });
 
-  it('warns on stderr about sensitive files', () => {
+  it('warns on stderr about sensitive files', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
-    const result = capeCmd(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
+    const result = await inProcess(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive');
     expect(result.stderr).toContain('.env');
@@ -407,23 +411,23 @@ describe('cape commit', () => {
     expect(log).toContain('feat: config');
   });
 
-  it('rejects invalid conventional commit message', () => {
+  it('rejects invalid conventional commit message', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const y = 2;\n');
-    const result = capeCmd(['commit', 'file.ts', '-m', 'bad message'], { cwd: repoDir });
+    const result = await inProcess(['commit', 'file.ts', '-m', 'bad message'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
-  it('rejects bulk staging with dot', () => {
+  it('rejects bulk staging with dot', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const z = 3;\n');
-    const result = capeCmd(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
+    const result = await inProcess(['commit', '.', '-m', 'feat: bulk'], { cwd: repoDir });
     expect(result.status).toBe(1);
   });
 
-  it('succeeds with multiple files', () => {
+  it('succeeds with multiple files', async () => {
     writeFileSync(join(repoDir, 'a.ts'), 'export const a = 1;\n');
     writeFileSync(join(repoDir, 'b.ts'), 'export const b = 2;\n');
 
-    const result = capeCmd(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
+    const result = await inProcess(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
       cwd: repoDir,
     });
     expect(result.status).toBe(0);
@@ -439,13 +443,13 @@ describe('cape commit', () => {
 });
 
 describe('cape check', () => {
-  it('cape --help lists check subcommand', () => {
-    const result = capeCmd(['--help']);
+  it('cape --help lists check subcommand', async () => {
+    const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('check');
   });
 
-  it('exits 1 in a repo with no detected ecosystem', () => {
+  it('exits 1 in a repo with no detected ecosystem', async () => {
     const emptyDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-check-XXXXXX')], {
       encoding: 'utf-8',
     }).trim();
@@ -453,7 +457,7 @@ describe('cape check', () => {
     execFileSync('git', ['-C', emptyDir, 'commit', '--allow-empty', '-m', 'initial']);
 
     try {
-      const result = capeCmd(['check'], { cwd: emptyDir });
+      const result = await inProcess(['check'], { cwd: emptyDir });
       expect(result.status).not.toBe(0);
     } finally {
       spawnSync('rm', ['-rf', emptyDir]);
@@ -463,8 +467,8 @@ describe('cape check', () => {
 
 describe('cape pr', () => {
   describe('template', () => {
-    it('returns JSON with sections array', () => {
-      const result = capeCmd(['pr', 'template']);
+    it('returns JSON with sections array', async () => {
+      const result = await inProcess(['pr', 'template']);
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(parsed).toHaveProperty('sections');
@@ -472,8 +476,8 @@ describe('cape pr', () => {
       expect(parsed.sections.length).toBeGreaterThan(0);
     });
 
-    it('includes source field indicating repo or default', () => {
-      const result = capeCmd(['pr', 'template']);
+    it('includes source field indicating repo or default', async () => {
+      const result = await inProcess(['pr', 'template']);
       expect(result.status).toBe(0);
       const parsed = JSON.parse(result.stdout);
       expect(['repo', 'default']).toContain(parsed.source);
@@ -493,39 +497,39 @@ describe('cape pr', () => {
       spawnSync('rm', ['-rf', tmpDir]);
     });
 
-    it('exits 1 when no file or --stdin provided', () => {
-      const result = capeCmd(['pr', 'validate']);
+    it('exits 1 when no file or --stdin provided', async () => {
+      const result = await inProcess(['pr', 'validate']);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain('provide <file> or --stdin');
     });
 
-    it('validates a PR body file with all sections present', () => {
-      const template = capeCmd(['pr', 'template']);
+    it('validates a PR body file with all sections present', async () => {
+      const template = await inProcess(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = parsed.sections.map((s: string) => `#### ${s}\n\nContent here.\n`).join('\n');
       const bodyFile = join(tmpDir, 'pr-body.md');
       writeFileSync(bodyFile, body);
 
-      const result = capeCmd(['pr', 'validate', bodyFile]);
+      const result = await inProcess(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(0);
       const validated = JSON.parse(result.stdout);
       expect(validated.valid).toBe(true);
       expect(validated.missing).toEqual([]);
     });
 
-    it('reports missing sections for empty body', () => {
+    it('reports missing sections for empty body', async () => {
       const bodyFile = join(tmpDir, 'empty-pr.md');
       writeFileSync(bodyFile, 'No sections here.\n');
 
-      const result = capeCmd(['pr', 'validate', bodyFile]);
+      const result = await inProcess(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(1);
       const validated = JSON.parse(result.stdout.split('\n')[0]!);
       expect(validated.valid).toBe(false);
       expect(validated.missing.length).toBeGreaterThan(0);
     });
 
-    it('reports extra sections not in template', () => {
-      const template = capeCmd(['pr', 'template']);
+    it('reports extra sections not in template', async () => {
+      const template = await inProcess(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = [
         ...parsed.sections.map((s: string) => `#### ${s}\n\nContent.\n`),
@@ -534,7 +538,7 @@ describe('cape pr', () => {
       const bodyFile = join(tmpDir, 'extra-pr.md');
       writeFileSync(bodyFile, body);
 
-      const result = capeCmd(['pr', 'validate', bodyFile]);
+      const result = await inProcess(['pr', 'validate', bodyFile]);
       expect(result.status).toBe(0);
       const validated = JSON.parse(result.stdout);
       expect(validated.valid).toBe(true);
@@ -544,24 +548,24 @@ describe('cape pr', () => {
 });
 
 describe('cape context', () => {
-  it('rejects invalid context name with uppercase', () => {
-    const result = capeCmd(['context', 'set', 'InvalidName']);
+  it('rejects invalid context name with uppercase', async () => {
+    const result = await inProcess(['context', 'set', 'InvalidName']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
-  it('rejects invalid context name with spaces', () => {
-    const result = capeCmd(['context', 'set', 'bad name']);
+  it('rejects invalid context name with spaces', async () => {
+    const result = await inProcess(['context', 'set', 'bad name']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
-  it('rejects invalid context name with underscores', () => {
-    const result = capeCmd(['context', 'set', 'bad_name']);
+  it('rejects invalid context name with underscores', async () => {
+    const result = await inProcess(['context', 'set', 'bad_name']);
     expect(result.stderr).toContain('Invalid context name');
   });
 
-  it('accepts valid lowercase-hyphen context name', () => {
+  it('accepts valid lowercase-hyphen context name', async () => {
     const contextFile = join(REPO_ROOT, 'cli', 'hooks', 'context', 'my-context-123.txt');
-    const result = capeCmd(['context', 'set', 'my-context-123']);
+    const result = await inProcess(['context', 'set', 'my-context-123']);
     try {
       expect(result.stderr).not.toContain('Invalid context name');
     } finally {
@@ -573,39 +577,39 @@ describe('cape context', () => {
     }
   });
 
-  it('clear rejects invalid context name', () => {
-    const result = capeCmd(['context', 'clear', 'BAD']);
+  it('clear rejects invalid context name', async () => {
+    const result = await inProcess(['context', 'clear', 'BAD']);
     expect(result.stderr).toContain('Invalid context name');
   });
 });
 
 describe('cape br validate', () => {
-  it('exits 1 when neither id nor --type provided', () => {
-    const result = capeCmd(['br', 'validate']);
+  it('exits 1 when neither id nor --type provided', async () => {
+    const result = await inProcess(['br', 'validate']);
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('provide either <id> or --type');
   });
 });
 
 describe('cape br design', () => {
-  it('cape br --help lists design subcommand', () => {
-    const result = capeCmd(['br', '--help']);
+  it('cape br --help lists design subcommand', async () => {
+    const result = await inProcess(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('design');
   });
 });
 
 describe('cape detect --map', () => {
-  it('returns JSON mapping source files to test files', () => {
-    const result = capeCmd(['detect', '--map', '.']);
+  it('returns JSON mapping source files to test files', async () => {
+    const result = await inProcess(['detect', '--map', '.']);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(typeof parsed).toBe('object');
     expect(Object.keys(parsed).length).toBeGreaterThan(0);
   });
 
-  it('values are either a test path or null', () => {
-    const result = capeCmd(['detect', '--map', '.']);
+  it('values are either a test path or null', async () => {
+    const result = await inProcess(['detect', '--map', '.']);
     const parsed = JSON.parse(result.stdout);
     for (const value of Object.values(parsed)) {
       expect(value === null || typeof value === 'string').toBe(true);
@@ -614,80 +618,80 @@ describe('cape detect --map', () => {
 });
 
 describe('cape br update', () => {
-  it('cape br --help lists update subcommand', () => {
-    const result = capeCmd(['br', '--help']);
+  it('cape br --help lists update subcommand', async () => {
+    const result = await inProcess(['br', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('update');
   });
 
-  it('requires an id argument', () => {
-    const result = capeCmd(['br', 'update']);
+  it('requires an id argument', async () => {
+    const result = await inProcess(['br', 'update']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('id');
   });
 
-  it('rejects hyphenated status values', () => {
-    const result = capeCmd(['br', 'update', 'bd-test', '--status', 'in-progress']);
+  it('rejects hyphenated status values', async () => {
+    const result = await inProcess(['br', 'update', 'bd-test', '--status', 'in-progress']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('in_progress');
   });
 
-  it('rejects done as status and redirects to cape br close', () => {
-    const result = capeCmd(['br', 'update', 'bd-test', '--status', 'done']);
+  it('rejects done as status and redirects to cape br close', async () => {
+    const result = await inProcess(['br', 'update', 'bd-test', '--status', 'done']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('cape br close');
   });
 });
 
 describe('cape pr create', () => {
-  it('cape pr --help lists create subcommand', () => {
-    const result = capeCmd(['pr', '--help']);
+  it('cape pr --help lists create subcommand', async () => {
+    const result = await inProcess(['pr', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create');
   });
 
-  it('requires --title flag', () => {
-    const result = capeCmd(['pr', 'create', '--body', 'body text']);
+  it('requires --title flag', async () => {
+    const result = await inProcess(['pr', 'create', '--body', 'body text']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--title');
   });
 
-  it('requires --body flag', () => {
-    const result = capeCmd(['pr', 'create', '--title', 'My PR']);
+  it('requires --body flag', async () => {
+    const result = await inProcess(['pr', 'create', '--title', 'My PR']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('--body');
   });
 });
 
 describe('cape git create-branch', () => {
-  it('cape git --help lists create-branch subcommand', () => {
-    const result = capeCmd(['git', '--help']);
+  it('cape git --help lists create-branch subcommand', async () => {
+    const result = await inProcess(['git', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('create-branch');
   });
 
-  it('requires a name argument', () => {
-    const result = capeCmd(['git', 'create-branch']);
+  it('requires a name argument', async () => {
+    const result = await inProcess(['git', 'create-branch']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('name');
   });
 
-  it('rejects names without conventional prefix', () => {
-    const result = capeCmd(['git', 'create-branch', 'no-prefix-here']);
+  it('rejects names without conventional prefix', async () => {
+    const result = await inProcess(['git', 'create-branch', 'no-prefix-here']);
     expect(result.status).not.toBe(0);
     expect(result.stderr).toContain('feat');
   });
 });
 
 describe('cape test', () => {
-  it('cape --help lists test subcommand', () => {
-    const result = capeCmd(['--help']);
+  it('cape --help lists test subcommand', async () => {
+    const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('test');
   });
 
-  it('cape test --help describes TDD state output', () => {
-    const result = capeCmd(['test', '--help']);
+  it('cape test --help describes TDD state output', async () => {
+    const result = await inProcess(['test', '--help']);
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('TDD state');
   });

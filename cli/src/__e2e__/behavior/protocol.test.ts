@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { cape } from './helpers';
+import { cape } from '../helpers';
 
 let tmpDir: string;
 let env: Record<string, string>;
