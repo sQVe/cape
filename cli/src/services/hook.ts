@@ -299,7 +299,11 @@ export const denyTable: readonly DenyEntry[] = [
     tier: 'redirect',
   },
   // Re-enable as each cape command is implemented:
-  // { pattern: /(?<!\bcape\s)\bbr\s+create\b/, message: 'Use `cape br create` instead of raw `br create`.', tier: 'redirect' },
+  {
+    pattern: /(?<!\bcape\s)\bbr\s+create\b/,
+    message: 'Use `cape br create` instead of raw `br create`.',
+    tier: 'redirect',
+  },
   // { pattern: /(?<!\bcape\s)\bbr\s+q\b/, message: 'Use `cape br q` to query beads.', tier: 'redirect' },
   // { pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/, message: 'Use `cape br update` to change issue status.', tier: 'redirect' },
   {

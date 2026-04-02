@@ -114,6 +114,50 @@ describe('cape br close', () => {
   });
 });
 
+describe('cape br create', () => {
+  it('cape br --help lists create subcommand', () => {
+    const result = cape(['br', '--help']);
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain('create');
+  });
+
+  it('errors when --type is missing', () => {
+    const result = cape(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--type is required');
+  });
+
+  it('errors when --priority is missing', () => {
+    const result = cape(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--priority is required');
+  });
+
+  it('errors when --labels is missing', () => {
+    const result = cape(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('--labels is required');
+  });
+
+  it('rejects --design flag', () => {
+    const result = cape([
+      'br',
+      'create',
+      'Test',
+      '--type',
+      'task',
+      '--priority',
+      'P1',
+      '--labels',
+      'hitl',
+      '--design',
+      'content',
+    ]);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('cape br design');
+  });
+});
+
 describe('cape epic verify', () => {
   it('cape --help lists epic subcommand', () => {
     const result = cape(['--help']);

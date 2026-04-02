@@ -490,3 +490,223 @@ describe('br close command', () => {
     stderrSpy.mockRestore();
   });
 });
+
+const validTaskDescription =
+  '## Goal\nDo it\n\n## Behaviors\n- thing\n\n## Success criteria\n- [ ] works';
+
+describe('br create command', () => {
+  const makeCreateLayer = (brCreateOutput: string | null, stdinContent = validTaskDescription) => {
+    let capturedArgs: readonly string[] = [];
+    const hookLayer = Layer.succeed(HookService)({
+      pluginRoot: () => '/test',
+      readFile: () => Effect.succeed(null),
+      writeFile: () => Effect.succeed(undefined),
+      removeFile: () => Effect.succeed(undefined),
+      ensureDir: () => Effect.succeed(undefined),
+      brQuery: (args) => {
+        if (args[0] === 'create') {
+          capturedArgs = args;
+          return Effect.succeed(brCreateOutput);
+        }
+        return Effect.succeed(null);
+      },
+      readStdin: () => Effect.succeed(stdinContent),
+      spawnGit: () => Effect.succeed(null),
+    });
+    return { hookLayer, getCapturedArgs: () => capturedArgs };
+  };
+
+  const makeCreateLayers = (hookLayer: Layer.Layer<HookService>) =>
+    Layer.mergeAll(
+      NodeServices.layer,
+      stubGitLayer,
+      stubDetectLayer,
+      stubCheckLayer,
+      stubCommitLayer,
+      stubPrLayer,
+      stubValidateLayer,
+      stubConformLayer,
+      makeStubBrLayer(),
+      hookLayer,
+    );
+
+  it('creates issue and returns structured JSON', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await Effect.runPromise(
+      run([
+        'br',
+        'create',
+        'Test issue',
+        '--type',
+        'task',
+        '--priority',
+        'P1',
+        '--labels',
+        'hitl',
+        '--description',
+        validTaskDescription,
+      ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.created).toBe(true);
+    expect(result.id).toBe('bd-test');
+    consoleSpy.mockRestore();
+  });
+
+  it('errors when --type is missing', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await expect(
+      Effect.runPromise(
+        run(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']).pipe(
+          Effect.provide(makeCreateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow('--type is required');
+    stderrSpy.mockRestore();
+  });
+
+  it('errors when --priority is missing', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await expect(
+      Effect.runPromise(
+        run(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']).pipe(
+          Effect.provide(makeCreateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow('--priority is required');
+    stderrSpy.mockRestore();
+  });
+
+  it('errors when --labels is missing', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await expect(
+      Effect.runPromise(
+        run(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']).pipe(
+          Effect.provide(makeCreateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow('--labels is required');
+    stderrSpy.mockRestore();
+  });
+
+  it('rejects --design flag with redirect message', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await expect(
+      Effect.runPromise(
+        run([
+          'br',
+          'create',
+          'Test',
+          '--type',
+          'task',
+          '--priority',
+          'P1',
+          '--labels',
+          'hitl',
+          '--design',
+          'content',
+        ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
+      ),
+    ).rejects.toThrow();
+    const output = stderrSpy.mock.calls.flat().join('');
+    expect(output).toContain('cape br design');
+    stderrSpy.mockRestore();
+  });
+
+  it('validates description headers and rejects invalid', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer('bd-test');
+    await expect(
+      Effect.runPromise(
+        run([
+          'br',
+          'create',
+          'Test',
+          '--type',
+          'task',
+          '--priority',
+          'P1',
+          '--labels',
+          'hitl',
+          '--description',
+          '## Goal\nDo it',
+        ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
+      ),
+    ).rejects.toThrow('missing section');
+    const output = stderrSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('missing section: Behaviors');
+    stderrSpy.mockRestore();
+  });
+
+  it('reads description from stdin when --description not provided', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, getCapturedArgs } = makeCreateLayer('bd-test');
+    await Effect.runPromise(
+      run(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1', '--labels', 'hitl']).pipe(
+        Effect.provide(makeCreateLayers(hookLayer)),
+      ),
+    );
+    expect(getCapturedArgs()).toContain('--description');
+    consoleSpy.mockRestore();
+  });
+
+  it('passes --parent flag through to br create', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, getCapturedArgs } = makeCreateLayer('bd-test.1');
+    await Effect.runPromise(
+      run([
+        'br',
+        'create',
+        'Child',
+        '--type',
+        'task',
+        '--priority',
+        'P1',
+        '--labels',
+        'hitl',
+        '--parent',
+        'bd-test',
+        '--description',
+        validTaskDescription,
+      ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
+    );
+    const args = getCapturedArgs();
+    expect(args).toContain('--parent');
+    expect(args).toContain('bd-test');
+    consoleSpy.mockRestore();
+  });
+
+  it('returns error JSON when br create fails', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeCreateLayer(null);
+    await expect(
+      Effect.runPromise(
+        run([
+          'br',
+          'create',
+          'Test',
+          '--type',
+          'task',
+          '--priority',
+          'P1',
+          '--labels',
+          'hitl',
+          '--description',
+          validTaskDescription,
+        ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
+      ),
+    ).rejects.toThrow('br create failed');
+    const output = stderrSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.error).toContain('br create failed');
+    stderrSpy.mockRestore();
+  });
+});

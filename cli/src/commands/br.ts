@@ -171,9 +171,86 @@ const brClose = Command.make(
   }),
 ).pipe(Command.withDescription('Close a bead issue and reset workflow state files.'));
 
+const brCreate = Command.make(
+  'create',
+  {
+    title: Argument.string('title').pipe(Argument.optional),
+    type: Flag.string('type').pipe(Flag.optional),
+    priority: Flag.string('priority').pipe(Flag.optional),
+    labels: Flag.string('labels').pipe(Flag.optional),
+    description: Flag.string('description').pipe(Flag.optional),
+    parent: Flag.string('parent').pipe(Flag.optional),
+    design: Flag.string('design').pipe(Flag.optional),
+  },
+  Effect.fn(function* ({ title, type, priority, labels, description, parent, design }) {
+    if (design._tag === 'Some') {
+      const error = {
+        error: 'Use `cape br design <id> <heading>` to attach design content after creation.',
+      };
+      yield* Console.error(JSON.stringify(error));
+      return yield* Effect.fail(new Error(error.error));
+    }
+
+    if (type._tag === 'None') {
+      yield* Console.error(JSON.stringify({ error: '--type is required' }));
+      return yield* Effect.fail(new Error('--type is required'));
+    }
+    if (priority._tag === 'None') {
+      yield* Console.error(JSON.stringify({ error: '--priority is required' }));
+      return yield* Effect.fail(new Error('--priority is required'));
+    }
+    if (labels._tag === 'None') {
+      yield* Console.error(JSON.stringify({ error: '--labels is required' }));
+      return yield* Effect.fail(new Error('--labels is required'));
+    }
+
+    const service = yield* HookService;
+
+    let descContent: string;
+    if (description._tag === 'Some') {
+      descContent = description.value;
+    } else {
+      descContent = yield* service.readStdin();
+    }
+
+    if (descContent) {
+      const errors = validateSections(type.value, descContent);
+      if (errors.length > 0) {
+        yield* Console.error(JSON.stringify({ valid: false, errors }));
+        return yield* Effect.fail(new Error(errors.join(', ')));
+      }
+    }
+
+    const args: string[] = ['create'];
+    if (title._tag === 'Some') {
+      args.push(title.value);
+    }
+    args.push('--type', type.value, '--priority', priority.value, '--labels', labels.value);
+    if (descContent) {
+      args.push('--description', descContent);
+    }
+    if (parent._tag === 'Some') {
+      args.push('--parent', parent.value);
+    }
+    args.push('--silent');
+
+    const output = yield* service.brQuery(args);
+    if (output == null) {
+      yield* Console.error(JSON.stringify({ error: 'br create failed' }));
+      return yield* Effect.fail(new Error('br create failed'));
+    }
+
+    yield* Console.log(JSON.stringify({ created: true, id: output.trim() }));
+  }),
+).pipe(
+  Command.withDescription(
+    'Create a bead issue with validation. Validates required flags, description headers, and rejects --design.',
+  ),
+);
+
 export const br = Command.make('br').pipe(
   Command.withDescription(
     'Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.',
   ),
-  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose]),
+  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate]),
 );
