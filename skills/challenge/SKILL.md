@@ -54,13 +54,14 @@ Glob/Grep/Read. Only present assumptions that require human judgment — priorit
 business constraints. If you can resolve an assumption by reading code, resolve it silently and move
 on.
 
-Categorize the phase to calibrate depth:
+Read `hooks/context/flow-phase.json` to determine the current phase. If the file is absent or
+unreadable, default to `"design"`. Use the phase value to set the depth cap:
 
-| Phase                       | Focus                              | Depth cap |
-| --------------------------- | ---------------------------------- | --------- |
-| Design (pre-implementation) | Scope, ambiguity, over-engineering | Up to 5   |
-| Implementation (post-task)  | Scope creep, unrequested additions | Up to 3   |
-| Ad-hoc review               | All categories                     | Up to 5   |
+| Phase            | Focus                              | Depth cap |
+| ---------------- | ---------------------------------- | --------- |
+| `design`         | Scope, ambiguity, over-engineering | Up to 5   |
+| `implementation` | Scope creep, unrequested additions | Up to 3   |
+| `adhoc`          | All categories                     | Up to 5   |
 
 ---
 
