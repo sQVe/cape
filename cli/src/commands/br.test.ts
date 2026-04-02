@@ -12,11 +12,12 @@ import { HookService } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
+  stubConformLayer,
   stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
-  stubConformLayer,
+  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -47,6 +48,7 @@ const makeCommandLayers = (brLayer = makeStubBrLayer()) =>
     stubCommitLayer,
     stubHookLayer,
     stubPrLayer,
+    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     brLayer,
@@ -349,6 +351,7 @@ describe('br close-check command', () => {
       stubCommitLayer,
       stubHookLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       brLayer,
@@ -432,6 +435,7 @@ describe('br close command', () => {
       },
       readStdin: () => Effect.succeed(''),
       spawnGit: () => Effect.succeed(null),
+      fileExists: () => Effect.succeed(false),
     });
     return { hookLayer, writtenFiles, removedFiles };
   };
@@ -444,6 +448,7 @@ describe('br close command', () => {
       stubCheckLayer,
       stubCommitLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       makeStubBrLayer(),
@@ -471,6 +476,7 @@ describe('br close command', () => {
       run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
     );
     expect(removedFiles).toContain('/test/hooks/context/tdd-state.json');
+    expect(removedFiles).toContain('/test/hooks/context/flow-phase.json');
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
     expect(writtenFiles['/test/hooks/context/workflow-active.txt']).toBe('');
     consoleSpy.mockRestore();
@@ -512,6 +518,7 @@ describe('br create command', () => {
       },
       readStdin: () => Effect.succeed(stdinContent),
       spawnGit: () => Effect.succeed(null),
+      fileExists: () => Effect.succeed(false),
     });
     return { hookLayer, getCapturedArgs: () => capturedArgs };
   };
@@ -524,6 +531,7 @@ describe('br create command', () => {
       stubCheckLayer,
       stubCommitLayer,
       stubPrLayer,
+      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       makeStubBrLayer(),
@@ -708,5 +716,222 @@ describe('br create command', () => {
     const result = JSON.parse(output);
     expect(result.error).toContain('br create failed');
     stderrSpy.mockRestore();
+  });
+});
+
+describe('br update command', () => {
+  const makeUpdateLayer = (
+    brUpdateOutput: string | null,
+    brShowOutput: string | null = '{"id":"bd-test","issue_type":"task"}',
+  ) => {
+    let capturedArgs: readonly string[] = [];
+    const writtenFiles: Record<string, string> = {};
+    const hookLayer = Layer.succeed(HookService)({
+      pluginRoot: () => '/test',
+      readFile: () => Effect.succeed(null),
+      writeFile: (path, content) => {
+        writtenFiles[path] = content;
+        return Effect.succeed(undefined);
+      },
+      removeFile: () => Effect.succeed(undefined),
+      ensureDir: () => Effect.succeed(undefined),
+      brQuery: (args) => {
+        if (args[0] === 'update') {
+          capturedArgs = args;
+          return Effect.succeed(brUpdateOutput);
+        }
+        if (args[0] === 'show') {
+          return Effect.succeed(brShowOutput);
+        }
+        return Effect.succeed(null);
+      },
+      readStdin: () => Effect.succeed(''),
+      spawnGit: () => Effect.succeed(null),
+      fileExists: () => Effect.succeed(false),
+    });
+    return { hookLayer, getCapturedArgs: () => capturedArgs, writtenFiles };
+  };
+
+  const makeUpdateLayers = (hookLayer: Layer.Layer<HookService>) =>
+    Layer.mergeAll(
+      NodeServices.layer,
+      stubGitLayer,
+      stubDetectLayer,
+      stubCheckLayer,
+      stubCommitLayer,
+      stubPrLayer,
+      stubTestLayer,
+      stubValidateLayer,
+      stubConformLayer,
+      makeStubBrLayer(),
+      hookLayer,
+    );
+
+  it('updates issue and returns structured JSON', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.updated).toBe(true);
+    expect(result.id).toBe('bd-test');
+    expect(result.phase).toBe('executing');
+    consoleSpy.mockRestore();
+  });
+
+  it('rejects hyphenated status values', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
+    await expect(
+      Effect.runPromise(
+        run(['br', 'update', 'bd-test', '--status', 'in-progress']).pipe(
+          Effect.provide(makeUpdateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow();
+    const output = stderrSpy.mock.calls.flat().join('');
+    expect(output).toContain('in_progress');
+    stderrSpy.mockRestore();
+  });
+
+  it('rejects done as status', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
+    await expect(
+      Effect.runPromise(
+        run(['br', 'update', 'bd-test', '--status', 'done']).pipe(
+          Effect.provide(makeUpdateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow();
+    const output = stderrSpy.mock.calls.flat().join('');
+    expect(output).toContain('cape br close');
+    stderrSpy.mockRestore();
+  });
+
+  it('writes flow-phase.json with phase and issueId', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const stateContent = writtenFiles['/test/hooks/context/flow-phase.json']!;
+    const state = JSON.parse(stateContent);
+    expect(state.phase).toBe('executing');
+    expect(state.issueId).toBe('bd-test');
+    expect(state.timestamp).toBeTypeOf('number');
+    consoleSpy.mockRestore();
+  });
+
+  it('derives debugging phase for bug type', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer(
+      '✓ Updated bd-test',
+      '{"id":"bd-test","issue_type":"bug"}',
+    );
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
+    expect(state.phase).toBe('debugging');
+    consoleSpy.mockRestore();
+  });
+
+  it('derives planning phase for epic type', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer(
+      '✓ Updated bd-test',
+      '{"id":"bd-test","issue_type":"epic"}',
+    );
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
+    expect(state.phase).toBe('planning');
+    consoleSpy.mockRestore();
+  });
+
+  it('delegates all args to br update', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, getCapturedArgs } = makeUpdateLayer('✓ Updated bd-test');
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const args = getCapturedArgs();
+    expect(args[0]).toBe('update');
+    expect(args).toContain('bd-test');
+    expect(args).toContain('--status');
+    expect(args).toContain('in_progress');
+    consoleSpy.mockRestore();
+  });
+
+  it('returns error JSON when br update fails', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hookLayer } = makeUpdateLayer(null);
+    await expect(
+      Effect.runPromise(
+        run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+          Effect.provide(makeUpdateLayers(hookLayer)),
+        ),
+      ),
+    ).rejects.toThrow('br update failed');
+    const output = stderrSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.error).toContain('br update failed');
+    stderrSpy.mockRestore();
+  });
+
+  it('falls back to executing phase when brQuery show returns malformed JSON', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test', 'not valid json{{{');
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
+    expect(state.phase).toBe('executing');
+    consoleSpy.mockRestore();
+  });
+
+  it('falls back to executing phase when brQuery show returns null', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test', null);
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
+    expect(state.phase).toBe('executing');
+    consoleSpy.mockRestore();
+  });
+
+  it('skips flow-phase.json when --status is not provided', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
+    await Effect.runPromise(
+      run(['br', 'update', 'bd-test', '--description', 'new desc']).pipe(
+        Effect.provide(makeUpdateLayers(hookLayer)),
+      ),
+    );
+    expect(writtenFiles['/test/hooks/context/flow-phase.json']).toBeUndefined();
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.updated).toBe(true);
+    expect(result.phase).toBeUndefined();
+    consoleSpy.mockRestore();
   });
 });
