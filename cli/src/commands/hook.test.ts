@@ -1492,6 +1492,19 @@ describe('preToolUseWrite', () => {
       const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
     });
+
+    it('allows overwrite when tdd-state is green', async () => {
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/existing.ts', 'new content'),
+        files: {
+          ...flowPhaseFile('executing'),
+          ...tddStateFile('green'),
+          '/src/existing.ts': 'old content',
+        },
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
   });
 
   describe('auto-bypasses trivial files', () => {
