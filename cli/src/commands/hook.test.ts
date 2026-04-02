@@ -652,6 +652,15 @@ describe('preToolUseBash', () => {
       expectDeny(result, 'cape br close');
     });
 
+    it.each(['cape br create --type task', 'cape br q', 'cape br update --status open', 'cape br close abc'])(
+      'passes through cape-prefixed br command: %s',
+      async (command) => {
+        const layer = makeStubHookLayer({ stdin: bashStdin(command) });
+        const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+        expect(result).toBeNull();
+      },
+    );
+
     it('denies raw gh pr create', async () => {
       const layer = makeStubHookLayer({
         stdin: bashStdin('gh pr create --title "feat: test"'),

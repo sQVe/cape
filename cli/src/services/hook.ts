@@ -299,22 +299,22 @@ export const denyTable: readonly DenyEntry[] = [
     tier: 'redirect',
   },
   {
-    pattern: /\bbr\s+create\b/,
+    pattern: /(?<!\bcape\s)\bbr\s+create\b/,
     message: 'Use `cape br create` instead of raw `br create`.',
     tier: 'redirect',
   },
   {
-    pattern: /\bbr\s+q\b/,
+    pattern: /(?<!\bcape\s)\bbr\s+q\b/,
     message: 'Use `cape br q` to query beads.',
     tier: 'redirect',
   },
   {
-    pattern: /\bbr\s+update\b.*--status\b/,
+    pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/,
     message: 'Use `cape br update` to change issue status.',
     tier: 'redirect',
   },
   {
-    pattern: /\bbr\s+close\b/,
+    pattern: /(?<!\bcape\s)\bbr\s+close\b/,
     message: 'Use `cape br close` to close an issue.',
     tier: 'redirect',
   },
