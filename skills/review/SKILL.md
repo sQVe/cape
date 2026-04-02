@@ -69,7 +69,8 @@ Parse the argument to determine what to review:
 | branch name       | Diff of that branch vs main                |
 | PR number         | Diff of PR branch vs its base              |
 
-Run `cape check` as a pre-review gate. If it fails, report failures and stop — fix build/test errors
+Run `cape check` as a pre-review gate. If exit code is non-zero, stop — do not proceed. Read
+`checkResults` from JSON output and report entries where `passed: false`. Fix build/test errors
 before reviewing code.
 
 **Detect main branch and changed files:**

@@ -59,8 +59,9 @@ trivial code) is non-negotiable. </rigidity_level>
 
 ## Step 1: Resolve scope
 
-Run `cape check` to establish a baseline. If tests fail, report failures and stop — find gaps only
-when the existing suite is green.
+Run `cape check` to establish a baseline. If exit code is non-zero, stop — do not proceed. Read
+`checkResults` from JSON output and report entries where `passed: false`. Find gaps only when the
+existing suite is green.
 
 The user specifies what to analyze. If their message doesn't include a clear scope, ask:
 
@@ -109,8 +110,7 @@ possible using subagents.
 
 ### 2a. Apply the value filter
 
-Use `isTrivialFile` from `@cape/cli` (or read the file and apply the same heuristics) to skip files
-that don't warrant tests:
+Use `isTrivialFile` from `@cape/cli` to skip files that don't warrant tests:
 
 - Type definitions, interfaces, enums without logic
 - Re-exports and barrel files

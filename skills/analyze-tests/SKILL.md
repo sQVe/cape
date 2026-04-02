@@ -55,8 +55,9 @@ a graph is available. </rigidity_level>
 
 ## Step 1: Resolve scope and gather structural context
 
-Run `cape check` to establish a baseline. If tests fail, report failures and stop — audit test
-quality only when the suite is green.
+Run `cape check` to establish a baseline. If exit code is non-zero, stop — do not proceed. Read
+`checkResults` from JSON output and report entries where `passed: false`. Audit test quality only
+when the suite is green.
 
 If the user's message doesn't include a clear scope, ask:
 

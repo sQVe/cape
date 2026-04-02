@@ -82,7 +82,8 @@ Present the plan to the user before executing.
 
 ## Step 2: Verify the safety net
 
-Run `cape check`. Every test must pass before you change anything.
+Run `cape check`. If exit code is non-zero, stop — do not proceed. Read `checkResults` from JSON
+output and report entries where `passed: false`. Every test must pass before you change anything.
 
 ```
 Full suite: [PASS/FAIL] — [N] tests, [M] failures
