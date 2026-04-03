@@ -77,6 +77,11 @@ documented.
 
 ## Step 2: Gather evidence
 
+**Checkpoint gate:** Read `.beads/<bug-id>/verify.json` (where `<bug-id>` is the br bug from step 1,
+or a temporary ID if no bug exists yet). If the key `evidence` records a SHA that matches
+`git rev-parse HEAD`, skip evidence gathering and report: "Evidence gathering already passed at HEAD
+<short-sha> — skipping." If the file is missing or malformed, proceed normally.
+
 **Use tools, not intuition.**
 
 Dispatch `cape:bug-tracer` to:
@@ -110,6 +115,10 @@ Evidence:
 
 Each piece of evidence should either support or eliminate a hypothesis. Evidence without
 interpretation is noise -- always note what each finding means.
+
+After evidence gathering completes, record the SHA in `.beads/<bug-id>/verify.json` under key
+`evidence`. Read the existing file (or start from `{}`), set the key to the current HEAD SHA, and
+write it back. Create the directory with `mkdir -p ".beads/<bug-id>"` if needed.
 
 ## Step 3: Hypothesize and test
 
