@@ -26,11 +26,13 @@ import {
 const makeTestCommitLayer = () =>
   Layer.succeed(CommitService)({
     stageAndCommit: () => Effect.succeed(undefined),
+    commitNoEdit: () => Effect.succeed(undefined),
   });
 
 const makeErrorCommitLayer = (message: string) =>
   Layer.succeed(CommitService)({
     stageAndCommit: () => Effect.fail(new Error(message)),
+    commitNoEdit: () => Effect.fail(new Error(message)),
   });
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -221,6 +223,33 @@ describe('commit command wiring', () => {
     expect(result.message).toBe('feat: add config');
     consoleSpy.mockRestore();
     stderrSpy.mockRestore();
+  });
+
+  it('commits with --no-edit for merge commits', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['commit', '--no-edit']).pipe(Effect.provide(commandLayers)),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({ noEdit: true });
+    consoleSpy.mockRestore();
+  });
+
+  it('rejects when no files and no --no-edit', async () => {
+    await expect(
+      Effect.runPromise(
+        run(['commit', '-m', 'feat: thing']).pipe(Effect.provide(commandLayers)),
+      ),
+    ).rejects.toThrow('at least one file is required');
+  });
+
+  it('rejects when no message and no --no-edit', async () => {
+    await expect(
+      Effect.runPromise(
+        run(['commit', 'file.ts']).pipe(Effect.provide(commandLayers)),
+      ),
+    ).rejects.toThrow('--message is required');
   });
 
   it('rejects when service fails', async () => {

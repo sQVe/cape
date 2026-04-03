@@ -14,6 +14,16 @@ const stageAndCommit = (files: readonly string[], message: string) =>
       error instanceof Error ? error : new Error('commit failed', { cause: error }),
   });
 
+const commitNoEdit = () =>
+  Effect.try({
+    try: () => {
+      execFileSync('git', ['commit', '--no-edit'], { encoding: 'utf-8' });
+    },
+    catch: (error) =>
+      error instanceof Error ? error : new Error('commit failed', { cause: error }),
+  });
+
 export const CommitServiceLive = Layer.succeed(CommitService)({
   stageAndCommit,
+  commitNoEdit,
 });

@@ -35,6 +35,7 @@ export class CommitService extends ServiceMap.Service<
       files: readonly string[],
       message: string,
     ) => Effect.Effect<void, Error>;
+    readonly commitNoEdit: () => Effect.Effect<void, Error>;
   }
 >()('CommitService') {}
 
@@ -42,4 +43,10 @@ export const stageAndCommit = (files: readonly string[], message: string) =>
   Effect.gen(function* () {
     const service = yield* CommitService;
     return yield* service.stageAndCommit(files, message);
+  });
+
+export const commitNoEdit = () =>
+  Effect.gen(function* () {
+    const service = yield* CommitService;
+    return yield* service.commitNoEdit();
   });
