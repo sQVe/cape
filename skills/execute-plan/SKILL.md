@@ -116,6 +116,11 @@ ahead to later steps.
 
 **For each step in the expanded plan:**
 
+**Checkpoint gate:** Before starting a step, read `.beads/<epic-id>/verify.json`. If the key
+`step-N` (e.g., `step-1`, `step-2`) records a SHA that matches `git rev-parse HEAD`, skip the entire
+cycle and report: "Step N already passed at HEAD <short-sha> — skipping." If the file is missing or
+malformed, proceed normally.
+
 0. **Reset TDD state** — Run `rm -f hooks/context/tdd-state.json` to clear TDD state from the
    previous step. This ensures the TDD gate enforces a fresh red-green cycle for each step.
 1. **Scope** — Read only the current step's title and **Changes** field. These define the single
@@ -127,9 +132,13 @@ ahead to later steps.
 4. **REFACTOR** — Improve what you just wrote. Run the full suite.
 5. **Gate** — Run the current step's **Verify** command. It must pass before you move to the next
    step. If it fails, fix within this step — do not move on.
+6. **Record checkpoint** — After the gate passes, write the current HEAD SHA to
+   `.beads/<epic-id>/verify.json` under key `step-N`. Read the existing file (or start from `{}`),
+   set the key, and write it back. Create the directory with `mkdir -p ".beads/<epic-id>"` if
+   needed.
 
 Do not pre-read upcoming steps. Do not write tests for step N+1 during step N. Each loop iteration
-is self-contained: scope, red, green, refactor, gate.
+is self-contained: checkpoint gate, scope, red, green, refactor, gate, record.
 
 If the code you need to modify is tangled — hard to add the new behavior without restructuring first
 — load `cape:refactor` with the Skill tool. Refactor commits the structural change separately, then
