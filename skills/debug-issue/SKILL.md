@@ -77,10 +77,10 @@ documented.
 
 ## Step 2: Gather evidence
 
-**Checkpoint gate:** Read `.beads/<bug-id>/verify.json` (where `<bug-id>` is the br bug from step 1,
-or a temporary ID if no bug exists yet). If the key `evidence` records a SHA that matches
-`git rev-parse HEAD`, skip evidence gathering and report: "Evidence gathering already passed at HEAD
-<short-sha> — skipping." If the file is missing or malformed, proceed normally.
+**Checkpoint gate (only when a br bug already exists):** Read `.beads/<bug-id>/verify.json`. If the
+key `evidence` records a SHA that matches `git rev-parse HEAD`, skip evidence gathering and report:
+"Evidence gathering already passed at HEAD <short-sha> — skipping." If no br bug exists yet (first
+run), skip this gate. If the file is missing or malformed, proceed normally.
 
 **Use tools, not intuition.**
 

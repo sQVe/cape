@@ -189,6 +189,13 @@ cape br close br-3                         # Complete
 br reopen br-3                             # Reopen
 ```
 
+After reopening an issue, delete its checkpoint state file to force a full re-run of any skill that
+uses it:
+
+```bash
+rm -f ".beads/<issue-id>/verify.json"
+```
+
 ### Managing dependencies
 
 ```bash
