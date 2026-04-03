@@ -55,7 +55,31 @@ cape epic verify <epic-id>
 
 Run three additional verification passes. All must pass before closing.
 
+### Checkpoint state
+
+Before running sub-passes, load checkpoint state to skip work that already passed at the current
+commit.
+
+1. Get the current HEAD SHA: `git rev-parse HEAD`
+2. If the epic's design field contains a previous `## Outcome` section (epic was reopened), delete
+   the state file to force a full re-run:
+   ```bash
+   rm -f ".beads/<epic-id>/verify.json"
+   ```
+3. Read `.beads/<epic-id>/verify.json` if it exists. The file maps pass names to SHAs:
+   ```json
+   { "criteria-audit": "<sha>", "code-review": "<sha>", "manual-verification": "<sha>" }
+   ```
+   If the file is missing or malformed, proceed with all passes — never error on bad state.
+4. Create the directory if needed: `mkdir -p ".beads/<epic-id>"`
+
+After each sub-pass succeeds, write the current HEAD SHA for that pass to the state file. Use `jq`
+or equivalent to update a single key without clobbering others.
+
 ### 2a: Success criteria audit
+
+Always run this pass — never skip it, even if the SHA matches. It is cheap and catches regressions
+in non-code outputs like missing files.
 
 Read the epic's success criteria. For each criterion, find concrete evidence that it's met — test
 output, file existence, behavior you can demonstrate.
@@ -74,19 +98,36 @@ If any criterion is not met, report what's missing and stop. The user can create
 `br create` and load `cape:execute-plan` with the Skill tool to address the gap before retrying
 finish-epic.
 
+After the audit passes, record the SHA in `.beads/<epic-id>/verify.json` under the key
+`criteria-audit`. Read the existing file (or start from `{}`), set the key to the current HEAD SHA,
+and write it back.
+
 ### 2b: Code review
 
-Dispatch `cape:code-reviewer` with the epic ID and the full branch diff. Pass only the contract
-(requirements, anti-patterns, success criteria) — not task implementation notes. The reviewer judges
-what was built against what was required, not what was intended. Address any critical findings
-before proceeding.
+**Checkpoint gate:** If `.beads/<epic-id>/verify.json` records a `code-review` SHA that matches the
+current HEAD, skip this pass and report: "Code review already passed at HEAD <short-sha> —
+skipping."
+
+Otherwise, dispatch `cape:code-reviewer` with the epic ID and the full branch diff. Pass only the
+contract (requirements, anti-patterns, success criteria) — not task implementation notes. The
+reviewer judges what was built against what was required, not what was intended. Address any
+critical findings before proceeding.
+
+After the review passes, record the SHA (same pattern as 2a, using key `code-review`).
 
 ### 2c: Manual verification
 
-If the epic specifies manual verification steps (e.g., "run the app and confirm X works", "verify
-the CLI outputs Y"), execute them and record the results.
+**Checkpoint gate:** If `.beads/<epic-id>/verify.json` records a `manual-verification` SHA that
+matches the current HEAD, skip this pass and report: "Manual verification already passed at HEAD
+<short-sha> — skipping."
+
+Otherwise, if the epic specifies manual verification steps (e.g., "run the app and confirm X works",
+"verify the CLI outputs Y"), execute them and record the results.
 
 Skip this pass if the epic has no manual verification steps.
+
+After manual verification passes (or is skipped because no steps exist), record the SHA (same
+pattern as 2a, using key `manual-verification`).
 
 ---
 
