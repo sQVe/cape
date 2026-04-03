@@ -217,8 +217,8 @@ If the user skips, proceed directly to Step 4.
 
 ## Step 4: Lock design
 
-Present the design summary. This summary must be self-contained — `cape:write-plan` should be able
-to create the epic without re-asking brainstorm's questions.
+Compose the design summary internally (do not present yet). This summary must be self-contained —
+`cape:write-plan` should be able to create the epic without re-asking brainstorm's questions.
 
 ```
 ## Design summary
@@ -251,10 +251,10 @@ to create the epic without re-asking brainstorm's questions.
 [What explored, what found, why abandoned]
 ```
 
-**Fact-check the design summary:**
+**Fact-check before presenting:**
 
-Before presenting, dispatch `cape:fact-checker` on the design summary. Pass all factual claims from
-the Requirements, Architecture, and Research findings sections. The fact-checker verifies each claim
+Dispatch `cape:fact-checker` on the composed design summary. Pass all factual claims from the
+Requirements, Architecture, and Research findings sections. The fact-checker verifies each claim
 against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
 
 - **Confirmed** claims — keep as-is
