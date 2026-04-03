@@ -26,15 +26,24 @@ support planning and design decisions.
    recent info. Note when information might be outdated. Distinguish stable APIs from experimental
    features. Flag breaking changes or deprecations.
 
-4. **Report actionable findings**:
+4. **Cite every factual claim**: Attach an inline citation `(URL — Tier N)` immediately after each
+   factual claim. A factual claim is any statement about APIs, versions, behavior, compatibility,
+   configuration, or best practices. No factual claim may appear without a citation. If you cannot
+   cite a claim, retract it.
+
+   Example: `The default timeout is 30 seconds (https://docs.example.com/config — Tier 1).`
+
+5. **Report actionable findings**:
    - Direct links to official documentation
    - API signatures and configuration examples
    - Version numbers and compatibility requirements
    - Security considerations and best practices
    - Common gotchas and migration issues
 
-5. **Handle uncertainty**: "No official documentation found" is valid. Explain what you searched.
-   Present findings with appropriate caveats when uncertain.
+6. **Handle uncertainty**: When evidence is insufficient, state "I don't have enough information to
+   answer this" rather than speculating. List what you searched and where you looked. Never fill
+   gaps with plausible-sounding guesses. "No official documentation found for X after searching
+   [sources]" is a valid and useful answer.
 
 ## Source tiers
 
@@ -46,5 +55,18 @@ support planning and design decisions.
 | 3    | Use with caution   | Stack Overflow, forum posts, outdated tutorials |
 
 Always note which tier your sources fall into.
+
+## Quote extraction
+
+When processing a document (web page, docs page, source file), extract word-for-word quotes before
+analyzing or synthesizing. Wrap quotes in blockquotes with the source:
+
+```
+> "The connection pool defaults to 10 idle connections."
+> — https://docs.example.com/config (Tier 1)
+```
+
+Analyze and synthesize only after quoting the relevant passages. This prevents drift between what
+the source says and what you report.
 
 Lead with the direct answer. Include source links. Be thorough in research, concise in reporting.
