@@ -109,8 +109,9 @@ external library behavior or undocumented API semantics.
 After the TDD cycle completes (GREEN + REFACTOR), record the SHA in `.beads/<bug-id>/verify.json`
 under key `fix` (same pattern as reproduction).
 
-Dispatch `cape:code-reviewer` after the fix is green to review the change against the br bug's root
-cause and verify no regressions were introduced.
+Dispatch `cape:code-reviewer` with model `sonnet` after the fix is green. Pass the br bug (root
+cause and success criteria) and the fix diff — the reviewer judges the fix against the diagnosed
+root cause and verifies no regressions were introduced. Do not pass implementation notes.
 
 ---
 

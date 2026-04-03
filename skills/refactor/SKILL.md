@@ -178,8 +178,9 @@ Dispatch for every test suite run during the transformation. Keeps test output o
 
 ## `cape:code-reviewer` dispatch:
 
-Optional — dispatch after a multi-step restructuring to verify the result is cleaner than what you
-started with. Pass the diff and the refactoring plan (not epic requirements — there is no epic).
+Optional — dispatch with model `sonnet` after a multi-step restructuring to verify the result is
+cleaner than what you started with. Pass the diff and the refactoring plan (not epic requirements —
+there is no epic).
 
 </agent_references>
 
