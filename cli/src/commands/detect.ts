@@ -5,7 +5,7 @@ import { DetectService, getDetectResult } from '../services/detect';
 
 export const detect = Command.make(
   'detect',
-  { map: Flag.optional(Flag.directory('map')) },
+  { map: Flag.optional(Flag.directory('map').pipe(Flag.withDescription('Directory to map as a file tree instead of detecting ecosystems'))) },
   Effect.fn(function* ({ map }) {
     if (Option.isSome(map)) {
       const service = yield* DetectService;
@@ -34,6 +34,6 @@ export const detect = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Detect project ecosystems and their check commands. Use to discover what languages, frameworks, and tools are present.',
+    'Detect project ecosystems and their check commands. Returns JSON array of ecosystems with language, framework, and commands. Use to discover project tooling.',
   ),
 );

@@ -13,9 +13,9 @@ import type { CommitResult } from '../services/commit';
 export const commit = Command.make(
   'commit',
   {
-    files: Argument.string('files').pipe(Argument.atLeast(0)),
-    noEdit: Flag.boolean('no-edit').pipe(Flag.withDefault(false)),
-    message: Flag.string('message').pipe(Flag.withAlias('m'), Flag.optional),
+    files: Argument.string('files').pipe(Argument.withDescription('Files to stage and commit'), Argument.atLeast(0)),
+    noEdit: Flag.boolean('no-edit').pipe(Flag.withDescription('Finalize a merge commit (git commit --no-edit)'), Flag.withDefault(false)),
+    message: Flag.string('message').pipe(Flag.withDescription('Commit message'), Flag.withAlias('m'), Flag.optional),
   },
   Effect.fn(function* ({ files, noEdit, message }) {
     if (noEdit) {
@@ -66,6 +66,6 @@ export const commit = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Stage files and create a git commit with message validation and sensitive-file detection. Use instead of raw git commit.',
+    'Stage files and create a git commit with message validation and sensitive-file detection. Returns { message, files }. Use instead of raw git commit.',
   ),
 );

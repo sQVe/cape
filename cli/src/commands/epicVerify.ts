@@ -6,7 +6,7 @@ import { runCloseReadinessCheck } from './br';
 export const epicVerify = Command.make(
   'verify',
   {
-    id: Argument.string('id'),
+    id: Argument.string('id').pipe(Argument.withDescription('Epic bead ID to verify')),
   },
   Effect.fn(function* ({ id }) {
     const { ready, openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
@@ -20,6 +20,6 @@ export const epicVerify = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Check if an epic can be closed: all child tasks done and project checks pass. Use before closing an epic.',
+    'Check if an epic can be closed: all child tasks done and project checks pass. Returns { verified, openTasks, checksPassed }. Use before closing an epic.',
   ),
 );

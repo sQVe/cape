@@ -11,7 +11,7 @@ const isDiffScope = (value: string): value is DiffScope =>
 
 export const conform = Command.make(
   'conform',
-  { scope: Argument.optional(Argument.string('scope')) },
+  { scope: Argument.optional(Argument.string('scope').pipe(Argument.withDescription('Diff scope: unstaged | staged | branch (default: branch)'))) },
   Effect.fn(function* ({ scope }) {
     const resolvedScope: DiffScope =
       scope._tag === 'Some' && isDiffScope(scope.value) ? scope.value : 'branch';
@@ -49,6 +49,6 @@ export const conform = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Discover convention rules and changed files for conformance checking. Outputs JSON for the conform skill.',
+    'Discover convention rules and changed files for conformance checking. Returns JSON with rules and changed files. Use as input for the conform skill.',
   ),
 );

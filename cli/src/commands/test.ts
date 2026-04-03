@@ -8,7 +8,7 @@ import { runTest } from '../services/test';
 
 export const test = Command.make(
   'test',
-  { file: Argument.string('file').pipe(Argument.optional) },
+  { file: Argument.string('file').pipe(Argument.withDescription('Test file or source file to run (auto-resolves to test path)'), Argument.optional) },
   Effect.fn(function* ({ file }) {
     const ecosystems = yield* getDetectResult.pipe(
       Effect.catch((error: Error) => {
@@ -62,6 +62,6 @@ export const test = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Run tests for the detected ecosystem. Writes TDD state (green/red) and returns structured JSON.',
+    'Run tests for the detected ecosystem. Returns { passed, phase, runner } and writes TDD state. Use instead of raw test commands.',
   ),
 );

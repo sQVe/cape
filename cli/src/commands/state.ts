@@ -109,11 +109,11 @@ const stateList = Command.make(
 
     yield* Console.log(sections.join('\n\n'));
   }),
-).pipe(Command.withDescription('Display all state keys (active and available), valid values, and common operations.'));
+).pipe(Command.withDescription('Display all state keys (active and available), valid values, and common operations. Use to discover state keys and workflow recipes.'));
 
 const stateSet = Command.make(
   'set',
-  { key: Argument.string('key'), value: Argument.string('value').pipe(Argument.optional) },
+  { key: Argument.string('key').pipe(Argument.withDescription('State key name (e.g. tddState, flowPhase, workflowActive)')), value: Argument.string('value').pipe(Argument.withDescription('Value as JSON object or plain string'), Argument.optional) },
   Effect.fn(function* ({ key, value }) {
     let parsed: Record<string, unknown>;
     if (value._tag === 'None') {
@@ -130,15 +130,15 @@ const stateSet = Command.make(
     }
     yield* writeStateKey(key, parsed);
   }),
-).pipe(Command.withDescription('Set a key in state.json. Accepts JSON object or plain value.'));
+).pipe(Command.withDescription('Set a key in state.json. Accepts JSON object or plain value. Use to activate state-dependent hook behavior.'));
 
 const stateClear = Command.make(
   'clear',
-  { key: Argument.string('key') },
+  { key: Argument.string('key').pipe(Argument.withDescription('State key to remove')) },
   Effect.fn(function* ({ key }) {
     yield* removeStateKey(key);
   }),
-).pipe(Command.withDescription('Remove a key from state.json. No-op if absent.'));
+).pipe(Command.withDescription('Remove a key from state.json. No-op if absent. Use to deactivate state-dependent hook behavior.'));
 
 const stateReset = Command.make(
   'reset',
@@ -148,7 +148,7 @@ const stateReset = Command.make(
     const root = service.pluginRoot();
     yield* service.removeFile(`${root}/hooks/context/state.json`);
   }),
-).pipe(Command.withDescription('Delete state.json entirely, removing all state.'));
+).pipe(Command.withDescription('Delete state.json entirely, removing all state. Use to clear all hook state at once.'));
 
 export const state = Command.make('state').pipe(
   Command.withDescription('Manage hook state that controls conditional hook behavior. Run `cape state list` to see all keys and common operations.'),

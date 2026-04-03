@@ -51,8 +51,8 @@ export const runCloseReadinessCheck = (id: string) =>
 const brValidate = Command.make(
   'validate',
   {
-    id: Argument.string('id').pipe(Argument.optional),
-    type: Flag.string('type').pipe(Flag.optional),
+    id: Argument.string('id').pipe(Argument.withDescription('Bead ID to validate'), Argument.optional),
+    type: Flag.string('type').pipe(Flag.withDescription('Bead type for stdin validation: epic | task | feature | bug'), Flag.optional),
   },
   Effect.fn(function* ({ id, type }) {
     let errors: string[];
@@ -77,15 +77,15 @@ const brValidate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Validate required sections of a bead by id or piped stdin. Use after creating or editing a bead to ensure it has all required fields.',
+    'Validate required sections of a bead by id or piped stdin. Returns { valid, errors }. Use after creating or editing a bead.',
   ),
 );
 
 const brDesign = Command.make(
   'design',
   {
-    id: Argument.string('id'),
-    heading: Argument.string('heading'),
+    id: Argument.string('id').pipe(Argument.withDescription('Bead ID to append design to')),
+    heading: Argument.string('heading').pipe(Argument.withDescription('Section heading for the appended content')),
   },
   Effect.fn(function* ({ id, heading }) {
     const bead = yield* showBead(id);
@@ -96,14 +96,14 @@ const brDesign = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Append a design section to a bead. Use during brainstorm or write-plan to attach design content.',
+    'Append a design section to a bead from stdin. Returns { updated, id }. Use during brainstorm or write-plan.',
   ),
 );
 
 const brTemplate = Command.make(
   'template',
   {
-    type: Flag.string('type'),
+    type: Flag.string('type').pipe(Flag.withDescription('Bead type: epic | task | feature | bug')),
   },
   Effect.fn(function* ({ type }) {
     const template = generateTemplate(type);
@@ -118,14 +118,14 @@ const brTemplate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Print a blank bead template for a given type (epic, task, feature, bug). Use when creating new beads.',
+    'Print a blank bead template for a given type. Outputs raw markdown. Use when creating new beads.',
   ),
 );
 
 const brCloseCheck = Command.make(
   'close-check',
   {
-    id: Argument.string('id'),
+    id: Argument.string('id').pipe(Argument.withDescription('Bead ID to check close readiness for')),
   },
   Effect.fn(function* ({ id }) {
     const { ready, openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
@@ -139,7 +139,7 @@ const brCloseCheck = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Check if a bead can be closed: all subtasks done and project checks pass. Use before closing a task or epic.',
+    'Check if a bead can be closed: all subtasks done and project checks pass. Returns { canClose, openSubtasks, checksPassed }. Use before closing a task or epic.',
   ),
 );
 
@@ -151,7 +151,7 @@ const stopMessage = [
 
 const brClose = Command.make(
   'close',
-  { id: Argument.string('id') },
+  { id: Argument.string('id').pipe(Argument.withDescription('Bead ID to close')) },
   Effect.fn(function* ({ id }) {
     const service = yield* HookService;
     const root = service.pluginRoot();
@@ -170,18 +170,18 @@ const brClose = Command.make(
 
     yield* Console.log(JSON.stringify({ closed: true, id, stopMessage }));
   }),
-).pipe(Command.withDescription('Close a bead issue and reset workflow state files.'));
+).pipe(Command.withDescription('Close a bead issue and reset workflow state files. Returns { closed, id }. Use after close-check passes.'));
 
 const brCreate = Command.make(
   'create',
   {
-    title: Argument.string('title').pipe(Argument.optional),
-    type: Flag.string('type').pipe(Flag.optional),
-    priority: Flag.string('priority').pipe(Flag.optional),
-    labels: Flag.string('labels').pipe(Flag.optional),
-    description: Flag.string('description').pipe(Flag.optional),
-    parent: Flag.string('parent').pipe(Flag.optional),
-    design: Flag.string('design').pipe(Flag.optional),
+    title: Argument.string('title').pipe(Argument.withDescription('Issue title'), Argument.optional),
+    type: Flag.string('type').pipe(Flag.withDescription('Bead type: epic | task | feature | bug'), Flag.optional),
+    priority: Flag.string('priority').pipe(Flag.withDescription('Priority level: P1 | P2 | P3'), Flag.optional),
+    labels: Flag.string('labels').pipe(Flag.withDescription('Comma-separated labels, e.g. hitl, afk, cape'), Flag.optional),
+    description: Flag.string('description').pipe(Flag.withDescription('Bead description with required sections; reads stdin if omitted'), Flag.optional),
+    parent: Flag.string('parent').pipe(Flag.withDescription('Parent bead ID for child issues'), Flag.optional),
+    design: Flag.string('design').pipe(Flag.withDescription('Rejected: use cape br design <id> <heading> instead'), Flag.optional),
   },
   Effect.fn(function* ({ title, type, priority, labels, description, parent, design }) {
     if (design._tag === 'Some') {
@@ -245,7 +245,7 @@ const brCreate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Create a bead issue with validation. Validates required flags, description headers, and rejects --design.',
+    'Create a bead issue with section validation. Returns { created, id }. Use when creating new epics, tasks, features, or bugs.',
   ),
 );
 
@@ -281,12 +281,12 @@ const writeFlowPhase = (id: string) =>
 const brUpdate = Command.make(
   'update',
   {
-    id: Argument.string('id'),
-    status: Flag.string('status').pipe(Flag.optional),
-    description: Flag.string('description').pipe(Flag.optional),
-    design: Flag.string('design').pipe(Flag.optional),
-    priority: Flag.string('priority').pipe(Flag.optional),
-    labels: Flag.string('labels').pipe(Flag.optional),
+    id: Argument.string('id').pipe(Argument.withDescription('Bead ID to update')),
+    status: Flag.string('status').pipe(Flag.withDescription('New status: open | in_progress (use cape br close for done)'), Flag.optional),
+    description: Flag.string('description').pipe(Flag.withDescription('Replacement description content'), Flag.optional),
+    design: Flag.string('design').pipe(Flag.withDescription('Replacement design content'), Flag.optional),
+    priority: Flag.string('priority').pipe(Flag.withDescription('Priority level: P1 | P2 | P3'), Flag.optional),
+    labels: Flag.string('labels').pipe(Flag.withDescription('Comma-separated labels'), Flag.optional),
   },
   Effect.fn(function* ({ id, status, description, design, priority, labels }) {
     if (status._tag === 'Some') {
@@ -336,11 +336,11 @@ const brUpdate = Command.make(
 
     yield* Console.log(JSON.stringify({ updated: true, id }));
   }),
-).pipe(Command.withDescription('Update a bead issue with status validation and flow state tracking.'));
+).pipe(Command.withDescription('Update a bead issue fields with status validation and flow state tracking. Returns { updated, id, phase? }. Use to change status, description, or priority.'));
 
 const brExpandedCheck = Command.make(
   'expanded-check',
-  { id: Argument.string('id') },
+  { id: Argument.string('id').pipe(Argument.withDescription('Bead ID to check for expanded plan')) },
   Effect.fn(function* ({ id }) {
     const bead = yield* showBead(id).pipe(
       Effect.catch((error: Error) =>
@@ -363,7 +363,7 @@ const brExpandedCheck = Command.make(
 
 export const br = Command.make('br').pipe(
   Command.withDescription(
-    'Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.',
+    'Manage bead issues: validate, design, template, create, update, close, and close-check. Use for all bead lifecycle operations.',
   ),
   Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate, brUpdate, brExpandedCheck]),
 );

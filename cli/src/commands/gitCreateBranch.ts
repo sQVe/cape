@@ -6,7 +6,7 @@ import { getCreateBranch, getValidateBranch } from '../services/git';
 export const gitCreateBranch = Command.make(
   'create-branch',
   {
-    name: Argument.string('name'),
+    name: Argument.string('name').pipe(Argument.withDescription('Branch name to validate and create')),
   },
   Effect.fn(function* ({ name }) {
     const validation = yield* getValidateBranch(name).pipe(
@@ -34,6 +34,6 @@ export const gitCreateBranch = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Validate a branch name and create it. Validates naming conventions then runs git checkout -b.',
+    'Validate a branch name and create it via git checkout -b. Returns { created, branch }. Use to create branches with naming enforcement.',
   ),
 );

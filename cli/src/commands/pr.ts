@@ -24,15 +24,15 @@ const prTemplate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Find and output the PR template for this repo. Use to discover required PR sections.',
+    'Find and output the PR template for this repo. Returns { found, path?, sections }. Use to discover required PR sections.',
   ),
 );
 
 const prValidate = Command.make(
   'validate',
   {
-    file: Argument.string('file').pipe(Argument.optional),
-    stdin: Flag.boolean('stdin').pipe(Flag.withDefault(false)),
+    file: Argument.string('file').pipe(Argument.withDescription('Path to PR body file to validate'), Argument.optional),
+    stdin: Flag.boolean('stdin').pipe(Flag.withDescription('Read PR body from stdin instead of file'), Flag.withDefault(false)),
   },
   Effect.fn(function* ({ file, stdin }) {
     const template = yield* findTemplate();
@@ -57,18 +57,18 @@ const prValidate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Validate a PR body against the repo template sections. Use before creating a PR to ensure completeness.',
+    'Validate a PR body against the repo template sections. Returns { valid, missing, unchecked }. Use before creating a PR.',
   ),
 );
 
 const prCreate = Command.make(
   'create',
   {
-    title: Flag.string('title'),
-    body: Flag.string('body'),
-    draft: Flag.boolean('draft').pipe(Flag.withDefault(false)),
-    label: Flag.string('label').pipe(Flag.optional),
-    noPush: Flag.boolean('no-push').pipe(Flag.withDefault(false)),
+    title: Flag.string('title').pipe(Flag.withDescription('PR title')),
+    body: Flag.string('body').pipe(Flag.withDescription('PR body content with required template sections')),
+    draft: Flag.boolean('draft').pipe(Flag.withDescription('Create as draft PR'), Flag.withDefault(false)),
+    label: Flag.string('label').pipe(Flag.withDescription('GitHub label to apply to the PR'), Flag.optional),
+    noPush: Flag.boolean('no-push').pipe(Flag.withDescription('Skip git push; assume branch is already pushed'), Flag.withDefault(false)),
   },
   Effect.fn(function* ({ title, body, draft, label, noPush }) {
     const hookService = yield* HookService;
@@ -133,11 +133,11 @@ const prCreate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Create a PR with pre-flight checks and body validation. Pushes branch and validates against template.',
+    'Create a PR with pre-flight checks and body validation. Returns { created, url }. Use to push and open a PR in one step.',
   ),
 );
 
 export const pr = Command.make('pr').pipe(
-  Command.withDescription('PR template discovery, body validation, and creation.'),
+  Command.withDescription('PR template discovery, body validation, and creation. Use for all PR lifecycle operations.'),
   Command.withSubcommands([prTemplate, prValidate, prCreate]),
 );

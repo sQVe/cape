@@ -57,7 +57,7 @@ const validTypes = new Set(['skills', 'agents', 'commands']);
 
 export const validate = Command.make(
   'validate',
-  { target: Argument.optional(Argument.string('target')) },
+  { target: Argument.optional(Argument.string('target').pipe(Argument.withDescription('File path or type to validate: skills | agents | commands (default: all)'))) },
   Effect.fn(function* ({ target }) {
     const service = yield* ValidateService;
     const root = yield* service.gitRoot();
@@ -99,6 +99,6 @@ export const validate = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Validate skill, agent, and command markdown files for required structure. Use to check cape definition files are well-formed.',
+    'Validate skill, agent, and command markdown files for required structure. Returns { results, passed, failed }. Use to check cape definition files.',
   ),
 );
