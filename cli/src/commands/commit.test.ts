@@ -51,16 +51,19 @@ const commandLayers = Layer.mergeAll(
   stubConformLayer,
 );
 
+const withBody = (subject: string, body = 'Explain the change in detail.') =>
+  `${subject}\n\n${body}`;
+
 describe('validateMessage', () => {
-  it('accepts feat with scope', () => {
-    expect(validateMessage('feat(cli): add commit command')).toBeNull();
+  it('accepts feat with scope and body', () => {
+    expect(validateMessage(withBody('feat(cli): add commit command'))).toBeNull();
   });
 
-  it('accepts fix without scope', () => {
-    expect(validateMessage('fix: resolve crash')).toBeNull();
+  it('accepts fix without scope and body', () => {
+    expect(validateMessage(withBody('fix: resolve crash'))).toBeNull();
   });
 
-  it('accepts all allowed types', () => {
+  it('accepts all allowed types with body', () => {
     const types = [
       'feat',
       'fix',
@@ -75,12 +78,20 @@ describe('validateMessage', () => {
       'revert',
     ];
     for (const type of types) {
-      expect(validateMessage(`${type}: description`)).toBeNull();
+      expect(validateMessage(withBody(`${type}: description`))).toBeNull();
     }
   });
 
   it('accepts message with body after blank line', () => {
     expect(validateMessage('fix(hook): remove gate\n\nDelete gateWritePlan().')).toBeNull();
+  });
+
+  it('rejects subject-only message', () => {
+    expect(validateMessage('feat: add thing')).toContain('commit body is required');
+  });
+
+  it('rejects body shorter than 10 characters', () => {
+    expect(validateMessage('feat: add thing\n\nshort')).toContain('at least 10 characters');
   });
 
   it('rejects message without type prefix', () => {
@@ -170,13 +181,14 @@ describe('commit command wiring', () => {
 
   it('commits with valid message and files', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const msg = 'feat: add thing\n\nAdd the thing to the project.';
     await Effect.runPromise(
-      run(['commit', 'src/foo.ts', '-m', 'feat: add thing']).pipe(Effect.provide(commandLayers)),
+      run(['commit', 'src/foo.ts', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result).toEqual({
-      message: 'feat: add thing',
+      message: msg,
       files: ['src/foo.ts'],
     });
     consoleSpy.mockRestore();
@@ -184,12 +196,13 @@ describe('commit command wiring', () => {
 
   it('commits multiple files', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const msg = 'fix: two files\n\nFix both files at once.';
     await Effect.runPromise(
-      run(['commit', 'a.ts', 'b.ts', '-m', 'fix: two files']).pipe(Effect.provide(commandLayers)),
+      run(['commit', 'a.ts', 'b.ts', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result).toEqual({ message: 'fix: two files', files: ['a.ts', 'b.ts'] });
+    expect(result).toEqual({ message: msg, files: ['a.ts', 'b.ts'] });
     consoleSpy.mockRestore();
   });
 
@@ -201,10 +214,20 @@ describe('commit command wiring', () => {
     ).rejects.toThrow('invalid conventional commit format');
   });
 
+  it('rejects subject-only commit message', async () => {
+    await expect(
+      Effect.runPromise(
+        run(['commit', 'file.ts', '-m', 'feat: no body']).pipe(Effect.provide(commandLayers)),
+      ),
+    ).rejects.toThrow('commit body is required');
+  });
+
   it('rejects bulk staging with dot', async () => {
     await expect(
       Effect.runPromise(
-        run(['commit', '.', '-m', 'feat: bulk']).pipe(Effect.provide(commandLayers)),
+        run(['commit', '.', '-m', 'feat: bulk\n\nBulk staging attempt.']).pipe(
+          Effect.provide(commandLayers),
+        ),
       ),
     ).rejects.toThrow('bulk staging');
   });
@@ -212,15 +235,16 @@ describe('commit command wiring', () => {
   it('warns on sensitive files to stderr but still commits', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const msg = 'feat: add config\n\nAdd environment configuration.';
     await Effect.runPromise(
-      run(['commit', '.env', '-m', 'feat: add config']).pipe(Effect.provide(commandLayers)),
+      run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
     const stderrOutput = stderrSpy.mock.calls.flat().join('');
     expect(stderrOutput).toContain('warning: sensitive files');
     expect(stderrOutput).toContain('.env');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result.message).toBe('feat: add config');
+    expect(result.message).toBe(msg);
     consoleSpy.mockRestore();
     stderrSpy.mockRestore();
   });
@@ -239,7 +263,9 @@ describe('commit command wiring', () => {
   it('rejects when no files and no --no-edit', async () => {
     await expect(
       Effect.runPromise(
-        run(['commit', '-m', 'feat: thing']).pipe(Effect.provide(commandLayers)),
+        run(['commit', '-m', 'feat: thing\n\nSome body text here.']).pipe(
+          Effect.provide(commandLayers),
+        ),
       ),
     ).rejects.toThrow('at least one file is required');
   });
@@ -253,6 +279,7 @@ describe('commit command wiring', () => {
   });
 
   it('rejects when service fails', async () => {
+    const msg = 'feat: thing\n\nAdd the thing to the project.';
     const layers = Layer.mergeAll(
       NodeServices.layer,
       stubGitLayer,
@@ -268,7 +295,7 @@ describe('commit command wiring', () => {
     );
     await expect(
       Effect.runPromise(
-        run(['commit', 'file.ts', '-m', 'feat: thing']).pipe(Effect.provide(layers)),
+        run(['commit', 'file.ts', '-m', msg]).pipe(Effect.provide(layers)),
       ),
     ).rejects.toThrow('commit failed');
   });

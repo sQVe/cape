@@ -10,11 +10,22 @@ export interface CommitResult {
   readonly files: string[];
 }
 
+const MIN_BODY_LENGTH = 10;
+
 export const validateMessage = (message: string) => {
-  const subject = message.split('\n')[0] ?? '';
-  if (!conventionalPattern.test(subject)) {
+  const [subject, ...rest] = message.split('\n');
+  if (!conventionalPattern.test(subject ?? '')) {
     return `invalid conventional commit format: "${message}"`;
   }
+
+  const body = rest.slice(1).join('\n').trim();
+  if (body.length === 0) {
+    return 'commit body is required: add a blank line after the subject followed by a description';
+  }
+  if (body.length < MIN_BODY_LENGTH) {
+    return `commit body must be at least ${MIN_BODY_LENGTH} characters`;
+  }
+
   return null;
 };
 

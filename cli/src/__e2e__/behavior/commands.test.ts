@@ -384,12 +384,13 @@ describe('cape commit', () => {
 
   it('succeeds with valid file and message in a temp git repo', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
-    const result = await inProcess(['commit', 'file.ts', '-m', 'feat: add thing'], {
+    const msg = 'feat: add thing\n\nAdd the thing to the project.';
+    const result = await inProcess(['commit', 'file.ts', '-m', msg], {
       cwd: repoDir,
     });
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
-    expect(parsed.message).toBe('feat: add thing');
+    expect(parsed.message).toBe(msg);
     expect(parsed.files).toContain('file.ts');
 
     const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
@@ -400,7 +401,8 @@ describe('cape commit', () => {
 
   it('warns on stderr about sensitive files', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
-    const result = await inProcess(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
+    const msg = 'feat: config\n\nAdd environment configuration.';
+    const result = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive');
     expect(result.stderr).toContain('.env');
@@ -427,7 +429,8 @@ describe('cape commit', () => {
     writeFileSync(join(repoDir, 'a.ts'), 'export const a = 1;\n');
     writeFileSync(join(repoDir, 'b.ts'), 'export const b = 2;\n');
 
-    const result = await inProcess(['commit', 'a.ts', 'b.ts', '-m', 'feat: add two files'], {
+    const msg = 'feat: add two files\n\nAdd both source files.';
+    const result = await inProcess(['commit', 'a.ts', 'b.ts', '-m', msg], {
       cwd: repoDir,
     });
     expect(result.status).toBe(0);

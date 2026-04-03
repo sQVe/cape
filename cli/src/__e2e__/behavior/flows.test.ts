@@ -111,7 +111,8 @@ describe('flow 4: full commit pipeline', () => {
   });
 
   it('commits with valid conventional message', () => {
-    const result = capeCmd(['commit', 'file.ts', '-m', 'feat: add thing'], { cwd: repoDir });
+    const msg = 'feat: add thing\n\nAdd the thing to the project.';
+    const result = capeCmd(['commit', 'file.ts', '-m', msg], { cwd: repoDir });
     expect(result.status).toBe(0);
 
     const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
@@ -135,7 +136,8 @@ describe('flow 4: full commit pipeline', () => {
   it('warns on sensitive files but still commits', () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=abc\n');
 
-    const result = capeCmd(['commit', '.env', '-m', 'feat: config'], { cwd: repoDir });
+    const msg = 'feat: config\n\nAdd environment configuration.';
+    const result = capeCmd(['commit', '.env', '-m', msg], { cwd: repoDir });
 
     expect(result.status).toBe(0);
     expect(result.stderr).toContain('sensitive files');
