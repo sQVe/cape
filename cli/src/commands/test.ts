@@ -3,7 +3,7 @@ import { Argument, Command } from 'effect/unstable/cli';
 
 import { resolveTestCommand } from '../services/check';
 import { getDetectResult, getPackageManager, isTestFile, resolveTestPath } from '../services/detect';
-import { HookService } from '../services/hook';
+import { writeStateKey } from '../services/hook';
 import { runTest } from '../services/test';
 
 export const test = Command.make(
@@ -43,16 +43,8 @@ export const test = Command.make(
 
     const result = yield* runTest(testCommand.command, args);
 
-    const service = yield* HookService;
-    const root = service.pluginRoot();
-    const contextPath = `${root}/hooks/context`;
     const phase = result.passed ? 'green' : 'red';
-
-    yield* service.ensureDir(contextPath);
-    yield* service.writeFile(
-      `${contextPath}/tdd-state.json`,
-      JSON.stringify({ phase, timestamp: Date.now() }),
-    );
+    yield* writeStateKey('tddState', { phase });
 
     yield* Console.log(
       JSON.stringify({

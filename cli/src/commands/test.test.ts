@@ -91,7 +91,7 @@ describe('test command', () => {
     expect(result.passed).toBe(true);
     expect(result.phase).toBe('green');
     expect(result.runner).toBe('vitest');
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.phase).toBe('green');
     consoleSpy.mockRestore();
   });
@@ -103,7 +103,7 @@ describe('test command', () => {
     await expect(
       Effect.runPromise(run(['test']).pipe(Effect.provide(layers))),
     ).rejects.toThrow('tests failed');
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.phase).toBe('red');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
@@ -196,7 +196,7 @@ describe('test command', () => {
     const { layers, writtenFiles } = makeLayers();
     const before = Date.now();
     await Effect.runPromise(run(['test']).pipe(Effect.provide(layers)));
-    const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.timestamp).toBeGreaterThanOrEqual(before);
     expect(state.timestamp).toBeLessThanOrEqual(Date.now());
     consoleSpy.mockRestore();

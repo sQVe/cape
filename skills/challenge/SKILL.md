@@ -54,8 +54,9 @@ Glob/Grep/Read. Only present assumptions that require human judgment — priorit
 business constraints. If you can resolve an assumption by reading code, resolve it silently and move
 on.
 
-Read `hooks/context/flow-phase.json` to determine the current phase. If the file is absent or
-unreadable, default to `"design"`. Use the phase value to set the depth cap:
+Read the `flowPhase` key from `hooks/context/state.json` to determine the current phase. If the file
+is absent, unreadable, or the key is missing, default to `"design"`. Use the phase value to set the
+depth cap:
 
 | Phase            | Focus                              | Depth cap |
 | ---------------- | ---------------------------------- | --------- |

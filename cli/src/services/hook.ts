@@ -87,31 +87,77 @@ export class HookService extends ServiceMap.Service<
 >()('HookService') {}
 
 
-export const readFlowPhase = () =>
+type StateValue = Record<string, unknown> & { timestamp: number };
+type StateFile = Record<string, StateValue>;
+
+const statePath = (root: string) => `${root}/hooks/context/state.json`;
+
+export const readState = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
-    const content = yield* service.readFile(`${root}/hooks/context/flow-phase.json`);
+    const content = yield* service.readFile(statePath(root));
     if (content == null) {
-      return null;
+      return {} as StateFile;
     }
     try {
       const raw: unknown = JSON.parse(content);
-      if (
-        typeof raw !== 'object' ||
-        raw == null ||
-        !('phase' in raw) ||
-        typeof raw.phase !== 'string' ||
-        !('timestamp' in raw) ||
-        typeof raw.timestamp !== 'number'
-      ) {
-        return null;
+      if (typeof raw !== 'object' || raw == null || Array.isArray(raw)) {
+        return {} as StateFile;
       }
-      const isStale = Date.now() - raw.timestamp > FLOW_PHASE_TTL_MS;
-      return isStale ? null : raw.phase;
+      return Object.fromEntries(Object.entries(raw)) as StateFile;
     } catch {
+      return {} as StateFile;
+    }
+  });
+
+export const writeStateKey = (key: string, value: Record<string, unknown>) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+    const state = yield* readState();
+    state[key] = { ...value, timestamp: Date.now() };
+    yield* service.ensureDir(`${root}/hooks/context`);
+    yield* service.writeFile(statePath(root), JSON.stringify(state));
+  });
+
+export const removeStateKey = (key: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+    const state = yield* readState();
+    if (!(key in state)) {
+      return;
+    }
+    const { [key]: _, ...rest } = state;
+    if (Object.keys(rest).length === 0) {
+      yield* service.removeFile(statePath(root));
+    } else {
+      yield* service.writeFile(statePath(root), JSON.stringify(rest));
+    }
+  });
+
+const readStateKey = (key: string, ttlMs: number) =>
+  Effect.gen(function* () {
+    const state = yield* readState();
+    const entry = state[key];
+    if (entry == null) {
       return null;
     }
+    if (typeof entry.timestamp !== 'number') {
+      return null;
+    }
+    const isStale = Date.now() - entry.timestamp > ttlMs;
+    return isStale ? null : entry;
+  });
+
+export const readFlowPhase = () =>
+  Effect.gen(function* () {
+    const entry = yield* readStateKey('flowPhase', FLOW_PHASE_TTL_MS);
+    if (entry == null || typeof entry.phase !== 'string') {
+      return null;
+    }
+    return entry.phase;
   });
 
 export const clearLogs = () =>
@@ -120,7 +166,7 @@ export const clearLogs = () =>
     const root = service.pluginRoot();
     yield* service.ensureDir(`${root}/hooks/context`);
     yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
-    yield* service.removeFile(`${root}/hooks/context/tdd-state.json`);
+    yield* removeStateKey('tddState');
   });
 
 export const sessionStart = (clearLogsFlag: boolean) =>
@@ -462,10 +508,8 @@ const gateFixBug = () =>
 
 const gateInternalSkill = () =>
   Effect.gen(function* () {
-    const service = yield* HookService;
-    const contextPath = `${service.pluginRoot()}/hooks/context/workflow-active.txt`;
-    const content = yield* service.readFile(contextPath);
-    if (!content) {
+    const state = yield* readState();
+    if (!state.workflowActive) {
       return denyWith(
         'This skill is internal to execute-plan / fix-bug and cannot be invoked directly.',
       );
@@ -563,42 +607,18 @@ export const postToolUseBash = () =>
     return null;
   });
 
-const readTddState = (root: string) =>
+const readTddState = () =>
   Effect.gen(function* () {
-    const service = yield* HookService;
-    const stateContent = yield* service.readFile(`${root}/hooks/context/tdd-state.json`);
-    if (stateContent == null) {
+    const entry = yield* readStateKey('tddState', TDD_STATE_TTL_MS);
+    if (entry == null || typeof entry.phase !== 'string') {
       return null;
     }
-    try {
-      const raw: unknown = JSON.parse(stateContent);
-      if (
-        typeof raw !== 'object' ||
-        raw == null ||
-        !('phase' in raw) ||
-        typeof raw.phase !== 'string' ||
-        !('timestamp' in raw) ||
-        typeof raw.timestamp !== 'number'
-      ) {
-        return null;
-      }
-      const state = { phase: raw.phase, timestamp: raw.timestamp };
-      const isStale = Date.now() - state.timestamp > TDD_STATE_TTL_MS;
-      return isStale ? null : state;
-    } catch {
-      return null;
-    }
+    return { phase: entry.phase, timestamp: entry.timestamp };
   });
 
-const writeTddState = (root: string, phase: string) =>
+const writeTddState = (phase: string) =>
   Effect.gen(function* () {
-    const service = yield* HookService;
-    const contextPath = `${root}/hooks/context`;
-    yield* service.ensureDir(contextPath);
-    yield* service.writeFile(
-      `${contextPath}/tdd-state.json`,
-      JSON.stringify({ phase, timestamp: Date.now() }),
-    );
+    yield* writeStateKey('tddState', { phase });
   });
 
 export const postToolUseEdit = () =>
@@ -620,8 +640,7 @@ export const postToolUseEdit = () =>
       return null;
     }
 
-    const root = service.pluginRoot();
-    const state = yield* readTddState(root);
+    const state = yield* readTddState();
 
     if (isTestFile(filePath)) {
       if (state?.phase === 'writing-test') {
@@ -633,7 +652,7 @@ export const postToolUseEdit = () =>
           ].join(' '),
         };
       }
-      yield* writeTddState(root, 'writing-test');
+      yield* writeTddState('writing-test');
       return null;
     }
 
@@ -678,9 +697,7 @@ const checkTddGate = (
       return null;
     }
 
-    const service = yield* HookService;
-    const root = service.pluginRoot();
-    const state = yield* readTddState(root);
+    const state = yield* readTddState();
 
     if (state?.phase === 'red' || state?.phase === 'green') {
       return null;
@@ -739,8 +756,7 @@ export const postToolUseWrite = () =>
       return null;
     }
 
-    const root = service.pluginRoot();
-    const state = yield* readTddState(root);
+    const state = yield* readTddState();
 
     if (isTestFile(writeInput.filePath)) {
       if (state?.phase === 'writing-test') {
@@ -752,7 +768,7 @@ export const postToolUseWrite = () =>
           ].join(' '),
         };
       }
-      yield* writeTddState(root, 'writing-test');
+      yield* writeTddState('writing-test');
       return null;
     }
 

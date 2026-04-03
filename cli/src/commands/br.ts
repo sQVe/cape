@@ -12,7 +12,7 @@ import {
 } from '../services/brValidate';
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
-import { HookService } from '../services/hook';
+import { HookService, removeStateKey, writeStateKey } from '../services/hook';
 
 export const runCloseReadinessCheck = (id: string) =>
   Effect.fn(function* () {
@@ -163,10 +163,10 @@ const brClose = Command.make(
     }
 
     yield* service.ensureDir(`${root}/hooks/context`);
-    yield* service.removeFile(`${root}/hooks/context/tdd-state.json`);
-    yield* service.removeFile(`${root}/hooks/context/flow-phase.json`);
+    yield* removeStateKey('tddState');
+    yield* removeStateKey('flowPhase');
+    yield* removeStateKey('workflowActive');
     yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
-    yield* service.writeFile(`${root}/hooks/context/workflow-active.txt`, '');
 
     yield* Console.log(JSON.stringify({ closed: true, id, stopMessage }));
   }),
@@ -274,12 +274,7 @@ const writeFlowPhase = (id: string) =>
         // fall through with default phase
       }
     }
-    const root = service.pluginRoot();
-    yield* service.ensureDir(`${root}/hooks/context`);
-    yield* service.writeFile(
-      `${root}/hooks/context/flow-phase.json`,
-      JSON.stringify({ phase, issueId: id, timestamp: Date.now() }),
-    );
+    yield* writeStateKey('flowPhase', { phase, issueId: id });
     return phase;
   });
 

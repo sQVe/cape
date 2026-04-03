@@ -208,13 +208,23 @@ const makeStubHookLayer = (
   return hookLayer;
 };
 
-const flowPhaseFile = (phase: string) => ({
-  '/test/hooks/context/flow-phase.json': JSON.stringify({
-    phase,
-    issueId: 'cape-abc',
-    timestamp: Date.now(),
-  }),
+const flowPhaseEntry = (phase: string) => ({
+  phase,
+  issueId: 'cape-abc',
+  timestamp: Date.now(),
 });
+
+const tddEntry = (phase: string) => ({
+  phase,
+  timestamp: Date.now(),
+});
+
+const stateFile = (entries: Record<string, unknown>) => ({
+  '/test/hooks/context/state.json': JSON.stringify(entries),
+});
+
+const flowPhaseFile = (phase: string) =>
+  stateFile({ flowPhase: flowPhaseEntry(phase) });
 
 describe('sessionStart', () => {
   it('outputs SKILL.md content when present', async () => {
@@ -232,7 +242,7 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('cape plugin loaded.');
   });
 
-  it('includes flow context when flow-phase.json exists', async () => {
+  it('includes flow context when flowPhase exists in state', async () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
@@ -247,10 +257,14 @@ describe('sessionStart', () => {
   it('clears logs when flag is set', async () => {
     const writtenFiles: Record<string, string> = {};
     const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({ writtenFiles, removedFiles });
+    const layer = makeStubHookLayer({
+      writtenFiles,
+      removedFiles,
+      files: stateFile({ tddState: tddEntry('red') }),
+    });
     await Effect.runPromise(sessionStart(true).pipe(Effect.provide(layer)));
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
-    expect(removedFiles).toContain('/test/hooks/context/tdd-state.json');
+    expect(removedFiles).toContain('/test/hooks/context/state.json');
   });
 
   it('does not clear logs when flag is false', async () => {
@@ -291,7 +305,7 @@ describe('userPromptSubmit', () => {
     expect(result.additionalContext).toContain('cape:beads');
   });
 
-  it('injects flow context when flow-phase.json exists', async () => {
+  it('injects flow context when flowPhase exists in state', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'hello' }),
       files: flowPhaseFile('executing'),
@@ -397,7 +411,11 @@ describe('hook command wiring', () => {
   it('clears logs with --clear-logs flag', async () => {
     const writtenFiles: Record<string, string> = {};
     const removedFiles: string[] = [];
-    const hookLayer = makeStubHookLayer({ writtenFiles, removedFiles });
+    const hookLayer = makeStubHookLayer({
+      writtenFiles,
+      removedFiles,
+      files: stateFile({ tddState: tddEntry('red') }),
+    });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
       run(['hook', 'session-start', '--clear-logs']).pipe(
@@ -405,7 +423,7 @@ describe('hook command wiring', () => {
       ),
     );
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
-    expect(removedFiles).toContain('/test/hooks/context/tdd-state.json');
+    expect(removedFiles).toContain('/test/hooks/context/state.json');
     consoleSpy.mockRestore();
   });
 
@@ -979,7 +997,7 @@ describe('preToolUseSkill', () => {
   it('allows expand-task when workflow is active', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:expand-task'),
-      files: { '/test/hooks/context/workflow-active.txt': 'true' },
+      files: stateFile({ workflowActive: { value: true, timestamp: Date.now() } }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
@@ -996,7 +1014,7 @@ describe('preToolUseSkill', () => {
   it('allows test-driven-development when workflow is active', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:test-driven-development'),
-      files: { '/test/hooks/context/workflow-active.txt': 'true' },
+      files: stateFile({ workflowActive: { value: true, timestamp: Date.now() } }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
@@ -1118,8 +1136,7 @@ describe('hook command - PreToolUse wiring', () => {
     const hookLayer = makeStubHookLayer({
       stdin: editStdin('/src/foo.ts'),
       files: {
-        ...flowPhaseFile('executing'),
-        ...tddStateFile('red'),
+        ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
       },
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -1186,47 +1203,36 @@ const editStdin = (filePath: string) =>
 const writeStdin = (filePath: string, content: string) =>
   JSON.stringify({ tool_input: { file_path: filePath, content } });
 
-const tddStateFile = (phase: string) => ({
-  '/test/hooks/context/tdd-state.json': JSON.stringify({
-    phase,
-    timestamp: Date.now(),
-  }),
-});
+const tddStateFile = (phase: string) =>
+  stateFile({ tddState: tddEntry(phase) });
 
 describe('readFlowPhase', () => {
-  it('returns null when flow-phase.json is older than 30 minutes', async () => {
+  it('returns null when flowPhase is older than 30 minutes', async () => {
     const staleTimestamp = Date.now() - 31 * 60 * 1000;
     const layer = makeStubHookLayer({
+      files: stateFile({
+        flowPhase: { phase: 'executing', issueId: 'cape-abc', timestamp: staleTimestamp },
+      }),
+    });
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    expect(result.additionalContext).not.toContain('<flow-context>');
+  });
+
+  it('returns null when state.json contains malformed JSON', async () => {
+    const layer = makeStubHookLayer({
       files: {
-        '/test/hooks/context/flow-phase.json': JSON.stringify({
-          phase: 'executing',
-          issueId: 'cape-abc',
-          timestamp: staleTimestamp,
-        }),
+        '/test/hooks/context/state.json': 'corrupted{{{',
       },
     });
     const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 
-  it('returns null when flow-phase.json contains malformed JSON', async () => {
+  it('returns null when flowPhase is missing phase field', async () => {
     const layer = makeStubHookLayer({
-      files: {
-        '/test/hooks/context/flow-phase.json': 'corrupted{{{',
-      },
-    });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
-    expect(result.additionalContext).not.toContain('<flow-context>');
-  });
-
-  it('returns null when flow-phase.json is missing phase field', async () => {
-    const layer = makeStubHookLayer({
-      files: {
-        '/test/hooks/context/flow-phase.json': JSON.stringify({
-          issueId: 'cape-abc',
-          timestamp: Date.now(),
-        }),
-      },
+      files: stateFile({
+        flowPhase: { issueId: 'cape-abc', timestamp: Date.now() },
+      }),
     });
     const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
     expect(result.additionalContext).not.toContain('<flow-context>');
@@ -1257,8 +1263,7 @@ describe('preToolUseEdit', () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/handler.go'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('writing-test'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
         },
       });
       const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
@@ -1283,8 +1288,7 @@ describe('preToolUseEdit', () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('green'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('green') }),
         },
       });
       const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
@@ -1306,8 +1310,7 @@ describe('preToolUseEdit', () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/pkg/handler_test.go'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('writing-test'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
         },
       });
       const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
@@ -1426,8 +1429,7 @@ describe('preToolUseWrite', () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/newTypes.ts', 'export type Foo = string;'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('writing-test'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
         },
       });
       const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
@@ -1452,8 +1454,7 @@ describe('preToolUseWrite', () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/existing.ts', 'new content'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('writing-test'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
           '/src/existing.ts': 'old content',
         },
       });
@@ -1480,8 +1481,7 @@ describe('preToolUseWrite', () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/existing.ts', 'new content'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('green'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('green') }),
           '/src/existing.ts': 'old content',
         },
       });
@@ -1568,16 +1568,15 @@ describe('postToolUseWrite', () => {
       });
       const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
-      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
-      expect(state.phase).toBe('writing-test');
+      const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}');
+      expect(state.tddState.phase).toBe('writing-test');
     });
 
     it('warns on second test file write without test run', async () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/foo.test.ts', 'test content'),
         files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('writing-test'),
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
         },
       });
       const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
@@ -1600,10 +1599,7 @@ describe('postToolUseWrite', () => {
     it('does not inject reminder when tests are red', async () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/foo.ts', 'production code'),
-        files: {
-          ...flowPhaseFile('executing'),
-          ...tddStateFile('red'),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
       });
       const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
@@ -1706,13 +1702,7 @@ describe('postToolUseEdit', () => {
     it('injects reminder when tests are green', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/handler.go'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'green',
-            timestamp: Date.now(),
-          }),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('green') }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
@@ -1722,13 +1712,7 @@ describe('postToolUseEdit', () => {
     it('does not inject reminder when tests are red', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'red',
-            timestamp: Date.now(),
-          }),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
@@ -1745,20 +1729,14 @@ describe('postToolUseEdit', () => {
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
-      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
-      expect(state.phase).toBe('writing-test');
+      const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}');
+      expect(state.tddState.phase).toBe('writing-test');
     });
 
     it('warns on second test file edit without test run', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.test.ts'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'writing-test',
-            timestamp: Date.now(),
-          }),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
@@ -1769,38 +1747,26 @@ describe('postToolUseEdit', () => {
       const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/pkg/handler_test.go'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'green',
-            timestamp: Date.now(),
-          }),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('green') }),
         writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
-      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
-      expect(state.phase).toBe('writing-test');
+      const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}');
+      expect(state.tddState.phase).toBe('writing-test');
     });
 
     it('does not warn on test file edit after test run resets state to red', async () => {
       const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/tests/parser_spec.lua'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'red',
-            timestamp: Date.now(),
-          }),
-        },
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
         writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
-      const state = JSON.parse(writtenFiles['/test/hooks/context/tdd-state.json'] ?? '');
-      expect(state.phase).toBe('writing-test');
+      const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}');
+      expect(state.tddState.phase).toBe('writing-test');
     });
 
     it('does not track test file edits outside active phase', async () => {
@@ -1811,7 +1777,7 @@ describe('postToolUseEdit', () => {
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toBeNull();
-      expect(writtenFiles['/test/hooks/context/tdd-state.json']).toBeUndefined();
+      expect(writtenFiles['/test/hooks/context/state.json']).toBeUndefined();
     });
   });
 
@@ -1870,27 +1836,24 @@ describe('postToolUseEdit', () => {
       const staleTimestamp = Date.now() - 11 * 60 * 1000;
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': JSON.stringify({
-            phase: 'red',
-            timestamp: staleTimestamp,
-          }),
-        },
+        files: stateFile({
+          flowPhase: flowPhaseEntry('executing'),
+          tddState: { phase: 'red', timestamp: staleTimestamp },
+        }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
     });
   });
 
-  describe('when state file is corrupted', () => {
-    it('injects reminder when state file is corrupted', async () => {
+  describe('when tddState is malformed', () => {
+    it('injects reminder when tddState has no phase field', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
-        files: {
-          ...flowPhaseFile('executing'),
-          '/test/hooks/context/tdd-state.json': 'corrupted{{{',
-        },
+        files: stateFile({
+          flowPhase: flowPhaseEntry('executing'),
+          tddState: { timestamp: Date.now() },
+        }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
@@ -2077,13 +2040,7 @@ describe('event logging', () => {
   it('logs tdd-batching for postToolUseEdit second test edit without run', async () => {
     const layer = makeStubHookLayer({
       stdin: editStdin('/src/foo.test.ts'),
-      files: {
-        ...flowPhaseFile('executing'),
-        '/test/hooks/context/tdd-state.json': JSON.stringify({
-          phase: 'writing-test',
-          timestamp: Date.now(),
-        }),
-      },
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('writing-test') }),
     });
     await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith('hook.PostToolUse.Edit', 'tdd-batching');
@@ -2092,13 +2049,7 @@ describe('event logging', () => {
   it('does not log for postToolUseEdit when tests are red', async () => {
     const layer = makeStubHookLayer({
       stdin: editStdin('/src/foo.ts'),
-      files: {
-        ...flowPhaseFile('executing'),
-        '/test/hooks/context/tdd-state.json': JSON.stringify({
-          phase: 'red',
-          timestamp: Date.now(),
-        }),
-      },
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
     });
     await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
     expect(logEvent).not.toHaveBeenCalled();

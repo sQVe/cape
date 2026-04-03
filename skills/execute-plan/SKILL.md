@@ -89,7 +89,7 @@ br show <task-id>
 Signal that a workflow is active (gates internal skills for direct invocation):
 
 ```bash
-cape context set workflow-active
+cape state set workflowActive
 ```
 
 If the task's design field does not already contain an `## Expanded plan` section, load
@@ -121,8 +121,8 @@ ahead to later steps.
 cycle and report: "Step N already passed at HEAD <short-sha> — skipping." If the file is missing or
 malformed, proceed normally.
 
-0. **Reset TDD state** — Run `rm -f hooks/context/tdd-state.json` to clear TDD state from the
-   previous step. This ensures the TDD gate enforces a fresh red-green cycle for each step.
+0. **Reset TDD state** — Run `cape state clear tddState` to clear TDD state from the previous step.
+   This ensures the TDD gate enforces a fresh red-green cycle for each step.
 1. **Scope** — Read only the current step's title and **Changes** field. These define the single
    behavior for this iteration. Ignore all subsequent steps.
 2. **RED** — Write one failing test for the behavior described in the current step's title. Run it.
@@ -159,7 +159,7 @@ substasks are complete and checks pass, then close:
 ```bash
 cape br close-check <task-id>
 cape br close <task-id>
-cape context clear workflow-active
+cape state clear workflowActive
 ```
 
 ---

@@ -547,39 +547,36 @@ describe('cape pr', () => {
   });
 });
 
-describe('cape context', () => {
-  it('rejects invalid context name with uppercase', async () => {
-    const result = await inProcess(['context', 'set', 'InvalidName']);
-    expect(result.stderr).toContain('Invalid context name');
-  });
+describe('cape state', () => {
+  const stateJsonPath = join(REPO_ROOT, 'cli', 'hooks', 'context', 'state.json');
 
-  it('rejects invalid context name with spaces', async () => {
-    const result = await inProcess(['context', 'set', 'bad name']);
-    expect(result.stderr).toContain('Invalid context name');
-  });
-
-  it('rejects invalid context name with underscores', async () => {
-    const result = await inProcess(['context', 'set', 'bad_name']);
-    expect(result.stderr).toContain('Invalid context name');
-  });
-
-  it('accepts valid lowercase-hyphen context name', async () => {
-    const contextFile = join(REPO_ROOT, 'cli', 'hooks', 'context', 'my-context-123.txt');
-    const result = await inProcess(['context', 'set', 'my-context-123']);
+  afterEach(() => {
     try {
-      expect(result.stderr).not.toContain('Invalid context name');
-    } finally {
-      try {
-        unlinkSync(contextFile);
-      } catch {
-        /* cleanup */
-      }
+      unlinkSync(stateJsonPath);
+    } catch {
+      /* cleanup */
     }
   });
 
-  it('clear rejects invalid context name', async () => {
-    const result = await inProcess(['context', 'clear', 'BAD']);
-    expect(result.stderr).toContain('Invalid context name');
+  it('set writes a key to state.json', async () => {
+    const result = await inProcess(['state', 'set', 'testKey', '{"foo":"bar"}']);
+    expect(result.status).toBe(0);
+  });
+
+  it('list prints "No active state." when state.json is absent', async () => {
+    const result = await inProcess(['state', 'list']);
+    expect(result.stdout).toContain('No active state.');
+  });
+
+  it('clear is a no-op when key is absent', async () => {
+    const result = await inProcess(['state', 'clear', 'nonExistent']);
+    expect(result.status).toBe(0);
+  });
+
+  it('reset removes state.json', async () => {
+    await inProcess(['state', 'set', 'testKey']);
+    const result = await inProcess(['state', 'reset']);
+    expect(result.status).toBe(0);
   });
 });
 

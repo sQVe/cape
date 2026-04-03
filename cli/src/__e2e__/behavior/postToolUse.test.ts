@@ -32,7 +32,7 @@ describe('PostToolUse/Bash', () => {
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('produces no state changes for git commands', () => {
@@ -42,7 +42,7 @@ describe('PostToolUse/Bash', () => {
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('appends multiple br show ids to the log', () => {
@@ -75,7 +75,7 @@ describe('PostToolUse/Bash', () => {
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], 'not json', env);
     expect(result.status).toBe(0);
     expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('returns null output (no stdout) for all commands', () => {
@@ -88,7 +88,7 @@ describe('PostToolUse/Bash', () => {
   });
 });
 
-// All Edit E2E tests hit the early-return path because no flow-phase.json exists.
+// All Edit E2E tests hit the early-return path because no flowPhase exists in state.json.
 // The TDD reminder output path is only testable at the unit level (in hook.test.ts).
 describe('PostToolUse/Edit', () => {
   it('skips .test.ts files', () => {

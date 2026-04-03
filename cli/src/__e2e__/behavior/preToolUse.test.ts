@@ -322,7 +322,7 @@ describe('skill gate: non-gated skills pass through', () => {
 });
 
 describe('skill gate: internal skills require active workflow', () => {
-  it('denies expand-task when workflow-active.txt is absent', () => {
+  it('denies expand-task when workflowActive is absent from state.json', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:expand-task'),
@@ -331,8 +331,11 @@ describe('skill gate: internal skills require active workflow', () => {
     expectDeny(result, 'internal');
   });
 
-  it('allows expand-task when workflow-active.txt exists', () => {
-    writeFileSync(join(contextDir, 'workflow-active.txt'), 'true');
+  it('allows expand-task when workflowActive exists in state.json', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({ workflowActive: { value: true, timestamp: Date.now() } }),
+    );
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:expand-task'),
@@ -341,7 +344,7 @@ describe('skill gate: internal skills require active workflow', () => {
     expectPassThrough(result);
   });
 
-  it('denies test-driven-development when workflow-active.txt is absent', () => {
+  it('denies test-driven-development when workflowActive is absent from state.json', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:test-driven-development'),
@@ -350,8 +353,11 @@ describe('skill gate: internal skills require active workflow', () => {
     expectDeny(result, 'internal');
   });
 
-  it('allows test-driven-development when workflow-active.txt exists', () => {
-    writeFileSync(join(contextDir, 'workflow-active.txt'), 'true');
+  it('allows test-driven-development when workflowActive exists in state.json', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({ workflowActive: { value: true, timestamp: Date.now() } }),
+    );
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:test-driven-development'),

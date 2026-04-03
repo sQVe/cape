@@ -54,10 +54,10 @@ describe('flow 1: br show then br update with design', () => {
 });
 
 describe('flow 2: TDD reminder on Edit', () => {
-  it('produces no TDD reminder without flow-phase.json', () => {
+  it('produces no TDD reminder without flowPhase in state', () => {
     writeFileSync(
-      join(contextDir, 'tdd-state.json'),
-      JSON.stringify({ phase: 'red', timestamp: Date.now() }),
+      join(contextDir, 'state.json'),
+      JSON.stringify({ tddState: { phase: 'red', timestamp: Date.now() } }),
     );
 
     const editStdin = JSON.stringify({
@@ -70,11 +70,11 @@ describe('flow 2: TDD reminder on Edit', () => {
 });
 
 describe('flow 3: session-start clears stale state', () => {
-  it('clears all context files with --clear-logs', () => {
+  it('clears tddState from state.json with --clear-logs', () => {
     writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-old\n');
     writeFileSync(
-      join(contextDir, 'tdd-state.json'),
-      JSON.stringify({ phase: 'red', timestamp: 0 }),
+      join(contextDir, 'state.json'),
+      JSON.stringify({ tddState: { phase: 'red', timestamp: 0 } }),
     );
 
     const result = cape(['hook', 'session-start', '--clear-logs'], '', env);
@@ -82,7 +82,7 @@ describe('flow 3: session-start clears stale state', () => {
 
     const brLog = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
     expect(brLog).toBe('');
-    expect(existsSync(join(contextDir, 'tdd-state.json'))).toBe(false);
+    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('produces additionalContext output', () => {

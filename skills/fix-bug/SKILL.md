@@ -88,7 +88,7 @@ skipping." If the file is missing or malformed, proceed normally.
 Signal that a workflow is active (gates internal skills for direct invocation):
 
 ```bash
-cape context set workflow-active
+cape state set workflowActive
 ```
 
 The bug's root cause from the br bug is your test target. Load `cape:test-driven-development` with
@@ -148,7 +148,7 @@ Wait for user approval, then run close-check and close:
 ```bash
 cape br close-check <bug-id>
 cape br close <bug-id>
-cape context clear workflow-active
+cape state clear workflowActive
 ```
 
 If `close-check` fails, stop and report which checks failed — do not close.

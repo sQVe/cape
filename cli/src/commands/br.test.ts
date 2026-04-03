@@ -412,12 +412,23 @@ describe('br close-check command', () => {
 });
 
 describe('br close command', () => {
+  const initialState = JSON.stringify({
+    tddState: { phase: 'red', timestamp: Date.now() },
+    flowPhase: { phase: 'executing', issueId: 'bd-test', timestamp: Date.now() },
+    workflowActive: { value: true, timestamp: Date.now() },
+  });
+
   const makeCloseLayer = (brCloseOutput: string | null) => {
     const writtenFiles: Record<string, string> = {};
     const removedFiles: string[] = [];
     const hookLayer = Layer.succeed(HookService)({
       pluginRoot: () => '/test',
-      readFile: () => Effect.succeed(null),
+      readFile: (path) => {
+        if (path === '/test/hooks/context/state.json') {
+          return Effect.succeed(writtenFiles[path] ?? initialState);
+        }
+        return Effect.succeed(null);
+      },
       writeFile: (path, content) => {
         writtenFiles[path] = content;
         return Effect.succeed(undefined);
@@ -475,10 +486,8 @@ describe('br close command', () => {
     await Effect.runPromise(
       run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
     );
-    expect(removedFiles).toContain('/test/hooks/context/tdd-state.json');
-    expect(removedFiles).toContain('/test/hooks/context/flow-phase.json');
+    expect(removedFiles).toContain('/test/hooks/context/state.json');
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
-    expect(writtenFiles['/test/hooks/context/workflow-active.txt']).toBe('');
     consoleSpy.mockRestore();
   });
 
@@ -878,7 +887,7 @@ describe('br update command', () => {
     stderrSpy.mockRestore();
   });
 
-  it('writes flow-phase.json with phase and issueId', async () => {
+  it('writes flowPhase to state.json with phase and issueId', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
@@ -886,11 +895,11 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const stateContent = writtenFiles['/test/hooks/context/flow-phase.json']!;
+    const stateContent = writtenFiles['/test/hooks/context/state.json']!;
     const state = JSON.parse(stateContent);
-    expect(state.phase).toBe('executing');
-    expect(state.issueId).toBe('bd-test');
-    expect(state.timestamp).toBeTypeOf('number');
+    expect(state.flowPhase.phase).toBe('executing');
+    expect(state.flowPhase.issueId).toBe('bd-test');
+    expect(state.flowPhase.timestamp).toBeTypeOf('number');
     consoleSpy.mockRestore();
   });
 
@@ -905,8 +914,8 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
-    expect(state.phase).toBe('debugging');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
+    expect(state.flowPhase.phase).toBe('debugging');
     consoleSpy.mockRestore();
   });
 
@@ -921,8 +930,8 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
-    expect(state.phase).toBe('planning');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
+    expect(state.flowPhase.phase).toBe('planning');
     consoleSpy.mockRestore();
   });
 
@@ -966,8 +975,8 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
-    expect(state.phase).toBe('executing');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
+    expect(state.flowPhase.phase).toBe('executing');
     consoleSpy.mockRestore();
   });
 
@@ -979,12 +988,12 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const state = JSON.parse(writtenFiles['/test/hooks/context/flow-phase.json']!);
-    expect(state.phase).toBe('executing');
+    const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
+    expect(state.flowPhase.phase).toBe('executing');
     consoleSpy.mockRestore();
   });
 
-  it('skips flow-phase.json when --status is not provided', async () => {
+  it('skips state write when --status is not provided', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
@@ -992,7 +1001,7 @@ describe('br update command', () => {
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    expect(writtenFiles['/test/hooks/context/flow-phase.json']).toBeUndefined();
+    expect(writtenFiles['/test/hooks/context/state.json']).toBeUndefined();
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result.updated).toBe(true);
