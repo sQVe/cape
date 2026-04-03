@@ -59,6 +59,10 @@ Do not proceed to step 2 without a br bug that has a documented root cause.
 
 ## Step 2: Reproduce the fix target
 
+**Checkpoint gate:** Read `.beads/<bug-id>/verify.json`. If the key `reproduction` records a SHA
+that matches `git rev-parse HEAD`, skip reproduction and report: "Reproduction already passed at
+HEAD <short-sha> — skipping." If the file is missing or malformed, proceed normally.
+
 Run the reproduction steps from the br bug to confirm the symptom locally.
 
 ```bash
@@ -69,9 +73,17 @@ If reproduction succeeds, you have a baseline. If reproduction fails, investigat
 proceeding -- the bug may already be fixed, the environment may differ, or the reproduction steps
 may be incomplete.
 
+After reproduction succeeds, record the SHA in `.beads/<bug-id>/verify.json` under the key
+`reproduction`. Read the existing file (or start from `{}`), set the key to the current HEAD SHA,
+and write it back. Create the directory with `mkdir -p ".beads/<bug-id>"` if needed.
+
 ---
 
 ## Step 3: Fix the bug
+
+**Checkpoint gate:** Read `.beads/<bug-id>/verify.json`. If the key `fix` records a SHA that matches
+`git rev-parse HEAD`, skip the TDD cycle and report: "Fix already passed at HEAD <short-sha> —
+skipping." If the file is missing or malformed, proceed normally.
 
 Signal that a workflow is active (gates internal skills for direct invocation):
 
@@ -93,6 +105,9 @@ Dispatch `cape:bug-tracer` if the root cause from the br bug proves incomplete o
 is discovered during the fix. Dispatch `cape:codebase-investigator` if you need to understand
 broader impact of the fix on other modules. Dispatch `cape:internet-researcher` if the fix involves
 external library behavior or undocumented API semantics.
+
+After the TDD cycle completes (GREEN + REFACTOR), record the SHA in `.beads/<bug-id>/verify.json`
+under key `fix` (same pattern as reproduction).
 
 Dispatch `cape:code-reviewer` after the fix is green to review the change against the br bug's root
 cause and verify no regressions were introduced.
