@@ -61,7 +61,10 @@ export const test = Command.make(
 
     if (!result.passed) {
       yield* Console.error(result.output);
-      yield* Effect.fail(new Error('tests failed'));
+      const error = `tests failed (runner: ${testCommand.label})`;
+      yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(

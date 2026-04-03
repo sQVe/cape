@@ -64,15 +64,19 @@ const brValidate = Command.make(
       const bead = yield* showBead(id.value);
       errors = validateSections(bead.issue_type, bead.description);
     } else {
-      yield* Console.error(JSON.stringify({ error: 'provide either <id> or --type' }));
-      return yield* Effect.fail(new Error('provide either <id> or --type'));
+      return yield* Console.error(JSON.stringify({ error: 'provide either <id> or --type' })).pipe(
+        Effect.andThen(Effect.die(new Error('provide either <id> or --type'))),
+      );
     }
 
     const result = { valid: errors.length === 0, errors };
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
-      return yield* Effect.fail(new Error(errors.join(', ')));
+      const error = errors.join(', ');
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(
@@ -109,9 +113,10 @@ const brTemplate = Command.make(
     const template = generateTemplate(type);
 
     if (template == null) {
-      const error = { error: `unknown type: ${type}. valid: epic, task, feature, bug` };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = `unknown type: ${type}. valid: epic, task, feature, bug`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     yield* Console.log(template);
@@ -134,7 +139,10 @@ const brCloseCheck = Command.make(
     yield* Console.log(JSON.stringify(result, null, 2));
 
     if (!ready) {
-      yield* Effect.fail(new Error('close-check failed'));
+      const error = `close-check failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`;
+      yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(
@@ -158,8 +166,9 @@ const brClose = Command.make(
 
     const output = yield* service.brQuery(['close', id]);
     if (output == null) {
-      yield* Console.error(JSON.stringify({ error: `failed to close ${id}` }));
-      return yield* Effect.fail(new Error(`failed to close ${id}`));
+      return yield* Console.error(JSON.stringify({ error: `failed to close ${id}` })).pipe(
+        Effect.andThen(Effect.die(new Error(`failed to close ${id}`))),
+      );
     }
 
     yield* service.ensureDir(`${root}/hooks/context`);
@@ -185,24 +194,26 @@ const brCreate = Command.make(
   },
   Effect.fn(function* ({ title, type, priority, labels, description, parent, design }) {
     if (design._tag === 'Some') {
-      const error = {
-        error: 'Use `cape br design <id> <heading>` to attach design content after creation.',
-      };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = 'Use `cape br design <id> <heading>` to attach design content after creation.';
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     if (type._tag === 'None') {
-      yield* Console.error(JSON.stringify({ error: '--type is required' }));
-      return yield* Effect.fail(new Error('--type is required'));
+      return yield* Console.error(JSON.stringify({ error: '--type is required' })).pipe(
+        Effect.andThen(Effect.die(new Error('--type is required'))),
+      );
     }
     if (priority._tag === 'None') {
-      yield* Console.error(JSON.stringify({ error: '--priority is required' }));
-      return yield* Effect.fail(new Error('--priority is required'));
+      return yield* Console.error(JSON.stringify({ error: '--priority is required' })).pipe(
+        Effect.andThen(Effect.die(new Error('--priority is required'))),
+      );
     }
     if (labels._tag === 'None') {
-      yield* Console.error(JSON.stringify({ error: '--labels is required' }));
-      return yield* Effect.fail(new Error('--labels is required'));
+      return yield* Console.error(JSON.stringify({ error: '--labels is required' })).pipe(
+        Effect.andThen(Effect.die(new Error('--labels is required'))),
+      );
     }
 
     const service = yield* HookService;
@@ -217,8 +228,10 @@ const brCreate = Command.make(
     if (descContent) {
       const errors = validateSections(type.value, descContent);
       if (errors.length > 0) {
-        yield* Console.error(JSON.stringify({ valid: false, errors }));
-        return yield* Effect.fail(new Error(errors.join(', ')));
+        const error = errors.join(', ');
+        return yield* Console.error(JSON.stringify({ error })).pipe(
+          Effect.andThen(Effect.die(new Error(error))),
+        );
       }
     }
 
@@ -237,8 +250,11 @@ const brCreate = Command.make(
 
     const output = yield* service.brQuery(args);
     if (output == null) {
-      yield* Console.error(JSON.stringify({ error: 'br create failed' }));
-      return yield* Effect.fail(new Error('br create failed'));
+      const titleContext = title._tag === 'Some' ? ` "${title.value}"` : '';
+      const error = `br create failed: ${type.value}${titleContext}`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     yield* Console.log(JSON.stringify({ created: true, id: output.trim() }));
@@ -293,14 +309,16 @@ const brUpdate = Command.make(
       const value = status.value;
       if (value.includes('-')) {
         const suggested = value.replace(/-/g, '_');
-        const error = { error: `Invalid status "${value}". Use "${suggested}" (underscore, not hyphen).` };
-        yield* Console.error(JSON.stringify(error));
-        return yield* Effect.fail(new Error(error.error));
+        const error = `Invalid status "${value}". Use "${suggested}" (underscore, not hyphen).`;
+        return yield* Console.error(JSON.stringify({ error })).pipe(
+          Effect.andThen(Effect.die(new Error(error))),
+        );
       }
       if (value === 'done') {
-        const error = { error: 'Use `cape br close <id>` to close an issue instead of setting status to "done".' };
-        yield* Console.error(JSON.stringify(error));
-        return yield* Effect.fail(new Error(error.error));
+        const error = 'Use `cape br close <id>` to close an issue instead of setting status to "done".';
+        return yield* Console.error(JSON.stringify({ error })).pipe(
+          Effect.andThen(Effect.die(new Error(error))),
+        );
       }
     }
 
@@ -324,8 +342,10 @@ const brUpdate = Command.make(
 
     const output = yield* service.brQuery(args);
     if (output == null) {
-      yield* Console.error(JSON.stringify({ error: `br update failed` }));
-      return yield* Effect.fail(new Error('br update failed'));
+      const error = `br update failed for ${id}`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     if (status._tag === 'Some') {

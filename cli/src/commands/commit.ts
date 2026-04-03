@@ -26,28 +26,32 @@ export const commit = Command.make(
 
     if (files.length === 0) {
       const error = 'at least one file is required';
-      yield* Console.error(JSON.stringify({ error }));
-      return yield* Effect.fail(new Error(error));
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     if (message._tag !== 'Some') {
       const error = '--message is required';
-      yield* Console.error(JSON.stringify({ error }));
-      return yield* Effect.fail(new Error(error));
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const msg = message.value;
 
     const fileError = validateFiles(files);
     if (fileError != null) {
-      yield* Console.error(JSON.stringify({ error: fileError }));
-      return yield* Effect.fail(new Error(fileError));
+      return yield* Console.error(JSON.stringify({ error: fileError })).pipe(
+        Effect.andThen(Effect.die(new Error(fileError))),
+      );
     }
 
     const messageError = validateMessage(msg);
     if (messageError != null) {
-      yield* Console.error(JSON.stringify({ error: messageError }));
-      return yield* Effect.fail(new Error(messageError));
+      return yield* Console.error(JSON.stringify({ error: messageError })).pipe(
+        Effect.andThen(Effect.die(new Error(messageError))),
+      );
     }
 
     const sensitive = detectSensitiveFiles(files);

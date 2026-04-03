@@ -16,9 +16,10 @@ export const gitDiff = Command.make(
     const raw = scope._tag === 'Some' ? scope.value : 'unstaged';
 
     if (!isDiffScope(raw)) {
-      const error = { error: `invalid scope: ${raw}. valid: ${DIFF_SCOPES.join(', ')}` };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = `invalid scope: ${raw}. valid: ${DIFF_SCOPES.join(', ')}`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const resolved = raw;

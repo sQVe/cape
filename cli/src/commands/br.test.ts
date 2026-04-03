@@ -162,6 +162,7 @@ describe('br validate command', () => {
 
   it('returns errors for invalid epic', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const bead = makeBead({
       issue_type: 'epic',
       description: '## Requirements\nstuff',
@@ -174,6 +175,7 @@ describe('br validate command', () => {
       ),
     ).rejects.toThrow('missing section');
     consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 
   it('validates from stdin with --type flag', async () => {
@@ -198,6 +200,7 @@ describe('br validate command', () => {
 
   it('rejects invalid content from stdin', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.succeed(makeBead()),
       updateDesign: () => Effect.succeed(undefined),
@@ -210,6 +213,7 @@ describe('br validate command', () => {
       ),
     ).rejects.toThrow('missing section');
     consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 
   it('rejects when neither id nor --type provided', async () => {
@@ -378,6 +382,7 @@ describe('br close-check command', () => {
 
   it('returns canClose:false when subtasks are open', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'open' }];
     await expect(
       Effect.runPromise(
@@ -385,16 +390,18 @@ describe('br close-check command', () => {
           Effect.provide(makeCloseCheckLayers(children, [])),
         ),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow('close-check failed for test-id: 1 open task(s), checks passed');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result.canClose).toBe(false);
     expect(result.openSubtasks).toHaveLength(1);
     consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 
   it('returns canClose:false when checks fail', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
     await expect(
       Effect.runPromise(
@@ -402,12 +409,13 @@ describe('br close-check command', () => {
           Effect.provide(makeCloseCheckLayers([], checks)),
         ),
       ),
-    ).rejects.toThrow();
+    ).rejects.toThrow('close-check failed for test-id: 0 open task(s), checks failed');
     const output = consoleSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
     expect(result.canClose).toBe(false);
     expect(result.checksPassed).toBe(false);
     consoleSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 });
 
@@ -658,8 +666,7 @@ describe('br create command', () => {
     ).rejects.toThrow('missing section');
     const output = stderrSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result.valid).toBe(false);
-    expect(result.errors).toContain('missing section: Behaviors');
+    expect(result.error).toContain('missing section: Behaviors');
     stderrSpy.mockRestore();
   });
 
@@ -720,10 +727,10 @@ describe('br create command', () => {
           validTaskDescription,
         ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
       ),
-    ).rejects.toThrow('br create failed');
+    ).rejects.toThrow('br create failed: task "Test"');
     const output = stderrSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result.error).toContain('br create failed');
+    expect(result.error).toContain('br create failed: task');
     stderrSpy.mockRestore();
   });
 });
@@ -960,10 +967,10 @@ describe('br update command', () => {
           Effect.provide(makeUpdateLayers(hookLayer)),
         ),
       ),
-    ).rejects.toThrow('br update failed');
+    ).rejects.toThrow('br update failed for bd-test');
     const output = stderrSpy.mock.calls.flat().join('');
     const result = JSON.parse(output);
-    expect(result.error).toContain('br update failed');
+    expect(result.error).toContain('br update failed for bd-test');
     stderrSpy.mockRestore();
   });
 

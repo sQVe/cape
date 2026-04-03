@@ -18,8 +18,10 @@ export const gitCreateBranch = Command.make(
     );
 
     if (!validation.valid) {
-      yield* Console.error(JSON.stringify({ error: validation.errors.join(', ') }));
-      return yield* Effect.fail(new Error(validation.errors.join(', ')));
+      const error = validation.errors.join(', ');
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const result = yield* getCreateBranch(name).pipe(

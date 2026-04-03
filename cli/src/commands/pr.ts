@@ -44,15 +44,19 @@ const prValidate = Command.make(
       const service = yield* PrService;
       body = yield* service.readFile(file.value);
     } else {
-      yield* Console.error(JSON.stringify({ error: 'provide <file> or --stdin' }));
-      return yield* Effect.fail(new Error('provide <file> or --stdin'));
+      return yield* Console.error(JSON.stringify({ error: 'provide <file> or --stdin' })).pipe(
+        Effect.andThen(Effect.die(new Error('provide <file> or --stdin'))),
+      );
     }
 
     const result = validatePrBody(template.sections, body);
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
-      return yield* Effect.fail(new Error(formatValidationErrors(result)));
+      const error = formatValidationErrors(result);
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(
@@ -76,39 +80,44 @@ const prCreate = Command.make(
 
     const branch = yield* hookService.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
     if (branch == null) {
-      yield* Console.error(JSON.stringify({ error: 'failed to determine current branch' }));
-      return yield* Effect.fail(new Error('failed to determine current branch'));
+      return yield* Console.error(JSON.stringify({ error: 'failed to determine current branch' })).pipe(
+        Effect.andThen(Effect.die(new Error('failed to determine current branch'))),
+      );
     }
 
     const defaultRef = yield* hookService.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
     const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
     if (branch === defaultBranch) {
-      const error = { error: `Cannot create PR from default branch "${branch}". Create a feature branch first.` };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = `Cannot create PR from default branch "${branch}". Create a feature branch first.`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const status = yield* hookService.spawnGit(['status', '--porcelain']);
     if (status != null && status.length > 0) {
-      const error = { error: 'Uncommitted changes detected. Commit or stash before creating a PR.' };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = 'Uncommitted changes detected. Commit or stash before creating a PR.';
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const template = yield* findTemplate();
     const validation = validatePrBody(template.sections, body);
     if (!validation.valid) {
-      const error = { error: `PR body validation failed: ${formatValidationErrors(validation)}` };
-      yield* Console.error(JSON.stringify(error));
-      return yield* Effect.fail(new Error(error.error));
+      const error = `PR body validation failed: ${formatValidationErrors(validation)}`;
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     if (!noPush) {
       const pushResult = yield* hookService.spawnGit(['push', '-u', 'origin', branch]);
       if (pushResult == null) {
-        const error = { error: 'git push failed' };
-        yield* Console.error(JSON.stringify(error));
-        return yield* Effect.fail(new Error(error.error));
+        const error = `git push failed for branch "${branch}"`;
+        return yield* Console.error(JSON.stringify({ error })).pipe(
+          Effect.andThen(Effect.die(new Error(error))),
+        );
       }
     }
 
@@ -124,7 +133,7 @@ const prCreate = Command.make(
       Effect.catch((error: Error) => {
         const message = `gh pr create failed: ${error.message}`;
         return Console.error(JSON.stringify({ error: message })).pipe(
-          Effect.andThen(Effect.fail(new Error(message))),
+          Effect.andThen(Effect.die(new Error(message))),
         );
       }),
     );

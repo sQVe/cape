@@ -27,7 +27,14 @@ export const check = Command.make(
     yield* Console.log(JSON.stringify(results, null, 2));
 
     if (results.some((r) => !r.passed)) {
-      yield* Effect.fail(new Error('checks failed'));
+      const failedNames = results
+        .filter((r) => !r.passed)
+        .map((r) => r.check)
+        .join(', ');
+      const error = `checks failed: ${failedNames}`;
+      yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(

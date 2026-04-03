@@ -15,7 +15,10 @@ export const epicVerify = Command.make(
     yield* Console.log(JSON.stringify(result, null, 2));
 
     if (!ready) {
-      yield* Effect.fail(new Error('epic verification failed'));
+      const error = `epic verification failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`;
+      yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(

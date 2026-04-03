@@ -102,7 +102,7 @@ describe('test command', () => {
     const { layers, writtenFiles } = makeLayers(undefined, makeTestLayer(false, 'FAIL: 1 test'));
     await expect(
       Effect.runPromise(run(['test']).pipe(Effect.provide(layers))),
-    ).rejects.toThrow('tests failed');
+    ).rejects.toThrow('tests failed (runner: vitest)');
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.phase).toBe('red');
     const output = consoleSpy.mock.calls.flat().join('');

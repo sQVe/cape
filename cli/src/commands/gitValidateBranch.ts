@@ -20,7 +20,10 @@ export const gitValidateBranch = Command.make(
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
-      yield* Effect.fail(new Error(result.errors.join(', ')));
+      const error = result.errors.join(', ');
+      yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
   }),
 ).pipe(

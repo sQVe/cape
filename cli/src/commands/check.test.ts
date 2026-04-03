@@ -96,9 +96,11 @@ describe('check command wiring', () => {
       stubValidateLayer,
       stubConformLayer,
     );
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
-      'checks failed',
+      'checks failed: vitest',
     );
+    stderrSpy.mockRestore();
   });
 
   it('rejects when detection fails', async () => {
