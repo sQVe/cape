@@ -45,8 +45,14 @@ br show <task-id>
 br show <epic-id>
 ```
 
-Check whether the task already has an expanded plan (look for an `## Expanded plan` section in the
-design field). If it does, skip expansion — the task is already grounded.
+Check whether the task already has an expanded plan:
+
+```bash
+cape br expanded-check <task-id>
+```
+
+If `hasExpandedPlan` is `true`, skip expansion — the task is already grounded. If the command fails
+(non-zero exit), stop and surface the error — do not fall back to reading the design field manually.
 
 Extract from the task:
 
@@ -217,7 +223,7 @@ produce the expanded plan — let execute-plan handle the split. </example>
 1. **Investigate before planning** — never produce steps referencing files you haven't verified
    exist
 2. **Every step has a verify command** — exact shell commands, not vague instructions
-3. **Skip if already expanded** — check for `## Expanded plan` section before doing work
+3. **Skip if already expanded** — run `cape br expanded-check` before doing work
 4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
 5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
 6. **No test prescriptions** — never describe what test to write; that's TDD's RED phase
