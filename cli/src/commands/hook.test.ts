@@ -1098,7 +1098,7 @@ describe('hook command - PreToolUse wiring', () => {
   it('routes pre-tool-use --matcher Edit to TDD gate', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: editStdin('/src/foo.ts'),
-      files: flowPhaseFile('executing'),
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1116,7 +1116,7 @@ describe('hook command - PreToolUse wiring', () => {
     const hookLayer = makeStubHookLayer({
       stdin: writeStdin('/src/foo.ts', 'new content'),
       files: {
-        ...flowPhaseFile('executing'),
+        ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
         '/src/foo.ts': 'old content',
       },
     });
@@ -1241,19 +1241,28 @@ describe('readFlowPhase', () => {
 
 describe('preToolUseEdit', () => {
   describe('denies production code edits during active phase', () => {
-    it('denies when tdd-state is null during executing phase', async () => {
+    it('allows when tdd-state is absent during executing phase', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
         files: flowPhaseFile('executing'),
       });
       const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
-      expectDeny(result, 'failing test');
+      expect(result).toBeNull();
     });
 
-    it('denies when tdd-state is null during debugging phase', async () => {
+    it('allows when tdd-state is absent during debugging phase', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
         files: flowPhaseFile('debugging'),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('denies when tdd-state is pending during executing phase', async () => {
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.ts'),
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
       });
       const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
       expectDeny(result, 'failing test');
@@ -1438,11 +1447,23 @@ describe('preToolUseWrite', () => {
   });
 
   describe('denies overwriting existing production files without TDD', () => {
-    it('denies when tdd-state is null during executing phase', async () => {
+    it('allows when tdd-state is absent during executing phase', async () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/existing.ts', 'new content'),
         files: {
           ...flowPhaseFile('executing'),
+          '/src/existing.ts': 'old content',
+        },
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('denies when tdd-state is pending during executing phase', async () => {
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/existing.ts', 'new content'),
+        files: {
+          ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
           '/src/existing.ts': 'old content',
         },
       });
@@ -1563,7 +1584,7 @@ describe('postToolUseWrite', () => {
       const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/foo.test.ts', 'test content'),
-        files: flowPhaseFile('executing'),
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
         writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
@@ -1586,10 +1607,19 @@ describe('postToolUseWrite', () => {
   });
 
   describe('when writing production code during active phase', () => {
-    it('injects TDD reminder when no test state exists', async () => {
+    it('returns null when tdd-state is absent', async () => {
       const layer = makeStubHookLayer({
         stdin: writeStdin('/src/foo.ts', 'production code'),
         files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('injects TDD reminder when tdd-state is pending', async () => {
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.ts', 'production code'),
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
       });
       const result = await Effect.runPromise(postToolUseWrite().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
@@ -1689,10 +1719,19 @@ describe('postToolUseBash', () => {
 
 describe('postToolUseEdit', () => {
   describe('when editing production code during executing phase', () => {
-    it('injects reminder when no test state exists', async () => {
+    it('returns null when tdd-state is absent', async () => {
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.ts'),
         files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('injects reminder when tdd-state is pending', async () => {
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.ts'),
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
       expect(result).toHaveProperty('additionalContext');
@@ -1724,7 +1763,7 @@ describe('postToolUseEdit', () => {
       const writtenFiles: Record<string, string> = {};
       const layer = makeStubHookLayer({
         stdin: editStdin('/src/foo.test.ts'),
-        files: flowPhaseFile('executing'),
+        files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
         writtenFiles,
       });
       const result = await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
@@ -1898,7 +1937,7 @@ describe('hook command - PostToolUse wiring', () => {
   it('routes post-tool-use --matcher Edit with TDD reminder output', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: editStdin('/src/foo.ts'),
-      files: flowPhaseFile('executing'),
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -1931,7 +1970,7 @@ describe('hook command - PostToolUse wiring', () => {
   it('routes post-tool-use --matcher Write with TDD reminder output', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: writeStdin('/src/foo.ts', 'production code'),
-      files: flowPhaseFile('executing'),
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await Effect.runPromise(
@@ -2031,7 +2070,7 @@ describe('event logging', () => {
   it('logs tdd-reminder for postToolUseEdit production code edit', async () => {
     const layer = makeStubHookLayer({
       stdin: editStdin('/src/foo.ts'),
-      files: flowPhaseFile('executing'),
+      files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
     await Effect.runPromise(postToolUseEdit().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith('hook.PostToolUse.Edit', 'tdd-reminder');

@@ -642,8 +642,23 @@ export const postToolUseEdit = () =>
 
     const state = yield* readTddState();
 
+    if (state == null) {
+      const rawState = yield* readState();
+      const hasStaleOrMalformedState = rawState.tddState != null;
+      if (flowPhase === 'debugging' || hasStaleOrMalformedState) {
+        logEvent('hook.PostToolUse.Edit', 'tdd-reminder-stale-state');
+        return {
+          additionalContext: [
+            'TDD reminder: test state is stale or invalid.',
+            'Ensure you have a current, valid failing test before continuing.',
+          ].join(' '),
+        };
+      }
+      return null;
+    }
+
     if (isTestFile(filePath)) {
-      if (state?.phase === 'writing-test') {
+      if (state.phase === 'writing-test') {
         logEvent('hook.PostToolUse.Edit', 'tdd-batching');
         return {
           additionalContext: [
@@ -656,7 +671,7 @@ export const postToolUseEdit = () =>
       return null;
     }
 
-    if (state?.phase === 'red') {
+    if (state.phase === 'red') {
       return null;
     }
 
@@ -699,12 +714,16 @@ const checkTddGate = (
 
     const state = yield* readTddState();
 
-    if (state?.phase === 'red' || state?.phase === 'green') {
+    if (state == null) {
+      return null;
+    }
+
+    if (state.phase === 'red' || state.phase === 'green') {
       return null;
     }
 
     const reason =
-      state?.phase === 'writing-test'
+      state.phase === 'writing-test'
         ? 'TDD gate: run the test before editing production code. Dispatch cape test-runner first.'
         : 'TDD gate: write a failing test before editing production code. Load cape:test-driven-development.';
 
@@ -758,8 +777,12 @@ export const postToolUseWrite = () =>
 
     const state = yield* readTddState();
 
+    if (state == null) {
+      return null;
+    }
+
     if (isTestFile(writeInput.filePath)) {
-      if (state?.phase === 'writing-test') {
+      if (state.phase === 'writing-test') {
         logEvent('hook.PostToolUse.Write', 'tdd-batching');
         return {
           additionalContext: [
@@ -772,7 +795,7 @@ export const postToolUseWrite = () =>
       return null;
     }
 
-    if (state?.phase === 'red') {
+    if (state.phase === 'red') {
       return null;
     }
 
