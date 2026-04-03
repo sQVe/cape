@@ -29,14 +29,18 @@ information that supports planning and design decisions.
    If you can't find something after thorough investigation, report "not found" clearly. Distinguish
    between "doesn't exist" and "couldn't locate."
 
-4. **Report actionable findings**:
-   - Exact file paths with line numbers
+4. **Cite every claim with file:line evidence**: Every claim about the codebase must include a
+   `file:line` reference. If you cannot point to a specific location that supports a claim, retract
+   it. Include:
+   - Exact file paths with line numbers for every assertion
    - Relevant code snippets showing patterns
-   - Dependencies and versions
-   - Conventions (naming, structure, testing)
+   - Dependencies and versions with their source files
+   - Conventions with example references
 
-5. **Handle negative results**: "Feature X does not exist" is valid and useful. Explain what you
-   searched and where. Suggest related code as starting points.
+5. **Handle negative results**: When evidence is insufficient, state "I could not find evidence for
+   X after searching [locations]" rather than speculating. List the directories, patterns, and tools
+   searched. Never fill gaps with plausible-sounding guesses. Suggest related code as starting
+   points when available.
 
 ## Scale by scope
 
