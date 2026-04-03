@@ -7,7 +7,9 @@ import { CommitService } from './commit';
 const stageAndCommit = (files: readonly string[], message: string) =>
   Effect.try({
     try: () => {
-      execFileSync('git', ['add', '--', ...files], { encoding: 'utf-8' });
+      execFileSync('git', ['add', '--all', '--', ...files], {
+        encoding: 'utf-8',
+      });
       execFileSync('git', ['commit', '-m', message], { encoding: 'utf-8' });
     },
     catch: (error) =>
