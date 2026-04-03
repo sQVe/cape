@@ -343,9 +343,32 @@ const brUpdate = Command.make(
   }),
 ).pipe(Command.withDescription('Update a bead issue with status validation and flow state tracking.'));
 
+const brExpandedCheck = Command.make(
+  'expanded-check',
+  { id: Argument.string('id') },
+  Effect.fn(function* ({ id }) {
+    const bead = yield* showBead(id).pipe(
+      Effect.catch((error: Error) =>
+        Console.error(JSON.stringify({ error: error.message })).pipe(
+          Effect.andThen(Effect.die(error)),
+        ),
+      ),
+    );
+
+    const hasExpandedPlan =
+      bead.design?.includes('## Expanded plan') ?? false;
+
+    yield* Console.log(JSON.stringify({ hasExpandedPlan }));
+  }),
+).pipe(
+  Command.withDescription(
+    'Check if a bead has an expanded plan in its design field. Returns { hasExpandedPlan: boolean }.',
+  ),
+);
+
 export const br = Command.make('br').pipe(
   Command.withDescription(
     'Manage beads issues. Use for bead validation, design updates, templates, and close-readiness checks.',
   ),
-  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate, brUpdate]),
+  Command.withSubcommands([brValidate, brDesign, brTemplate, brCloseCheck, brClose, brCreate, brUpdate, brExpandedCheck]),
 );

@@ -719,6 +719,71 @@ describe('br create command', () => {
   });
 });
 
+describe('br expanded-check command', () => {
+  it('returns hasExpandedPlan false for task with no design field', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const bead = makeBead({ design: null });
+    await Effect.runPromise(
+      run(['br', 'expanded-check', 'cape-test']).pipe(
+        Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({ hasExpandedPlan: false });
+    consoleSpy.mockRestore();
+  });
+
+  it('returns hasExpandedPlan false when design exists but lacks expanded plan section', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const bead = makeBead({ design: '## Brainstorm (brainstorm)\n\nSome design notes' });
+    await Effect.runPromise(
+      run(['br', 'expanded-check', 'cape-test']).pipe(
+        Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({ hasExpandedPlan: false });
+    consoleSpy.mockRestore();
+  });
+
+  it('returns hasExpandedPlan true when design contains expanded plan section', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const bead = makeBead({ design: '## Expanded plan (expand-task)\n\n### Steps\n...' });
+    await Effect.runPromise(
+      run(['br', 'expanded-check', 'cape-test']).pipe(
+        Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({ hasExpandedPlan: true });
+    consoleSpy.mockRestore();
+  });
+
+  it('exits non-zero when task ID does not exist', async () => {
+    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const brLayer = Layer.succeed(BrValidateService)({
+      show: () => Effect.fail(new Error('bead not found: nonexistent')),
+      updateDesign: () => Effect.succeed(undefined),
+      readStdin: () => Effect.succeed(''),
+      listChildren: () => Effect.succeed([]),
+    });
+    await expect(
+      Effect.runPromise(
+        run(['br', 'expanded-check', 'nonexistent']).pipe(
+          Effect.provide(makeCommandLayers(brLayer)),
+        ),
+      ),
+    ).rejects.toThrow();
+    const output = stderrSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result.error).toContain('bead not found');
+    stderrSpy.mockRestore();
+  });
+});
+
 describe('br update command', () => {
   const makeUpdateLayer = (
     brUpdateOutput: string | null,
