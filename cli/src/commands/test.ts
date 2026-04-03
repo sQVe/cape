@@ -20,9 +20,13 @@ export const test = Command.make(
     const packageManager = yield* getPackageManager;
     const testCommand = resolveTestCommand(ecosystems, packageManager);
     if (testCommand == null) {
-      const result = { error: 'no test runner detected' };
-      yield* Console.error(JSON.stringify(result));
-      return yield* Effect.fail(new Error(result.error));
+      const languages = ecosystems.map((e) => e.language).join(', ');
+      const error = languages
+        ? `no test runner detected for ${languages}`
+        : 'no ecosystem detected';
+      return yield* Console.error(JSON.stringify({ error })).pipe(
+        Effect.andThen(Effect.die(new Error(error))),
+      );
     }
 
     const args = [...testCommand.args];

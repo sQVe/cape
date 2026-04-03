@@ -121,7 +121,7 @@ describe('test command', () => {
     const { layers } = makeLayers(noRunnerDetect);
     await expect(
       Effect.runPromise(run(['test']).pipe(Effect.provide(layers))),
-    ).rejects.toThrow('no test runner detected');
+    ).rejects.toThrow('no test runner detected for typescript');
     stderrSpy.mockRestore();
   });
 
