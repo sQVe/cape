@@ -251,10 +251,23 @@ to create the epic without re-asking brainstorm's questions.
 [What explored, what found, why abandoned]
 ```
 
+**Fact-check the design summary:**
+
+Before presenting, dispatch `cape:fact-checker` on the design summary. Pass all factual claims from
+the Requirements, Architecture, and Research findings sections. The fact-checker verifies each claim
+against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
+
+- **Confirmed** claims — keep as-is
+- **Refuted** claims — remove or correct with the fact-checker's evidence
+- **Partially correct** claims — update to reflect what was actually found
+- **Unverifiable** claims — remove from the design summary; note them under "Open questions" instead
+
+Present the final design summary only after fact-checking is complete.
+
 **Stop and hand off:**
 
 ```
-Design summary complete. Next step: formalize into a br epic with `cape:write-plan`.
+Design summary complete (fact-checked). Next step: formalize into a br epic with `cape:write-plan`.
 ```
 
 </the_process>
@@ -270,6 +283,13 @@ Each sub-agent receives the same research context and designs under its assigned
 - Agent 3: "Optimize for the most common case"
 
 If sub-agents aren't available, simulate constraints sequentially.
+
+## `cape:fact-checker` protocol (Step 4):
+
+Dispatch after composing the design summary, before presenting to the user. Pass all factual claims
+from the Requirements, Architecture, and Research findings sections. Expect back per-claim verdicts
+(Confirmed/Refuted/Partially correct/Unverifiable) with evidence. Remove or correct claims based on
+the verdicts.
 
 ## Research protocol:
 
