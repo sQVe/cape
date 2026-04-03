@@ -778,6 +778,17 @@ export const postToolUseWrite = () =>
     const state = yield* readTddState();
 
     if (state == null) {
+      const rawState = yield* readState();
+      const hasStaleOrMalformedState = rawState.tddState != null;
+      if (flowPhase === 'debugging' || hasStaleOrMalformedState) {
+        logEvent('hook.PostToolUse.Write', 'tdd-reminder-stale-state');
+        return {
+          additionalContext: [
+            'TDD reminder: test state is stale or invalid.',
+            'Ensure you have a current, valid failing test before continuing.',
+          ].join(' '),
+        };
+      }
       return null;
     }
 
