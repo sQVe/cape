@@ -3,19 +3,38 @@ import { Argument, Command } from 'effect/unstable/cli';
 
 import { HookService, readState, removeStateKey, writeStateKey } from '../services/hook';
 
-const TTL_MS: Record<string, number> = {
-  flowPhase: 30 * 60 * 1000,
-  tddState: 10 * 60 * 1000,
-};
+// Source of truth for all known state keys.
+// Update this catalog when adding or changing state keys.
+const STATE_KEY_CATALOG = [
+  {
+    key: 'flowPhase',
+    description: 'Controls which hooks fire — executing/debugging enable TDD gate',
+    validValues: 'executing | debugging | planning',
+    valueShape: '{ phase, issueId }',
+    ttlMs: 30 * 60 * 1000,
+  },
+  {
+    key: 'tddState',
+    description: 'TDD enforcement — phase tracks test-first cycle progress',
+    validValues: 'red | green | writing-test',
+    valueShape: '{ phase }',
+    ttlMs: 10 * 60 * 1000,
+  },
+  {
+    key: 'workflowActive',
+    description: 'Gates internal skills (expand-task, test-driven-development) for direct invocation',
+    validValues: 'true (boolean, set or absent)',
+    valueShape: '{ value: true }',
+    ttlMs: null,
+  },
+] as const;
 
-const KEY_DESCRIPTIONS: Record<string, string> = {
-  flowPhase: 'Controls which hooks fire — executing/debugging enable TDD gate (TTL: 30 min)',
-  tddState: 'TDD enforcement — phase tracks test-first cycle progress (TTL: 10 min)',
-  workflowActive: 'Gates internal skills (expand-task, test-driven-development) for direct invocation',
-};
+const catalogByKey = Object.fromEntries(
+  STATE_KEY_CATALOG.map((entry) => [entry.key, entry]),
+);
 
 const formatTtlRemaining = (key: string, timestamp: number): string | null => {
-  const ttl = TTL_MS[key];
+  const ttl = catalogByKey[key]?.ttlMs;
   if (ttl == null) {
     return null;
   }
@@ -28,40 +47,69 @@ const formatTtlRemaining = (key: string, timestamp: number): string | null => {
   return `${minutes}m ${seconds}s remaining`;
 };
 
+const formatActiveEntry = (key: string, entry: Record<string, unknown> & { timestamp: number }) => {
+  const { timestamp, ...value } = entry;
+  const catalog = catalogByKey[key];
+  const description = catalog?.description ?? 'Custom state key';
+  const ttl = formatTtlRemaining(key, timestamp);
+  const valueStr = JSON.stringify(value);
+
+  let line = `  ${key}: ${valueStr}`;
+  if (ttl != null) {
+    line += ` [${ttl}]`;
+  }
+  line += `\n    ${description}`;
+  return line;
+};
+
+const formatCatalogEntry = (entry: (typeof STATE_KEY_CATALOG)[number]) => {
+  const ttlLabel = entry.ttlMs != null
+    ? `TTL: ${entry.ttlMs / 60_000} min`
+    : 'no TTL';
+  return `  ${entry.key}: (not set)\n    ${entry.description}\n    Values: ${entry.validValues} · ${ttlLabel}`;
+};
+
 const stateList = Command.make(
   'list',
   {},
   Effect.fn(function* () {
     const entries = yield* readState();
-    const keys = Object.keys(entries);
+    const activeKeys = Object.keys(entries);
+    const sections: string[] = [];
 
-    if (keys.length === 0) {
-      yield* Console.log('No active state.');
-      return;
+    if (activeKeys.length === 0) {
+      sections.push('Active state: None');
+    } else {
+      const activeLines: string[] = [];
+      for (const key of activeKeys) {
+        const entry = entries[key];
+        if (entry == null) {
+          continue;
+        }
+        activeLines.push(formatActiveEntry(key, entry));
+      }
+      sections.push(`Active state:\n${activeLines.join('\n\n')}`);
     }
 
-    const lines: string[] = [];
-    for (const key of keys) {
-      const entry = entries[key];
-      if (entry == null) {
-        continue;
-      }
-      const { timestamp, ...value } = entry;
-      const description = KEY_DESCRIPTIONS[key] ?? 'Custom state key';
-      const ttl = formatTtlRemaining(key, timestamp);
-      const valueStr = JSON.stringify(value);
-
-      let line = `${key}: ${valueStr}`;
-      if (ttl != null) {
-        line += ` [${ttl}]`;
-      }
-      line += `\n  ${description}`;
-      lines.push(line);
+    const inactiveEntries = STATE_KEY_CATALOG.filter(
+      (entry) => entries[entry.key] == null,
+    );
+    if (inactiveEntries.length > 0) {
+      const availableLines = inactiveEntries.map(formatCatalogEntry);
+      sections.push(`Available keys:\n${availableLines.join('\n\n')}`);
     }
 
-    yield* Console.log(lines.join('\n\n'));
+    sections.push(
+      [
+        'Common operations:',
+        '  Opt out of TDD: cape state clear tddState && cape state clear flowPhase',
+        '  Reset all state: cape state reset',
+      ].join('\n'),
+    );
+
+    yield* Console.log(sections.join('\n\n'));
   }),
-).pipe(Command.withDescription('Display all active state keys with values, descriptions, and TTL remaining.'));
+).pipe(Command.withDescription('Display all state keys (active and available), valid values, and common operations.'));
 
 const stateSet = Command.make(
   'set',
@@ -103,6 +151,6 @@ const stateReset = Command.make(
 ).pipe(Command.withDescription('Delete state.json entirely, removing all state.'));
 
 export const state = Command.make('state').pipe(
-  Command.withDescription('Manage hook state that controls conditional hook behavior.'),
+  Command.withDescription('Manage hook state that controls conditional hook behavior. Run `cape state list` to see all keys and common operations.'),
   Command.withSubcommands([stateList, stateSet, stateClear, stateReset]),
 );

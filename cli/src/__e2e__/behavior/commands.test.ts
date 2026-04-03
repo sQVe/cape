@@ -563,9 +563,10 @@ describe('cape state', () => {
     expect(result.status).toBe(0);
   });
 
-  it('list prints "No active state." when state.json is absent', async () => {
+  it('list shows available keys when state.json is absent', async () => {
     const result = await inProcess(['state', 'list']);
-    expect(result.stdout).toContain('No active state.');
+    expect(result.stdout).toContain('Active state: None');
+    expect(result.stdout).toContain('Available keys');
   });
 
   it('clear is a no-op when key is absent', async () => {
