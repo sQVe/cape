@@ -421,7 +421,10 @@ const gatedSkills = new Set([
   'test-driven-development',
 ]);
 
-type DenyResult = ReturnType<typeof denyWith> | null;
+interface ContextResult {
+  additionalContext: string;
+}
+type GateResult = ReturnType<typeof denyWith> | ContextResult | null;
 
 const gateExecutePlan = () =>
   Effect.gen(function* () {
@@ -443,6 +446,20 @@ const gateExecutePlan = () =>
       return denyWith(
         'No ready tasks. All tasks under the open epic are either in-progress or blocked. Use cape:expand-task or create a new task with cape:beads.',
       );
+    }
+    const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+    if (branch != null) {
+      const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
+      const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
+      if (branch === defaultBranch) {
+        return {
+          additionalContext: [
+            `You are on \`${branch}\` (the default branch).`,
+            'Ask the user whether to create a feature branch before starting work.',
+            'Use cape:branch to create one if they agree.',
+          ].join(' '),
+        };
+      }
     }
     return null;
   });
@@ -519,7 +536,7 @@ const gateInternalSkill = () =>
 
 const skillGates: Record<
   string,
-  (args: string | null) => Effect.Effect<DenyResult, never, HookService>
+  (args: string | null) => Effect.Effect<GateResult, never, HookService>
 > = {
   'execute-plan': () => gateExecutePlan(),
   'expand-task': () => gateInternalSkill(),
@@ -545,7 +562,7 @@ export const preToolUseSkill = () =>
     const gate = skillGates[name];
     if (gate != null) {
       const result = yield* gate(skill.args);
-      if (result != null) {
+      if (result != null && 'hookSpecificOutput' in result) {
         logEvent('hook.PreToolUse.Skill', result.hookSpecificOutput.permissionDecisionReason);
       }
       return result;

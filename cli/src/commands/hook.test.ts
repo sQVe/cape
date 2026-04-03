@@ -968,6 +968,41 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
+  it('returns additionalContext when on default branch with open epic and ready tasks', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:execute-plan'),
+      brResponses: {
+        '--type epic': 'cape-1 epic open My Epic',
+        ready: 'cape-1.1 task Do something',
+      },
+      gitResponses: {
+        'rev-parse': 'main',
+        'symbolic-ref': 'refs/remotes/origin/main',
+      },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toHaveProperty('additionalContext');
+    expect((result as unknown as { additionalContext: string }).additionalContext).toContain(
+      'branch',
+    );
+  });
+
+  it('allows execute-plan on a feature branch with open epic and ready tasks', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:execute-plan'),
+      brResponses: {
+        '--type epic': 'cape-1 epic open My Epic',
+        ready: 'cape-1.1 task Do something',
+      },
+      gitResponses: {
+        'rev-parse': 'feat/my-feature',
+        'symbolic-ref': 'refs/remotes/origin/main',
+      },
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
   it('allows execute-plan when br fails', async () => {
     const layer = makeStubHookLayer({ stdin: skillStdin('cape:execute-plan') });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
