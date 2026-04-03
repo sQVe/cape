@@ -32,6 +32,6 @@ export const check = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Run project checks (lint, typecheck, test) for all detected ecosystems. Use to verify code health before commits or closing tasks.',
+    'Run project checks (lint, typecheck, test) for all detected ecosystems. Returns JSON array of { check, passed, output }. Use to verify code health before commits or closing tasks.',
   ),
 );

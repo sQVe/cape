@@ -357,7 +357,7 @@ const brExpandedCheck = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Check if a bead has an expanded plan in its design field. Returns { hasExpandedPlan: boolean }.',
+    'Check if a bead has an expanded plan in its design field. Returns { hasExpandedPlan }. Use during task expansion to check skip eligibility.',
   ),
 );
 
