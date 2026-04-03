@@ -15,6 +15,14 @@ const codeExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs
 
 export const isCodeFile = (filePath: string): boolean => codeExtensions.has(extname(filePath));
 
+const MAX_NEW_TEST_BLOCKS = 1;
+const testBlockPattern = /\b(?:it|test)\s*(?:\.\s*\w+\s*)?\(/g;
+
+export const countTestBlocks = (content: string): number => {
+  const matches = content.match(testBlockPattern);
+  return matches?.length ?? 0;
+};
+
 const TDD_STATE_TTL_MS = 10 * 60 * 1000;
 const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
@@ -580,6 +588,27 @@ const parseFilePath = (input: string): string | null => {
   }
 };
 
+interface EditInput {
+  readonly filePath: string;
+  readonly oldString: string;
+  readonly newString: string;
+}
+
+const parseEditInput = (input: string): EditInput | null => {
+  try {
+    const data = JSON.parse(input);
+    const filePath = parseString(data.tool_input?.file_path);
+    const oldString = parseString(data.tool_input?.old_string);
+    const newString = parseString(data.tool_input?.new_string);
+    if (!filePath || oldString == null || newString == null) {
+      return null;
+    }
+    return { filePath, oldString, newString };
+  } catch {
+    return null;
+  }
+};
+
 interface WriteInput {
   readonly filePath: string;
   readonly content: string;
@@ -701,6 +730,29 @@ export const postToolUseEdit = () =>
     };
   });
 
+const checkTestBatching = (
+  newCount: number,
+  existingCount: number,
+) =>
+  Effect.gen(function* () {
+    const flowPhase = yield* readFlowPhase();
+    if (!flowPhase) {
+      return null;
+    }
+    if (flowPhase !== 'executing' && flowPhase !== 'debugging') {
+      return null;
+    }
+
+    const delta = newCount - existingCount;
+    if (delta <= MAX_NEW_TEST_BLOCKS) {
+      return null;
+    }
+
+    const reason = `TDD violation: adding ${delta} test blocks at once (max ${MAX_NEW_TEST_BLOCKS}). Write one failing test, run it with \`cape test\`, then add the next.`;
+    logEvent('hook.PreToolUse', 'tdd-batching-denied');
+    return denyWith(reason);
+  });
+
 const checkTddGate = (
   filePath: string,
   isNewFile: boolean,
@@ -757,6 +809,18 @@ export const preToolUseEdit = () =>
       return null;
     }
 
+    if (isTestFile(filePath)) {
+      const editInput = parseEditInput(input);
+      if (editInput != null) {
+        const oldCount = countTestBlocks(editInput.oldString);
+        const newCount = countTestBlocks(editInput.newString);
+        const batchResult = yield* checkTestBatching(newCount, oldCount);
+        if (batchResult != null) {
+          return batchResult;
+        }
+      }
+    }
+
     const fileContent = yield* service.readFile(filePath);
     return yield* checkTddGate(filePath, false, fileContent);
   });
@@ -768,6 +832,16 @@ export const preToolUseWrite = () =>
     const writeInput = parseWriteInput(input);
     if (!writeInput) {
       return null;
+    }
+
+    if (isTestFile(writeInput.filePath)) {
+      const existingContent = yield* service.readFile(writeInput.filePath);
+      const existingCount = existingContent != null ? countTestBlocks(existingContent) : 0;
+      const newCount = countTestBlocks(writeInput.content);
+      const batchResult = yield* checkTestBatching(newCount, existingCount);
+      if (batchResult != null) {
+        return batchResult;
+      }
     }
 
     const exists = yield* service.fileExists(writeInput.filePath);

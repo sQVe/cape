@@ -8,6 +8,7 @@ import { main } from '../main';
 
 import {
   HookService,
+  countTestBlocks,
   denyTable,
   denyWith,
   detectBeadsSkill,
@@ -1232,8 +1233,8 @@ describe('isCodeFile', () => {
   });
 });
 
-const editStdin = (filePath: string) =>
-  JSON.stringify({ tool_input: { file_path: filePath, old_string: 'old', new_string: 'new' } });
+const editStdin = (filePath: string, oldString = 'old', newString = 'new') =>
+  JSON.stringify({ tool_input: { file_path: filePath, old_string: oldString, new_string: newString } });
 
 const writeStdin = (filePath: string, content: string) =>
   JSON.stringify({ tool_input: { file_path: filePath, content } });
@@ -2133,5 +2134,191 @@ describe('event logging', () => {
     const layer = makeStubHookLayer();
     await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
     expect(logEvent).not.toHaveBeenCalled();
+  });
+});
+
+describe('countTestBlocks', () => {
+  it('counts it() calls', () => {
+    expect(countTestBlocks("it('does something', () => {})")).toBe(1);
+  });
+
+  it('counts test() calls', () => {
+    expect(countTestBlocks("test('does something', () => {})")).toBe(1);
+  });
+
+  it('counts multiple blocks', () => {
+    const content = [
+      "it('first', () => {})",
+      "it('second', () => {})",
+      "it('third', () => {})",
+    ].join('\n');
+    expect(countTestBlocks(content)).toBe(3);
+  });
+
+  it('counts it.each and it.only variants', () => {
+    const content = [
+      "it.each([1, 2])('works with %i', () => {})",
+      "it.only('focused', () => {})",
+      "it.skip('skipped', () => {})",
+    ].join('\n');
+    expect(countTestBlocks(content)).toBe(3);
+  });
+
+  it('does not count describe blocks', () => {
+    expect(countTestBlocks("describe('module', () => {})")).toBe(0);
+  });
+
+  it('does not count item or similar words', () => {
+    expect(countTestBlocks("const item = getItem('foo')")).toBe(0);
+  });
+
+  it('returns 0 for empty string', () => {
+    expect(countTestBlocks('')).toBe(0);
+  });
+});
+
+describe('test batching gate', () => {
+  describe('preToolUseWrite blocks batch test creation', () => {
+    it('denies new test file with multiple it() blocks during executing phase', async () => {
+      const content = [
+        "describe('Foo', () => {",
+        "  it('first', () => {})",
+        "  it('second', () => {})",
+        "});",
+      ].join('\n');
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expectDeny(result, 'TDD violation');
+    });
+
+    it('allows new test file with single it() block during executing phase', async () => {
+      const content = "describe('Foo', () => { it('works', () => {}) });";
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('denies overwrite that adds multiple test blocks', async () => {
+      const existing = "it('existing', () => {})";
+      const content = [
+        "it('existing', () => {})",
+        "it('new one', () => {})",
+        "it('another new', () => {})",
+      ].join('\n');
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: {
+          ...flowPhaseFile('executing'),
+          '/src/foo.test.ts': existing,
+        },
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expectDeny(result, 'TDD violation');
+    });
+
+    it('allows overwrite that adds one test block', async () => {
+      const existing = "it('existing', () => {})";
+      const content = "it('existing', () => {})\nit('new one', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: {
+          ...flowPhaseFile('executing'),
+          '/src/foo.test.ts': existing,
+        },
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('denies new test file with multiple it() blocks during debugging phase', async () => {
+      const content = "it('first', () => {})\nit('second', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: flowPhaseFile('debugging'),
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expectDeny(result, 'TDD violation');
+    });
+
+    it('allows batch test writes outside active phase', async () => {
+      const content = "it('a', () => {})\nit('b', () => {})\nit('c', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+        files: flowPhaseFile('planning'),
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows batch test writes when no flow phase exists', async () => {
+      const content = "it('a', () => {})\nit('b', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: writeStdin('/src/foo.test.ts', content),
+      });
+      const result = await Effect.runPromise(preToolUseWrite().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('preToolUseEdit blocks batch test additions', () => {
+    it('denies edit adding multiple it() blocks', async () => {
+      const oldString = '// placeholder';
+      const newString = "it('first', () => {})\nit('second', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts', oldString, newString),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expectDeny(result, 'TDD violation');
+    });
+
+    it('allows edit adding one it() block', async () => {
+      const oldString = '// placeholder';
+      const newString = "it('new test', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts', oldString, newString),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows edit replacing one it() with another', async () => {
+      const oldString = "it('old', () => {})";
+      const newString = "it('new', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts', oldString, newString),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows edit that removes test blocks', async () => {
+      const oldString = "it('a', () => {})\nit('b', () => {})";
+      const newString = "it('a', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts', oldString, newString),
+        files: flowPhaseFile('executing'),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
+
+    it('allows batch edit outside active phase', async () => {
+      const oldString = '// placeholder';
+      const newString = "it('a', () => {})\nit('b', () => {})";
+      const layer = makeStubHookLayer({
+        stdin: editStdin('/src/foo.test.ts', oldString, newString),
+      });
+      const result = await Effect.runPromise(preToolUseEdit().pipe(Effect.provide(layer)));
+      expect(result).toBeNull();
+    });
   });
 });
