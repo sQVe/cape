@@ -1,6 +1,7 @@
 import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
 import { getCreateBranch, getValidateBranch } from '../services/git';
 
 export const gitCreateBranch = Command.make(
@@ -18,10 +19,7 @@ export const gitCreateBranch = Command.make(
     );
 
     if (!validation.valid) {
-      const error = validation.errors.join(', ');
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(validation.errors.join(', '));
     }
 
     const result = yield* getCreateBranch(name).pipe(

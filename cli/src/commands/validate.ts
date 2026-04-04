@@ -1,6 +1,6 @@
 import { join, relative, resolve } from 'node:path';
 
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import type { ValidateResult } from '../services/validate';
@@ -63,7 +63,7 @@ export const validate = Command.make(
     const root = yield* service.gitRoot();
     let results: ValidateResult[];
 
-    if (target._tag === 'None') {
+    if (Option.isNone(target)) {
       results = yield* validateByType('all', root);
     } else if (validTypes.has(target.value)) {
       results = yield* validateByType(target.value, root);

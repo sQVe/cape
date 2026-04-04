@@ -1,5 +1,7 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
+
+import { dieWithError } from '../dieWithError';
 
 import { HookService } from '../services/hook';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
@@ -40,23 +42,18 @@ const prValidate = Command.make(
     let body: string;
     if (stdin) {
       body = yield* readStdin();
-    } else if (file._tag === 'Some') {
+    } else if (Option.isSome(file)) {
       const service = yield* PrService;
       body = yield* service.readFile(file.value);
     } else {
-      return yield* Console.error(JSON.stringify({ error: 'provide <file> or --stdin' })).pipe(
-        Effect.andThen(Effect.die(new Error('provide <file> or --stdin'))),
-      );
+      return yield* dieWithError('provide <file> or --stdin');
     }
 
     const result = validatePrBody(template.sections, body);
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
-      const error = formatValidationErrors(result);
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(formatValidationErrors(result));
     }
   }),
 ).pipe(
@@ -80,44 +77,30 @@ const prCreate = Command.make(
 
     const branch = yield* hookService.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
     if (branch == null) {
-      return yield* Console.error(JSON.stringify({ error: 'failed to determine current branch' })).pipe(
-        Effect.andThen(Effect.die(new Error('failed to determine current branch'))),
-      );
+      return yield* dieWithError('failed to determine current branch');
     }
 
     const defaultRef = yield* hookService.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
     const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
     if (branch === defaultBranch) {
-      const error = `Cannot create PR from default branch "${branch}". Create a feature branch first.`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(`Cannot create PR from default branch "${branch}". Create a feature branch first.`);
     }
 
     const status = yield* hookService.spawnGit(['status', '--porcelain']);
     if (status != null && status.length > 0) {
-      const error = 'Uncommitted changes detected. Commit or stash before creating a PR.';
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError('Uncommitted changes detected. Commit or stash before creating a PR.');
     }
 
     const template = yield* findTemplate();
     const validation = validatePrBody(template.sections, body);
     if (!validation.valid) {
-      const error = `PR body validation failed: ${formatValidationErrors(validation)}`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(`PR body validation failed: ${formatValidationErrors(validation)}`);
     }
 
     if (!noPush) {
       const pushResult = yield* hookService.spawnGit(['push', '-u', 'origin', branch]);
       if (pushResult == null) {
-        const error = `git push failed for branch "${branch}"`;
-        return yield* Console.error(JSON.stringify({ error })).pipe(
-          Effect.andThen(Effect.die(new Error(error))),
-        );
+        return yield* dieWithError(`git push failed for branch "${branch}"`);
       }
     }
 
@@ -125,7 +108,7 @@ const prCreate = Command.make(
     if (draft) {
       ghArgs.push('--draft');
     }
-    if (label._tag === 'Some') {
+    if (Option.isSome(label)) {
       ghArgs.push('--label', label.value);
     }
 

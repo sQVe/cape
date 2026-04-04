@@ -1,6 +1,7 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
 import { DIFF_SCOPES, getGitDiff } from '../services/git';
 import type { DiffScope } from '../services/git';
 
@@ -13,13 +14,10 @@ export const gitDiff = Command.make(
     scope: Argument.string('scope').pipe(Argument.withDescription('Diff scope: unstaged | staged | branch (default: unstaged)'), Argument.optional),
   },
   Effect.fn(function* ({ scope }) {
-    const raw = scope._tag === 'Some' ? scope.value : 'unstaged';
+    const raw = Option.isSome(scope) ? scope.value : 'unstaged';
 
     if (!isDiffScope(raw)) {
-      const error = `invalid scope: ${raw}. valid: ${DIFF_SCOPES.join(', ')}`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(`invalid scope: ${raw}. valid: ${DIFF_SCOPES.join(', ')}`);
     }
 
     const resolved = raw;

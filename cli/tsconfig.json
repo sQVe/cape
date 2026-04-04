@@ -11,13 +11,8 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
     "noUncheckedIndexedAccess": true,
-    "noEmit": true,
-    "rootDir": "src",
-    "outDir": "dist"
+    "noEmit": true
   },
   "include": ["src"]
 }

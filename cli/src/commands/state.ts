@@ -1,4 +1,4 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { HookService, readState, removeStateKey, writeStateKey } from '../services/hook';
@@ -116,7 +116,7 @@ const stateSet = Command.make(
   { key: Argument.string('key').pipe(Argument.withDescription('State key name (e.g. tddState, flowPhase, workflowActive)')), value: Argument.string('value').pipe(Argument.withDescription('Value as JSON object or plain string'), Argument.optional) },
   Effect.fn(function* ({ key, value }) {
     let parsed: Record<string, unknown>;
-    if (value._tag === 'None') {
+    if (Option.isNone(value)) {
       parsed = { value: true };
     } else {
       try {

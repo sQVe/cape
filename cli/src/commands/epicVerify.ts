@@ -1,6 +1,8 @@
 import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
+
 import { runCloseReadinessCheck } from './br';
 
 export const epicVerify = Command.make(
@@ -15,10 +17,7 @@ export const epicVerify = Command.make(
     yield* Console.log(JSON.stringify(result, null, 2));
 
     if (!ready) {
-      const error = `epic verification failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`;
-      yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      yield* dieWithError(`epic verification failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`);
     }
   }),
 ).pipe(

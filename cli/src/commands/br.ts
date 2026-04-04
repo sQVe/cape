@@ -1,6 +1,7 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
 import {
   appendDesign,
   generateTemplate,
@@ -57,16 +58,14 @@ const brValidate = Command.make(
   Effect.fn(function* ({ id, type }) {
     let errors: string[];
 
-    if (type._tag === 'Some') {
+    if (Option.isSome(type)) {
       const content = yield* readStdin();
       errors = validateSections(type.value, content);
-    } else if (id._tag === 'Some') {
+    } else if (Option.isSome(id)) {
       const bead = yield* showBead(id.value);
       errors = validateSections(bead.issue_type, bead.description);
     } else {
-      return yield* Console.error(JSON.stringify({ error: 'provide either <id> or --type' })).pipe(
-        Effect.andThen(Effect.die(new Error('provide either <id> or --type'))),
-      );
+      return yield* dieWithError('provide either <id> or --type');
     }
 
     const result = { valid: errors.length === 0, errors };
@@ -74,9 +73,7 @@ const brValidate = Command.make(
 
     if (!result.valid) {
       const error = errors.join(', ');
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(error);
     }
   }),
 ).pipe(
@@ -114,9 +111,7 @@ const brTemplate = Command.make(
 
     if (template == null) {
       const error = `unknown type: ${type}. valid: epic, task, feature, bug`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(error);
     }
 
     yield* Console.log(template);
@@ -140,9 +135,7 @@ const brCloseCheck = Command.make(
 
     if (!ready) {
       const error = `close-check failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`;
-      yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      yield* dieWithError(error);
     }
   }),
 ).pipe(
@@ -166,9 +159,7 @@ const brClose = Command.make(
 
     const output = yield* service.brQuery(['close', id]);
     if (output == null) {
-      return yield* Console.error(JSON.stringify({ error: `failed to close ${id}` })).pipe(
-        Effect.andThen(Effect.die(new Error(`failed to close ${id}`))),
-      );
+      return yield* dieWithError(`failed to close ${id}`);
     }
 
     yield* service.ensureDir(`${root}/hooks/context`);
@@ -193,33 +184,24 @@ const brCreate = Command.make(
     design: Flag.string('design').pipe(Flag.withDescription('Rejected: use cape br design <id> <heading> instead'), Flag.optional),
   },
   Effect.fn(function* ({ title, type, priority, labels, description, parent, design }) {
-    if (design._tag === 'Some') {
-      const error = 'Use `cape br design <id> <heading>` to attach design content after creation.';
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+    if (Option.isSome(design)) {
+      return yield* dieWithError('Use `cape br design <id> <heading>` to attach design content after creation.');
     }
 
-    if (type._tag === 'None') {
-      return yield* Console.error(JSON.stringify({ error: '--type is required' })).pipe(
-        Effect.andThen(Effect.die(new Error('--type is required'))),
-      );
+    if (Option.isNone(type)) {
+      return yield* dieWithError('--type is required');
     }
-    if (priority._tag === 'None') {
-      return yield* Console.error(JSON.stringify({ error: '--priority is required' })).pipe(
-        Effect.andThen(Effect.die(new Error('--priority is required'))),
-      );
+    if (Option.isNone(priority)) {
+      return yield* dieWithError('--priority is required');
     }
-    if (labels._tag === 'None') {
-      return yield* Console.error(JSON.stringify({ error: '--labels is required' })).pipe(
-        Effect.andThen(Effect.die(new Error('--labels is required'))),
-      );
+    if (Option.isNone(labels)) {
+      return yield* dieWithError('--labels is required');
     }
 
     const service = yield* HookService;
 
     let descContent: string;
-    if (description._tag === 'Some') {
+    if (Option.isSome(description)) {
       descContent = description.value;
     } else {
       descContent = yield* service.readStdin();
@@ -229,32 +211,28 @@ const brCreate = Command.make(
       const errors = validateSections(type.value, descContent);
       if (errors.length > 0) {
         const error = errors.join(', ');
-        return yield* Console.error(JSON.stringify({ error })).pipe(
-          Effect.andThen(Effect.die(new Error(error))),
-        );
+        return yield* dieWithError(error);
       }
     }
 
     const args: string[] = ['create'];
-    if (title._tag === 'Some') {
+    if (Option.isSome(title)) {
       args.push(title.value);
     }
     args.push('--type', type.value, '--priority', priority.value, '--labels', labels.value);
     if (descContent) {
       args.push('--description', descContent);
     }
-    if (parent._tag === 'Some') {
+    if (Option.isSome(parent)) {
       args.push('--parent', parent.value);
     }
     args.push('--silent');
 
     const output = yield* service.brQuery(args);
     if (output == null) {
-      const titleContext = title._tag === 'Some' ? ` "${title.value}"` : '';
+      const titleContext = Option.isSome(title) ? ` "${title.value}"` : '';
       const error = `br create failed: ${type.value}${titleContext}`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(error);
     }
 
     yield* Console.log(JSON.stringify({ created: true, id: output.trim() }));
@@ -305,50 +283,41 @@ const brUpdate = Command.make(
     labels: Flag.string('labels').pipe(Flag.withDescription('Comma-separated labels'), Flag.optional),
   },
   Effect.fn(function* ({ id, status, description, design, priority, labels }) {
-    if (status._tag === 'Some') {
+    if (Option.isSome(status)) {
       const value = status.value;
       if (value.includes('-')) {
         const suggested = value.replace(/-/g, '_');
-        const error = `Invalid status "${value}". Use "${suggested}" (underscore, not hyphen).`;
-        return yield* Console.error(JSON.stringify({ error })).pipe(
-          Effect.andThen(Effect.die(new Error(error))),
-        );
+        return yield* dieWithError(`Invalid status "${value}". Use "${suggested}" (underscore, not hyphen).`);
       }
       if (value === 'done') {
-        const error = 'Use `cape br close <id>` to close an issue instead of setting status to "done".';
-        return yield* Console.error(JSON.stringify({ error })).pipe(
-          Effect.andThen(Effect.die(new Error(error))),
-        );
+        return yield* dieWithError('Use `cape br close <id>` to close an issue instead of setting status to "done".');
       }
     }
 
     const service = yield* HookService;
     const args: string[] = ['update', id];
-    if (status._tag === 'Some') {
+    if (Option.isSome(status)) {
       args.push('--status', status.value);
     }
-    if (description._tag === 'Some') {
+    if (Option.isSome(description)) {
       args.push('--description', description.value);
     }
-    if (design._tag === 'Some') {
+    if (Option.isSome(design)) {
       args.push('--design', design.value);
     }
-    if (priority._tag === 'Some') {
+    if (Option.isSome(priority)) {
       args.push('--priority', priority.value);
     }
-    if (labels._tag === 'Some') {
+    if (Option.isSome(labels)) {
       args.push('--labels', labels.value);
     }
 
     const output = yield* service.brQuery(args);
     if (output == null) {
-      const error = `br update failed for ${id}`;
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(`br update failed for ${id}`);
     }
 
-    if (status._tag === 'Some') {
+    if (Option.isSome(status)) {
       const phase = yield* writeFlowPhase(id);
       yield* Console.log(JSON.stringify({ updated: true, id, phase }));
       return;

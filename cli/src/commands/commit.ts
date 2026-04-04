@@ -1,5 +1,7 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
+
+import { dieWithError } from '../dieWithError';
 
 import {
   commitNoEdit,
@@ -25,33 +27,23 @@ export const commit = Command.make(
     }
 
     if (files.length === 0) {
-      const error = 'at least one file is required';
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError('at least one file is required');
     }
 
-    if (message._tag !== 'Some') {
-      const error = '--message is required';
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+    if (Option.isNone(message)) {
+      return yield* dieWithError('--message is required');
     }
 
     const msg = message.value;
 
     const fileError = validateFiles(files);
     if (fileError != null) {
-      return yield* Console.error(JSON.stringify({ error: fileError })).pipe(
-        Effect.andThen(Effect.die(new Error(fileError))),
-      );
+      return yield* dieWithError(fileError);
     }
 
     const messageError = validateMessage(msg);
     if (messageError != null) {
-      return yield* Console.error(JSON.stringify({ error: messageError })).pipe(
-        Effect.andThen(Effect.die(new Error(messageError))),
-      );
+      return yield* dieWithError(messageError);
     }
 
     const sensitive = detectSensitiveFiles(files);

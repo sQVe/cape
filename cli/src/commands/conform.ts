@@ -1,4 +1,4 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import type { ConformInput } from '../services/conform';
@@ -14,7 +14,7 @@ export const conform = Command.make(
   { scope: Argument.optional(Argument.string('scope').pipe(Argument.withDescription('Diff scope: unstaged | staged | branch (default: branch)'))) },
   Effect.fn(function* ({ scope }) {
     const resolvedScope: DiffScope =
-      scope._tag === 'Some' && isDiffScope(scope.value) ? scope.value : 'branch';
+      Option.isSome(scope) && isDiffScope(scope.value) ? scope.value : 'branch';
 
     const git = yield* GitService;
     const diff = yield* git.getDiff(resolvedScope).pipe(

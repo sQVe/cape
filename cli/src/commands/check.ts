@@ -1,6 +1,7 @@
 import { Console, Effect } from 'effect';
 import { Command } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
 
@@ -31,10 +32,7 @@ export const check = Command.make(
         .filter((r) => !r.passed)
         .map((r) => r.check)
         .join(', ');
-      const error = `checks failed: ${failedNames}`;
-      yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      yield* dieWithError(`checks failed: ${failedNames}`);
     }
   }),
 ).pipe(

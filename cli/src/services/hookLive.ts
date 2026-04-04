@@ -1,14 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 
+import { pluginRoot } from '../pluginRoot';
 import { HookService } from './hook';
-
-const pluginRoot = () =>
-  // eslint-disable-next-line node/no-process-env
-  process.env.CLAUDE_PLUGIN_ROOT ?? dirname(dirname(dirname(new URL(import.meta.url).pathname)));
 
 const readFile = (path: string) =>
   Effect.try({

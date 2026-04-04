@@ -1,5 +1,7 @@
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
+
+import { dieWithError } from '../dieWithError';
 
 import { resolveTestCommand } from '../services/check';
 import { getDetectResult, getPackageManager, isTestFile, resolveTestPath } from '../services/detect';
@@ -24,14 +26,12 @@ export const test = Command.make(
       const error = languages
         ? `no test runner detected for ${languages}`
         : 'no ecosystem detected';
-      return yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      return yield* dieWithError(error);
     }
 
     const args = [...testCommand.args];
 
-    if (file._tag === 'Some') {
+    if (Option.isSome(file)) {
       const ecosystem = ecosystems[0];
       let testFile = file.value;
 
@@ -55,16 +55,13 @@ export const test = Command.make(
         passed: result.passed,
         phase,
         runner: testCommand.label,
-        ...(file._tag === 'Some' ? { file: file.value } : {}),
+        ...(Option.isSome(file) ? { file: file.value } : {}),
       }),
     );
 
     if (!result.passed) {
       yield* Console.error(result.output);
-      const error = `tests failed (runner: ${testCommand.label})`;
-      yield* Console.error(JSON.stringify({ error })).pipe(
-        Effect.andThen(Effect.die(new Error(error))),
-      );
+      yield* dieWithError(`tests failed (runner: ${testCommand.label})`);
     }
   }),
 ).pipe(
