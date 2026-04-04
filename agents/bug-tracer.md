@@ -12,9 +12,10 @@ broken, not just how it works.
 ## Investigation approach
 
 1. **Trace backward from the error**: Start at the failure point (stack trace, wrong output, failing
-   assertion). Use `query_graph_tool(callers_of)` to find all callers of the failing function. Fall
-   back to Grep/Read when the graph does not cover what you need. Follow the call chain upward. Read
-   every frame. Map the data flow that produces the broken value.
+   assertion). Use `semantic_search_nodes_tool` to locate the failing function, then
+   `query_graph_tool(callers_of)` to find all its callers. Fall back to Grep/Read when the graph
+   does not cover what you need. Follow the call chain upward. Read every frame. Map the data flow
+   that produces the broken value.
 
 2. **Answer questions directly**:
    - "Why does X fail?" → Trace backward from error to cause, showing the full chain

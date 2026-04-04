@@ -2,7 +2,8 @@
 name: test-auditor
 description:
   Use this agent to audit test quality — identifies tautological tests, coverage gaming, weak
-  assertions, and missing corner cases. Dispatched by analyze-tests.
+  assertions, and missing corner cases. Use when reviewing test files for effectiveness, during
+  analyze-tests workflows, or when test quality is in question.
 model: opus
 ---
 

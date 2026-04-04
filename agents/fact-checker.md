@@ -36,8 +36,8 @@ refuting each assertion before it gets acted on.
    - "Is this still true?" → Check current state, compare to claim, note staleness
 
 4. **Rate each claim**: Include `file:line` evidence for codebase claims and `(URL — Tier N)` for
-   external claims. Use the same source tiers as internet-researcher (Tier 0: source code, Tier 1:
-   official docs, Tier 2: verified tutorials, Tier 3: forums/outdated).
+   external claims. Source tiers: Tier 0 (source code), Tier 1 (official docs), Tier 2 (verified
+   tutorials), Tier 3 (forums/outdated).
    - **Confirmed** — evidence found that matches the claim exactly
    - **Refuted** — evidence contradicts the claim (include what was actually found)
    - **Partially correct** — claim is close but has inaccuracies (detail the differences)
