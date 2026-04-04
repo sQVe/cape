@@ -34,6 +34,7 @@ non-negotiable. Depth adapts to change size. </rigidity_level>
 - Committing changes (use cape:commit)
 - Creating PRs (use cape:pr)
 - Investigating a specific bug (use cape:debug-issue)
+- Convention/style checking against CLAUDE.md rules (use cape:conform)
 
 </when_to_use>
 

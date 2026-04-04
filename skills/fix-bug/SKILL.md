@@ -156,6 +156,8 @@ If `close-check` fails, stop and report which checks failed — do not close.
 
 After closing, load `cape:commit` with the Skill tool to commit the fix.
 
+Optionally load `cape:find-test-gaps` to verify test coverage around the fixed area.
+
 </the_process>
 
 <agent_references>

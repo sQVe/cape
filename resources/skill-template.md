@@ -25,6 +25,15 @@ description: >
 
 </when_to_use>
 
+<critical_rules>
+
+1. **[Bold phrase]** -- [rule that has no exceptions]
+2. **[Bold phrase]** -- [rule]
+3. **[Bold phrase]** -- [rule]
+4. **[Bold phrase]** -- [rule]
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: [Title]
@@ -97,12 +106,3 @@ dispatch would be too heavy.]
 - **[Bold phrase]** -- [explanation]
 
 </key_principles>
-
-<critical_rules>
-
-1. **[Bold phrase]** -- [rule that has no exceptions]
-2. **[Bold phrase]** -- [rule]
-3. **[Bold phrase]** -- [rule]
-4. **[Bold phrase]** -- [rule]
-
-</critical_rules>
