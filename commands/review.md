@@ -1,5 +1,6 @@
 ---
-description: Review code changes using structural analysis
+description:
+  Review staged or uncommitted code changes for bugs, logic errors, and convention violations
 argument-hint: '[scope]'
 ---
 
