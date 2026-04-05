@@ -1,4 +1,4 @@
-import { Console, Effect, Option } from 'effect';
+import { Console, Effect } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
@@ -17,7 +17,7 @@ export const commit = Command.make(
   {
     files: Argument.string('files').pipe(Argument.withDescription('Files to stage and commit'), Argument.atLeast(0)),
     noEdit: Flag.boolean('no-edit').pipe(Flag.withDescription('Finalize a merge commit (git commit --no-edit)'), Flag.withDefault(false)),
-    message: Flag.string('message').pipe(Flag.withDescription('Commit message'), Flag.withAlias('m'), Flag.optional),
+    message: Flag.string('message').pipe(Flag.withDescription('Commit message (repeatable, joined with blank line)'), Flag.withAlias('m'), Flag.atLeast(0)),
   },
   Effect.fn(function* ({ files, noEdit, message }) {
     if (noEdit) {
@@ -30,11 +30,11 @@ export const commit = Command.make(
       return yield* dieWithError('at least one file is required');
     }
 
-    if (Option.isNone(message)) {
+    if (message.length === 0) {
       return yield* dieWithError('--message is required');
     }
 
-    const msg = message.value;
+    const msg = message.join('\n\n');
 
     const fileError = validateFiles(files);
     if (fileError != null) {

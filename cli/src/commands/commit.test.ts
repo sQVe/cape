@@ -206,6 +206,22 @@ describe('commit command wiring', () => {
     consoleSpy.mockRestore();
   });
 
+  it('joins multiple -m flags with blank line', async () => {
+    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    await Effect.runPromise(
+      run(['commit', 'src/foo.ts', '-m', 'feat: add thing', '-m', 'Add the thing to the project.']).pipe(
+        Effect.provide(commandLayers),
+      ),
+    );
+    const output = consoleSpy.mock.calls.flat().join('');
+    const result = JSON.parse(output);
+    expect(result).toEqual({
+      message: 'feat: add thing\n\nAdd the thing to the project.',
+      files: ['src/foo.ts'],
+    });
+    consoleSpy.mockRestore();
+  });
+
   it('rejects invalid commit message with exit error', async () => {
     await expect(
       Effect.runPromise(
