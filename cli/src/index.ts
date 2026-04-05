@@ -2,6 +2,7 @@ import { NodeRuntime, NodeServices } from '@effect/platform-node';
 import { Effect } from 'effect';
 import { Command } from 'effect/unstable/cli';
 
+import type { UserError } from './dieWithError';
 import { logEvent } from './eventLog';
 import { main } from './main';
 import { BrValidateServiceLive } from './services/brValidateLive';
@@ -37,5 +38,6 @@ main.pipe(
   Effect.provide(PrServiceLive),
   Effect.provide(TestServiceLive),
   Effect.provide(ValidateServiceLive),
+  Effect.catchTag('UserError', (_e: UserError) => Effect.sync(() => process.exit(1))),
   NodeRuntime.runMain,
 );
