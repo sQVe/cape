@@ -69,7 +69,7 @@ export const capeCmd = (
   };
 };
 
-const runWith = Command.runWith(main, { version: '1.6.0' });
+const runWith = Command.runWith(main, { version: '1.6.1' });
 
 export const inProcess = async (
   args: string[],
