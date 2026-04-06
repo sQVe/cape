@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 import { parse as parseToml } from 'smol-toml';
@@ -12,6 +12,19 @@ import {
   detectPackageManager,
   isRecord,
 } from './detect';
+
+const lockfiles = ['pnpm-lock.yaml', 'yarn.lock', 'package-lock.json', 'bun.lockb'];
+
+export const findWorkspaceRoot = (startDirectory: string): string | null => {
+  let directory = dirname(startDirectory);
+  while (directory !== dirname(directory)) {
+    if (lockfiles.some((lockfile) => existsSync(join(directory, lockfile)))) {
+      return directory;
+    }
+    directory = dirname(directory);
+  }
+  return null;
+};
 
 const createProbe = (directory: string): DirectoryProbe => ({
   fileExists: (name) => existsSync(join(directory, name)),
@@ -36,7 +49,10 @@ const createProbe = (directory: string): DirectoryProbe => ({
 const detect = () =>
   Effect.try({
     try: () => {
-      const results = detectEcosystems(createProbe(process.cwd()));
+      const cwd = process.cwd();
+      const workspaceRoot = findWorkspaceRoot(cwd);
+      const fallback = workspaceRoot != null ? createProbe(workspaceRoot) : undefined;
+      const results = detectEcosystems(createProbe(cwd), fallback);
       if (results.length === 0) {
         throw new Error('no ecosystem detected');
       }
@@ -87,5 +103,13 @@ const mapDirectory = (directory: string) =>
 export const DetectServiceLive = Layer.succeed(DetectService)({
   detect,
   mapDirectory,
-  packageManager: () => Effect.succeed(detectPackageManager(createProbe(process.cwd()))),
+  packageManager: () =>
+    Effect.succeed(
+      (() => {
+        const cwd = process.cwd();
+        const workspaceRoot = findWorkspaceRoot(cwd);
+        const fallback = workspaceRoot != null ? createProbe(workspaceRoot) : undefined;
+        return detectPackageManager(createProbe(cwd), fallback);
+      })(),
+    ),
 });

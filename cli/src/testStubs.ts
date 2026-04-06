@@ -37,6 +37,7 @@ export const stubCheckLayer = Layer.succeed(CheckService)({
 
 export const stubCommitLayer = Layer.succeed(CommitService)({
   stageAndCommit: () => Effect.succeed(undefined),
+  commitNoEdit: () => Effect.succeed(undefined),
 });
 
 export const stubBrLayer = Layer.succeed(BrValidateService)({

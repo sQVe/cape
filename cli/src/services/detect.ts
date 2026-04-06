@@ -54,14 +54,16 @@ const detectPython = (probe: DirectoryProbe) => ({
   formatter: hasRuff(probe) ? 'ruff' : null,
 });
 
-const hasNodeDep = (probe: DirectoryProbe, name: string) => {
-  const pkg = probe.readConfig('package.json');
-  if (pkg == null) return false;
+const hasNodeDep = (probe: DirectoryProbe, name: string, fallback?: DirectoryProbe) => {
+  const check = (p: DirectoryProbe) => {
+    const pkg = p.readConfig('package.json');
+    if (pkg == null) return false;
+    const deps = pkg['dependencies'];
+    const devDeps = pkg['devDependencies'];
+    return (isRecord(deps) && deps[name] != null) || (isRecord(devDeps) && devDeps[name] != null);
+  };
 
-  const deps = pkg['dependencies'];
-  const devDeps = pkg['devDependencies'];
-
-  return (isRecord(deps) && deps[name] != null) || (isRecord(devDeps) && devDeps[name] != null);
+  return check(probe) || (fallback != null && check(fallback));
 };
 
 const isTypescript = (probe: DirectoryProbe) => {
@@ -69,35 +71,35 @@ const isTypescript = (probe: DirectoryProbe) => {
   return hasNodeDep(probe, 'typescript');
 };
 
-const detectTypescriptTestFramework = (probe: DirectoryProbe) => {
-  if (hasNodeDep(probe, 'vite-plus')) return 'vite-plus';
-  if (hasNodeDep(probe, 'vitest')) return 'vitest';
-  if (hasNodeDep(probe, 'jest')) return 'jest';
+const detectTypescriptTestFramework = (probe: DirectoryProbe, fallback?: DirectoryProbe) => {
+  if (hasNodeDep(probe, 'vite-plus', fallback)) return 'vite-plus';
+  if (hasNodeDep(probe, 'vitest', fallback)) return 'vitest';
+  if (hasNodeDep(probe, 'jest', fallback)) return 'jest';
   return null;
 };
 
-const detectTypescriptLinter = (probe: DirectoryProbe) => {
+const detectTypescriptLinter = (probe: DirectoryProbe, fallback?: DirectoryProbe) => {
   if (probe.fileExists('.oxlintrc.json')) return 'oxlint';
-  if (hasNodeDep(probe, 'oxlint')) return 'oxlint';
-  if (hasNodeDep(probe, 'eslint')) return 'eslint';
+  if (hasNodeDep(probe, 'oxlint', fallback)) return 'oxlint';
+  if (hasNodeDep(probe, 'eslint', fallback)) return 'eslint';
   return null;
 };
 
-const detectTypescriptFormatter = (probe: DirectoryProbe) => {
+const detectTypescriptFormatter = (probe: DirectoryProbe, fallback?: DirectoryProbe) => {
   if (probe.fileExists('.oxfmtrc.json')) return 'oxfmt';
-  if (hasNodeDep(probe, 'oxfmt')) return 'oxfmt';
-  if (hasNodeDep(probe, 'prettier')) return 'prettier';
+  if (hasNodeDep(probe, 'oxfmt', fallback)) return 'oxfmt';
+  if (hasNodeDep(probe, 'prettier', fallback)) return 'prettier';
   return null;
 };
 
-const detectTypescript = (probe: DirectoryProbe) => ({
+const detectTypescript = (probe: DirectoryProbe, fallback?: DirectoryProbe) => ({
   language: 'typescript',
-  testFramework: detectTypescriptTestFramework(probe),
-  linter: detectTypescriptLinter(probe),
-  formatter: detectTypescriptFormatter(probe),
+  testFramework: detectTypescriptTestFramework(probe, fallback),
+  linter: detectTypescriptLinter(probe, fallback),
+  formatter: detectTypescriptFormatter(probe, fallback),
 });
 
-type Detector = (probe: DirectoryProbe) => DetectResult | null;
+type Detector = (probe: DirectoryProbe, fallback?: DirectoryProbe) => DetectResult | null;
 
 const detectLua = (probe: DirectoryProbe) => {
   if (
@@ -142,7 +144,7 @@ const detectRust = (probe: DirectoryProbe) => {
 };
 
 const detectors: Detector[] = [
-  (probe) => (isTypescript(probe) ? detectTypescript(probe) : null),
+  (probe, fallback) => (isTypescript(probe) ? detectTypescript(probe, fallback) : null),
   (probe) =>
     probe.fileExists('pyproject.toml') ||
     probe.fileExists('setup.py') ||
@@ -154,9 +156,9 @@ const detectors: Detector[] = [
   detectRust,
 ];
 
-export const detectEcosystems = (probe: DirectoryProbe) =>
+export const detectEcosystems = (probe: DirectoryProbe, fallback?: DirectoryProbe) =>
   detectors.reduce<DetectResult[]>((results, detector) => {
-    const result = detector(probe);
+    const result = detector(probe, fallback);
     if (result != null) results.push(result);
     return results;
   }, []);
@@ -310,12 +312,19 @@ export const isTrivialFile = (filePath: string, content: string) => {
 
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun';
 
-export const detectPackageManager = (probe: DirectoryProbe): PackageManager | null => {
-  if (probe.fileExists('pnpm-lock.yaml')) return 'pnpm';
-  if (probe.fileExists('yarn.lock')) return 'yarn';
-  if (probe.fileExists('bun.lockb')) return 'bun';
-  if (probe.fileExists('package-lock.json')) return 'npm';
+const checkPackageManager = (p: DirectoryProbe): PackageManager | null => {
+  if (p.fileExists('pnpm-lock.yaml')) return 'pnpm';
+  if (p.fileExists('yarn.lock')) return 'yarn';
+  if (p.fileExists('bun.lockb')) return 'bun';
+  if (p.fileExists('package-lock.json')) return 'npm';
   return null;
+};
+
+export const detectPackageManager = (
+  probe: DirectoryProbe,
+  fallback?: DirectoryProbe,
+): PackageManager | null => {
+  return checkPackageManager(probe) ?? (fallback != null ? checkPackageManager(fallback) : null);
 };
 
 export class DetectService extends ServiceMap.Service<

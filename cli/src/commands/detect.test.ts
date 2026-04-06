@@ -1,7 +1,11 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer, Result } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { DetectResult, DirectoryProbe } from '../services/detect';
@@ -15,6 +19,7 @@ import {
   isTrivialFile,
   resolveTestPath,
 } from '../services/detect';
+import { findWorkspaceRoot } from '../services/detectLive';
 import {
   stubBrLayer,
   stubCheckLayer,
@@ -241,6 +246,61 @@ describe('detectEcosystems', () => {
     });
   });
 
+  describe('workspace root fallback', () => {
+    it('finds vitest from fallback probe when local package.json lacks it', () => {
+      const local = makeProbe(['tsconfig.json', 'package.json'], {
+        'package.json': { devDependencies: { typescript: '^5' } },
+      });
+      const fallback = makeProbe(['package.json'], {
+        'package.json': { devDependencies: { vitest: '^2.0.0' } },
+      });
+      const ts = findByLanguage(detectEcosystems(local, fallback), 'typescript');
+      expect(ts?.testFramework).toBe('vitest');
+    });
+
+    it('prefers higher-priority dep from fallback over lower-priority local dep', () => {
+      const local = makeProbe(['tsconfig.json', 'package.json'], {
+        'package.json': { devDependencies: { jest: '^29' } },
+      });
+      const fallback = makeProbe(['package.json'], {
+        'package.json': { devDependencies: { vitest: '^2' } },
+      });
+      const ts = findByLanguage(detectEcosystems(local, fallback), 'typescript');
+      expect(ts?.testFramework).toBe('vitest');
+    });
+
+    it('uses local dep when fallback has no matching dep', () => {
+      const local = makeProbe(['tsconfig.json', 'package.json'], {
+        'package.json': { devDependencies: { jest: '^29' } },
+      });
+      const fallback = makeProbe(['package.json'], {
+        'package.json': { devDependencies: { prettier: '^3' } },
+      });
+      const ts = findByLanguage(detectEcosystems(local, fallback), 'typescript');
+      expect(ts?.testFramework).toBe('jest');
+    });
+
+    it('does not apply fallback to non-Node ecosystems', () => {
+      const local = makeProbe(['go.mod']);
+      const fallback = makeProbe(['tsconfig.json', 'package.json'], {
+        'package.json': { devDependencies: { typescript: '^5', vitest: '^2' } },
+      });
+      const results = detectEcosystems(local, fallback);
+      expect(findByLanguage(results, 'go')).toBeDefined();
+      expect(findByLanguage(results, 'typescript')).toBeUndefined();
+    });
+
+    it('detects typescript via fallback when local has tsconfig but no deps', () => {
+      const local = makeProbe(['tsconfig.json']);
+      const fallback = makeProbe(['package.json'], {
+        'package.json': { devDependencies: { eslint: '^8', prettier: '^3' } },
+      });
+      const ts = findByLanguage(detectEcosystems(local, fallback), 'typescript');
+      expect(ts?.linter).toBe('eslint');
+      expect(ts?.formatter).toBe('prettier');
+    });
+  });
+
   describe('lua', () => {
     it('detects from .stylua.toml', () => {
       expect(detectEcosystems(makeProbe(['.stylua.toml']))).toEqual([
@@ -405,6 +465,22 @@ describe('detectPackageManager', () => {
   it('prefers pnpm over yarn when both lock files exist', () => {
     expect(detectPackageManager(makeProbe(['pnpm-lock.yaml', 'yarn.lock']))).toBe('pnpm');
   });
+
+  it('falls back to workspace root probe when local has no lockfile', () => {
+    const local = makeProbe();
+    const fallback = makeProbe(['pnpm-lock.yaml']);
+    expect(detectPackageManager(local, fallback)).toBe('pnpm');
+  });
+
+  it('prefers local lockfile over fallback', () => {
+    const local = makeProbe(['yarn.lock']);
+    const fallback = makeProbe(['pnpm-lock.yaml']);
+    expect(detectPackageManager(local, fallback)).toBe('yarn');
+  });
+
+  it('returns null when neither local nor fallback has lockfile', () => {
+    expect(detectPackageManager(makeProbe(), makeProbe())).toBeNull();
+  });
 });
 
 describe('isTestFile', () => {
@@ -559,5 +635,51 @@ describe('isTrivialFile', () => {
   it('returns false for test files', () => {
     const content = `import { describe, it } from 'vitest';\ndescribe('test', () => {});\n`;
     expect(isTrivialFile('src/math.test.ts', content)).toBe(false);
+  });
+});
+
+describe('findWorkspaceRoot', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'cape-detect-'));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  it('finds workspace root with pnpm-lock.yaml in parent', () => {
+    const subDir = join(tempDir, 'packages', 'app');
+    mkdirSync(subDir, { recursive: true });
+    writeFileSync(join(tempDir, 'pnpm-lock.yaml'), '');
+    expect(findWorkspaceRoot(subDir)).toBe(tempDir);
+  });
+
+  it('finds workspace root with yarn.lock in parent', () => {
+    const subDir = join(tempDir, 'packages', 'app');
+    mkdirSync(subDir, { recursive: true });
+    writeFileSync(join(tempDir, 'yarn.lock'), '');
+    expect(findWorkspaceRoot(subDir)).toBe(tempDir);
+  });
+
+  it('returns null when no lockfile found', () => {
+    const subDir = join(tempDir, 'packages', 'app');
+    mkdirSync(subDir, { recursive: true });
+    expect(findWorkspaceRoot(subDir)).toBeNull();
+  });
+
+  it('does not find lockfile in the start directory itself', () => {
+    writeFileSync(join(tempDir, 'pnpm-lock.yaml'), '');
+    expect(findWorkspaceRoot(tempDir)).toBeNull();
+  });
+
+  it('finds nearest lockfile when multiple exist', () => {
+    const mid = join(tempDir, 'workspace');
+    const subDir = join(mid, 'packages', 'app');
+    mkdirSync(subDir, { recursive: true });
+    writeFileSync(join(tempDir, 'pnpm-lock.yaml'), '');
+    writeFileSync(join(mid, 'yarn.lock'), '');
+    expect(findWorkspaceRoot(subDir)).toBe(mid);
   });
 });
