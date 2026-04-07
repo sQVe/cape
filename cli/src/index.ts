@@ -26,7 +26,7 @@ if (cmd && cmdSegments[0] != null && !skipCommands.has(cmdSegments[0])) {
 }
 
 main.pipe(
-  Command.run({ version: '1.6.1' }),
+  Command.run({ version: '1.6.2' }),
   Effect.provide(NodeServices.layer),
   Effect.provide(BrValidateServiceLive),
   Effect.provide(CheckServiceLive),
