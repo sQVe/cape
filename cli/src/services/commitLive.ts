@@ -13,7 +13,9 @@ const stageFiles = (files: readonly string[]) => {
     execFileSync('git', ['add', '--', ...existing], { encoding: 'utf-8' });
   }
   if (deleted.length > 0) {
-    execFileSync('git', ['rm', '--quiet', '--', ...deleted], { encoding: 'utf-8' });
+    execFileSync('git', ['rm', '--quiet', '--cached', '--', ...deleted], {
+      encoding: 'utf-8',
+    });
   }
 };
 
