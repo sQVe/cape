@@ -141,6 +141,8 @@ export const validateSkillContent = (
   return { file, valid: errors.length === 0, errors };
 };
 
+const validAgentModels = new Set(['opus', 'sonnet', 'haiku']);
+
 export const validateAgentContent = (file: string, content: string): ValidateResult => {
   const errors: string[] = [];
   const frontmatter = parseFrontmatter(content);
@@ -156,6 +158,10 @@ export const validateAgentContent = (file: string, content: string): ValidateRes
     }
     if (!frontmatter.model) {
       errors.push('Missing frontmatter field: model');
+    } else if (!validAgentModels.has(frontmatter.model)) {
+      errors.push(
+        `Invalid model value: ${frontmatter.model} (allowed: ${[...validAgentModels].join(', ')})`,
+      );
     }
   }
 

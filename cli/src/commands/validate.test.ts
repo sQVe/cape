@@ -229,6 +229,14 @@ describe('validateAgentContent', () => {
     expect(result.errors).toContain('Missing frontmatter field: model');
   });
 
+  it('detects invalid model value', () => {
+    const content = validAgent.replace('model: opus', 'model: sonnnet');
+    const result = validateAgentContent('test.md', content);
+    expect(result.errors).toContain(
+      'Invalid model value: sonnnet (allowed: opus, sonnet, haiku)',
+    );
+  });
+
   it('detects missing name field', () => {
     const content = validAgent.replace('name: test-agent\n', '');
     const result = validateAgentContent('test.md', content);
