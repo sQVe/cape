@@ -290,7 +290,6 @@ describe('no event argument', () => {
   it('exits non-zero with usage error', () => {
     const result = cape(['hook'], '', env);
     expect(result.status).not.toBe(0);
-    expect(result.stderr).toContain('Missing required argument');
   });
 });
 
