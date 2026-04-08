@@ -55,7 +55,60 @@ const tagHasContent = (content: string, tag: string): boolean => {
 const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
-export const validateSkillContent = (file: string, content: string): ValidateResult => {
+const skillRequiredTags = [
+  'skill_overview',
+  'rigidity_level',
+  'when_to_use',
+  'critical_rules',
+  'the_process',
+  'examples',
+  'key_principles',
+];
+
+const skillAllKnownTags = [...skillRequiredTags, 'agent_references', 'skill_references', 'anti_batching'];
+
+const checkTagOrdering = (content: string, errors: string[]) => {
+  const criticalRulesPos = content.indexOf('<critical_rules>');
+  const theProcessPos = content.indexOf('<the_process>');
+  if (criticalRulesPos !== -1 && theProcessPos !== -1 && criticalRulesPos > theProcessPos) {
+    errors.push('<critical_rules> must appear before <the_process>');
+  }
+};
+
+const checkDuplicateTags = (content: string, tags: string[], errors: string[]) => {
+  for (const tag of tags) {
+    const openTag = `<${tag}>`;
+    if (content.indexOf(openTag) !== content.lastIndexOf(openTag)) {
+      errors.push(`Duplicate tag: <${tag}>`);
+    }
+  }
+};
+
+const checkAgentReferences = (content: string, knownAgents: Set<string>, errors: string[]) => {
+  if (!hasTag(content, 'agent_references')) {
+    return;
+  }
+  const agentSection = content.slice(
+    content.indexOf('<agent_references>'),
+    content.indexOf('</agent_references>'),
+  );
+  for (const match of agentSection.matchAll(/cape:([a-z][-a-z]*)/g)) {
+    const agentName = match[1];
+    if (agentName != null && !knownAgents.has(agentName)) {
+      errors.push(`References unknown agent: cape:${agentName}`);
+    }
+  }
+};
+
+interface SkillValidateOptions {
+  readonly knownAgents?: Set<string>;
+}
+
+export const validateSkillContent = (
+  file: string,
+  content: string,
+  options: SkillValidateOptions = {},
+): ValidateResult => {
   const errors: string[] = [];
   const frontmatter = parseFrontmatter(content);
 
@@ -70,16 +123,7 @@ export const validateSkillContent = (file: string, content: string): ValidateRes
     }
   }
 
-  const requiredTags = [
-    'skill_overview',
-    'rigidity_level',
-    'when_to_use',
-    'critical_rules',
-    'the_process',
-    'examples',
-    'key_principles',
-  ];
-  for (const tag of requiredTags) {
+  for (const tag of skillRequiredTags) {
     if (!hasTag(content, tag)) {
       errors.push(`Missing required tag: <${tag}>`);
     } else if (!tagHasContent(content, tag)) {
@@ -87,23 +131,11 @@ export const validateSkillContent = (file: string, content: string): ValidateRes
     }
   }
 
-  const criticalRulesPos = content.indexOf('<critical_rules>');
-  const theProcessPos = content.indexOf('<the_process>');
-  if (criticalRulesPos !== -1 && theProcessPos !== -1 && criticalRulesPos > theProcessPos) {
-    errors.push('<critical_rules> must appear before <the_process>');
-  }
+  checkTagOrdering(content, errors);
+  checkDuplicateTags(content, skillAllKnownTags, errors);
 
-  const allKnownTags = [
-    ...requiredTags,
-    'agent_references',
-    'skill_references',
-    'anti_batching',
-  ];
-  for (const tag of allKnownTags) {
-    const openTag = `<${tag}>`;
-    if (content.indexOf(openTag) !== content.lastIndexOf(openTag)) {
-      errors.push(`Duplicate tag: <${tag}>`);
-    }
+  if (options.knownAgents != null) {
+    checkAgentReferences(content, options.knownAgents, errors);
   }
 
   return { file, valid: errors.length === 0, errors };
@@ -141,7 +173,15 @@ export const validateAgentContent = (file: string, content: string): ValidateRes
   return { file, valid: errors.length === 0, errors };
 };
 
-export const validateCommandContent = (file: string, content: string): ValidateResult => {
+interface CommandValidateOptions {
+  readonly knownSkills?: Set<string>;
+}
+
+export const validateCommandContent = (
+  file: string,
+  content: string,
+  options: CommandValidateOptions = {},
+): ValidateResult => {
   const errors: string[] = [];
   const frontmatter = parseFrontmatter(content);
 
@@ -155,6 +195,13 @@ export const validateCommandContent = (file: string, content: string): ValidateR
 
   if (!content.includes('Use the cape:')) {
     errors.push("Body must reference a skill (expected 'Use the cape:' pattern)");
+  }
+
+  if (options.knownSkills != null) {
+    const skillRef = content.match(/Use the cape:([a-z-]+)/);
+    if (skillRef?.[1] != null && !options.knownSkills.has(skillRef[1])) {
+      errors.push(`References unknown skill: cape:${skillRef[1]}`);
+    }
   }
 
   return { file, valid: errors.length === 0, errors };

@@ -203,6 +203,17 @@ description: test
     const result = validateSkillContent('test.md', content);
     expect(result.errors).toContain('Empty tag: <skill_overview>');
   });
+
+  it('detects reference to nonexistent agent', () => {
+    const knownAgents = new Set(['code-reviewer', 'test-runner']);
+    const content =
+      validSkill +
+      '\n<agent_references>\n## `cape:nonexistent-agent` protocol:\nDispatch details.\n</agent_references>\n';
+    const result = validateSkillContent('test.md', content, { knownAgents });
+    expect(result.errors).toContain(
+      'References unknown agent: cape:nonexistent-agent',
+    );
+  });
 });
 
 describe('validateAgentContent', () => {
@@ -277,6 +288,15 @@ describe('validateCommandContent', () => {
       "Body must reference a skill (expected 'Use the cape:' pattern)",
     );
   });
+
+  it('detects reference to nonexistent skill', () => {
+    const knownSkills = new Set(['brainstorm', 'commit']);
+    const content = '---\ndescription: test\n---\nUse the cape:nonexistent skill exactly as written.';
+    const result = validateCommandContent('test.md', content, { knownSkills });
+    expect(result.errors).toContain(
+      'References unknown skill: cape:nonexistent',
+    );
+  });
 });
 
 describe('inferFileType', () => {
@@ -334,7 +354,7 @@ describe('validate command wiring', () => {
   it('validates all types with no args', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const layer = makeTestValidateLayer({
-      '/repo/skills/test/SKILL.md': validSkill,
+      '/repo/skills/test-skill/SKILL.md': validSkill,
       '/repo/agents/test.md': validAgent,
       '/repo/commands/test.md': validCommand,
     });

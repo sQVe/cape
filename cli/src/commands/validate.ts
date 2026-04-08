@@ -27,13 +27,47 @@ const validateFiles = (
     return results;
   });
 
+const collectNames = (pattern: string, extractor: (path: string) => string | null) =>
+  Effect.gen(function* () {
+    const service = yield* ValidateService;
+    const files = yield* service.globFiles(pattern);
+    const names = new Set<string>();
+    for (const file of files) {
+      const name = extractor(file);
+      if (name != null) {
+        names.add(name);
+      }
+    }
+    return names;
+  });
+
+const skillNameFromPath = (path: string): string | null => {
+  const match = path.match(/skills\/([^/]+)\/SKILL\.md$/);
+  return match?.[1] ?? null;
+};
+
+const agentNameFromPath = (path: string): string | null => {
+  const match = path.match(/agents\/([^/]+)\.md$/);
+  return match?.[1] ?? null;
+};
+
 const validateByType = (type: string, root: string) =>
   Effect.gen(function* () {
     const results: ValidateResult[] = [];
 
+    const knownSkills =
+      type === 'all' || type === 'commands'
+        ? yield* collectNames(join(root, 'skills/*/SKILL.md'), skillNameFromPath)
+        : new Set<string>();
+
+    const knownAgents =
+      type === 'all' || type === 'skills'
+        ? yield* collectNames(join(root, 'agents/*.md'), agentNameFromPath)
+        : new Set<string>();
+
     if (type === 'all' || type === 'skills') {
       const r = yield* validateFiles(join(root, 'skills/*/SKILL.md'), (file, content) =>
-        validateSkillContent(relative(root, file), content),
+        validateSkillContent(relative(root, file), content, { knownAgents }),
       );
       results.push(...r);
     }
@@ -45,7 +79,7 @@ const validateByType = (type: string, root: string) =>
     }
     if (type === 'all' || type === 'commands') {
       const r = yield* validateFiles(join(root, 'commands/*.md'), (file, content) =>
-        validateCommandContent(relative(root, file), content),
+        validateCommandContent(relative(root, file), content, { knownSkills }),
       );
       results.push(...r);
     }
