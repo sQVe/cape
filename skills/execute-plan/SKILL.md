@@ -17,9 +17,9 @@ then hands control back to the user before continuing.
 The rhythm: load epic context, do one task, reflect on what changed, create the next task, stop.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The rhythm (one task, reflect, stop) is non-negotiable. Everything
-else -- how you implement, what tools you reach for, how you structure the next task -- adapts to
-context. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- The rhythm (one task, reflect, stop) is non-negotiable.
+Everything else -- how you implement, what tools you reach for, how you structure the next task --
+adapts to context. </rigidity_level>
 
 <when_to_use>
 
@@ -349,9 +349,6 @@ per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:li
 
 <key_principles>
 
-- **One task, then stop** -- the rhythm exists because each completed task changes what you know
-- **Tasks are disposable, requirements are not** -- delete redundant tasks freely; never water down
-  epic requirements
 - **Learn forward** -- each task's next step is created from what was learned, not what was assumed
 - **Obstacles don't justify shortcuts** -- re-read the epic when blocked, research the problem, ask
   the user

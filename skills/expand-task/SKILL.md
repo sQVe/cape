@@ -16,9 +16,9 @@ references a real file at a real line number with a concrete verification comman
 Core contract: no step references an imagined file. No step lacks a verification command. Someone
 picking this plan up cold can follow it without asking questions. </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The investigation phase and output structure (steps with file paths,
-changes, verification) are non-negotiable. How deep you investigate and how granular the steps are
-adapts to the task's complexity. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — The investigation phase and output structure (steps with file
+paths, changes, verification) are non-negotiable. How deep you investigate and how granular the
+steps are adapts to the task's complexity. </rigidity_level>
 
 <when_to_use>
 

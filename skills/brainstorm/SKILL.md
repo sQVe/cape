@@ -19,7 +19,7 @@ different constraints, and produce a self-contained design summary.
 Core contract: no design gets locked without research, constraint-driven design exploration, and
 iterative user discussion at every stage. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt questioning style and research depth to context, but always:
+<rigidity_level> LOW FREEDOM — Adapt questioning style and research depth to context, but always:
 research before proposing, checkpoint after each step, never advance without user input.
 </rigidity_level>
 
@@ -406,13 +406,8 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 
 <key_principles>
 
-- **Research before proposing** — use agents to understand codebase and external context
-- **Checkpoint after every step** — present findings, wait for user input, never auto-advance
 - **Constraint-driven design** — competing constraints reveal trade-offs a single perspective misses
-- **Scale effort to complexity** — divergent agents for complex ideas, inline for simple ones
-- **Challenge is opt-in** — offer it, don't force it
 - **Design summary is the handoff** — contains everything write-plan needs to create the epic
-- **Anti-patterns prevent shortcuts** — every entry uses "NO X (reason: Y)" format
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
 - **Capture decisions** — Key Decisions table feeds the design summary
 - **Document dead ends** — prevents wasted re-investigation during implementation </key_principles>

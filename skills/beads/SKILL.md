@@ -26,7 +26,7 @@ Two roles:
 2. **Output conventions** — how cape skills should create br items as their output artifacts.
    </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt commands to context, but always use the correct flags
+<rigidity_level> LOW FREEDOM — Adapt commands to context, but always use the correct flags
 documented here. The critical rules are rigid: violating them produces silent failures.
 </rigidity_level>
 

@@ -13,8 +13,9 @@ description: >
 context from active br tasks, conversation history, and user input to build a descriptive branch
 name without interrogating the user. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt naming format to user preferences and project conventions. The
-only rigid rule: always confirm the name before creating the branch. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — Adapt naming format to user preferences and project conventions.
+The rigid rules: verify git repo, confirm before creating, check for existing branch, warn on
+uncommitted changes. </rigidity_level>
 
 <when_to_use>
 

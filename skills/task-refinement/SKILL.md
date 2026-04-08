@@ -18,8 +18,9 @@ refine the task to close every gap found.
 Core contract: no task passes refinement with vague criteria, untested failure paths, or assumptions
 that haven't been verified against the actual codebase. </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The review categories and codebase verification are non-negotiable.
-How deep you go in each category adapts to the task's complexity and risk. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- The review categories and codebase verification are
+non-negotiable. How deep you go in each category adapts to the task's complexity and risk.
+</rigidity_level>
 
 <when_to_use>
 

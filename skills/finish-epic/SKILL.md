@@ -16,8 +16,8 @@ completion, closes the epic, and reports what was accomplished.
 
 Core contract: the epic only closes when every success criterion has evidence. </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The verification gate and evidence-based success criteria checks are
-non-negotiable. How you run verification and what you include in the summary adapts to context.
+<rigidity_level> MEDIUM FREEDOM — The verification gate and evidence-based success criteria checks
+are non-negotiable. How you run verification and what you include in the summary adapts to context.
 </rigidity_level>
 
 <when_to_use>
@@ -223,9 +223,7 @@ signal.
 
 <key_principles>
 
-- **Evidence before closure** — every success criterion needs proof, not a checkmark
-- **Don't force it** — if something isn't ready, report what's missing and stop
-- **Automated checks are the gate** — broken tests or linting mean the epic isn't done
 - **The outcome is the record** — future sessions read it to understand what shipped
+- **Completeness over speed** — rushing closure creates debt in the next epic
 
 </key_principles>

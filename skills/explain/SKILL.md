@@ -17,7 +17,7 @@ overview.
 Core contract: every explanation traces real code paths. No hand-waving, no "it probably does X."
 Read the code, then explain what it actually does. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt structure, depth, and diagram use to what the user asked.
+<rigidity_level> MEDIUM FREEDOM — Adapt structure, depth, and diagram use to what the user asked.
 Rigid rules: always read code before explaining it, always anchor claims to file:line references,
 always match depth to scope. </rigidity_level>
 

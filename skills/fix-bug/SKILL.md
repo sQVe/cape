@@ -16,7 +16,7 @@ br bug exists, then delegates the fix to the TDD skill with evidence-based closu
 Core contract: every fix gets a regression test that fails before the fix and passes after.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The TDD cycle (delegated to `cape:test-driven-development`) and
+<rigidity_level> MEDIUM FREEDOM -- The TDD cycle (delegated to `cape:test-driven-development`) and
 evidence-based closure are non-negotiable. Investigation depth, test strategy, and fix approach
 adapt to context. </rigidity_level>
 
@@ -236,7 +236,6 @@ query) remains exploitable.
 <key_principles>
 
 - **Reproduce before fixing** -- confirm the symptom exists locally before changing code
-- **Regression test is non-negotiable** -- every fix gets a test that would have caught it
 - **Minimal fix** -- root cause only, no drive-by improvements
 - **Evidence-based closure** -- verify the original symptom is gone before closing
 

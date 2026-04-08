@@ -15,8 +15,8 @@ anti-patterns, and a first task. The bridge between exploration (brainstorm) and
 Core contract: no epic without a design summary in conversation context. No task without an epic.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The epic structure (from the template) and first-task creation are
-non-negotiable. Validation depth and detail-filling adapt to the design's complexity.
+<rigidity_level> MEDIUM FREEDOM -- The epic structure (from the template) and first-task creation
+are non-negotiable. Validation depth and detail-filling adapt to the design's complexity.
 </rigidity_level>
 
 <when_to_use>

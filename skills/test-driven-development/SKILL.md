@@ -14,7 +14,7 @@ first, watch it fail for the right reason, write the minimum code to pass, then 
 while tests stay green. This cycle repeats for each behavior — one behavior per cycle, no batching.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The RED-GREEN-REFACTOR sequence is immutable. You must not write
+<rigidity_level> MEDIUM FREEDOM — The RED-GREEN-REFACTOR sequence is immutable. You must not write
 production code before a test fails, and you must not refactor while tests are red. The only
 flexibility is in test strategy: what to assert, test granularity, and how to structure the test
 itself. </rigidity_level>

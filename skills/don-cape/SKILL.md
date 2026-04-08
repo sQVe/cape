@@ -15,8 +15,8 @@ commit), and fix (debug-issue → fix-bug → commit). Skipping a link breaks th
 Core contract: before acting on any user request, check the routing table. If a cape skill matches,
 load it with the Skill tool and follow it. </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The meta-process (check routing table, use Skill tool, follow chains)
-is immutable. Each individual skill defines its own rigidity. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — The meta-process (check routing table, use Skill tool, follow
+chains) is immutable. Each individual skill defines its own rigidity. </rigidity_level>
 
 <when_to_use>
 

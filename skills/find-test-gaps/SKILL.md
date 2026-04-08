@@ -317,7 +317,5 @@ the important behavior is tested.
   a gap worth reporting
 - **Value over coverage** — skip trivial code, focus on logic that could break in meaningful ways
 - **Per-module tasks** — one br task per module keeps work atomic and trackable
-- **User controls scope** — the user decides what to analyze; don't expand beyond what was asked
-- **Confirm before creating** — present findings and wait for approval before creating br items
 
 </key_principles>

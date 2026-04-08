@@ -345,12 +345,8 @@ with its own severity-tagged items. Same format as example 1, repeated per file.
 
 <key_principles>
 
-- **Graph first** — structural context (blast radius, callers, test coverage) before line-by-line
-  reading. One informed reviewer beats three blind ones.
-- **Verdict first** — the reader should know the outcome before reading details
 - **Impact-weighted severity** — a bug in an isolated helper is less critical than the same bug in a
   function with 10 callers
-- **Review informs, doesn't fix** — present findings clearly, let the user decide the next step
 - **Graceful degradation** — if the graph is unavailable, fall back to diff-based review. The skill
   still works, it just loses structural context.
 

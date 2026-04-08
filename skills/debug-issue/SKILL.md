@@ -18,9 +18,10 @@ steps -- ready for handoff to fix-bug.
 Core contract: no hypothesis without evidence. No br issue without a confirmed root cause or a clear
 "cause unknown" with documented dead ends. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM -- Adapt investigation depth and tool choices to the bug's complexity.
-Rigid rules: always reproduce before hypothesizing, always gather evidence before concluding, always
-create a br bug issue with findings, always confirm before creating the issue. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- Adapt investigation depth and tool choices to the bug's
+complexity. Rigid rules: always reproduce before hypothesizing, always gather evidence before
+concluding, always create a br bug issue with findings, always confirm before creating the issue.
+</rigidity_level>
 
 <when_to_use>
 
@@ -323,15 +324,9 @@ instead of tracing the data flow.
 
 <key_principles>
 
-- **Reproduce before hypothesizing** -- confirm the symptom exists and is repeatable before
-  theorizing
 - **Tools before guesses** -- read code, run tests, check logs before forming opinions
-- **Evidence before conclusions** -- every finding noted with file:line and interpretation
 - **Root cause, not symptoms** -- keep asking "why" until fixing the cause prevents recurrence
 - **Dead ends are progress** -- document refuted hypotheses to narrow the search and prevent
   re-investigation
-- **Investigate only** -- this skill finds causes, fix-bug applies solutions
-- **Confirm before creating** -- always present findings and get approval before creating the br
-  issue
 
 </key_principles>

@@ -21,7 +21,7 @@ This is the "evolve chain" — distinct from building (new behavior) and fixing 
 Code works correctly but its structure makes the next change harder than it should be.
 </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The safety protocol (test gate → transform → verify) is
+<rigidity_level> MEDIUM FREEDOM — The safety protocol (test gate → transform → verify) is
 non-negotiable. Everything else — which refactoring to apply, step size, whether to use LSP or
 manual edits — adapts to context. </rigidity_level>
 

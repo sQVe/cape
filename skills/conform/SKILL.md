@@ -17,9 +17,9 @@ Unlike review (which checks correctness, security, and design using structural a
 mechanical and rule-driven. It checks what the user has explicitly documented, not what a reviewer
 would infer. No blast radius, no severity levels, no code-review-graph. </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The process order (scope → gather → match → check → report) is fixed.
-The report format (result first, violations grouped by file) is non-negotiable. Checking granularity
-adapts to scope size. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — The process order (scope → gather → match → check → report) is
+fixed. The report format (result first, violations grouped by file) is non-negotiable. Checking
+granularity adapts to scope size. </rigidity_level>
 
 <when_to_use>
 

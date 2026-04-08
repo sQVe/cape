@@ -18,7 +18,7 @@ resolve).
 Core contract: every assumption found is categorized, risk-assessed, and resolved with the user
 through interactive turn-by-turn interrogation before work continues. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM — Adapt depth to complexity (light touch for simple work, full audit
+<rigidity_level> MEDIUM FREEDOM — Adapt depth to complexity (light touch for simple work, full audit
 for complex designs). The three steps and the interactive resolution are non-negotiable.
 </rigidity_level>
 
@@ -235,9 +235,6 @@ Continue through remaining branches until all resolved or user says "lock it". <
 <key_principles>
 
 - **Everything is challengeable** — including user requirements, not just agent assumptions
-- **Research before surfacing** — investigate the codebase to provide informed recommendations
-- **One per turn** — interactive back-and-forth, not a batch dump
-- **Depth matches risk** — lightweight for simple tasks, full audit for complex designs
 - **Assumptions are binary** — each is either confirmed (becomes a documented constraint) or
   rejected (triggers a change)
 - **Challenge early, challenge often** — cheaper to catch assumptions in design than in production

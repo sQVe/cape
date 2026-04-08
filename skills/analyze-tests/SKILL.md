@@ -19,10 +19,10 @@ Core contract: every RED or YELLOW verdict must cite the specific line or patter
 test weak, and explain what false confidence it creates. "This test could be better" is not a
 verdict — "this test passes even when the production code is deleted" is. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — The categorization framework (RED/YELLOW/GREEN) and the
-requirement to read production code before tests are rigid. How deep the analysis goes within each
-module adapts to complexity and risk. The structural context step (code-review-graph) is rigid when
-a graph is available. </rigidity_level>
+<rigidity_level> HIGH FREEDOM — The categorization framework (RED/YELLOW/GREEN) and the requirement
+to read production code before tests are rigid. How deep the analysis goes within each module adapts
+to complexity and risk. The structural context step (code-review-graph) is rigid when a graph is
+available. </rigidity_level>
 
 <when_to_use>
 
