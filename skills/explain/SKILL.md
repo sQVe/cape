@@ -72,6 +72,12 @@ If scope is ambiguous, start MEDIUM and offer to zoom in or out.
 
 ## Step 2: Research
 
+Use code-review-graph when available to map relationships before reading files — see
+`resources/graph-tools-instructions.md` for the tool catalog and fallback behavior. For NARROW
+scope, `query_graph_tool` with `callers_of`/`callees_of` maps the immediate context. For
+MEDIUM/BROAD, `get_impact_radius_tool` and `query_graph_tool` with `file_summary` reveal structure
+faster than reading every file.
+
 Dispatch `cape:codebase-investigator` to gather the raw material. Tailor the investigation prompt to
 the detected scope:
 

@@ -68,11 +68,10 @@ What tests should I audit? Examples:
 - A module: the payment processing tests
 ```
 
-Once scope is clear, use code-review-graph to build structural context before reading any files.
-This prevents wasting tokens on code you don't need and surfaces relationships that aren't obvious
-from file names alone.
+Once scope is clear, use code-review-graph to build structural context before reading any files. See
+`resources/graph-tools-instructions.md` for the full tool catalog and fallback behavior.
 
-**Graph queries to run:**
+**Graph queries to run (in order):**
 
 1. `semantic_search_nodes_tool` with `kind: "Test"` to find test entities in scope
 2. `query_graph_tool` with `tests_for` on each production file to confirm test-to-source mappings
@@ -80,10 +79,6 @@ from file names alone.
    heavily-called functions deserve more scrutiny on their tests
 4. `get_impact_radius_tool` on the production files to understand blast radius — tests guarding
    high-impact code get more scrutiny
-
-If the graph is unavailable or hasn't been built for the target repo, fall back to manual
-file-reading (dispatch `cape:codebase-investigator` to find test conventions and mappings). Don't
-block on the graph.
 
 Present the scope summary:
 

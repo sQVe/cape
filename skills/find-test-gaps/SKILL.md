@@ -72,18 +72,16 @@ What should I analyze? Examples:
 - A feature area: everything related to session management
 ```
 
-Once scope is clear, use code-review-graph to build structural context before reading files:
+Once scope is clear, use code-review-graph to build structural context before reading files. See
+`resources/graph-tools-instructions.md` for the full tool catalog and fallback behavior.
+
+**Graph queries to run (in order):**
 
 1. `get_impact_radius_tool` on the scope's production files to prioritize which gaps matter most —
    high-impact code (many callers) deserves more scrutiny
 2. `query_graph_tool` with `tests_for` to find existing test-to-source mappings
 3. `semantic_search_nodes_tool` to find related test utilities and fixtures
 
-If the graph is unavailable, fall back to `cape:codebase-investigator`. Dispatch it to:
-
-- Find all source files within the scope
-- Find the project's test file conventions (co-located vs separate `tests/` directory, naming
-  patterns like `.test.ts`, `_test.go`, `_spec.lua`)
 - Map each source file to its test file (if one exists)
 - Identify the test framework and assertion style in use
 

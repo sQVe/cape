@@ -94,7 +94,8 @@ Report: "Reviewing N files..."
 
 ## Step 2: Build structural context
 
-Update the graph and gather structural intelligence. Run sequentially:
+Update the graph and gather structural intelligence. See `resources/graph-tools-instructions.md` for
+the full tool catalog and fallback behavior. Run sequentially:
 
 1. `build_or_update_graph_tool()` — incremental update to reflect current state
 2. `get_review_context_tool()` — returns changed files, impacted nodes, source snippets, and review
