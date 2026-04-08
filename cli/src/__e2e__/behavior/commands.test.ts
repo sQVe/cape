@@ -551,15 +551,18 @@ describe('cape pr', () => {
 });
 
 describe('cape state', () => {
-  const stateJsonPath = join(REPO_ROOT, 'cli', 'hooks', 'context', 'state.json');
+  const stateJsonPath = join(REPO_ROOT, 'hooks', 'context', 'state.json');
 
-  afterEach(() => {
+  const cleanState = () => {
     try {
       unlinkSync(stateJsonPath);
     } catch {
       /* cleanup */
     }
-  });
+  };
+
+  beforeEach(cleanState);
+  afterEach(cleanState);
 
   it('set writes a key to state.json', async () => {
     const result = await inProcess(['state', 'set', 'testKey', '{"foo":"bar"}']);
