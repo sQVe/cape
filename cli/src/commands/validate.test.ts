@@ -44,6 +44,18 @@ Use when testing.
 <critical_rules>
 Always test.
 </critical_rules>
+
+<the_process>
+Process here.
+</the_process>
+
+<examples>
+Example content here.
+</examples>
+
+<key_principles>
+Principle content here.
+</key_principles>
 `;
 
 const validAgent = `---
@@ -128,7 +140,7 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Empty tag: <skill_overview>');
   });
 
-  it('requires all four tags', () => {
+  it('requires all seven tags', () => {
     const content = '---\nname: x\ndescription: x\n---\n';
     const result = validateSkillContent('test.md', content);
     expect(result.valid).toBe(false);
@@ -136,6 +148,51 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Missing required tag: <rigidity_level>');
     expect(result.errors).toContain('Missing required tag: <when_to_use>');
     expect(result.errors).toContain('Missing required tag: <critical_rules>');
+    expect(result.errors).toContain('Missing required tag: <the_process>');
+    expect(result.errors).toContain('Missing required tag: <examples>');
+    expect(result.errors).toContain('Missing required tag: <key_principles>');
+  });
+
+  it('detects missing the_process tag', () => {
+    const skillWithoutTheProcess = validSkill.replace(
+      /<the_process>[\s\S]*?<\/the_process>\n*/,
+      '',
+    );
+    const result = validateSkillContent('test.md', skillWithoutTheProcess);
+    expect(result.errors).toContain('Missing required tag: <the_process>');
+  });
+
+  it('detects missing examples tag', () => {
+    const content = validSkill.replace(/<examples>[\s\S]*?<\/examples>\n*/, '');
+    const result = validateSkillContent('test.md', content);
+    expect(result.errors).toContain('Missing required tag: <examples>');
+  });
+
+  it('detects critical_rules after the_process', () => {
+    const content = `---
+name: test
+description: test
+---
+
+<skill_overview>Overview.</skill_overview>
+<rigidity_level>High</rigidity_level>
+<when_to_use>Use here.</when_to_use>
+<the_process>Process.</the_process>
+<critical_rules>Rules.</critical_rules>
+<examples>Examples.</examples>
+<key_principles>Principles.</key_principles>
+`;
+    const result = validateSkillContent('test.md', content);
+    expect(result.errors).toContain(
+      '<critical_rules> must appear before <the_process>',
+    );
+  });
+
+  it('detects duplicate XML tags', () => {
+    const content =
+      validSkill + '\n<critical_rules>\nDuplicate rules.\n</critical_rules>\n';
+    const result = validateSkillContent('test.md', content);
+    expect(result.errors).toContain('Duplicate tag: <critical_rules>');
   });
 
   it('detects whitespace-only tag as empty', () => {

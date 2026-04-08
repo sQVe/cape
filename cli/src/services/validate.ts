@@ -70,12 +70,39 @@ export const validateSkillContent = (file: string, content: string): ValidateRes
     }
   }
 
-  const requiredTags = ['skill_overview', 'rigidity_level', 'when_to_use', 'critical_rules'];
+  const requiredTags = [
+    'skill_overview',
+    'rigidity_level',
+    'when_to_use',
+    'critical_rules',
+    'the_process',
+    'examples',
+    'key_principles',
+  ];
   for (const tag of requiredTags) {
     if (!hasTag(content, tag)) {
       errors.push(`Missing required tag: <${tag}>`);
     } else if (!tagHasContent(content, tag)) {
       errors.push(`Empty tag: <${tag}>`);
+    }
+  }
+
+  const criticalRulesPos = content.indexOf('<critical_rules>');
+  const theProcessPos = content.indexOf('<the_process>');
+  if (criticalRulesPos !== -1 && theProcessPos !== -1 && criticalRulesPos > theProcessPos) {
+    errors.push('<critical_rules> must appear before <the_process>');
+  }
+
+  const allKnownTags = [
+    ...requiredTags,
+    'agent_references',
+    'skill_references',
+    'anti_batching',
+  ];
+  for (const tag of allKnownTags) {
+    const openTag = `<${tag}>`;
+    if (content.indexOf(openTag) !== content.lastIndexOf(openTag)) {
+      errors.push(`Duplicate tag: <${tag}>`);
     }
   }
 
