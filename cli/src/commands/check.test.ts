@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer, Result } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { CheckResult } from '../services/check';
@@ -18,6 +18,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const makeTestDetectLayer = (results: DetectResult[] = []) =>
   Layer.succeed(DetectService)({
@@ -74,12 +75,11 @@ const commandLayers = Layer.mergeAll(
 
 describe('check command wiring', () => {
   it('outputs JSON when all checks pass', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['check']).pipe(Effect.provide(commandLayers)));
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual([{ check: 'vitest', passed: true, output: 'Tests passed' }]);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when any check fails', async () => {
@@ -96,11 +96,11 @@ describe('check command wiring', () => {
       stubValidateLayer,
       stubConformLayer,
     );
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     await expect(Effect.runPromise(run(['check']).pipe(Effect.provide(layers)))).rejects.toThrow(
       'checks failed: vitest',
     );
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when detection fails', async () => {

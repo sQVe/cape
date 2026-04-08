@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { HookService } from '../services/hook';
@@ -22,6 +22,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const repoTemplate = [
   '#### Summary',
@@ -154,48 +155,45 @@ describe('pr template command', () => {
   });
 
   it('returns default template when no repo template exists', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers())));
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.source).toBe('default');
     expect(result.sections).toEqual(['Motivation', 'Changes', 'Test plan']);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns repo template when .github/pull_request_template.md exists', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = makeStubPrLayer({
       '/repo/.github/pull_request_template.md': repoTemplate,
     });
     await Effect.runPromise(
       run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Summary', 'Test plan']);
     expect(result.content).toBe(repoTemplate);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('finds uppercase PULL_REQUEST_TEMPLATE.md', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = makeStubPrLayer({
       '/repo/.github/PULL_REQUEST_TEMPLATE.md': repoTemplate,
     });
     await Effect.runPromise(
       run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Summary', 'Test plan']);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('extracts sections from h2 headings in repo template', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const h2Template = '## Summary\n\nDescribe.\n\n## Risk\n\n- [ ] Low\n';
     const prLayer = makeStubPrLayer({
       '/repo/.github/pull_request_template.md': h2Template,
@@ -203,26 +201,24 @@ describe('pr template command', () => {
     await Effect.runPromise(
       run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Summary', 'Risk']);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('cascades through template paths in order', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = makeStubPrLayer({
       '/repo/docs/pull_request_template.md': '#### Custom\nstuff',
     });
     await Effect.runPromise(
       run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.source).toBe('repo');
     expect(result.sections).toEqual(['Custom']);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -234,7 +230,7 @@ describe('pr validate command', () => {
   });
 
   it('returns valid when all default sections present and boxes checked', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
@@ -246,14 +242,13 @@ describe('pr validate command', () => {
     await Effect.runPromise(
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects unchecked test plan boxes', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
@@ -267,15 +262,14 @@ describe('pr validate command', () => {
         run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
       ),
     ).rejects.toThrow('unchecked test plan items');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['works']);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('detects missing sections', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.succeed('#### Motivation\njust this'),
@@ -288,16 +282,15 @@ describe('pr validate command', () => {
         run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
       ),
     ).rejects.toThrow('Changes, Test plan');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.valid).toBe(false);
     expect(result.missing).toContain('Changes');
     expect(result.missing).toContain('Test plan');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('validates from stdin with --stdin flag', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.fail(new Error('should not read file')),
@@ -309,22 +302,21 @@ describe('pr validate command', () => {
     await Effect.runPromise(
       run(['pr', 'validate', '--stdin']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when neither file nor --stdin provided', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     await expect(
       Effect.runPromise(run(['pr', 'validate']).pipe(Effect.provide(makeCommandLayers()))),
     ).rejects.toThrow('provide <file> or --stdin');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('validates against repo template when present', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: (path) => Effect.succeed(path === '/repo/.github/pull_request_template.md'),
       readFile: (path) =>
@@ -338,10 +330,9 @@ describe('pr validate command', () => {
     await Effect.runPromise(
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -415,21 +406,20 @@ describe('pr create command', () => {
   });
 
   it('creates PR and returns url on success', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['pr', 'create', '--title', 'My PR', '--body', validBody]).pipe(
         Effect.provide(makeCreateLayers()),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.created).toBe(true);
     expect(result.url).toBe('https://github.com/owner/repo/pull/1');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when on default branch', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const hookLayer = makeCreateHookLayer({ branch: 'main' });
     await expect(
       Effect.runPromise(
@@ -438,11 +428,11 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('Cannot create PR from default branch');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when uncommitted changes exist', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const hookLayer = makeCreateHookLayer({ status: 'M src/foo.ts' });
     await expect(
       Effect.runPromise(
@@ -451,11 +441,11 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('Uncommitted changes detected');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when body validation fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     await expect(
       Effect.runPromise(
         run(['pr', 'create', '--title', 'My PR', '--body', '#### Motivation\nonly this']).pipe(
@@ -463,11 +453,11 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('PR body validation failed');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('skips push when --no-push is set', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let pushCalled = false;
     const hookLayer = Layer.succeed(HookService)({
       pluginRoot: () => '/test',
@@ -501,11 +491,11 @@ describe('pr create command', () => {
       ),
     );
     expect(pushCalled).toBe(false);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('passes --draft flag to gh', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedGhArgs: readonly string[] = [];
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
@@ -523,11 +513,11 @@ describe('pr create command', () => {
       ),
     );
     expect(capturedGhArgs).toContain('--draft');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('passes --label flag to gh', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedGhArgs: readonly string[] = [];
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
@@ -546,11 +536,11 @@ describe('pr create command', () => {
     );
     expect(capturedGhArgs).toContain('--label');
     expect(capturedGhArgs).toContain('enhancement');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('falls back to main when symbolic-ref returns null', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const hookLayer = Layer.succeed(HookService)({
       pluginRoot: () => '/test',
       readFile: () => Effect.succeed(null),
@@ -582,14 +572,13 @@ describe('pr create command', () => {
         Effect.provide(makeCreateLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.created).toBe(true);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors on detached HEAD when rev-parse returns null', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const hookLayer = Layer.succeed(HookService)({
       pluginRoot: () => '/test',
       readFile: () => Effect.succeed(null),
@@ -614,11 +603,11 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('failed to determine current branch');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when gh pr create fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const prLayer = makeCreatePrLayer(new Error('HTTP 422: Validation Failed'));
     await expect(
       Effect.runPromise(
@@ -627,11 +616,11 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('gh pr create failed: HTTP 422: Validation Failed');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when git push fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const hookLayer = makeCreateHookLayer({ pushResult: null });
     await expect(
       Effect.runPromise(
@@ -640,6 +629,6 @@ describe('pr create command', () => {
         ),
       ),
     ).rejects.toThrow('git push failed');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });

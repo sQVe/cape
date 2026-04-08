@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { BeadData, ChildStatus } from '../services/brValidate';
@@ -20,6 +20,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const makeBead = (overrides: Partial<BeadData> = {}) => ({
   id: 'cape-test',
@@ -150,19 +151,17 @@ describe('validateSections', () => {
 
 describe('br validate command', () => {
   it('returns valid JSON for valid bead', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['br', 'validate', 'cape-test']).pipe(Effect.provide(makeCommandLayers())),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ valid: true, errors: [] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns errors for invalid epic', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const bead = makeBead({
       issue_type: 'epic',
       description: '## Requirements\nstuff',
@@ -174,12 +173,11 @@ describe('br validate command', () => {
         ),
       ),
     ).rejects.toThrow('missing section');
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('validates from stdin with --type flag', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.succeed(makeBead()),
       updateDesign: () => Effect.succeed(undefined),
@@ -192,15 +190,13 @@ describe('br validate command', () => {
     await Effect.runPromise(
       run(['br', 'validate', '--type', 'task']).pipe(Effect.provide(makeCommandLayers(brLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ valid: true, errors: [] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects invalid content from stdin', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.succeed(makeBead()),
       updateDesign: () => Effect.succeed(undefined),
@@ -212,16 +208,15 @@ describe('br validate command', () => {
         run(['br', 'validate', '--type', 'epic']).pipe(Effect.provide(makeCommandLayers(brLayer))),
       ),
     ).rejects.toThrow('missing section');
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when neither id nor --type provided', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     await expect(
       Effect.runPromise(run(['br', 'validate']).pipe(Effect.provide(makeCommandLayers()))),
     ).rejects.toThrow('provide either <id> or --type');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -266,31 +261,30 @@ describe('generateTemplate', () => {
 
 describe('br template command', () => {
   it('outputs template for valid type', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['br', 'template', '--type', 'task']).pipe(Effect.provide(makeCommandLayers())),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    expect(output).toContain('## Goal');
-    expect(output).toContain('## Behaviors');
-    expect(output).toContain('## Success criteria');
-    consoleSpy.mockRestore();
+    expect(console_.output()).toContain('## Goal');
+    expect(console_.output()).toContain('## Behaviors');
+    expect(console_.output()).toContain('## Success criteria');
+    console_.restore();
   });
 
   it('exits with error for unknown type', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     await expect(
       Effect.runPromise(
         run(['br', 'template', '--type', 'unknown']).pipe(Effect.provide(makeCommandLayers())),
       ),
     ).rejects.toThrow();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
 describe('br design command', () => {
   it('appends section to existing design', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let updatedDesign = '';
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.succeed(makeBead({ design: '## Existing\nold content' })),
@@ -309,14 +303,13 @@ describe('br design command', () => {
     expect(updatedDesign).toContain('## Existing\nold content');
     expect(updatedDesign).toContain('## New section');
     expect(updatedDesign).toContain('new content');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ updated: true, id: 'cape-test' });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('creates fresh design when null', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let updatedDesign = '';
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.succeed(makeBead({ design: null })),
@@ -333,7 +326,7 @@ describe('br design command', () => {
       ),
     );
     expect(updatedDesign).toBe('## First section\n\nfresh content');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -364,7 +357,7 @@ describe('br close-check command', () => {
   };
 
   it('returns canClose:true when all subtasks closed and checks pass', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'closed' }];
     const checks: CheckResult[] = [{ check: 'vitest', passed: true, output: 'ok' }];
     await Effect.runPromise(
@@ -372,17 +365,15 @@ describe('br close-check command', () => {
         Effect.provide(makeCloseCheckLayers(children, checks)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.canClose).toBe(true);
     expect(result.openSubtasks).toEqual([]);
     expect(result.checksPassed).toBe(true);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns canClose:false when subtasks are open', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'open' }];
     await expect(
       Effect.runPromise(
@@ -391,17 +382,14 @@ describe('br close-check command', () => {
         ),
       ),
     ).rejects.toThrow('close-check failed for test-id: 1 open task(s), checks passed');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.canClose).toBe(false);
     expect(result.openSubtasks).toHaveLength(1);
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns canClose:false when checks fail', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
     await expect(
       Effect.runPromise(
@@ -410,12 +398,10 @@ describe('br close-check command', () => {
         ),
       ),
     ).rejects.toThrow('close-check failed for test-id: 0 open task(s), checks failed');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.canClose).toBe(false);
     expect(result.checksPassed).toBe(false);
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -475,42 +461,40 @@ describe('br close command', () => {
     );
 
   it('closes issue and returns structured JSON', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCloseLayer('✓ Closed bd-test');
     await Effect.runPromise(
       run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.closed).toBe(true);
     expect(result.id).toBe('bd-test');
     expect(result.stopMessage).toContain('STOP');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('cleans up state files on close', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles, removedFiles } = makeCloseLayer('✓ Closed bd-test');
     await Effect.runPromise(
       run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
     );
     expect(removedFiles).toContain('/test/hooks/context/state.json');
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns error JSON when br close fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCloseLayer(null);
     await expect(
       Effect.runPromise(
         run(['br', 'close', 'bd-test']).pipe(Effect.provide(makeCloseLayers(hookLayer))),
       ),
     ).rejects.toThrow('failed to close bd-test');
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toContain('failed to close');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -556,7 +540,7 @@ describe('br create command', () => {
     );
 
   it('creates issue and returns structured JSON', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await Effect.runPromise(
       run([
@@ -573,15 +557,14 @@ describe('br create command', () => {
         validTaskDescription,
       ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.created).toBe(true);
     expect(result.id).toBe('bd-test');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when --type is missing', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await expect(
       Effect.runPromise(
@@ -590,11 +573,11 @@ describe('br create command', () => {
         ),
       ),
     ).rejects.toThrow('--type is required');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when --priority is missing', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await expect(
       Effect.runPromise(
@@ -603,11 +586,11 @@ describe('br create command', () => {
         ),
       ),
     ).rejects.toThrow('--priority is required');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when --labels is missing', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await expect(
       Effect.runPromise(
@@ -616,11 +599,11 @@ describe('br create command', () => {
         ),
       ),
     ).rejects.toThrow('--labels is required');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects --design flag with redirect message', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await expect(
       Effect.runPromise(
@@ -639,13 +622,12 @@ describe('br create command', () => {
         ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
       ),
     ).rejects.toThrow();
-    const output = stderrSpy.mock.calls.flat().join('');
-    expect(output).toContain('cape br design');
-    stderrSpy.mockRestore();
+    expect(console_.errorOutput()).toContain('cape br design');
+    console_.restore();
   });
 
   it('validates description headers and rejects invalid', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer('bd-test');
     await expect(
       Effect.runPromise(
@@ -664,14 +646,13 @@ describe('br create command', () => {
         ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
       ),
     ).rejects.toThrow('missing section');
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toContain('missing section: Behaviors');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('reads description from stdin when --description not provided', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, getCapturedArgs } = makeCreateLayer('bd-test');
     await Effect.runPromise(
       run(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1', '--labels', 'hitl']).pipe(
@@ -679,11 +660,11 @@ describe('br create command', () => {
       ),
     );
     expect(getCapturedArgs()).toContain('--description');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('passes --parent flag through to br create', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, getCapturedArgs } = makeCreateLayer('bd-test.1');
     await Effect.runPromise(
       run([
@@ -705,11 +686,11 @@ describe('br create command', () => {
     const args = getCapturedArgs();
     expect(args).toContain('--parent');
     expect(args).toContain('bd-test');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns error JSON when br create fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeCreateLayer(null);
     await expect(
       Effect.runPromise(
@@ -728,58 +709,54 @@ describe('br create command', () => {
         ]).pipe(Effect.provide(makeCreateLayers(hookLayer))),
       ),
     ).rejects.toThrow('br create failed: task "Test"');
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toContain('br create failed: task');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
 describe('br expanded-check command', () => {
   it('returns hasExpandedPlan false for task with no design field', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const bead = makeBead({ design: null });
     await Effect.runPromise(
       run(['br', 'expanded-check', 'cape-test']).pipe(
         Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ hasExpandedPlan: false });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns hasExpandedPlan false when design exists but lacks expanded plan section', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const bead = makeBead({ design: '## Brainstorm (brainstorm)\n\nSome design notes' });
     await Effect.runPromise(
       run(['br', 'expanded-check', 'cape-test']).pipe(
         Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ hasExpandedPlan: false });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns hasExpandedPlan true when design contains expanded plan section', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const bead = makeBead({ design: '## Expanded plan (expand-task)\n\n### Steps\n...' });
     await Effect.runPromise(
       run(['br', 'expanded-check', 'cape-test']).pipe(
         Effect.provide(makeCommandLayers(makeStubBrLayer(bead))),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ hasExpandedPlan: true });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('exits non-zero when task ID does not exist', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const brLayer = Layer.succeed(BrValidateService)({
       show: () => Effect.fail(new Error('bead not found: nonexistent')),
       updateDesign: () => Effect.succeed(undefined),
@@ -793,10 +770,9 @@ describe('br expanded-check command', () => {
         ),
       ),
     ).rejects.toThrow();
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toContain('bead not found');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -849,23 +825,22 @@ describe('br update command', () => {
     );
 
   it('updates issue and returns structured JSON', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
         Effect.provide(makeUpdateLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.updated).toBe(true);
     expect(result.id).toBe('bd-test');
     expect(result.phase).toBe('executing');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects hyphenated status values', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
     await expect(
       Effect.runPromise(
@@ -874,13 +849,12 @@ describe('br update command', () => {
         ),
       ),
     ).rejects.toThrow();
-    const output = stderrSpy.mock.calls.flat().join('');
-    expect(output).toContain('in_progress');
-    stderrSpy.mockRestore();
+    expect(console_.errorOutput()).toContain('in_progress');
+    console_.restore();
   });
 
   it('rejects done as status', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeUpdateLayer('✓ Updated bd-test');
     await expect(
       Effect.runPromise(
@@ -889,13 +863,12 @@ describe('br update command', () => {
         ),
       ),
     ).rejects.toThrow();
-    const output = stderrSpy.mock.calls.flat().join('');
-    expect(output).toContain('cape br close');
-    stderrSpy.mockRestore();
+    expect(console_.errorOutput()).toContain('cape br close');
+    console_.restore();
   });
 
   it('writes flowPhase to state.json with phase and issueId', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
@@ -907,11 +880,11 @@ describe('br update command', () => {
     expect(state.flowPhase.phase).toBe('executing');
     expect(state.flowPhase.issueId).toBe('bd-test');
     expect(state.flowPhase.timestamp).toBeTypeOf('number');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('derives debugging phase for bug type', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer(
       '✓ Updated bd-test',
       '{"id":"bd-test","issue_type":"bug"}',
@@ -923,11 +896,11 @@ describe('br update command', () => {
     );
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
     expect(state.flowPhase.phase).toBe('debugging');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('derives planning phase for epic type', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer(
       '✓ Updated bd-test',
       '{"id":"bd-test","issue_type":"epic"}',
@@ -939,11 +912,11 @@ describe('br update command', () => {
     );
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
     expect(state.flowPhase.phase).toBe('planning');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('delegates all args to br update', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, getCapturedArgs } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
@@ -955,11 +928,11 @@ describe('br update command', () => {
     expect(args).toContain('bd-test');
     expect(args).toContain('--status');
     expect(args).toContain('in_progress');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns error JSON when br update fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer } = makeUpdateLayer(null);
     await expect(
       Effect.runPromise(
@@ -968,14 +941,13 @@ describe('br update command', () => {
         ),
       ),
     ).rejects.toThrow('br update failed for bd-test');
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toContain('br update failed for bd-test');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('falls back to executing phase when brQuery show returns malformed JSON', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test', 'not valid json{{{');
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
@@ -984,11 +956,11 @@ describe('br update command', () => {
     );
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
     expect(state.flowPhase.phase).toBe('executing');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('falls back to executing phase when brQuery show returns null', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test', null);
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--status', 'in_progress']).pipe(
@@ -997,11 +969,11 @@ describe('br update command', () => {
     );
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json']!);
     expect(state.flowPhase.phase).toBe('executing');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('skips state write when --status is not provided', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { hookLayer, writtenFiles } = makeUpdateLayer('✓ Updated bd-test');
     await Effect.runPromise(
       run(['br', 'update', 'bd-test', '--description', 'new desc']).pipe(
@@ -1009,10 +981,9 @@ describe('br update command', () => {
       ),
     );
     expect(writtenFiles['/test/hooks/context/state.json']).toBeUndefined();
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.updated).toBe(true);
     expect(result.phase).toBeUndefined();
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });

@@ -40,11 +40,15 @@ export const makeTestCommandLayers = (
 
 export const spyConsole = () => {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
   return {
-    output: () => spy.mock.calls.flat().join(''),
+    output: () => logSpy.mock.calls.flat().join(''),
+    errorOutput: () => errorSpy.mock.calls.flat().join(''),
     restore: () => {
-      spy.mockRestore();
+      logSpy.mockRestore();
+      errorSpy.mockRestore();
     },
   };
 };

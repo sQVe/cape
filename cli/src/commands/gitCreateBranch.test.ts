@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { BranchValidation } from '../services/git';
@@ -17,6 +17,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -116,18 +117,17 @@ describe('git create-branch command', () => {
   });
 
   it('outputs JSON with created and branch on success', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['git', 'create-branch', 'feat/my-feature']).pipe(Effect.provide(testLayers(makeGitLayer()))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ created: true, branch: 'feat/test' });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('outputs JSON error when validation fails', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const validation: BranchValidation = {
       valid: false,
       errors: ['missing prefix', 'too long'],
@@ -139,10 +139,9 @@ describe('git create-branch command', () => {
         ),
       ),
     ).rejects.toThrow();
-    const output = stderrSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.errorOutput());
     expect(result.error).toBe('missing prefix, too long');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('fails when git create-branch errors', async () => {

@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import type { ChildStatus } from '../services/brValidate';
@@ -18,6 +18,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -68,7 +69,7 @@ describe('epic verify command', () => {
   });
 
   it('returns verified:true when all tasks closed and checks pass', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const children: ChildStatus[] = [
       { id: 'test.1', title: 'Task 1', status: 'closed' },
       { id: 'test.2', title: 'Task 2', status: 'closed' },
@@ -79,17 +80,15 @@ describe('epic verify command', () => {
         Effect.provide(testLayers(makeBrLayer(children), makeCheckLayer(checks))),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.verified).toBe(true);
     expect(result.openTasks).toEqual([]);
     expect(result.checksPassed).toBe(true);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns verified:false when tasks are still open', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const children: ChildStatus[] = [
       { id: 'test.1', title: 'Task 1', status: 'closed' },
       { id: 'test.2', title: 'Task 2', status: 'open' },
@@ -101,17 +100,14 @@ describe('epic verify command', () => {
         ),
       ),
     ).rejects.toThrow('epic verification failed for test-epic: 1 open task(s), checks passed');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.verified).toBe(false);
     expect(result.openTasks).toEqual([{ id: 'test.2', title: 'Task 2', status: 'open' }]);
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('returns verified:false when checks fail', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'closed' }];
     const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
     await expect(
@@ -121,11 +117,9 @@ describe('epic verify command', () => {
         ),
       ),
     ).rejects.toThrow('epic verification failed for test-epic: 0 open task(s), checks failed');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.verified).toBe(false);
     expect(result.checksPassed).toBe(false);
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 });

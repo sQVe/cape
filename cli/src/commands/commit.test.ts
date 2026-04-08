@@ -1,6 +1,6 @@
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import {
@@ -224,18 +224,15 @@ describe('commit command wiring', () => {
 
   it('warns on sensitive files to stderr but still commits', async () => {
     const console_ = spyConsole();
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const msg = 'feat: add config\n\nAdd environment configuration.';
     await Effect.runPromise(
       run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
-    const stderrOutput = stderrSpy.mock.calls.flat().join('');
-    expect(stderrOutput).toContain('warning: sensitive files');
-    expect(stderrOutput).toContain('.env');
+    expect(console_.errorOutput()).toContain('warning: sensitive files');
+    expect(console_.errorOutput()).toContain('.env');
     const result = JSON.parse(console_.output());
     expect(result.message).toBe(msg);
     console_.restore();
-    stderrSpy.mockRestore();
   });
 
   it('commits with --no-edit for merge commits', async () => {

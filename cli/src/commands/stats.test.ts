@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { HookService } from '../services/hook';
@@ -16,6 +16,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -54,17 +55,17 @@ const makeTestLayers = (fileContent: string | null = null) => {
 
 describe('stats', () => {
   it('outputs "No events recorded yet." when file is missing', async () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(null))));
-    expect(spy).toHaveBeenCalledWith('No events recorded yet.');
-    spy.mockRestore();
+    expect(console_.output()).toContain('No events recorded yet.');
+    console_.restore();
   });
 
   it('outputs "No events recorded yet." when file is empty', async () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(''))));
-    expect(spy).toHaveBeenCalledWith('No events recorded yet.');
-    spy.mockRestore();
+    expect(console_.output()).toContain('No events recorded yet.');
+    console_.restore();
   });
 
   it('outputs summary with total count and command breakdown', async () => {
@@ -76,13 +77,13 @@ describe('stats', () => {
       .map((e) => JSON.stringify(e))
       .join('\n');
 
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('Total events: 3');
     expect(output).toContain('commit: 2');
     expect(output).toContain('check: 1');
-    spy.mockRestore();
+    console_.restore();
   });
 
   it('shows last 7 days count', async () => {
@@ -97,11 +98,11 @@ describe('stats', () => {
       .map((e) => JSON.stringify(e))
       .join('\n');
 
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('Events in last 7 days: 2');
-    spy.mockRestore();
+    console_.restore();
   });
 
   it('shows 10 most recent entries in reverse chronological order', async () => {
@@ -111,13 +112,13 @@ describe('stats', () => {
     }));
     const events = entries.map((e) => JSON.stringify(e)).join('\n');
 
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('cmd15');
     expect(output).toContain('cmd6');
     expect(output).not.toContain(' cmd5 ');
-    spy.mockRestore();
+    console_.restore();
   });
 
   it('includes detail in recent entries when present', async () => {
@@ -127,20 +128,20 @@ describe('stats', () => {
       detail: 'deny: no tests',
     });
 
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('deny: no tests');
-    spy.mockRestore();
+    console_.restore();
   });
 
   it('skips malformed JSONL lines gracefully', async () => {
     const events = ['not json', JSON.stringify({ ts: '2026-03-30T10:00:00.000Z', cmd: 'commit' })].join('\n');
 
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('Total events: 1');
-    spy.mockRestore();
+    console_.restore();
   });
 });

@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { resolveTestCommand } from '../services/check';
@@ -18,6 +18,7 @@ import {
   stubPrLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -83,38 +84,34 @@ const makeLayers = (
 
 describe('test command', () => {
   it('runs tests and returns structured JSON on pass', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { layers, writtenFiles } = makeLayers();
     await Effect.runPromise(run(['test']).pipe(Effect.provide(layers)));
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.passed).toBe(true);
     expect(result.phase).toBe('green');
     expect(result.runner).toBe('vitest');
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.phase).toBe('green');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('writes red phase and fails on test failure', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { layers, writtenFiles } = makeLayers(undefined, makeTestLayer(false, 'FAIL: 1 test'));
     await expect(
       Effect.runPromise(run(['test']).pipe(Effect.provide(layers))),
     ).rejects.toThrow('tests failed (runner: vitest)');
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.phase).toBe('red');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.passed).toBe(false);
     expect(result.phase).toBe('red');
-    consoleSpy.mockRestore();
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('errors when no test runner detected', async () => {
-    const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const console_ = spyConsole();
     const noRunnerDetect = makeDetectLayer([
       { language: 'typescript', testFramework: null, linter: null, formatter: null },
     ]);
@@ -122,11 +119,11 @@ describe('test command', () => {
     await expect(
       Effect.runPromise(run(['test']).pipe(Effect.provide(layers))),
     ).rejects.toThrow('no test runner detected for typescript');
-    stderrSpy.mockRestore();
+    console_.restore();
   });
 
   it('passes file argument through to test runner', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedArgs: readonly string[] = [];
     const testLayer = Layer.succeed(TestService)({
       runTest: (_cmd, args) => {
@@ -137,14 +134,13 @@ describe('test command', () => {
     const { layers } = makeLayers(undefined, testLayer);
     await Effect.runPromise(run(['test', 'src/foo.test.ts']).pipe(Effect.provide(layers)));
     expect(capturedArgs).toContain('src/foo.test.ts');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.file).toBe('src/foo.test.ts');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('resolves source file to test file', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedArgs: readonly string[] = [];
     const testLayer = Layer.succeed(TestService)({
       runTest: (_cmd, args) => {
@@ -155,11 +151,11 @@ describe('test command', () => {
     const { layers } = makeLayers(undefined, testLayer);
     await Effect.runPromise(run(['test', 'src/foo.ts']).pipe(Effect.provide(layers)));
     expect(capturedArgs).toContain('src/foo.test.ts');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('passes raw source file when resolveTestPath returns null', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedArgs: readonly string[] = [];
     const testLayer = Layer.succeed(TestService)({
       runTest: (_cmd, args) => {
@@ -173,11 +169,11 @@ describe('test command', () => {
     const { layers } = makeLayers(detectLayer, testLayer);
     await Effect.runPromise(run(['test', 'src/foo.unk']).pipe(Effect.provide(layers)));
     expect(capturedArgs).toContain('src/foo.unk');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('does not resolve test file paths', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     let capturedArgs: readonly string[] = [];
     const testLayer = Layer.succeed(TestService)({
       runTest: (_cmd, args) => {
@@ -188,18 +184,18 @@ describe('test command', () => {
     const { layers } = makeLayers(undefined, testLayer);
     await Effect.runPromise(run(['test', 'src/foo.test.ts']).pipe(Effect.provide(layers)));
     expect(capturedArgs).toContain('src/foo.test.ts');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('writes TDD state with timestamp', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const { layers, writtenFiles } = makeLayers();
     const before = Date.now();
     await Effect.runPromise(run(['test']).pipe(Effect.provide(layers)));
     const state = JSON.parse(writtenFiles['/test/hooks/context/state.json'] ?? '{}').tddState;
     expect(state.timestamp).toBeGreaterThanOrEqual(before);
     expect(state.timestamp).toBeLessThanOrEqual(Date.now());
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
 

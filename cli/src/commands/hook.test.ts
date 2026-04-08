@@ -39,6 +39,7 @@ import {
   stubConformLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 vi.mock('../eventLog', () => ({
   logEvent: vi.fn(),
@@ -388,25 +389,25 @@ const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
 
 describe('hook command wiring', () => {
   it('handles session-start event', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'session-start']).pipe(Effect.provide(makeCommandLayers())),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.additionalContext).toContain('cape plugin loaded.');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('handles SessionStart PascalCase', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'SessionStart']).pipe(Effect.provide(makeCommandLayers())),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.additionalContext).toContain('cape plugin loaded.');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('clears logs with --clear-logs flag', async () => {
@@ -417,7 +418,7 @@ describe('hook command wiring', () => {
       removedFiles,
       files: stateFile({ tddState: tddEntry('red') }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'session-start', '--clear-logs']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
@@ -425,36 +426,36 @@ describe('hook command wiring', () => {
     );
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
     expect(removedFiles).toContain('/test/hooks/context/state.json');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('handles user-prompt-submit with beads detection', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'show br issues' }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'user-prompt-submit']).pipe(Effect.provide(makeCommandLayers(hookLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.decision).toBe('approve');
     expect(result.additionalContext).toContain('cape:beads');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('outputs approve-only for pass-through on user-prompt-submit', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'hello' }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'user-prompt-submit']).pipe(Effect.provide(makeCommandLayers(hookLayer))),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result).toEqual({ decision: 'approve' });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
 
@@ -1062,16 +1063,16 @@ describe('hook command - PreToolUse wiring', () => {
     const hookLayer = makeStubHookLayer({
       stdin: bashStdin('git commit -m "feat: test"'),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Bash']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('routes pre-tool-use --matcher Skill to flow-gate', async () => {
@@ -1079,56 +1080,56 @@ describe('hook command - PreToolUse wiring', () => {
       stdin: skillStdin('cape:execute-plan'),
       brResponses: { '--type epic': '' },
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Skill']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('produces no output for pass-through commands', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Bash']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
-    consoleSpy.mockRestore();
+    expect(console_.output()).toHaveLength(0);
+    console_.restore();
   });
 
   it('produces no output for unknown matcher', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Unknown']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
-    consoleSpy.mockRestore();
+    expect(console_.output()).toHaveLength(0);
+    console_.restore();
   });
 
   it('accepts PascalCase PreToolUse event name', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: bashStdin('git commit -m "feat: test"'),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'PreToolUse', '--matcher', 'Bash']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('routes pre-tool-use --matcher Edit to TDD gate', async () => {
@@ -1136,16 +1137,16 @@ describe('hook command - PreToolUse wiring', () => {
       stdin: editStdin('/src/foo.ts'),
       files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Edit']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('routes pre-tool-use --matcher Write to TDD gate', async () => {
@@ -1156,16 +1157,16 @@ describe('hook command - PreToolUse wiring', () => {
         '/src/foo.ts': 'old content',
       },
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Write']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('produces no output for Edit pass-through', async () => {
@@ -1175,14 +1176,14 @@ describe('hook command - PreToolUse wiring', () => {
         ...stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('red') }),
       },
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'pre-tool-use', '--matcher', 'Edit']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
-    consoleSpy.mockRestore();
+    expect(console_.output()).toHaveLength(0);
+    console_.restore();
   });
 });
 
@@ -1959,15 +1960,15 @@ describe('hook command - PostToolUse wiring', () => {
       stdin: bashStdin('br show cape-abc'),
       writtenFiles,
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'post-tool-use', '--matcher', 'Bash']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
+    expect(console_.output()).toHaveLength(0);
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toContain('cape-abc');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('routes post-tool-use --matcher Edit with TDD reminder output', async () => {
@@ -1975,16 +1976,16 @@ describe('hook command - PostToolUse wiring', () => {
       stdin: editStdin('/src/foo.ts'),
       files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'post-tool-use', '--matcher', 'Edit']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.additionalContext).toContain('TDD reminder');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('accepts PascalCase PostToolUse event name', async () => {
@@ -1993,14 +1994,14 @@ describe('hook command - PostToolUse wiring', () => {
       stdin: bashStdin('br show cape-xyz'),
       writtenFiles,
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'PostToolUse', '--matcher', 'Bash']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
     expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toContain('cape-xyz');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('routes post-tool-use --matcher Write with TDD reminder output', async () => {
@@ -2008,28 +2009,28 @@ describe('hook command - PostToolUse wiring', () => {
       stdin: writeStdin('/src/foo.ts', 'production code'),
       files: stateFile({ flowPhase: flowPhaseEntry('executing'), tddState: tddEntry('pending') }),
     });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'post-tool-use', '--matcher', 'Write']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
+    const output = console_.output();
     const result = JSON.parse(output);
     expect(result.additionalContext).toContain('TDD reminder');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('produces no output for unknown PostToolUse matcher', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['hook', 'post-tool-use', '--matcher', 'Unknown']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(consoleSpy.mock.calls).toHaveLength(0);
-    consoleSpy.mockRestore();
+    expect(console_.output()).toHaveLength(0);
+    console_.restore();
   });
 });
 

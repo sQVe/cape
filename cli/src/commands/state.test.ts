@@ -1,7 +1,7 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { HookService } from '../services/hook';
@@ -16,6 +16,7 @@ import {
   stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
+import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
@@ -54,11 +55,11 @@ const makeLayers = (stateContent: string | null = null) =>
 
 describe('cape state list', () => {
   it('shows all available keys when state is empty', async () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['state', 'list']).pipe(Effect.provide(makeLayers(null))),
     );
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('Active state: None');
     expect(output).toContain('Available keys');
     expect(output).toContain('flowPhase');
@@ -66,88 +67,79 @@ describe('cape state list', () => {
     expect(output).toContain('workflowActive');
     expect(output).toContain('executing | debugging | planning');
     expect(output).toContain('red | green | writing-test');
-    spy.mockRestore();
+    console_.restore();
   });
 
   it('shows active key under Active state and inactive keys under Available keys', async () => {
     const state = JSON.stringify({
       tddState: { phase: 'green', timestamp: Date.now() },
     });
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    try {
-      await Effect.runPromise(
-        run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-      );
-      const output = spy.mock.calls.map((c) => c[0]).join('\n');
-      const activeIdx = output.indexOf('Active state:');
-      const availableIdx = output.indexOf('Available keys:');
-      const opsIdx = output.indexOf('Common operations:');
-      const tddIdx = output.indexOf('tddState: {"phase":"green"}');
-      expect(activeIdx).toBeGreaterThanOrEqual(0);
-      expect(availableIdx).toBeGreaterThan(activeIdx);
-      expect(tddIdx).toBeGreaterThan(activeIdx);
-      expect(tddIdx).toBeLessThan(availableIdx);
-      const availableSection = output.slice(availableIdx, opsIdx);
-      expect(availableSection).toContain('flowPhase');
-      expect(availableSection).toContain('workflowActive');
-      expect(availableSection).not.toContain('tddState');
-    } finally {
-      spy.mockRestore();
-    }
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
+    );
+    const output = console_.output();
+    const activeIdx = output.indexOf('Active state:');
+    const availableIdx = output.indexOf('Available keys:');
+    const opsIdx = output.indexOf('Common operations:');
+    const tddIdx = output.indexOf('tddState: {"phase":"green"}');
+    expect(activeIdx).toBeGreaterThanOrEqual(0);
+    expect(availableIdx).toBeGreaterThan(activeIdx);
+    expect(tddIdx).toBeGreaterThan(activeIdx);
+    expect(tddIdx).toBeLessThan(availableIdx);
+    const availableSection = output.slice(availableIdx, opsIdx);
+    expect(availableSection).toContain('flowPhase');
+    expect(availableSection).toContain('workflowActive');
+    expect(availableSection).not.toContain('tddState');
+    console_.restore();
   });
 
   it('shows expired TTL key under Active state with expired label', async () => {
     const state = JSON.stringify({
       tddState: { phase: 'red', timestamp: Date.now() - 20 * 60 * 1000 },
     });
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    try {
-      await Effect.runPromise(
-        run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-      );
-      const output = spy.mock.calls.map((c) => c[0]).join('\n');
-      const activeSection = output.slice(
-        output.indexOf('Active state:'),
-        output.indexOf('Available keys:'),
-      );
-      expect(activeSection).toContain('tddState');
-      expect(activeSection).toContain('[expired]');
-    } finally {
-      spy.mockRestore();
-    }
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
+    );
+    const output = console_.output();
+    const activeSection = output.slice(
+      output.indexOf('Active state:'),
+      output.indexOf('Available keys:'),
+    );
+    expect(activeSection).toContain('tddState');
+    expect(activeSection).toContain('[expired]');
+    console_.restore();
   });
 
   it('shows custom key under Active state with fallback description', async () => {
     const state = JSON.stringify({
       myCustomKey: { value: 'hello', timestamp: Date.now() },
     });
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    try {
-      await Effect.runPromise(
-        run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-      );
-      const output = spy.mock.calls.map((c) => c[0]).join('\n');
-      const activeSection = output.slice(
-        output.indexOf('Active state:'),
-        output.indexOf('Available keys:'),
-      );
-      expect(activeSection).toContain('myCustomKey');
-      expect(activeSection).toContain('Custom state key');
-    } finally {
-      spy.mockRestore();
-    }
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
+    );
+    const output = console_.output();
+    const activeSection = output.slice(
+      output.indexOf('Active state:'),
+      output.indexOf('Available keys:'),
+    );
+    expect(activeSection).toContain('myCustomKey');
+    expect(activeSection).toContain('Custom state key');
+    console_.restore();
   });
 
   it('shows common operations section with TDD opt-out recipe', async () => {
-    const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['state', 'list']).pipe(Effect.provide(makeLayers(null))),
     );
-    const output = spy.mock.calls.map((c) => c[0]).join('\n');
+    const output = console_.output();
     expect(output).toContain('Common operations');
     expect(output).toContain('cape state clear tddState');
     expect(output).toContain('cape state clear flowPhase');
     expect(output).toContain('cape state reset');
-    spy.mockRestore();
+    console_.restore();
   });
 });
