@@ -41,6 +41,20 @@ to complexity. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Always spawn 3+ constraint agents** — never skip the divergent exploration, even if one
+   approach seems obvious
+2. **Every design needs concrete code** — interface signatures in the target language, not prose
+3. **Include usage examples** — 2-3 caller snippets per design showing the common case
+4. **Assess depth** — every design gets a depth rating comparing interface surface to hidden
+   complexity
+5. **Research before designing** — dispatch codebase-investigator before spawning design agents
+6. **Code interfaces only** — API surfaces, module boundaries, type contracts; redirect UI design
+   questions to the user
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Gather requirements
@@ -289,17 +303,3 @@ the chosen approach in its design summary. </example>
   explicitly with "NO X (reason: Y)" format
 
 </key_principles>
-
-<critical_rules>
-
-1. **Always spawn 3+ constraint agents** — never skip the divergent exploration, even if one
-   approach seems obvious
-2. **Every design needs concrete code** — interface signatures in the target language, not prose
-3. **Include usage examples** — 2-3 caller snippets per design showing the common case
-4. **Assess depth** — every design gets a depth rating comparing interface surface to hidden
-   complexity
-5. **Research before designing** — dispatch codebase-investigator before spawning design agents
-6. **Code interfaces only** — API surfaces, module boundaries, type contracts; redirect UI design
-   questions to the user
-
-</critical_rules>

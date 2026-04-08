@@ -35,6 +35,16 @@ non-negotiable. How you run verification and what you include in the summary ada
 
 </when_to_use>
 
+<critical_rules>
+
+1. **All tasks must be closed** — don't close open tasks to force epic closure
+2. **All automated checks must pass** — tests, linting, hooks
+3. **All success criteria need evidence** — verify and cite, don't self-certify
+4. **Stop on failure** — report what's missing, don't close a failing epic
+5. **No git operations** — no merge, no PR, no push; user handles integration
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Verify
@@ -219,13 +229,3 @@ signal.
 - **The outcome is the record** — future sessions read it to understand what shipped
 
 </key_principles>
-
-<critical_rules>
-
-1. **All tasks must be closed** — don't close open tasks to force epic closure
-2. **All automated checks must pass** — tests, linting, hooks
-3. **All success criteria need evidence** — verify and cite, don't self-certify
-4. **Stop on failure** — report what's missing, don't close a failing epic
-5. **No git operations** — no merge, no PR, no push; user handles integration
-
-</critical_rules>

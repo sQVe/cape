@@ -37,6 +37,22 @@ How deep you go in each category adapts to the task's complexity and risk. </rig
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Always verify with codebase-investigator** -- never trust file paths or patterns from the task
+   without checking
+2. **Check all six categories** -- skip findings that don't apply, never skip the check
+3. **Acknowledge strengths first** -- call out what's already good before listing problems; a clean
+   bill of health is a valid outcome
+4. **Escalate blockers at the top** -- if the task is fundamentally unexecutable, lead with it and
+   recommend closing or re-scoping; then complete the remaining review
+5. **Respect HITL/AFK modes** -- present for approval on HITL, apply directly on AFK
+6. **Don't add scope** -- refinement tightens existing goals; new features belong in new tasks
+7. **Every edge case needs a test** -- if you add an edge case, add the corresponding test case to
+   the implementation checklist
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Load the task
@@ -275,19 +291,3 @@ need fixing. </example>
   isn't relevant to the epic's goals, drop it
 
 </key_principles>
-
-<critical_rules>
-
-1. **Always verify with codebase-investigator** -- never trust file paths or patterns from the task
-   without checking
-2. **Check all six categories** -- skip findings that don't apply, never skip the check
-3. **Acknowledge strengths first** -- call out what's already good before listing problems; a clean
-   bill of health is a valid outcome
-4. **Escalate blockers at the top** -- if the task is fundamentally unexecutable, lead with it and
-   recommend closing or re-scoping; then complete the remaining review
-5. **Respect HITL/AFK modes** -- present for approval on HITL, apply directly on AFK
-6. **Don't add scope** -- refinement tightens existing goals; new features belong in new tasks
-7. **Every edge case needs a test** -- if you add an edge case, add the corresponding test case to
-   the implementation checklist
-
-</critical_rules>

@@ -42,6 +42,19 @@ manual edits — adapts to context. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Full test suite must pass before any transformation** — pre-existing failures block the
+   refactoring until resolved or explicitly acknowledged
+2. **Run `cape check` after every step** — not just at the end. Each step must independently
+   preserve behavior
+3. **Never mix refactoring with behavior changes** — structural commits and behavioral commits are
+   separate. If a refactoring reveals a bug, report it; don't fix it
+4. **Present the plan before executing multi-step refactorings** — the user approves the sequence of
+   named transformations before you start
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Name the refactoring
@@ -279,16 +292,3 @@ needs coverage?" </example>
 - **Bugs are findings, not fixes** — note them, report them, don't fix them mid-refactoring
 
 </key_principles>
-
-<critical_rules>
-
-1. **Full test suite must pass before any transformation** — pre-existing failures block the
-   refactoring until resolved or explicitly acknowledged
-2. **Run `cape check` after every step** — not just at the end. Each step must independently
-   preserve behavior
-3. **Never mix refactoring with behavior changes** — structural commits and behavioral commits are
-   separate. If a refactoring reveals a bug, report it; don't fix it
-4. **Present the plan before executing multi-step refactorings** — the user approves the sequence of
-   named transformations before you start
-
-</critical_rules>

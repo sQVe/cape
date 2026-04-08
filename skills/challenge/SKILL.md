@@ -37,6 +37,20 @@ for complex designs). The three steps and the interactive resolution are non-neg
 
 </when_to_use>
 
+<critical_rules>
+
+1. **One assumption per turn** — walk interactively, never batch-dump findings
+2. **Research before presenting** — investigate codebase to self-answer what you can
+3. **Include recommendation with options** — not just "this is an assumption" but "here's what I
+   recommend and here are alternatives with trade-offs"
+4. **Group by risk level** — high-risk assumptions first, always
+5. **Respect depth caps** — 3 for post-implementation, 5 for design and ad-hoc
+6. **Never skip high-risk assumptions** — even in lightweight mode, high-risk items are always
+   surfaced
+7. **Support "lock it" escape** — user can end early; summarize remaining as open questions
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Gather context
@@ -231,16 +245,4 @@ Continue through remaining branches until all resolved or user says "lock it". <
 
 </key_principles>
 
-<critical_rules>
-
-1. **One assumption per turn** — walk interactively, never batch-dump findings
-2. **Research before presenting** — investigate codebase to self-answer what you can
-3. **Include recommendation with options** — not just "this is an assumption" but "here's what I
-   recommend and here are alternatives with trade-offs"
-4. **Group by risk level** — high-risk assumptions first, always
-5. **Respect depth caps** — 3 for post-implementation, 5 for design and ad-hoc
-6. **Never skip high-risk assumptions** — even in lightweight mode, high-risk items are always
-   surfaced
-7. **Support "lock it" escape** — user can end early; summarize remaining as open questions
-
-</critical_rules> </output>
+ </output>

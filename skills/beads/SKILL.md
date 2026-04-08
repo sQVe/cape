@@ -42,6 +42,19 @@ documented here. The critical rules are rigid: violating them produces silent fa
 - Creating epics from designs (use `cape:write-plan`)
 - Advanced operations like splitting/merging tasks </when_to_use>
 
+<critical_rules>
+
+1. **Use `--description` on `cape br create`** — `--design` does not exist on create
+2. **Use underscores in status** — `in_progress` not `in-progress`
+3. **Use `cape br close` to complete** — not `--status done`
+4. **Check workspace exists** — `br where` before creating issues
+5. **Skills create br items** — actionable findings become tracked issues, not just text
+6. **One issue per finding** — batch skills create separate issues, not checklists
+7. **Always set type and priority** — never leave these as defaults
+8. **Append to design fields** — use `cape br design <id> <heading>` with content on stdin
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Ensure workspace
@@ -396,16 +409,3 @@ Original Goal and Implementation sections preserved. </example>
   traceability
 
 </key_principles>
-
-<critical_rules>
-
-1. **Use `--description` on `cape br create`** — `--design` does not exist on create
-2. **Use underscores in status** — `in_progress` not `in-progress`
-3. **Use `cape br close` to complete** — not `--status done`
-4. **Check workspace exists** — `br where` before creating issues
-5. **Skills create br items** — actionable findings become tracked issues, not just text
-6. **One issue per finding** — batch skills create separate issues, not checklists
-7. **Always set type and priority** — never leave these as defaults
-8. **Append to design fields** — use `cape br design <id> <heading>` with content on stdin
-
-</critical_rules>

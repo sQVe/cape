@@ -29,6 +29,15 @@ only rigid rule: always confirm the name before creating the branch. </rigidity_
 - Deleting or managing branches
 - Cherry-picking or rebasing </when_to_use>
 
+<critical_rules>
+
+1. **Verify git repo** — stop if not inside a git working tree
+2. **Confirm before creating** — never create a branch without user approval
+3. **Check for existing branch** — always check before `git checkout -b`
+4. **Warn on uncommitted changes** — don't block, but inform the user
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Gather context
@@ -143,12 +152,3 @@ abort?" </example>
 - **Short names** — 2-5 word descriptions in kebab-case, no redundancy
 
 </key_principles>
-
-<critical_rules>
-
-1. **Verify git repo** — stop if not inside a git working tree
-2. **Confirm before creating** — never create a branch without user approval
-3. **Check for existing branch** — always check before `git checkout -b`
-4. **Warn on uncommitted changes** — don't block, but inform the user
-
-</critical_rules>

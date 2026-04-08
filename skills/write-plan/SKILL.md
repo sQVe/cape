@@ -33,6 +33,16 @@ non-negotiable. Validation depth and detail-filling adapt to the design's comple
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Require design context** -- do not create an epic without a brainstorm design summary
+2. **Use epic template** -- every section from the injected template above is required
+3. **Create ONLY first task** -- subsequent tasks created iteratively
+4. **Stop after creation** -- present summary and wait for user to run execute-plan
+5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Verify design context
@@ -203,13 +213,3 @@ explore the idea, then come back to formalize it." Stop. </example>
 - **Tighten, don't loosen** -- validation makes requirements more specific, not less
 
 </key_principles>
-
-<critical_rules>
-
-1. **Require design context** -- do not create an epic without a brainstorm design summary
-2. **Use epic template** -- every section from the injected template above is required
-3. **Create ONLY first task** -- subsequent tasks created iteratively
-4. **Stop after creation** -- present summary and wait for user to run execute-plan
-5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
-
-</critical_rules>

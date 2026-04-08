@@ -34,6 +34,18 @@ adapts to the task's complexity. </rigidity_level>
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Investigate before planning** — never produce steps referencing files you haven't verified
+   exist
+2. **Every step has a verify command** — exact shell commands, not vague instructions
+3. **Skip if already expanded** — run `cape br expanded-check` before doing work
+4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
+5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
+6. **No test prescriptions** — never describe what test to write; that's TDD's RED phase
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Load context
@@ -217,15 +229,3 @@ produce the expanded plan — let execute-plan handle the split. </example>
 - **Behavior, not tests** — steps describe what behavior to add; TDD designs the tests
 
 </key_principles>
-
-<critical_rules>
-
-1. **Investigate before planning** — never produce steps referencing files you haven't verified
-   exist
-2. **Every step has a verify command** — exact shell commands, not vague instructions
-3. **Skip if already expanded** — run `cape br expanded-check` before doing work
-4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
-5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
-6. **No test prescriptions** — never describe what test to write; that's TDD's RED phase
-
-</critical_rules>

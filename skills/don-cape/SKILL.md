@@ -24,6 +24,15 @@ Always active. Injected at session start via hook. Applies to every user message
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Check the routing table before every task** — if a cape skill matches, use it
+2. **Use the Skill tool to load skills** — never work from memory
+3. **Follow workflow chains in order** — brainstorm before write-plan before execute-plan
+4. **STOP after brainstorm and write-plan** — wait for user to explicitly continue
+
+</critical_rules>
+
 <the_process>
 
 ## Step 1: Route the request
@@ -209,12 +218,3 @@ that the project already has an in-memory cache, creating a conflicting layer.
   rework that costs more than the research
 
 </key_principles>
-
-<critical_rules>
-
-1. **Check the routing table before every task** — if a cape skill matches, use it
-2. **Use the Skill tool to load skills** — never work from memory
-3. **Follow workflow chains in order** — brainstorm before write-plan before execute-plan
-4. **STOP after brainstorm and write-plan** — wait for user to explicitly continue
-
-</critical_rules>

@@ -35,6 +35,24 @@ Don't use for:
 
 </when_to_use>
 
+<critical_rules>
+
+1. **Exactly one new `it()`/`test()` block per Write/Edit call.** Count the new test cases in what
+   you are about to write. If the count is not 1, delete extras before saving. This is the single
+   most important rule — every other TDD benefit depends on it.
+2. **Never write production code without a failing test.** If you catch yourself writing code first,
+   stop, delete it, and write the test.
+3. **The test must fail for the right reason.** A compile error or import failure is not a valid RED
+   state. The assertion itself must fire and fail.
+4. **Run tests after every phase.** RED: test fails. GREEN: test passes, full suite passes.
+   REFACTOR: full suite passes. No exceptions.
+5. **Stop if there is no test infrastructure.** Do not create test frameworks, runners, or
+   configuration. Inform the user and let them set it up.
+6. **Do not skip the refactor phase.** Look at the code. If nothing needs improvement, that is fine
+   — but you must look.
+
+</critical_rules>
+
 <the_process>
 
 ## Step 0: Confirm test infrastructure
@@ -241,24 +259,6 @@ once. </example>
   "Persists the record" is behavior.
 
 </key_principles>
-
-<critical_rules>
-
-1. **Exactly one new `it()`/`test()` block per Write/Edit call.** Count the new test cases in what
-   you are about to write. If the count is not 1, delete extras before saving. This is the single
-   most important rule — every other TDD benefit depends on it.
-2. **Never write production code without a failing test.** If you catch yourself writing code first,
-   stop, delete it, and write the test.
-3. **The test must fail for the right reason.** A compile error or import failure is not a valid RED
-   state. The assertion itself must fire and fail.
-4. **Run tests after every phase.** RED: test fails. GREEN: test passes, full suite passes.
-   REFACTOR: full suite passes. No exceptions.
-5. **Stop if there is no test infrastructure.** Do not create test frameworks, runners, or
-   configuration. Inform the user and let them set it up.
-6. **Do not skip the refactor phase.** Look at the code. If nothing needs improvement, that is fine
-   — but you must look.
-
-</critical_rules>
 
 <anti_batching>
 

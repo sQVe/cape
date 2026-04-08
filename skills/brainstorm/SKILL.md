@@ -43,6 +43,22 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 - Refactoring with a clear target structure (use `cape:refactor`)
 - Requirements already crystal clear and epic exists </when_to_use>
 
+<critical_rules>
+
+1. **Checkpoint after each step** — present findings/proposals and STOP. Never advance to the next
+   step without user input. The user may discuss, redirect, iterate, or say "continue".
+2. **Research BEFORE proposing** — use agents to understand context
+3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
+4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
+   simple ideas with obvious paths
+5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't load
+   automatically
+6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
+7. **Stop after design summary** — present summary and wait for user to run write-plan
+8. **Design summary must be self-contained** — write-plan should not need to re-ask questions
+
+</critical_rules>
+
 <the_process>
 
 Every step ends with a **CHECKPOINT** — present findings and wait for user input. Never advance to
@@ -400,19 +416,3 @@ into an epic, the anti-pattern is preserved and blocks shortcuts during implemen
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
 - **Capture decisions** — Key Decisions table feeds the design summary
 - **Document dead ends** — prevents wasted re-investigation during implementation </key_principles>
-
-<critical_rules>
-
-1. **Checkpoint after each step** — present findings/proposals and STOP. Never advance to the next
-   step without user input. The user may discuss, redirect, iterate, or say "continue".
-2. **Research BEFORE proposing** — use agents to understand context
-3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
-4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
-   simple ideas with obvious paths
-5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't load
-   automatically
-6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
-7. **Stop after design summary** — present summary and wait for user to run write-plan
-8. **Design summary must be self-contained** — write-plan should not need to re-ask questions
-
-</critical_rules>
