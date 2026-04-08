@@ -1,5 +1,6 @@
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
@@ -17,6 +18,39 @@ import { HookServiceLive } from '../services/hookLive';
 import { PrServiceLive } from '../services/prLive';
 import { TestServiceLive } from '../services/testLive';
 import { ValidateServiceLive } from '../services/validateLive';
+
+const GIT_ENV = {
+  ...process.env, // eslint-disable-line node/no-process-env
+  GIT_AUTHOR_NAME: 'test',
+  GIT_AUTHOR_EMAIL: 'test@test.com',
+  GIT_COMMITTER_NAME: 'test',
+  GIT_COMMITTER_EMAIL: 'test@test.com',
+};
+
+export const initTestRepo = (prefix = 'cape-repo'): string => {
+  const dir = execFileSync('mktemp', ['-d', join(tmpdir(), `${prefix}-XXXXXX`)], {
+    encoding: 'utf-8',
+    timeout: 5_000,
+  }).trim();
+  execFileSync('git', ['init', '-b', 'main', dir], { timeout: 5_000 });
+  execFileSync(
+    'git',
+    ['-C', dir, '-c', 'commit.gpgsign=false', 'commit', '--allow-empty', '-m', 'initial'],
+    { env: GIT_ENV, timeout: 5_000 },
+  );
+  return dir;
+};
+
+export const gitInRepo = (repoDir: string, ...args: string[]) =>
+  execFileSync('git', ['-C', repoDir, '-c', 'commit.gpgsign=false', ...args], {
+    env: GIT_ENV,
+    encoding: 'utf-8',
+    timeout: 5_000,
+  });
+
+export const cleanupTestRepo = (dir: string) => {
+  spawnSync('rm', ['-rf', dir]);
+};
 
 const BINARY = join(import.meta.dirname, '..', '..', 'dist', 'index.mjs');
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');

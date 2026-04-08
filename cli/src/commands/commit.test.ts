@@ -1,4 +1,3 @@
-import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 import { describe, expect, it, vi } from 'vitest';
@@ -11,17 +10,7 @@ import {
   validateFiles,
   validateMessage,
 } from '../services/commit';
-import {
-  stubBrLayer,
-  stubCheckLayer,
-  stubDetectLayer,
-  stubGitLayer,
-  stubHookLayer,
-  stubPrLayer,
-  stubConformLayer,
-  stubTestLayer,
-  stubValidateLayer,
-} from '../testStubs';
+import { makeTestCommandLayers, spyConsole } from '../testUtils';
 
 const makeTestCommitLayer = () =>
   Layer.succeed(CommitService)({
@@ -37,19 +26,7 @@ const makeErrorCommitLayer = (message: string) =>
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const commandLayers = Layer.mergeAll(
-  NodeServices.layer,
-  stubGitLayer,
-  stubDetectLayer,
-  stubCheckLayer,
-  makeTestCommitLayer(),
-  stubBrLayer,
-  stubHookLayer,
-  stubPrLayer,
-  stubTestLayer,
-  stubValidateLayer,
-  stubConformLayer,
-);
+const commandLayers = makeTestCommandLayers(makeTestCommitLayer());
 
 const withBody = (subject: string, body = 'Explain the change in detail.') =>
   `${subject}\n\n${body}`;
@@ -180,46 +157,43 @@ describe('commit command wiring', () => {
   });
 
   it('commits with valid message and files', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const msg = 'feat: add thing\n\nAdd the thing to the project.';
     await Effect.runPromise(
       run(['commit', 'src/foo.ts', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({
       message: msg,
       files: ['src/foo.ts'],
     });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('commits multiple files', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const msg = 'fix: two files\n\nFix both files at once.';
     await Effect.runPromise(
       run(['commit', 'a.ts', 'b.ts', '-m', msg]).pipe(Effect.provide(commandLayers)),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ message: msg, files: ['a.ts', 'b.ts'] });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('joins multiple -m flags with blank line', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['commit', 'src/foo.ts', '-m', 'feat: add thing', '-m', 'Add the thing to the project.']).pipe(
         Effect.provide(commandLayers),
       ),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({
       message: 'feat: add thing\n\nAdd the thing to the project.',
       files: ['src/foo.ts'],
     });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects invalid commit message with exit error', async () => {
@@ -249,7 +223,7 @@ describe('commit command wiring', () => {
   });
 
   it('warns on sensitive files to stderr but still commits', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const stderrSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const msg = 'feat: add config\n\nAdd environment configuration.';
     await Effect.runPromise(
@@ -258,22 +232,20 @@ describe('commit command wiring', () => {
     const stderrOutput = stderrSpy.mock.calls.flat().join('');
     expect(stderrOutput).toContain('warning: sensitive files');
     expect(stderrOutput).toContain('.env');
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result.message).toBe(msg);
-    consoleSpy.mockRestore();
+    console_.restore();
     stderrSpy.mockRestore();
   });
 
   it('commits with --no-edit for merge commits', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     await Effect.runPromise(
       run(['commit', '--no-edit']).pipe(Effect.provide(commandLayers)),
     );
-    const output = consoleSpy.mock.calls.flat().join('');
-    const result = JSON.parse(output);
+    const result = JSON.parse(console_.output());
     expect(result).toEqual({ noEdit: true });
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('rejects when no files and no --no-edit', async () => {
@@ -296,19 +268,7 @@ describe('commit command wiring', () => {
 
   it('rejects when service fails', async () => {
     const msg = 'feat: thing\n\nAdd the thing to the project.';
-    const layers = Layer.mergeAll(
-      NodeServices.layer,
-      stubGitLayer,
-      stubDetectLayer,
-      stubCheckLayer,
-      makeErrorCommitLayer('commit failed'),
-      stubBrLayer,
-      stubHookLayer,
-      stubPrLayer,
-      stubTestLayer,
-      stubValidateLayer,
-      stubConformLayer,
-    );
+    const layers = makeTestCommandLayers(makeErrorCommitLayer('commit failed'));
     await expect(
       Effect.runPromise(
         run(['commit', 'file.ts', '-m', msg]).pipe(Effect.provide(layers)),

@@ -1,7 +1,6 @@
-import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import {
@@ -12,17 +11,7 @@ import {
   validateCommandContent,
   validateSkillContent,
 } from '../services/validate';
-import {
-  stubBrLayer,
-  stubCheckLayer,
-  stubCommitLayer,
-  stubDetectLayer,
-  stubGitLayer,
-  stubHookLayer,
-  stubConformLayer,
-  stubTestLayer,
-  stubPrLayer,
-} from '../testStubs';
+import { makeTestCommandLayers, spyConsole } from '../testUtils';
 
 const validSkill = `---
 name: test-skill
@@ -339,55 +328,46 @@ const makeTestValidateLayer = (files: Record<string, string> = {}) =>
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const makeCommandLayers = (validateLayer = makeTestValidateLayer()) =>
-  Layer.mergeAll(
-    NodeServices.layer,
-    stubGitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
-    stubCommitLayer,
-    stubBrLayer,
-    stubHookLayer,
-    stubPrLayer,
-    stubTestLayer,
-    stubConformLayer,
-    validateLayer,
-  );
-
 describe('validate command wiring', () => {
   it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(run(['validate', '--help']).pipe(Effect.provide(makeCommandLayers())));
+    await Effect.runPromise(
+      run(['validate', '--help']).pipe(Effect.provide(makeTestCommandLayers())),
+    );
   });
 
   it('validates all types with no args', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const layer = makeTestValidateLayer({
       '/repo/skills/test-skill/SKILL.md': validSkill,
       '/repo/agents/test.md': validAgent,
       '/repo/commands/test.md': validCommand,
     });
 
-    await Effect.runPromise(run(['validate']).pipe(Effect.provide(makeCommandLayers(layer))));
+    await Effect.runPromise(
+      run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer))),
+    );
 
-    const output = JSON.parse(consoleSpy.mock.calls[0]?.[0] as string);
+    const output = JSON.parse(console_.output());
     expect(output.passed).toBe(3);
     expect(output.failed).toBe(0);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('reports failures in JSON output', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const layer = makeTestValidateLayer({
       '/repo/skills/bad/SKILL.md': '---\nname: bad\n---\nno tags',
     });
 
     await expect(
-      Effect.runPromise(run(['validate']).pipe(Effect.provide(makeCommandLayers(layer)))),
+      Effect.runPromise(
+        run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer))),
+      ),
     ).rejects.toThrow();
 
-    const output = JSON.parse(consoleSpy.mock.calls[0]?.[0] as string);
+    const output = JSON.parse(console_.output());
     expect(output.failed).toBe(1);
     expect(output.results[0].errors.length).toBeGreaterThan(0);
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });

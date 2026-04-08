@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { cape } from '../helpers';
+import { cape, cleanupTestRepo, initTestRepo } from '../helpers';
 
 const bashInput = (command: string) => JSON.stringify({ tool_input: { command } });
 
@@ -175,16 +175,11 @@ describe('push branch check', () => {
   let repoDir: string;
 
   beforeEach(() => {
-    repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-repo-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', repoDir]);
-    execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'main']);
-    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    repoDir = initTestRepo('cape-repo');
   });
 
   afterEach(() => {
-    spawnSync('rm', ['-rf', repoDir]);
+    cleanupTestRepo(repoDir);
   });
 
   it('denies push from default branch', () => {

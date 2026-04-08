@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { inProcess } from '../helpers';
+import { cleanupTestRepo, gitInRepo, initTestRepo, inProcess } from '../helpers';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..', '..', '..');
 
@@ -221,18 +221,14 @@ describe('cape git diff', () => {
   let repoDir: string;
 
   beforeEach(() => {
-    repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-diff-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', repoDir]);
-    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    repoDir = initTestRepo('cape-diff');
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
-    execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
-    execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add file']);
+    gitInRepo(repoDir, 'add', 'file.ts');
+    gitInRepo(repoDir, 'commit', '-m', 'add file');
   });
 
   afterEach(() => {
-    spawnSync('rm', ['-rf', repoDir]);
+    cleanupTestRepo(repoDir);
   });
 
   it('outputs unstaged diff by default', async () => {
@@ -244,7 +240,7 @@ describe('cape git diff', () => {
 
   it('outputs staged diff', async () => {
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 3;\n');
-    execFileSync('git', ['-C', repoDir, 'add', 'file.ts']);
+    gitInRepo(repoDir, 'add', 'file.ts');
     const result = await inProcess(['git', 'diff', 'staged'], { cwd: repoDir });
     expect(result.status).toBe(0);
     expect(result.stdout).toContain('file.ts');
@@ -273,10 +269,10 @@ describe('cape git diff', () => {
   });
 
   it('outputs branch diff against main', async () => {
-    execFileSync('git', ['-C', repoDir, 'checkout', '-b', 'feat/test-branch']);
+    gitInRepo(repoDir, 'checkout', '-b', 'feat/test-branch');
     writeFileSync(join(repoDir, 'new.ts'), 'export const y = 1;\n');
-    execFileSync('git', ['-C', repoDir, 'add', 'new.ts']);
-    execFileSync('git', ['-C', repoDir, 'commit', '-m', 'add new']);
+    gitInRepo(repoDir, 'add', 'new.ts');
+    gitInRepo(repoDir, 'commit', '-m', 'add new');
 
     const result = await inProcess(['git', 'diff', 'branch'], { cwd: repoDir });
     expect(result.status).toBe(0);
@@ -366,15 +362,11 @@ describe('cape commit', () => {
   let repoDir: string;
 
   beforeEach(() => {
-    repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-cmd-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', repoDir]);
-    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    repoDir = initTestRepo('cape-cmd');
   });
 
   afterEach(() => {
-    spawnSync('rm', ['-rf', repoDir]);
+    cleanupTestRepo(repoDir);
   });
 
   it('exits 1 with no files argument', async () => {
@@ -393,9 +385,7 @@ describe('cape commit', () => {
     expect(parsed.message).toBe(msg);
     expect(parsed.files).toContain('file.ts');
 
-    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
-      encoding: 'utf-8',
-    });
+    const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: add thing');
   });
 
@@ -407,9 +397,7 @@ describe('cape commit', () => {
     expect(result.stderr).toContain('sensitive');
     expect(result.stderr).toContain('.env');
 
-    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
-      encoding: 'utf-8',
-    });
+    const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: config');
   });
 
@@ -438,9 +426,7 @@ describe('cape commit', () => {
     expect(parsed.files).toContain('a.ts');
     expect(parsed.files).toContain('b.ts');
 
-    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
-      encoding: 'utf-8',
-    });
+    const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: add two files');
   });
 });
@@ -453,17 +439,13 @@ describe('cape check', () => {
   });
 
   it('exits 1 in a repo with no detected ecosystem', async () => {
-    const emptyDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-check-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', emptyDir]);
-    execFileSync('git', ['-C', emptyDir, 'commit', '--allow-empty', '-m', 'initial']);
+    const emptyDir = initTestRepo('cape-check');
 
     try {
       const result = await inProcess(['check'], { cwd: emptyDir });
       expect(result.status).not.toBe(0);
     } finally {
-      spawnSync('rm', ['-rf', emptyDir]);
+      cleanupTestRepo(emptyDir);
     }
   });
 });

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { cape, capeCmd } from '../helpers';
+import { cape, capeCmd, cleanupTestRepo, gitInRepo, initTestRepo } from '../helpers';
 
 let tmpDir: string;
 let contextDir: string;
@@ -98,16 +98,12 @@ describe('flow 4: full commit pipeline', () => {
   let repoDir: string;
 
   beforeEach(() => {
-    repoDir = execFileSync('mktemp', ['-d', join(tmpdir(), 'cape-commit-XXXXXX')], {
-      encoding: 'utf-8',
-    }).trim();
-    execFileSync('git', ['init', repoDir]);
-    execFileSync('git', ['-C', repoDir, 'commit', '--allow-empty', '-m', 'initial']);
+    repoDir = initTestRepo('cape-commit');
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
   });
 
   afterEach(() => {
-    spawnSync('rm', ['-rf', repoDir]);
+    cleanupTestRepo(repoDir);
   });
 
   it('commits with valid conventional message', () => {
@@ -115,9 +111,7 @@ describe('flow 4: full commit pipeline', () => {
     const result = capeCmd(['commit', 'file.ts', '-m', msg], { cwd: repoDir });
     expect(result.status).toBe(0);
 
-    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
-      encoding: 'utf-8',
-    });
+    const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: add thing');
   });
 
@@ -143,9 +137,7 @@ describe('flow 4: full commit pipeline', () => {
     expect(result.stderr).toContain('sensitive files');
     expect(result.stderr).toContain('.env');
 
-    const log = execFileSync('git', ['-C', repoDir, 'log', '--oneline'], {
-      encoding: 'utf-8',
-    });
+    const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: config');
   });
 

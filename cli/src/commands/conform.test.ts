@@ -1,22 +1,11 @@
-import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
 import { ConformService, extractChangedPaths, parseRuleFile } from '../services/conform';
 import { GitService } from '../services/git';
-import {
-  stubBrLayer,
-  stubCheckLayer,
-  stubCommitLayer,
-  stubDetectLayer,
-  stubGitLayer,
-  stubHookLayer,
-  stubPrLayer,
-  stubTestLayer,
-  stubValidateLayer,
-} from '../testStubs';
+import { makeTestCommandLayers, spyConsole } from '../testUtils';
 
 describe('parseRuleFile', () => {
   it('extracts globs from frontmatter and strips it from content', () => {
@@ -169,28 +158,15 @@ const makeTestConformLayer = (
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const makeCommandLayers = (conformLayer = makeTestConformLayer()) =>
-  Layer.mergeAll(
-    NodeServices.layer,
-    stubGitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
-    stubCommitLayer,
-    stubBrLayer,
-    stubHookLayer,
-    stubPrLayer,
-    stubTestLayer,
-    stubValidateLayer,
-    conformLayer,
-  );
-
 describe('conform command wiring', () => {
   it('is wired as a subcommand of cape', async () => {
-    await Effect.runPromise(run(['conform', '--help']).pipe(Effect.provide(makeCommandLayers())));
+    await Effect.runPromise(
+      run(['conform', '--help']).pipe(Effect.provide(makeTestCommandLayers())),
+    );
   });
 
   it('outputs JSON with rules and changed files', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
     const conformLayer = makeTestConformLayer(
       [{ source: 'rules/ts.md', globs: ['**/*.ts'], content: 'Use arrow functions.' }],
       { 'src/index.ts': 'const foo = function() {}' },
@@ -214,42 +190,28 @@ describe('conform command wiring', () => {
 
     await Effect.runPromise(
       run(['conform']).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            NodeServices.layer,
-            gitLayer,
-            stubDetectLayer,
-            stubCheckLayer,
-            stubCommitLayer,
-            stubBrLayer,
-            stubHookLayer,
-            stubPrLayer,
-            stubTestLayer,
-            stubValidateLayer,
-            conformLayer,
-          ),
-        ),
+        Effect.provide(makeTestCommandLayers(gitLayer, conformLayer)),
       ),
     );
 
-    const output = JSON.parse(consoleSpy.mock.calls[0]?.[0] as string);
+    const output = JSON.parse(console_.output());
     expect(output.scope).toBe('branch');
     expect(output.rules).toHaveLength(1);
     expect(output.rules[0].source).toBe('rules/ts.md');
     expect(output.changedFiles).toHaveLength(1);
     expect(output.changedFiles[0].path).toBe('src/index.ts');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 
   it('accepts a scope argument', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const console_ = spyConsole();
 
     await Effect.runPromise(
-      run(['conform', 'unstaged']).pipe(Effect.provide(makeCommandLayers())),
+      run(['conform', 'unstaged']).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
-    const output = JSON.parse(consoleSpy.mock.calls[0]?.[0] as string);
+    const output = JSON.parse(console_.output());
     expect(output.scope).toBe('unstaged');
-    consoleSpy.mockRestore();
+    console_.restore();
   });
 });
