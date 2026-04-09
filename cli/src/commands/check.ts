@@ -4,26 +4,15 @@ import { Command } from 'effect/unstable/cli';
 import { dieWithError } from '../dieWithError';
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const check = Command.make(
   'check',
   {},
   Effect.fn(function* () {
-    const ecosystems = yield* getDetectResult.pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const ecosystems = yield* getDetectResult.pipe(catchAndDie);
 
-    const results = yield* getCheckResults(ecosystems).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const results = yield* getCheckResults(ecosystems).pipe(catchAndDie);
 
     yield* Console.log(JSON.stringify(results, null, 2));
 

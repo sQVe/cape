@@ -2,6 +2,7 @@ import { Console, Effect, Option } from 'effect';
 import { Command, Flag } from 'effect/unstable/cli';
 
 import { DetectService, getDetectResult } from '../services/detect';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const detect = Command.make(
   'detect',
@@ -9,26 +10,12 @@ export const detect = Command.make(
   Effect.fn(function* ({ map }) {
     if (Option.isSome(map)) {
       const service = yield* DetectService;
-      const result = yield* service
-        .mapDirectory(map.value)
-        .pipe(
-          Effect.catch((error: Error) =>
-            Console.error(JSON.stringify({ error: error.message })).pipe(
-              Effect.andThen(Effect.die(error)),
-            ),
-          ),
-        );
+      const result = yield* service.mapDirectory(map.value).pipe(catchAndDie);
       yield* Console.log(JSON.stringify(result, null, 2));
       return;
     }
 
-    const results = yield* getDetectResult.pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const results = yield* getDetectResult.pipe(catchAndDie);
 
     yield* Console.log(JSON.stringify(results, null, 2));
   }),

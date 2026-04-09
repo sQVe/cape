@@ -14,34 +14,17 @@ import {
 import { getCheckResults } from '../services/check';
 import { getDetectResult } from '../services/detect';
 import { HookService, removeStateKey, writeStateKey } from '../services/hook';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const runCloseReadinessCheck = (id: string) =>
   Effect.fn(function* () {
-    const children = yield* listChildren(id).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const children = yield* listChildren(id).pipe(catchAndDie);
 
     const openItems = children.filter((child) => child.status !== 'closed');
 
-    const ecosystems = yield* getDetectResult.pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const ecosystems = yield* getDetectResult.pipe(catchAndDie);
 
-    const checkResults = yield* getCheckResults(ecosystems).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const checkResults = yield* getCheckResults(ecosystems).pipe(catchAndDie);
 
     const checksPassed = checkResults.every((r) => r.passed);
     const ready = openItems.length === 0 && checksPassed;
@@ -331,13 +314,7 @@ const brExpandedCheck = Command.make(
   'expanded-check',
   { id: Argument.string('id').pipe(Argument.withDescription('Bead ID to check for expanded plan')) },
   Effect.fn(function* ({ id }) {
-    const bead = yield* showBead(id).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const bead = yield* showBead(id).pipe(catchAndDie);
 
     const hasExpandedPlan =
       bead.design?.includes('## Expanded plan') ?? false;
