@@ -25,6 +25,10 @@ const GIT_ENV = {
   GIT_AUTHOR_EMAIL: 'test@test.com',
   GIT_COMMITTER_NAME: 'test',
   GIT_COMMITTER_EMAIL: 'test@test.com',
+  // Isolate from the user's git config so gpgsign, hooks, or aliases can't
+  // make e2e tests flaky or depend on the dev's machine.
+  GIT_CONFIG_GLOBAL: '/dev/null',
+  GIT_CONFIG_SYSTEM: '/dev/null',
 };
 
 export const initTestRepo = (prefix = 'cape-repo'): string => {
@@ -94,6 +98,7 @@ export const capeCmd = (
   const result = spawnSync('node', [BINARY, ...args], {
     encoding: 'utf-8',
     cwd: options.cwd ?? REPO_ROOT,
+    env: GIT_ENV,
     timeout: 10_000,
   });
   return {
