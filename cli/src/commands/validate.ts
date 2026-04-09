@@ -11,35 +11,7 @@ import {
   validateCommandContent,
   validateSkillContent,
 } from '../services/validate';
-
-const validateFiles = (
-  pattern: string,
-  validator: (file: string, content: string) => ValidateResult,
-) =>
-  Effect.gen(function* () {
-    const service = yield* ValidateService;
-    const files = yield* service.globFiles(pattern);
-    const results: ValidateResult[] = [];
-    for (const file of files) {
-      const content = yield* service.readFile(file);
-      results.push(validator(file, content));
-    }
-    return results;
-  });
-
-const collectNames = (pattern: string, extractor: (path: string) => string | null) =>
-  Effect.gen(function* () {
-    const service = yield* ValidateService;
-    const files = yield* service.globFiles(pattern);
-    const names = new Set<string>();
-    for (const file of files) {
-      const name = extractor(file);
-      if (name != null) {
-        names.add(name);
-      }
-    }
-    return names;
-  });
+import { collectDefinitionNames, loadDefinitions } from '../utils/loadDefinitions';
 
 const skillNameFromPath = (path: string): string | null => {
   const match = path.match(/skills\/([^/]+)\/SKILL\.md$/);
@@ -53,33 +25,44 @@ const agentNameFromPath = (path: string): string | null => {
 
 const validateByType = (type: string, root: string) =>
   Effect.gen(function* () {
+    const service = yield* ValidateService;
     const results: ValidateResult[] = [];
 
     const knownSkills =
       type === 'all' || type === 'commands'
-        ? yield* collectNames(join(root, 'skills/*/SKILL.md'), skillNameFromPath)
+        ? yield* collectDefinitionNames(
+            service,
+            join(root, 'skills/*/SKILL.md'),
+            skillNameFromPath,
+          )
         : new Set<string>();
 
     const knownAgents =
       type === 'all' || type === 'skills'
-        ? yield* collectNames(join(root, 'agents/*.md'), agentNameFromPath)
+        ? yield* collectDefinitionNames(service, join(root, 'agents/*.md'), agentNameFromPath)
         : new Set<string>();
 
     if (type === 'all' || type === 'skills') {
-      const r = yield* validateFiles(join(root, 'skills/*/SKILL.md'), (file, content) =>
-        validateSkillContent(relative(root, file), content, { knownAgents }),
+      const r = yield* loadDefinitions(
+        service,
+        join(root, 'skills/*/SKILL.md'),
+        (file, content) =>
+          validateSkillContent(relative(root, file), content, { knownAgents }),
       );
       results.push(...r);
     }
     if (type === 'all' || type === 'agents') {
-      const r = yield* validateFiles(join(root, 'agents/*.md'), (file, content) =>
+      const r = yield* loadDefinitions(service, join(root, 'agents/*.md'), (file, content) =>
         validateAgentContent(relative(root, file), content),
       );
       results.push(...r);
     }
     if (type === 'all' || type === 'commands') {
-      const r = yield* validateFiles(join(root, 'commands/*.md'), (file, content) =>
-        validateCommandContent(relative(root, file), content, { knownSkills }),
+      const r = yield* loadDefinitions(
+        service,
+        join(root, 'commands/*.md'),
+        (file, content) =>
+          validateCommandContent(relative(root, file), content, { knownSkills }),
       );
       results.push(...r);
     }

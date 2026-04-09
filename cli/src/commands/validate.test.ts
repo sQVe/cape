@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import {
   inferFileType,
-  parseFrontmatter,
   ValidateService,
   validateAgentContent,
   validateCommandContent,
@@ -68,26 +67,6 @@ description: A test command
 
 Use the cape:test-skill skill exactly as written.
 `;
-
-describe('parseFrontmatter', () => {
-  it('parses valid frontmatter', () => {
-    const result = parseFrontmatter('---\nname: foo\ndescription: bar\n---\nbody');
-    expect(result).toEqual({ name: 'foo', description: 'bar' });
-  });
-
-  it('returns null for missing frontmatter', () => {
-    expect(parseFrontmatter('no frontmatter')).toBeNull();
-  });
-
-  it('returns null for unclosed frontmatter', () => {
-    expect(parseFrontmatter('---\nname: foo\nbody')).toBeNull();
-  });
-
-  it('handles multiline values', () => {
-    const result = parseFrontmatter('---\ndescription: >\n  line one\n  line two\n---\n');
-    expect(result?.description).toBe('> line one line two');
-  });
-});
 
 describe('validateSkillContent', () => {
   it('returns valid for correct skill', () => {

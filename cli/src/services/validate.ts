@@ -1,43 +1,13 @@
 import type { Effect } from 'effect';
 import { ServiceMap } from 'effect';
 
+import { parseFrontmatter } from '../utils/frontmatter';
+
 export interface ValidateResult {
   readonly file: string;
   readonly valid: boolean;
   readonly errors: string[];
 }
-
-export const parseFrontmatter = (content: string): Record<string, string> | null => {
-  if (!content.startsWith('---\n')) {
-    return null;
-  }
-  const closing = content.indexOf('\n---\n', 4);
-  if (closing === -1) {
-    return null;
-  }
-
-  const block = content.slice(4, closing);
-  const fields: Record<string, string> = {};
-  let currentKey: string | null = null;
-  let currentValue: string[] = [];
-
-  for (const line of block.split('\n')) {
-    const match = line.match(/^(\w+):\s*(.*)/);
-    if (match) {
-      if (currentKey != null) {
-        fields[currentKey] = currentValue.join(' ').trim();
-      }
-      currentKey = match[1] ?? null;
-      currentValue = match[2] ? [match[2]] : [];
-    } else if (currentKey != null && /^\s+/.test(line)) {
-      currentValue.push(line.trim());
-    }
-  }
-  if (currentKey != null) {
-    fields[currentKey] = currentValue.join(' ').trim();
-  }
-  return fields;
-};
 
 const hasTag = (content: string, tag: string): boolean =>
   content.includes(`<${tag}>`) && content.includes(`</${tag}>`);
