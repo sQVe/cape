@@ -7,17 +7,13 @@ import { resolveTestCommand } from '../services/check';
 import { getDetectResult, getPackageManager, isTestFile, resolveTestPath } from '../services/detect';
 import { writeStateKey } from '../services/hook';
 import { runTest } from '../services/test';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const test = Command.make(
   'test',
   { file: Argument.string('file').pipe(Argument.withDescription('Test file or source file to run (auto-resolves to test path)'), Argument.optional) },
   Effect.fn(function* ({ file }) {
-    const ecosystems = yield* getDetectResult.pipe(
-      Effect.catch((error: Error) => {
-        const result = { error: error.message };
-        return Console.error(JSON.stringify(result)).pipe(Effect.andThen(Effect.die(error)));
-      }),
-    );
+    const ecosystems = yield* getDetectResult.pipe(catchAndDie);
 
     const packageManager = yield* getPackageManager;
     const testCommand = resolveTestCommand(ecosystems, packageManager);

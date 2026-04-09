@@ -5,6 +5,7 @@ import { dieWithError } from '../dieWithError';
 
 import { HookService } from '../services/hook';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
+import { catchAndDie } from '../utils/catchAndDie';
 
 const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
   const parts: string[] = [];
@@ -113,12 +114,8 @@ const prCreate = Command.make(
     }
 
     const url = yield* prService.spawnGh(ghArgs).pipe(
-      Effect.catch((error: Error) => {
-        const message = `gh pr create failed: ${error.message}`;
-        return Console.error(JSON.stringify({ error: message })).pipe(
-          Effect.andThen(Effect.die(new Error(message))),
-        );
-      }),
+      Effect.mapError((error: Error) => new Error(`gh pr create failed: ${error.message}`)),
+      catchAndDie,
     );
 
     yield* Console.log(JSON.stringify({ created: true, url: url.trim() }));
