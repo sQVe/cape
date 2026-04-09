@@ -3,6 +3,7 @@ import { Argument, Command } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
 import { getCreateBranch, getValidateBranch } from '../services/git';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const gitCreateBranch = Command.make(
   'create-branch',
@@ -10,25 +11,13 @@ export const gitCreateBranch = Command.make(
     name: Argument.string('name').pipe(Argument.withDescription('Branch name to validate and create')),
   },
   Effect.fn(function* ({ name }) {
-    const validation = yield* getValidateBranch(name).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const validation = yield* getValidateBranch(name).pipe(catchAndDie);
 
     if (!validation.valid) {
       return yield* dieWithError(validation.errors.join(', '));
     }
 
-    const result = yield* getCreateBranch(name).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const result = yield* getCreateBranch(name).pipe(catchAndDie);
 
     yield* Console.log(JSON.stringify(result));
   }),

@@ -4,6 +4,7 @@ import { Argument, Command } from 'effect/unstable/cli';
 import { dieWithError } from '../dieWithError';
 import { DIFF_SCOPES, getGitDiff } from '../services/git';
 import type { DiffScope } from '../services/git';
+import { catchAndDie } from '../utils/catchAndDie';
 
 const isDiffScope = (value: string): value is DiffScope =>
   (DIFF_SCOPES as readonly string[]).includes(value);
@@ -22,13 +23,7 @@ export const gitDiff = Command.make(
 
     const resolved = raw;
 
-    const diff = yield* getGitDiff(resolved).pipe(
-      Effect.catch((error: Error) =>
-        Console.error(JSON.stringify({ error: error.message })).pipe(
-          Effect.andThen(Effect.die(error)),
-        ),
-      ),
-    );
+    const diff = yield* getGitDiff(resolved).pipe(catchAndDie);
 
     yield* Console.log(diff);
   }),
