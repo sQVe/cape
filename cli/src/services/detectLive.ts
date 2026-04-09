@@ -1,9 +1,10 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 import { parse as parseToml } from 'smol-toml';
 
+import { readFileUtf8 } from '../utils/fs';
 import type { DirectoryProbe } from './detect';
 import {
   DetectService,
@@ -37,7 +38,7 @@ const createProbe = (directory: string): DirectoryProbe => ({
   },
   readConfig: (name) => {
     try {
-      const content = readFileSync(join(directory, name), 'utf-8');
+      const content = readFileUtf8(join(directory, name));
       const parsed: unknown = name.endsWith('.toml') ? parseToml(content) : JSON.parse(content);
       return isRecord(parsed) ? parsed : null;
     } catch {

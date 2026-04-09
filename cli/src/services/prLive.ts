@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
+import { readFileUtf8 } from '../utils/fs';
 import { gitRoot } from '../utils/git';
 import { PrService } from './pr';
 
@@ -10,7 +11,7 @@ const fileExists = (path: string) => Effect.succeed(existsSync(path));
 
 const readFile = (path: string) =>
   Effect.try({
-    try: () => readFileSync(path, 'utf-8'),
+    try: () => readFileUtf8(path),
     catch: (error) => (error instanceof Error ? error : new Error(`failed to read file: ${path}`)),
   });
 

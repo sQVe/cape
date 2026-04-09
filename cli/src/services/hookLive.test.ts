@@ -54,7 +54,9 @@ describe('HookServiceLive', () => {
     });
 
     it('returns null for non-existent file', async () => {
-      mockExistsSync.mockReturnValue(false);
+      mockReadFileSync.mockImplementation(() => {
+        throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      });
 
       const result = await run(
         Effect.gen(function* () {

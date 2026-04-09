@@ -1,19 +1,12 @@
-import { existsSync, globSync, readFileSync } from 'node:fs';
+import { globSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 
+import { tryReadFileUtf8 } from '../utils/fs';
 import { gitRoot } from '../utils/git';
 import { ConformService, parseRuleFile } from './conform';
-
-const tryReadFile = (path: string): string | null => {
-  try {
-    return readFileSync(path, 'utf-8');
-  } catch {
-    return null;
-  }
-};
 
 const discoverRules = () =>
   Effect.try({
@@ -30,9 +23,7 @@ const discoverRules = () =>
       ];
 
       for (const source of sources) {
-        if (!existsSync(source)) continue;
-
-        const raw = tryReadFile(source);
+        const raw = tryReadFileUtf8(source);
         if (raw == null) continue;
 
         rules.push(parseRuleFile(source, raw));
@@ -51,7 +42,7 @@ const readFiles = (paths: string[]) =>
 
       return paths
         .map((path) => {
-          const content = tryReadFile(join(root, path));
+          const content = tryReadFileUtf8(join(root, path));
           return content != null ? { path, content } : null;
         })
         .filter((f) => f != null);

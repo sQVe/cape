@@ -1,7 +1,8 @@
-import { globSync, readFileSync } from 'node:fs';
+import { globSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
+import { readFileUtf8 } from '../utils/fs';
 import { gitRoot } from '../utils/git';
 import { ValidateService } from './validate';
 
@@ -13,7 +14,7 @@ export const ValidateServiceLive = Layer.succeed(ValidateService)({
     }).pipe(Effect.orDie),
   readFile: (path: string) =>
     Effect.try({
-      try: () => readFileSync(path, 'utf-8'),
+      try: () => readFileUtf8(path),
       catch: () => new Error('read failed'),
     }).pipe(Effect.orDie),
   gitRoot: () =>
