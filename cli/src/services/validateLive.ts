@@ -1,8 +1,8 @@
-import { execFileSync } from 'node:child_process';
 import { globSync, readFileSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
+import { gitRoot } from '../utils/git';
 import { ValidateService } from './validate';
 
 export const ValidateServiceLive = Layer.succeed(ValidateService)({
@@ -18,8 +18,7 @@ export const ValidateServiceLive = Layer.succeed(ValidateService)({
     }).pipe(Effect.orDie),
   gitRoot: () =>
     Effect.try({
-      try: () =>
-        execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).trim(),
+      try: gitRoot,
       catch: () => new Error('Not a git repository'),
     }).pipe(Effect.orDie),
 });

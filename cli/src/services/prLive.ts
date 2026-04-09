@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
+import { gitRoot } from '../utils/git';
 import { PrService } from './pr';
 
 const fileExists = (path: string) => Effect.succeed(existsSync(path));
@@ -18,16 +19,6 @@ const readStdin = () =>
     try: () => readFileSync('/dev/stdin', 'utf-8').trim(),
     catch: (error) =>
       error instanceof Error ? error : new Error('failed to read stdin', { cause: error }),
-  });
-
-const gitRoot = () =>
-  Effect.try({
-    try: () =>
-      execFileSync('git', ['rev-parse', '--show-toplevel'], {
-        encoding: 'utf-8',
-      }).trim(),
-    catch: (error) =>
-      error instanceof Error ? error : new Error('not a git repository', { cause: error }),
   });
 
 const spawnGh = (args: readonly string[]) =>
@@ -52,6 +43,11 @@ export const PrServiceLive = Layer.succeed(PrService)({
   fileExists,
   readFile,
   readStdin,
-  gitRoot,
+  gitRoot: () =>
+    Effect.try({
+      try: gitRoot,
+      catch: (error) =>
+        error instanceof Error ? error : new Error('not a git repository', { cause: error }),
+    }),
   spawnGh,
 });

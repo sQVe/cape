@@ -1,14 +1,11 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, globSync, readFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 
+import { gitRoot } from '../utils/git';
 import { ConformService, parseRuleFile } from './conform';
-
-const gitRoot = () =>
-  execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf-8' }).trim();
 
 const tryReadFile = (path: string): string | null => {
   try {
