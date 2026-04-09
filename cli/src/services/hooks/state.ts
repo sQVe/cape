@@ -7,6 +7,10 @@ import { detectBeadsSkill, detectDebugIssue, detectExecutePlan, parseCommand } f
 export const TDD_STATE_TTL_MS = 10 * 60 * 1000;
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
+// HookService methods declare E=never intentionally: hooks must degrade
+// gracefully so a broken hook never crashes the CLI. hookLive.ts absorbs all
+// failures via Effect.orElseSucceed(fallback) — the one documented exception
+// to the "propagate errors through E" Live pattern.
 export class HookService extends ServiceMap.Service<
   HookService,
   {
