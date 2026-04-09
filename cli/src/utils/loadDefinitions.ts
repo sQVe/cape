@@ -1,15 +1,15 @@
 import { Effect } from 'effect';
 
 export interface DefinitionReader {
-  readonly globFiles: (pattern: string) => Effect.Effect<string[]>;
-  readonly readFile: (path: string) => Effect.Effect<string>;
+  readonly globFiles: (pattern: string) => Effect.Effect<string[], Error>;
+  readonly readFile: (path: string) => Effect.Effect<string, Error>;
 }
 
 export const loadDefinitions = <T>(
   reader: DefinitionReader,
   pattern: string,
   transform: (file: string, content: string) => T,
-): Effect.Effect<T[]> =>
+): Effect.Effect<T[], Error> =>
   Effect.gen(function* () {
     const files = yield* reader.globFiles(pattern);
     const results: T[] = [];
@@ -24,7 +24,7 @@ export const collectDefinitionNames = (
   reader: Pick<DefinitionReader, 'globFiles'>,
   pattern: string,
   extractor: (path: string) => string | null,
-): Effect.Effect<Set<string>> =>
+): Effect.Effect<Set<string>, Error> =>
   Effect.gen(function* () {
     const files = yield* reader.globFiles(pattern);
     const names = new Set<string>();

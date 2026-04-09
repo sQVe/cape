@@ -3,6 +3,7 @@ import { join, relative, resolve } from 'node:path';
 import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
+import { dieWithError } from '../dieWithError';
 import type { ValidateResult } from '../services/validate';
 import {
   ValidateService,
@@ -11,6 +12,7 @@ import {
   validateCommandContent,
   validateSkillContent,
 } from '../services/validate';
+import { catchAndDie } from '../utils/catchAndDie';
 import { collectDefinitionNames, loadDefinitions } from '../utils/loadDefinitions';
 
 const skillNameFromPath = (path: string): string | null => {
@@ -77,24 +79,23 @@ export const validate = Command.make(
   { target: Argument.optional(Argument.string('target').pipe(Argument.withDescription('File path or type to validate: skills | agents | commands (default: all)'))) },
   Effect.fn(function* ({ target }) {
     const service = yield* ValidateService;
-    const root = yield* service.gitRoot();
+    const root = yield* service.gitRoot().pipe(catchAndDie);
     let results: ValidateResult[];
 
     if (Option.isNone(target)) {
-      results = yield* validateByType('all', root);
+      results = yield* validateByType('all', root).pipe(catchAndDie);
     } else if (validTypes.has(target.value)) {
-      results = yield* validateByType(target.value, root);
+      results = yield* validateByType(target.value, root).pipe(catchAndDie);
     } else {
       const absPath = resolve(target.value);
       const relPath = relative(root, absPath);
       const fileType = inferFileType(relPath);
 
       if (fileType == null) {
-        yield* Console.error(JSON.stringify({ error: `Unknown file type: ${relPath}` }));
-        return yield* Effect.die(new Error('unknown file type'));
+        return yield* dieWithError(`Unknown file type: ${relPath}`);
       }
 
-      const content = yield* service.readFile(absPath);
+      const content = yield* service.readFile(absPath).pipe(catchAndDie);
       let validator: (file: string, content: string) => ValidateResult;
       if (fileType === 'skill') {
         validator = validateSkillContent;
@@ -111,7 +112,7 @@ export const validate = Command.make(
     yield* Console.log(JSON.stringify({ results, passed, failed }));
 
     if (failed > 0) {
-      return yield* Effect.die(new Error(`${failed} file(s) failed validation`));
+      return yield* dieWithError(`${failed} file(s) failed validation`);
     }
   }),
 ).pipe(

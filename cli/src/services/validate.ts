@@ -199,8 +199,8 @@ export const inferFileType = (path: string): 'skill' | 'agent' | 'command' | nul
 export class ValidateService extends ServiceMap.Service<
   ValidateService,
   {
-    readonly globFiles: (pattern: string) => Effect.Effect<string[]>;
-    readonly readFile: (path: string) => Effect.Effect<string>;
-    readonly gitRoot: () => Effect.Effect<string>;
+    readonly globFiles: (pattern: string) => Effect.Effect<string[], Error>;
+    readonly readFile: (path: string) => Effect.Effect<string, Error>;
+    readonly gitRoot: () => Effect.Effect<string, Error>;
   }
 >()('ValidateService') {}

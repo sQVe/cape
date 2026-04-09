@@ -10,16 +10,18 @@ export const ValidateServiceLive = Layer.succeed(ValidateService)({
   globFiles: (pattern: string) =>
     Effect.try({
       try: () => globSync(pattern),
-      catch: () => new Error('glob failed'),
-    }).pipe(Effect.orDie),
+      catch: (error) =>
+        error instanceof Error ? error : new Error('glob failed', { cause: error }),
+    }),
   readFile: (path: string) =>
     Effect.try({
       try: () => readFileUtf8(path),
-      catch: () => new Error('read failed'),
-    }).pipe(Effect.orDie),
+      catch: (error) =>
+        error instanceof Error ? error : new Error(`read failed: ${path}`, { cause: error }),
+    }),
   gitRoot: () =>
     Effect.try({
       try: gitRoot,
       catch: () => new Error('Not a git repository'),
-    }).pipe(Effect.orDie),
+    }),
 });
