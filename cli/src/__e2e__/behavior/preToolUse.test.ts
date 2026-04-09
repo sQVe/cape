@@ -188,7 +188,7 @@ describe('push branch check', () => {
       bashInput('git push origin main'),
       { ...env, GIT_DIR: join(repoDir, '.git'), GIT_WORK_TREE: repoDir },
     );
-    expectDeny(result, 'Cannot push');
+    expectDeny(result, 'Push from `main` is blocked');
   });
 });
 

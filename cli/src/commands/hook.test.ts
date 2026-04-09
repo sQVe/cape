@@ -754,7 +754,7 @@ describe('preToolUseBash', () => {
         },
       });
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'Cannot push');
+      expectDeny(result, 'Push from `main` is blocked');
     });
 
     it('allows push from feature branch', async () => {

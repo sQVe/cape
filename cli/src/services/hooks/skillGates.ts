@@ -46,7 +46,7 @@ export const preToolUseBash = () =>
         const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
         const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
         if (branch === defaultBranch) {
-          const message = `Cannot push from \`${branch}\`. Create a feature branch first.`;
+          const message = `Push from \`${branch}\` is blocked. Reason: direct pushes to the default branch bypass review. Run \`cape git create-branch --help\` to start a feature branch first.`;
           logEvent('hook.PreToolUse.Bash', message);
           return denyWith(message);
         }
