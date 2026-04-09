@@ -1,6 +1,8 @@
 import type { Effect } from 'effect';
 import { ServiceMap } from 'effect';
 
+import { splitFrontmatter } from '../utils/frontmatter';
+
 export interface RuleFile {
   readonly source: string;
   readonly globs: string[];
@@ -40,28 +42,8 @@ const parseGlobs = (frontmatterBlock: string): string[] => {
   return globs;
 };
 
-const stripFrontmatter = (raw: string): { frontmatter: string | null; body: string } => {
-  if (!raw.startsWith('---\n')) {
-    return { frontmatter: null, body: raw };
-  }
-
-  const closing = raw.indexOf('\n---\n', 4);
-  if (closing === -1) {
-    const closingEnd = raw.indexOf('\n---', 4);
-    if (closingEnd !== -1 && closingEnd + 4 >= raw.length) {
-      return { frontmatter: raw.slice(4, closingEnd), body: '' };
-    }
-    return { frontmatter: null, body: raw };
-  }
-
-  return {
-    frontmatter: raw.slice(4, closing),
-    body: raw.slice(closing + 5).replace(/^\n+/, ''),
-  };
-};
-
 export const parseRuleFile = (source: string, raw: string): RuleFile => {
-  const { frontmatter, body } = stripFrontmatter(raw);
+  const { frontmatter, body } = splitFrontmatter(raw);
   const globs = frontmatter != null ? parseGlobs(frontmatter) : [];
 
   return { source, globs, content: body };
