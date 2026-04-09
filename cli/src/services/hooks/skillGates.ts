@@ -1,6 +1,7 @@
 import { Effect } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { safeParseJson } from '../../utils/json';
 import { denyTable } from './denyTable';
 import { parseCommand, parseSkillInput, stripQuotedContent } from './parsing';
 import { HookService, readState } from './state';
@@ -129,24 +130,20 @@ const gateFinishEpic = (targetEpicId: string | null) =>
     if (output === null) {
       return null;
     }
-    try {
-      const epics: unknown = JSON.parse(output);
-      if (!Array.isArray(epics)) {
-        return null;
-      }
-      for (const raw of epics) {
-        const { epicId, openCount } = parseEpicStatusEntry(raw);
-        if (targetEpicId != null && epicId !== targetEpicId) {
-          continue;
-        }
-        if (openCount > 0 && epicId != null) {
-          return denyWith(
-            `Epic ${epicId} still has ${openCount} open task(s). Close each task with \`cape br close <task-id>\` (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
-          );
-        }
-      }
-    } catch {
+    const epics = safeParseJson(output);
+    if (!Array.isArray(epics)) {
       return null;
+    }
+    for (const raw of epics) {
+      const { epicId, openCount } = parseEpicStatusEntry(raw);
+      if (targetEpicId != null && epicId !== targetEpicId) {
+        continue;
+      }
+      if (openCount > 0 && epicId != null) {
+        return denyWith(
+          `Epic ${epicId} still has ${openCount} open task(s). Close each task with \`cape br close <task-id>\` (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
+        );
+      }
     }
     return null;
   });

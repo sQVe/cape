@@ -1,6 +1,7 @@
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { safeParseJson } from '../../utils/json';
 import { detectBeadsSkill, detectDebugIssue, detectExecutePlan, parseCommand } from './parsing';
 
 export const TDD_STATE_TTL_MS = 10 * 60 * 1000;
@@ -34,15 +35,11 @@ export const readState = () =>
     if (content == null) {
       return {} as StateFile;
     }
-    try {
-      const raw: unknown = JSON.parse(content);
-      if (typeof raw !== 'object' || raw == null || Array.isArray(raw)) {
-        return {} as StateFile;
-      }
-      return Object.fromEntries(Object.entries(raw)) as StateFile;
-    } catch {
+    const raw = safeParseJson(content);
+    if (typeof raw !== 'object' || raw == null || Array.isArray(raw)) {
       return {} as StateFile;
     }
+    return Object.fromEntries(Object.entries(raw)) as StateFile;
   });
 
 export const writeStateKey = (key: string, value: Record<string, unknown>) =>
@@ -151,13 +148,15 @@ export const userPromptSubmit = () =>
     const service = yield* HookService;
     const input = yield* service.readStdin();
 
-    let prompt = '';
-    try {
-      const data = JSON.parse(input);
-      prompt = data.prompt ?? '';
-    } catch {
-      return { decision: 'approve' as const };
-    }
+    const data = safeParseJson(input);
+    const prompt =
+      typeof data === 'object' &&
+      data !== null &&
+      !Array.isArray(data) &&
+      'prompt' in data &&
+      typeof data.prompt === 'string'
+        ? data.prompt
+        : '';
 
     if (!prompt) {
       return { decision: 'approve' as const };
