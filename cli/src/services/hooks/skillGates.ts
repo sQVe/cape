@@ -141,7 +141,7 @@ const gateFinishEpic = (targetEpicId: string | null) =>
         }
         if (openCount > 0 && epicId != null) {
           return denyWith(
-            `Epic ${epicId} still has ${openCount} open task(s). Close all tasks before running cape:finish-epic.`,
+            `Epic ${epicId} still has ${openCount} open task(s). Close each task with \`cape br close <task-id>\` (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
           );
         }
       }
@@ -171,7 +171,7 @@ const gateInternalSkill = () =>
     const state = yield* readState();
     if (!state.workflowActive) {
       return denyWith(
-        'This skill is internal to execute-plan / fix-bug and cannot be invoked directly.',
+        'This skill is internal to cape:execute-plan / cape:fix-bug and cannot be invoked directly. Load cape:execute-plan or cape:fix-bug to drive it.',
       );
     }
     return null;
