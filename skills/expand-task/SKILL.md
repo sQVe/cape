@@ -42,7 +42,8 @@ steps are adapts to the task's complexity. </rigidity_level>
 3. **Skip if already expanded** — run `cape br expanded-check` before doing work
 4. **Flag oversized tasks** — if expansion would exceed 10 steps, recommend splitting instead
 5. **Respect anti-patterns** — expanded plan must not introduce approaches the epic forbids
-6. **No test prescriptions** — never describe what test to write; that's TDD's RED phase
+6. **No test prescriptions** — never describe what test to write; TDD decides that from the current
+   behavior gap
 
 </critical_rules>
 
@@ -140,8 +141,8 @@ the split.
 - **Verify** is an exact shell command. Not "run tests" — `npm test -- --grep 'auth strategy'` or
   `go test ./internal/auth/... -run TestGoogleStrategy`.
 
-Do NOT include test descriptions in steps. Test design belongs to the TDD cycle's RED phase — it
-must emerge from the current state of the code, not from a plan written before implementation began.
+Do NOT include test descriptions in steps. Test design belongs to implementation-time TDD — it must
+emerge from the current state of the code, not from a plan written before implementation began.
 
 **Include a final verification step** that runs `cape check`, confirming the complete change works
 together.

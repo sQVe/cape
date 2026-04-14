@@ -125,11 +125,14 @@ malformed, proceed normally.
    for this step. This clears any state from the previous step and activates enforcement.
 1. **Scope** — Read only the current step's title and **Changes** field. These define the single
    behavior for this iteration. Ignore all subsequent steps.
-2. **RED** — Write one failing test for the behavior described in the current step's title. Run it.
-   Confirm it fails for the right reason (assertion failure, not import/syntax error).
-3. **GREEN** — Write the minimum production code described in the current step's **Changes** to make
-   the test pass. Run the test. Run the full suite.
-4. **REFACTOR** — Improve what you just wrote. Run the full suite.
+2. **Write the next failing test** — Add the smallest test that captures the behavior described in
+   the current step's title. Run it. Confirm it fails for the right reason (behavior missing or
+   wrong, not import/syntax problems).
+3. **Make it pass with the minimum change** — Implement only what the current test needs from the
+   files described in the step's **Changes**. Re-run the test, then the broader affected suite as
+   needed.
+4. **Clean up if it clearly helps** — Improve names, structure, or duplication only when the code is
+   clearer for it. Re-run tests after any cleanup.
 5. **Gate** — Run the current step's **Verify** command. It must pass before you move to the next
    step. If it fails, fix within this step — do not move on.
 6. **Record checkpoint** — After the gate passes, write the current HEAD SHA to
@@ -138,7 +141,8 @@ malformed, proceed normally.
    needed.
 
 Do not pre-read upcoming steps. Do not write tests for step N+1 during step N. Each loop iteration
-is self-contained: checkpoint gate, scope, red, green, refactor, gate, record.
+is self-contained: checkpoint gate, scope, failing test, minimal change, optional cleanup, gate,
+record.
 
 If the code you need to modify is tangled — hard to add the new behavior without restructuring first
 — load `cape:refactor` with the Skill tool. Refactor commits the structural change separately, then
