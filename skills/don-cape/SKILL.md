@@ -37,8 +37,22 @@ Always active. Injected at session start via hook. Applies to every user message
 
 ## Step 1: Route the request
 
-Before responding to any user message, scan this table. If a skill matches, load it with the Skill
-tool. **First match wins** — stop scanning after the first row whose intent matches.
+**Short-circuit first.** Before scanning the routing table, check for objective signals that the
+user has already committed to a specific skill — in which case, skip the brainstorm/write-plan chain
+and load that skill directly:
+
+- **Direct skill invocation.** The user's message begins with a `/cape:<name>` slash command (e.g.
+  `/cape:refactor`, `/cape:pr`, `/cape:fix-bug`). Load the named skill. Do not reroute to brainstorm
+  or write-plan.
+- **Pre-existing br task.** An open br task with a `Design` section already exists for the work in
+  question (user references the bead ID, or `br ready` surfaces it as the next task). Load
+  `cape:execute-plan`. Planning is already done — do not rerun it.
+
+Only these two signals short-circuit the chain. Do not infer scope/size/complexity from prose —
+those judgments are unreliable. If neither signal fires, scan the routing table.
+
+Otherwise, scan this table. If a skill matches, load it with the Skill tool. **First match wins** —
+stop scanning after the first row whose intent matches.
 
 | User intent                                                         | Skill                      | Notes                                                                                   |
 | ------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
@@ -145,8 +159,10 @@ debug-issue → fix-bug → commit
 to an approach. write-plan locks requirements before implementation begins. Skipping these steps
 means building on unvalidated assumptions — the kind of shortcut that creates rework.
 
-**User intent is WHAT, not HOW.** When a user says "add feature X", that's what they want built —
-not permission to skip brainstorm and write-plan. The chain determines how.
+**Vague feature requests go through the chain.** When a user says "add feature X" with no `/cape:*`
+invocation and no pre-existing br task, that's a WHAT statement — brainstorm and write-plan still
+apply. Direct `/cape:<name>` invocation, or executing against a br task that already has a design,
+is the user's explicit choice of HOW and short-circuits the chain (see Step 1).
 
 ---
 
