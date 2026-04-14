@@ -17,7 +17,6 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -49,7 +48,6 @@ const makeCommandLayers = (brLayer = makeStubBrLayer()) =>
     stubCommitLayer,
     stubHookLayer,
     stubPrLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     brLayer,
@@ -348,7 +346,6 @@ describe('br close-check command', () => {
       stubCommitLayer,
       stubHookLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       brLayer,
@@ -407,7 +404,6 @@ describe('br close-check command', () => {
 
 describe('br close command', () => {
   const initialState = JSON.stringify({
-    tddState: { phase: 'red', timestamp: Date.now() },
     flowPhase: { phase: 'executing', issueId: 'bd-test', timestamp: Date.now() },
     workflowActive: { value: true, timestamp: Date.now() },
   });
@@ -453,7 +449,6 @@ describe('br close command', () => {
       stubCheckLayer,
       stubCommitLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       makeStubBrLayer(),
@@ -532,7 +527,6 @@ describe('br create command', () => {
       stubCheckLayer,
       stubCommitLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       makeStubBrLayer(),
@@ -817,7 +811,6 @@ describe('br update command', () => {
       stubCheckLayer,
       stubCommitLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
       makeStubBrLayer(),

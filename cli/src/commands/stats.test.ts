@@ -13,7 +13,6 @@ import {
   stubGitLayer,
   stubPrLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -46,7 +45,6 @@ const makeTestLayers = (fileContent: string | null = null) => {
     stubCommitLayer,
     stubBrLayer,
     stubPrLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     hookLayer,

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -53,36 +53,15 @@ describe('flow 1: br show then br update with design', () => {
   });
 });
 
-describe('flow 2: TDD reminder on Edit', () => {
-  it('produces no TDD reminder without flowPhase in state', () => {
-    writeFileSync(
-      join(contextDir, 'state.json'),
-      JSON.stringify({ tddState: { phase: 'red', timestamp: Date.now() } }),
-    );
-
-    const editStdin = JSON.stringify({
-      tool_input: { file_path: '/src/index.ts' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Edit'], editStdin, env);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-});
-
-describe('flow 3: session-start clears stale state', () => {
-  it('clears tddState from state.json with --clear-logs', () => {
+describe('flow 3: session-start clears logs', () => {
+  it('clears br-show log with --clear-logs', () => {
     writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-old\n');
-    writeFileSync(
-      join(contextDir, 'state.json'),
-      JSON.stringify({ tddState: { phase: 'red', timestamp: 0 } }),
-    );
 
     const result = cape(['hook', 'session-start', '--clear-logs'], '', env);
     expect(result.status).toBe(0);
 
     const brLog = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
     expect(brLog).toBe('');
-    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('produces additionalContext output', () => {

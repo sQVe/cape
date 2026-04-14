@@ -70,13 +70,6 @@ export const denyTable: readonly DenyEntry[] = [
     tier: 'redirect',
   },
   {
-    pattern:
-      /(?<!\bcape\s)\b(?:npx vitest|vitest|bun test|npm test|pytest|go test|cargo test|busted|python -m (?:pytest|unittest))(?:\s|$)/,
-    message:
-      'Use `cape test` to run tests so TDD state is tracked. Run `cape test --help` to learn the workflow.',
-    tier: 'redirect',
-  },
-  {
     pattern: /\bgit\s+reset\s+--hard\b/,
     message:
       'Caution: `git reset --hard` risks discarding uncommitted changes permanently. Consider `git stash` first.',

@@ -49,24 +49,6 @@
             "command": "cape hook pre-tool-use --matcher Skill"
           }
         ]
-      },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook pre-tool-use --matcher Edit"
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook pre-tool-use --matcher Write"
-          }
-        ]
       }
     ],
     "PostToolUse": [
@@ -76,24 +58,6 @@
           {
             "type": "command",
             "command": "cape hook post-tool-use --matcher Bash"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook post-tool-use --matcher Edit"
-          }
-        ]
-      },
-      {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook post-tool-use --matcher Write"
           }
         ]
       }

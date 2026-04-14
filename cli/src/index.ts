@@ -13,7 +13,6 @@ import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
 import { HookServiceLive } from './services/hookLive';
 import { PrServiceLive } from './services/prLive';
-import { TestServiceLive } from './services/testLive';
 import { ValidateServiceLive } from './services/validateLive';
 
 const AppLayer = Layer.mergeAll(
@@ -25,7 +24,6 @@ const AppLayer = Layer.mergeAll(
   GitServiceLive,
   HookServiceLive,
   PrServiceLive,
-  TestServiceLive,
   ValidateServiceLive,
 );
 

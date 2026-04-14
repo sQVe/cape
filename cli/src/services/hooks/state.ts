@@ -4,7 +4,6 @@ import { logEvent } from '../../eventLog';
 import { safeParseJson } from '../../utils/json';
 import { detectBeadsSkill, detectDebugIssue, detectExecutePlan, parseCommand } from './parsing';
 
-export const TDD_STATE_TTL_MS = 10 * 60 * 1000;
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
 // HookService methods declare E=never intentionally: hooks must degrade
@@ -95,27 +94,12 @@ export const readFlowPhase = () =>
     return entry.phase;
   });
 
-export const readTddState = () =>
-  Effect.gen(function* () {
-    const entry = yield* readStateKey('tddState', TDD_STATE_TTL_MS);
-    if (entry == null || typeof entry.phase !== 'string') {
-      return null;
-    }
-    return { phase: entry.phase, timestamp: entry.timestamp };
-  });
-
-export const writeTddState = (phase: string) =>
-  Effect.gen(function* () {
-    yield* writeStateKey('tddState', { phase });
-  });
-
 export const clearLogs = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
     yield* service.ensureDir(`${root}/hooks/context`);
     yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
-    yield* removeStateKey('tddState');
   });
 
 export const sessionStart = (clearLogsFlag: boolean) =>

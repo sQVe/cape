@@ -16,7 +16,6 @@ import { DetectServiceLive } from '../services/detectLive';
 import { GitServiceLive } from '../services/gitLive';
 import { HookServiceLive } from '../services/hookLive';
 import { PrServiceLive } from '../services/prLive';
-import { TestServiceLive } from '../services/testLive';
 import { ValidateServiceLive } from '../services/validateLive';
 
 const GIT_ENV = {
@@ -69,7 +68,6 @@ const liveCommandLayers = Layer.mergeAll(
   GitServiceLive,
   HookServiceLive,
   PrServiceLive,
-  TestServiceLive,
   ValidateServiceLive,
 );
 
