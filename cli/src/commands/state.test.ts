@@ -63,16 +63,14 @@ describe('cape state list', () => {
     expect(output).toContain('Active state: None');
     expect(output).toContain('Available keys');
     expect(output).toContain('flowPhase');
-    expect(output).toContain('tddState');
     expect(output).toContain('workflowActive');
     expect(output).toContain('executing | debugging | planning');
-    expect(output).toContain('red | green | writing-test');
     console_.restore();
   });
 
   it('shows active key under Active state and inactive keys under Available keys', async () => {
     const state = JSON.stringify({
-      tddState: { phase: 'green', timestamp: Date.now() },
+      flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() },
     });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -82,21 +80,20 @@ describe('cape state list', () => {
     const activeIdx = output.indexOf('Active state:');
     const availableIdx = output.indexOf('Available keys:');
     const opsIdx = output.indexOf('Common operations:');
-    const tddIdx = output.indexOf('tddState: {"phase":"green"}');
+    const flowIdx = output.indexOf('flowPhase: ');
     expect(activeIdx).toBeGreaterThanOrEqual(0);
     expect(availableIdx).toBeGreaterThan(activeIdx);
-    expect(tddIdx).toBeGreaterThan(activeIdx);
-    expect(tddIdx).toBeLessThan(availableIdx);
+    expect(flowIdx).toBeGreaterThan(activeIdx);
+    expect(flowIdx).toBeLessThan(availableIdx);
     const availableSection = output.slice(availableIdx, opsIdx);
-    expect(availableSection).toContain('flowPhase');
     expect(availableSection).toContain('workflowActive');
-    expect(availableSection).not.toContain('tddState');
+    expect(availableSection).not.toContain('flowPhase:');
     console_.restore();
   });
 
   it('shows expired TTL key under Active state with expired label', async () => {
     const state = JSON.stringify({
-      tddState: { phase: 'red', timestamp: Date.now() - 20 * 60 * 1000 },
+      flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() - 60 * 60 * 1000 },
     });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -107,7 +104,7 @@ describe('cape state list', () => {
       output.indexOf('Active state:'),
       output.indexOf('Available keys:'),
     );
-    expect(activeSection).toContain('tddState');
+    expect(activeSection).toContain('flowPhase');
     expect(activeSection).toContain('[expired]');
     console_.restore();
   });
@@ -130,15 +127,13 @@ describe('cape state list', () => {
     console_.restore();
   });
 
-  it('shows common operations section with TDD opt-out recipe', async () => {
+  it('shows common operations section with reset recipe', async () => {
     const console_ = spyConsole();
     await Effect.runPromise(
       run(['state', 'list']).pipe(Effect.provide(makeLayers(null))),
     );
     const output = console_.output();
     expect(output).toContain('Common operations');
-    expect(output).toContain('cape state clear tddState');
-    expect(output).toContain('cape state clear flowPhase');
     expect(output).toContain('cape state reset');
     console_.restore();
   });

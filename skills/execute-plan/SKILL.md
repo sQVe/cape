@@ -121,8 +121,6 @@ ahead to later steps.
 cycle and report: "Step N already passed at HEAD <short-sha> — skipping." If the file is missing or
 malformed, proceed normally.
 
-0. **Activate TDD gate** — Run `cape state set tddState '{"phase":"pending"}'` to arm the TDD gate
-   for this step. This clears any state from the previous step and activates enforcement.
 1. **Scope** — Read only the current step's title and **Changes** field. These define the single
    behavior for this iteration. Ignore all subsequent steps.
 2. **Write the next failing test** — Add the smallest test that captures the behavior described in
