@@ -11,12 +11,11 @@ a concise summary with complete failure details.
 
 ## Investigation approach
 
-1. **Run tests via cape test**: When asked to run tests, prefer `cape test` (or `cape test <file>`)
-   over raw test commands. `cape test` auto-detects the runner, writes TDD state, and returns
-   structured JSON. If a specific raw command is given, execute it as-is.
+1. **Run tests with the native runner**: Detect and invoke the project's test command directly
+   (`pnpm test`, `npm test`, `pytest`, `cargo test`, `go test`, `busted`, etc.). If a specific raw
+   command is given, execute it as-is.
 
 2. **Parse results by command type**:
-   - `cape test` → parse JSON output for pass/fail, phase, runner
    - Test suite (pytest, cargo test, npm test, go test, busted) → extract summary stats, find
      failures
    - Pre-commit hooks → extract hook results, find failures
