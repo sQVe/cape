@@ -85,15 +85,14 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 ---
 
-## Step 4: Check contribution requirements
+## Step 4: Check contribution requirements (opt-in)
 
-Look for contribution artifacts that need updating:
+Skip this step unless the user explicitly asks for contribution-artifact checks (e.g., "update the
+changelog", "run changeset", "check contribution requirements"). When asked, look for:
 
 - **CONTRIBUTING.md** — note any PR requirements
 - **CHANGELOG.md** — if it has an "Unreleased" section, add an entry for this change
 - **.changeset/** — if present, run `npx changeset` interactively
-
-If none exist, skip.
 
 ---
 
@@ -135,9 +134,9 @@ gaps found, add missing test plan items.
 
 ---
 
-## STOP — Step 6: Present and confirm (OUTPUT GATE)
+## STOP — Step 6: Present, approve, execute, create (OUTPUT GATE)
 
-**You MUST stop here and get user approval before proceeding.**
+**You MUST stop here and get user approval before running tests or creating the PR.**
 
 Output the full PR:
 
@@ -156,59 +155,23 @@ options:
 Do not announce next steps or say "Let me..." after the separator. Present the plan, then ask. Do
 not call any tools between outputting the description and calling `AskUserQuestion`.
 
----
-
-## Step 7: Execute test plan and update description
-
-**You MUST execute every test plan checkbox item before proceeding. Do NOT skip this step.**
-
-For each checkbox item in the PR description:
-
-1. Run the command or verification
-2. Update the checkbox in your copy of the PR description: `- [x]` if passed, leave `- [ ]` if
-   failed
-3. On first failure:
-   - Stop execution, report failure details
-   - Ask user: **Fix and retry** or **Cancel**
-   - Do NOT proceed to next item until current passes
-4. Continue until all items pass
-
-After all items pass, you must have a **rewritten copy of the PR description** where every `- [ ]`
-is now `- [x]`. This rewritten description is what gets passed to `cape pr create` — not the
-original.
-
----
-
-## Step 8: Create PR (fix loop, max 3 attempts)
-
-Validate the **rewritten** description (with `[x]` marks) against the template:
-
-```bash
-echo '<rewritten-description>' | cape pr validate --stdin
-```
-
-Validation rejects both missing sections AND unchecked boxes. If any `- [ ]` remains, validation
-fails — go back to step 7. Do not call `cape pr create` until validation passes.
+**On approval (Create PR or Create draft):** run every test-plan checkbox in order, mark each
+`- [x]` on pass, keep `- [ ]` on fail. On any failure, stop, report details, ask **Fix and retry**
+or **Cancel**. After all pass, validate the rewritten description with `cape pr validate --stdin`
+(rejects missing sections AND unchecked boxes — loop back if any `- [ ]` remains), then call
+`cape pr create` with the rewritten body. Add `--draft` for the draft option. On creation failure
+(push rejected, conflicts): auto-fix if trivial, re-attempt up to 3 times, then ask the user.
 
 ```bash
 cape pr create --title "the title" --body "$(cat <<'EOF'
-<description>
+<rewritten-description>
 EOF
 )"
 ```
 
-Add `--draft` flag if user chose "Create draft" in step 6.
-
-If creation fails (push rejected, conflicts):
-
-1. Analyze failure output
-2. Auto-fix if possible (push, rebase)
-3. Re-attempt
-4. After 3 failures: report issues, ask user to fix manually
-
 ---
 
-## Step 9: Finalize
+## Step 7: Finalize
 
 After successful creation:
 
