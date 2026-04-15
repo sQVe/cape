@@ -15,7 +15,7 @@ const hookRun = Command.make(
   {
     event: Argument.string('event').pipe(Argument.withDescription('Hook lifecycle event: SessionStart | UserPromptSubmit | PreToolUse | PostToolUse')),
     clearLogs: Flag.boolean('clear-logs').pipe(Flag.withDescription('Clear event log on SessionStart'), Flag.withDefault(false)),
-    matcher: Flag.string('matcher').pipe(Flag.withDescription('Tool matcher for Pre/PostToolUse: Bash | Skill'), Flag.withDefault('')),
+    matcher: Flag.string('matcher').pipe(Flag.withDescription('Tool matcher: PreToolUse accepts Bash | Skill; PostToolUse accepts Bash'), Flag.withDefault('')),
   },
   Effect.fn(function* ({ event, clearLogs, matcher }) {
     const normalized = normalizeEventName(event);

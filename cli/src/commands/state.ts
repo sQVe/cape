@@ -8,7 +8,7 @@ import { HookService, readState, removeStateKey, writeStateKey } from '../servic
 const STATE_KEY_CATALOG = [
   {
     key: 'flowPhase',
-    description: 'Controls which hooks fire — executing/debugging enable TDD gate',
+    description: 'Current workflow phase — surfaces in session-start/user-prompt-submit context and read by challenge',
     validValues: 'executing | debugging | planning',
     valueShape: '{ phase, issueId }',
     ttlMs: 30 * 60 * 1000,

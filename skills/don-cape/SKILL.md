@@ -49,10 +49,10 @@ and load that skill directly:
   `cape:execute-plan`. Planning is already done — do not rerun it.
 
 Only these two signals short-circuit the chain. Do not infer scope/size/complexity from prose —
-those judgments are unreliable. If neither signal fires, scan the routing table.
+those judgments are unreliable.
 
-Otherwise, scan this table. If a skill matches, load it with the Skill tool. **First match wins** —
-stop scanning after the first row whose intent matches.
+If neither signal fires, scan the routing table below. If a skill matches, load it with the Skill
+tool. **First match wins** — stop scanning after the first row whose intent matches.
 
 | User intent                                                         | Skill                      | Notes                                                                                   |
 | ------------------------------------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------- |
