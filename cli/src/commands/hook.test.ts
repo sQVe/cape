@@ -263,6 +263,37 @@ describe('sessionStart', () => {
     expect(Object.keys(writtenFiles)).toHaveLength(0);
     expect(removedFiles).toHaveLength(0);
   });
+
+  it('removes legacy tddState key from state.json', async () => {
+    const writtenFiles: Record<string, string> = {};
+    const removedFiles: string[] = [];
+    const layer = makeStubHookLayer({
+      writtenFiles,
+      removedFiles,
+      files: stateFile({ tddState: { phase: 'red', timestamp: Date.now() } }),
+    });
+    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    expect(removedFiles).toContain('/test/hooks/context/state.json');
+  });
+
+  it('preserves flowPhase while removing legacy tddState', async () => {
+    const writtenFiles: Record<string, string> = {};
+    const removedFiles: string[] = [];
+    const layer = makeStubHookLayer({
+      writtenFiles,
+      removedFiles,
+      files: stateFile({
+        tddState: { phase: 'red', timestamp: Date.now() },
+        flowPhase: flowPhaseEntry('executing'),
+      }),
+    });
+    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const written = writtenFiles['/test/hooks/context/state.json'];
+    expect(written).toBeDefined();
+    const parsed = JSON.parse(written as string);
+    expect(parsed).not.toHaveProperty('tddState');
+    expect(parsed).toHaveProperty('flowPhase');
+  });
 });
 
 describe('userPromptSubmit', () => {
@@ -1042,7 +1073,7 @@ describe('hook command - PreToolUse wiring', () => {
     console_.restore();
   });
 
-  it('produces no output for unknown matcher', async () => {
+  it('warns on stderr for unknown PreToolUse matcher', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -1051,6 +1082,8 @@ describe('hook command - PreToolUse wiring', () => {
       ),
     );
     expect(console_.output()).toHaveLength(0);
+    expect(console_.errorOutput()).toContain('Unknown');
+    expect(console_.errorOutput()).toContain('PreToolUse');
     console_.restore();
   });
 
@@ -1183,7 +1216,7 @@ describe('hook command - PostToolUse wiring', () => {
     console_.restore();
   });
 
-  it('produces no output for unknown PostToolUse matcher', async () => {
+  it('warns on stderr for unknown PostToolUse matcher', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -1192,6 +1225,8 @@ describe('hook command - PostToolUse wiring', () => {
       ),
     );
     expect(console_.output()).toHaveLength(0);
+    expect(console_.errorOutput()).toContain('Unknown');
+    expect(console_.errorOutput()).toContain('PostToolUse');
     console_.restore();
   });
 });

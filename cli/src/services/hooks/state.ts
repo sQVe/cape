@@ -111,6 +111,9 @@ export const sessionStart = (clearLogsFlag: boolean) =>
       yield* clearLogs();
     }
 
+    // One-time migration: prune legacy tddState key from user state files.
+    yield* removeStateKey('tddState');
+
     const flowPhase = yield* readFlowPhase();
 
     const skillPath = `${root}/skills/don-cape/SKILL.md`;

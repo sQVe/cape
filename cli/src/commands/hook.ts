@@ -37,6 +37,8 @@ const hookRun = Command.make(
           result = yield* preToolUseBash();
         } else if (matcher === 'Skill') {
           result = yield* preToolUseSkill();
+        } else {
+          yield* Console.error(`cape hook: unknown PreToolUse matcher "${matcher}" — expected Bash | Skill. Check hooks.json.`);
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
@@ -47,6 +49,8 @@ const hookRun = Command.make(
         let result;
         if (matcher === 'Bash') {
           result = yield* postToolUseBash();
+        } else {
+          yield* Console.error(`cape hook: unknown PostToolUse matcher "${matcher}" — expected Bash. Check hooks.json.`);
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
