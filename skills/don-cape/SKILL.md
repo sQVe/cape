@@ -69,6 +69,7 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`       | Standalone                                                                              |
 | Explain, "how does X work", "walk me through", codebase overview    | `cape:explain`             | Standalone                                                                              |
 | Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`           | Standalone                                                                              |
+| Refine a task, stress-test br-N, "is this task ready", edge cases   | `cape:task-refinement`     | Opt-in between write-plan and execute-plan                                              |
 | Create a branch, start work on a branch                             | `cape:branch`              | Standalone                                                                              |
 | Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`         | End of build chain                                                                      |
 | Commit, save changes, wrap this up                                  | `cape:commit`              | Standalone                                                                              |
