@@ -8,7 +8,6 @@ import { DetectService } from './services/detect';
 import { GitService } from './services/git';
 import { HookService } from './services/hook';
 import { PrService } from './services/pr';
-import { TestService } from './services/test';
 import { ValidateService } from './services/validate';
 
 export const stubGitLayer = Layer.succeed(GitService)({
@@ -77,10 +76,6 @@ export const stubValidateLayer = Layer.succeed(ValidateService)({
   globFiles: () => Effect.succeed([]),
   readFile: () => Effect.succeed(''),
   gitRoot: () => Effect.succeed('/repo'),
-});
-
-export const stubTestLayer = Layer.succeed(TestService)({
-  runTest: () => Effect.succeed({ passed: true, output: '' }),
 });
 
 export const stubConformLayer = Layer.succeed(ConformService)({

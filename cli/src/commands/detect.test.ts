@@ -28,7 +28,6 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -82,7 +81,6 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
-  stubTestLayer,
   stubValidateLayer,
   stubConformLayer,
 );
@@ -96,7 +94,6 @@ const errorCommandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
-  stubTestLayer,
   stubValidateLayer,
   stubConformLayer,
 );

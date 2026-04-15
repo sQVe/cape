@@ -11,10 +11,9 @@ import { git } from './commands/git';
 import { hook } from './commands/hook';
 import { pr } from './commands/pr';
 import { stats } from './commands/stats';
-import { test } from './commands/test';
 import { validate } from './commands/validate';
 
 export const main = Command.make('cape').pipe(
   Command.withDescription('Cape CLI — opinionated Claude Code workflow tools.'),
-  Command.withSubcommands([br, check, commit, conform, detect, epic, git, hook, pr, state, stats, test, validate]),
+  Command.withSubcommands([br, check, commit, conform, detect, epic, git, hook, pr, state, stats, validate]),
 );

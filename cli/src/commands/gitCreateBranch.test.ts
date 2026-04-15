@@ -14,7 +14,6 @@ import {
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -82,7 +81,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
   );

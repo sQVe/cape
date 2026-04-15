@@ -4,12 +4,8 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 import {
   normalizeEventName,
   postToolUseBash,
-  postToolUseEdit,
-  postToolUseWrite,
   preToolUseBash,
-  preToolUseEdit,
   preToolUseSkill,
-  preToolUseWrite,
   sessionStart,
   userPromptSubmit,
 } from '../services/hook';
@@ -19,7 +15,7 @@ const hookRun = Command.make(
   {
     event: Argument.string('event').pipe(Argument.withDescription('Hook lifecycle event: SessionStart | UserPromptSubmit | PreToolUse | PostToolUse')),
     clearLogs: Flag.boolean('clear-logs').pipe(Flag.withDescription('Clear event log on SessionStart'), Flag.withDefault(false)),
-    matcher: Flag.string('matcher').pipe(Flag.withDescription('Tool matcher for Pre/PostToolUse: Bash | Edit | Write | Skill'), Flag.withDefault('')),
+    matcher: Flag.string('matcher').pipe(Flag.withDescription('Tool matcher: PreToolUse accepts Bash | Skill; PostToolUse accepts Bash'), Flag.withDefault('')),
   },
   Effect.fn(function* ({ event, clearLogs, matcher }) {
     const normalized = normalizeEventName(event);
@@ -41,10 +37,6 @@ const hookRun = Command.make(
           result = yield* preToolUseBash();
         } else if (matcher === 'Skill') {
           result = yield* preToolUseSkill();
-        } else if (matcher === 'Edit') {
-          result = yield* preToolUseEdit();
-        } else if (matcher === 'Write') {
-          result = yield* preToolUseWrite();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
@@ -55,10 +47,6 @@ const hookRun = Command.make(
         let result;
         if (matcher === 'Bash') {
           result = yield* postToolUseBash();
-        } else if (matcher === 'Edit') {
-          result = yield* postToolUseEdit();
-        } else if (matcher === 'Write') {
-          result = yield* postToolUseWrite();
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));

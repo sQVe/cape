@@ -37,7 +37,21 @@ Always active. Injected at session start via hook. Applies to every user message
 
 ## Step 1: Route the request
 
-Before responding to any user message, scan this table. If a skill matches, load it with the Skill
+**Short-circuit first.** Before scanning the routing table, check for objective signals that the
+user has already committed to a specific skill — in which case, skip the brainstorm/write-plan chain
+and load that skill directly:
+
+- **Direct skill invocation.** The user's message begins with a `/cape:<name>` slash command (e.g.
+  `/cape:refactor`, `/cape:pr`, `/cape:fix-bug`). Load the named skill. Do not reroute to brainstorm
+  or write-plan.
+- **Pre-existing br task.** An open br task with a `Design` section already exists for the work in
+  question (user references the bead ID, or `br ready` surfaces it as the next task). Load
+  `cape:execute-plan`. Planning is already done — do not rerun it.
+
+Only these two signals short-circuit the chain. Do not infer scope/size/complexity from prose —
+those judgments are unreliable.
+
+If neither signal fires, scan the routing table below. If a skill matches, load it with the Skill
 tool. **First match wins** — stop scanning after the first row whose intent matches.
 
 | User intent                                                         | Skill                      | Notes                                                                                   |
@@ -51,7 +65,6 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`        | Run `br ready` first; if empty + open epic exists, suggest finish-epic (see note below) |
 | Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`         | Investigation only                                                                      |
 | Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`             | Requires br bug to exist                                                                |
-| Refine, stress-test, harden a task before executing                 | `cape:task-refinement`     | Between plan and execute                                                                |
 | Find untested behavior, test gaps, what's untested                  | `cape:find-test-gaps`      | Standalone                                                                              |
 | Audit test quality, tautological tests, coverage gaming             | `cape:analyze-tests`       | Standalone                                                                              |
 | Explain, "how does X work", "walk me through", codebase overview    | `cape:explain`             | Standalone                                                                              |
@@ -79,16 +92,15 @@ anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                        | Dispatched by                                                                                                                                    | Purpose                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                                                             | Trace execution backward from errors to root cause                           |
-| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug, refactor                                                                                                     | Review implementation against plan and standards                             |
-| `cape:codebase-investigator` | brainstorm, debug-issue, explain, fix-bug, refactor, expand-task, find-test-gaps, analyze-tests, task-refinement, challenge, design-an-interface | Explore codebase structure, find patterns, verify assumptions                |
-| `cape:fact-checker`          | brainstorm, execute-plan, task-refinement                                                                                                        | Verify claims and assumptions against codebase evidence                      |
-| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug, design-an-interface                                                                                            | Research external APIs, libraries, community practices                       |
-| `cape:notebox-researcher`    | task-refinement                                                                                                                                  | Surface past decisions and research from notes                               |
-| `cape:test-auditor`          | analyze-tests                                                                                                                                    | Audit test quality for tautological tests, weak assertions, missing coverage |
-| `cape:test-runner`           | test-driven-development, finish-epic, refactor                                                                                                   | Run tests and hooks without polluting context                                |
+| Agent                        | Dispatched by                                                                                                                   | Purpose                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `cape:bug-tracer`            | debug-issue, fix-bug                                                                                                            | Trace execution backward from errors to root cause                           |
+| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug, refactor                                                                                    | Review implementation against plan and standards                             |
+| `cape:codebase-investigator` | brainstorm, debug-issue, explain, fix-bug, refactor, expand-task, find-test-gaps, analyze-tests, challenge, design-an-interface | Explore codebase structure, find patterns, verify assumptions                |
+| `cape:fact-checker`          | brainstorm, execute-plan                                                                                                        | Verify claims and assumptions against codebase evidence                      |
+| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug, design-an-interface                                                                           | Research external APIs, libraries, community practices                       |
+| `cape:test-auditor`          | analyze-tests                                                                                                                   | Audit test quality for tautological tests, weak assertions, missing coverage |
+| `cape:test-runner`           | test-driven-development, finish-epic, refactor                                                                                  | Run tests and hooks without polluting context                                |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.
@@ -102,7 +114,7 @@ Cape skills form three workflow chains. Each link hands off to the next. Don't s
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm [challenge optional] → write-plan → STOP → [task-refinement] → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
+brainstorm [challenge optional] → write-plan → STOP → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
 ```
 
 - `brainstorm` is conversational — never enters plan mode. It checkpoints after research and after
@@ -110,7 +122,6 @@ brainstorm [challenge optional] → write-plan → STOP → [task-refinement] �
 - `challenge` is offered by brainstorm (opt-in) to surface hidden assumptions before locking
 - `write-plan` formalizes it into a br epic with one first task
 - **STOP** — present the epic and wait. The user decides when to start building.
-- `task-refinement` (optional) stress-tests the task before implementation
 - `execute-plan` implements one task, challenges completed work, creates the next task, stops for
   review
   - `expand-task` (internal, automatic) grounds the task in codebase reality before coding starts
@@ -148,8 +159,10 @@ debug-issue → fix-bug → commit
 to an approach. write-plan locks requirements before implementation begins. Skipping these steps
 means building on unvalidated assumptions — the kind of shortcut that creates rework.
 
-**User intent is WHAT, not HOW.** When a user says "add feature X", that's what they want built —
-not permission to skip brainstorm and write-plan. The chain determines how.
+**Vague feature requests go through the chain.** When a user says "add feature X" with no `/cape:*`
+invocation and no pre-existing br task, that's a WHAT statement — brainstorm and write-plan still
+apply. Direct `/cape:<name>` invocation, or executing against a br task that already has a design,
+is the user's explicit choice of HOW and short-circuits the chain (see Step 1).
 
 ---
 

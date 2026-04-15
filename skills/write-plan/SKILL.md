@@ -140,7 +140,7 @@ br create "Task 1: [Specific deliverable]" \
 [HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
 
 ## Behaviors
-[Sequential — each becomes exactly one RED-GREEN-REFACTOR cycle. Never test or implement more than one at a time.]
+[Sequential — each should be small enough to drive with one test-first behavior slice. Never bundle multiple behaviors into one task.]
 1. [Behavior 1: "returns error when input is empty"]
 2. [Behavior 2: "parses valid input into sections"]
 ...

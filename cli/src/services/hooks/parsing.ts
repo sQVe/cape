@@ -1,23 +1,3 @@
-import { basename, extname } from 'node:path';
-
-const testFilePattern =
-  /\.(test|spec)\.(ts|tsx|js|jsx)$|_test\.go$|_spec\.lua$|^test_.*\.py$|[\\/]__tests__[\\/]/;
-
-export const isTestFile = (filePath: string): boolean =>
-  testFilePattern.test(filePath) || testFilePattern.test(basename(filePath));
-
-const codeExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.rs', '.lua']);
-
-export const isCodeFile = (filePath: string): boolean => codeExtensions.has(extname(filePath));
-
-export const MAX_NEW_TEST_BLOCKS = 1;
-const testBlockPattern = /\b(?:it|test)\s*(?:\.\s*\w+\s*)?\(/g;
-
-export const countTestBlocks = (content: string): number => {
-  const matches = content.match(testBlockPattern);
-  return matches?.length ?? 0;
-};
-
 const beadsPatterns = [
   /\bbr\b/i,
   /\bbeads?\b/i,
@@ -107,51 +87,3 @@ export const parseSkillInput = (input: string): SkillInput | null => {
   }
 };
 
-export const parseFilePath = (input: string): string | null => {
-  try {
-    const data = JSON.parse(input);
-    return parseString(data.tool_input?.file_path);
-  } catch {
-    return null;
-  }
-};
-
-export interface EditInput {
-  readonly filePath: string;
-  readonly oldString: string;
-  readonly newString: string;
-}
-
-export const parseEditInput = (input: string): EditInput | null => {
-  try {
-    const data = JSON.parse(input);
-    const filePath = parseString(data.tool_input?.file_path);
-    const oldString = parseString(data.tool_input?.old_string);
-    const newString = parseString(data.tool_input?.new_string);
-    if (!filePath || oldString == null || newString == null) {
-      return null;
-    }
-    return { filePath, oldString, newString };
-  } catch {
-    return null;
-  }
-};
-
-export interface WriteInput {
-  readonly filePath: string;
-  readonly content: string;
-}
-
-export const parseWriteInput = (input: string): WriteInput | null => {
-  try {
-    const data = JSON.parse(input);
-    const filePath = parseString(data.tool_input?.file_path);
-    const content = parseString(data.tool_input?.content);
-    if (!filePath || content == null) {
-      return null;
-    }
-    return { filePath, content };
-  } catch {
-    return null;
-  }
-};

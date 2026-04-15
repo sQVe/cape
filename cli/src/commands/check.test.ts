@@ -15,7 +15,6 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -68,7 +67,6 @@ const commandLayers = Layer.mergeAll(
   stubBrLayer,
   stubHookLayer,
   stubPrLayer,
-  stubTestLayer,
   stubValidateLayer,
   stubConformLayer,
 );
@@ -92,7 +90,6 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
     );
@@ -118,7 +115,6 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
     );
@@ -137,7 +133,6 @@ describe('check command wiring', () => {
       stubBrLayer,
       stubHookLayer,
       stubPrLayer,
-      stubTestLayer,
       stubValidateLayer,
       stubConformLayer,
     );

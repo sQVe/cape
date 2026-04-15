@@ -19,7 +19,6 @@ import {
   stubGitLayer,
   stubHookLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -62,7 +61,6 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     stubCommitLayer,
     stubBrLayer,
     stubHookLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     prLayer,
@@ -393,7 +391,6 @@ const makeCreateLayers = (
     stubBrLayer,
     hookLayer,
     prLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
   );

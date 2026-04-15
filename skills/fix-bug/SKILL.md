@@ -16,9 +16,9 @@ br bug exists, then delegates the fix to the TDD skill with evidence-based closu
 Core contract: every fix gets a regression test that fails before the fix and passes after.
 </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM -- The TDD cycle (delegated to `cape:test-driven-development`) and
-evidence-based closure are non-negotiable. Investigation depth, test strategy, and fix approach
-adapt to context. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- Test-first bug fixing (delegated to
+`cape:test-driven-development`) and evidence-based closure are non-negotiable. Investigation depth,
+test strategy, and fix approach adapt to context. </rigidity_level>
 
 <when_to_use>
 
@@ -39,7 +39,7 @@ adapt to context. </rigidity_level>
 <critical_rules>
 
 1. **br bug must exist before fixing** -- adopt from debug-issue or create via debug-issue dispatch
-2. **Failing test before code change** -- RED before GREEN, always
+2. **Failing test before code change** -- reproduce the bug in a test before you fix it
 3. **Full test suite before closing** -- no regressions introduced
 4. **Confirm before closing** -- present fix summary and get user approval
 5. **Run close-check before close** -- `cape br close-check <bug-id>` must pass before
@@ -103,11 +103,12 @@ cape state set workflowActive
 ```
 
 The bug's root cause from the br bug is your test target. Load `cape:test-driven-development` with
-the Skill tool — the RED test reproduces the bug, GREEN fixes it, REFACTOR cleans up.
+the Skill tool — let the failing test reproduce the bug, then make it pass with the smallest fix.
+Clean up only if it clearly improves the result.
 
 **Scope guard:**
 
-- Don't refactor adjacent code beyond what the REFACTOR phase justifies
+- Don't refactor adjacent code beyond what the current bug fix justifies
 - Don't improve error handling elsewhere
 - Don't add features
 - Don't clean up unrelated tests
@@ -117,8 +118,8 @@ is discovered during the fix. Dispatch `cape:codebase-investigator` if you need 
 broader impact of the fix on other modules. Dispatch `cape:internet-researcher` if the fix involves
 external library behavior or undocumented API semantics.
 
-After the TDD cycle completes (GREEN + REFACTOR), record the SHA in `.beads/<bug-id>/verify.json`
-under key `fix` (same pattern as reproduction).
+After the bug-fix pass is complete and tests are green, record the SHA in
+`.beads/<bug-id>/verify.json` under key `fix` (same pattern as reproduction).
 
 Dispatch `cape:code-reviewer` with model `sonnet` after the fix is green. Pass the br bug (root
 cause and success criteria) and the fix diff — the reviewer judges the fix against the diagnosed
@@ -208,8 +209,9 @@ silently.
 
 1. `br show br-42` -- read root cause: off-by-one in `auth.ts:47`
 2. Run reproduction steps from the bug to confirm the symptom locally
-3. Write a test that exercises the boundary condition at `auth.ts:47` -- confirm it fails (RED)
-4. Fix the comparison operator -- confirm the test passes (GREEN), full suite green
+3. Write a test that exercises the boundary condition at `auth.ts:47` -- confirm it fails before the
+   code change
+4. Fix the comparison operator -- confirm the test passes, then run the full suite
 5. Re-run reproduction steps, symptom gone. Append Outcome to br-42, present summary, close
    </example>
 
@@ -227,8 +229,9 @@ query) remains exploitable.
 1. No br bug exists -- dispatch debug-issue to investigate. It produces br-58 with root cause: email
    not URL-encoded before being passed to the auth service query
 2. Run reproduction: POST login with `user+test@example.com`, confirm 500
-3. Write a test for the auth service that passes an email with `+` -- confirm it fails (RED)
-4. Fix the encoding in the auth service -- confirm test passes (GREEN), full suite green
+3. Write a test for the auth service that passes an email with `+` -- confirm it fails before the
+   code change
+4. Fix the encoding in the auth service -- confirm the test passes, then run the full suite
 5. Re-run reproduction, login succeeds. Append Outcome to br-58, present summary, close </example>
 
 </examples>

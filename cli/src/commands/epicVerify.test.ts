@@ -15,7 +15,6 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
@@ -52,7 +51,6 @@ const testLayers = (
     stubCommitLayer,
     stubHookLayer,
     stubPrLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
     brLayer,

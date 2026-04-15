@@ -146,7 +146,6 @@ const brClose = Command.make(
     }
 
     yield* service.ensureDir(`${root}/hooks/context`);
-    yield* removeStateKey('tddState');
     yield* removeStateKey('flowPhase');
     yield* removeStateKey('workflowActive');
     yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');

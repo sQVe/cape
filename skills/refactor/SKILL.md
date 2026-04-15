@@ -95,8 +95,11 @@ Present the plan to the user before executing.
 
 ## Step 2: Verify the safety net
 
-Run `cape check`. If exit code is non-zero, stop — do not proceed. Read `checkResults` from JSON
-output and report entries where `passed: false`. Every test must pass before you change anything.
+Run `cape check` to baseline the safety net. On non-zero exit, read `checkResults` from JSON output
+and surface entries where `passed: false` as warnings. If failures are unrelated to the refactor
+target, proceed — note them for the user. If failures indicate the test suite can't cover the area
+being refactored, stop and fix first. The per-step and final-step `cape check` gates below remain
+strict: they verify the transform preserved behavior, so a regression there must halt.
 
 ```
 Full suite: [PASS/FAIL] — [N] tests, [M] failures

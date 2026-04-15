@@ -8,17 +8,10 @@ import { HookService, readState, removeStateKey, writeStateKey } from '../servic
 const STATE_KEY_CATALOG = [
   {
     key: 'flowPhase',
-    description: 'Controls which hooks fire — executing/debugging enable TDD gate',
+    description: 'Current workflow phase — surfaces in session-start/user-prompt-submit context and read by challenge',
     validValues: 'executing | debugging | planning',
     valueShape: '{ phase, issueId }',
     ttlMs: 30 * 60 * 1000,
-  },
-  {
-    key: 'tddState',
-    description: 'TDD enforcement — phase tracks test-first cycle progress',
-    validValues: 'red | green | writing-test',
-    valueShape: '{ phase }',
-    ttlMs: 10 * 60 * 1000,
   },
   {
     key: 'workflowActive',
@@ -102,7 +95,6 @@ const stateList = Command.make(
     sections.push(
       [
         'Common operations:',
-        '  Opt out of TDD: cape state clear tddState && cape state clear flowPhase',
         '  Reset all state: cape state reset',
       ].join('\n'),
     );
@@ -113,7 +105,7 @@ const stateList = Command.make(
 
 const stateSet = Command.make(
   'set',
-  { key: Argument.string('key').pipe(Argument.withDescription('State key name (e.g. tddState, flowPhase, workflowActive)')), value: Argument.string('value').pipe(Argument.withDescription('Value as JSON object or plain string'), Argument.optional) },
+  { key: Argument.string('key').pipe(Argument.withDescription('State key name (e.g. flowPhase, workflowActive)')), value: Argument.string('value').pipe(Argument.withDescription('Value as JSON object or plain string'), Argument.optional) },
   Effect.fn(function* ({ key, value }) {
     let parsed: Record<string, unknown>;
     if (Option.isNone(value)) {

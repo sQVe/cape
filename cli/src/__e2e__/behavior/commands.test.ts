@@ -650,15 +650,3 @@ describe('cape git create-branch', () => {
   });
 });
 
-describe('cape test', () => {
-  it('cape --help lists test subcommand', async () => {
-    const result = await inProcess(['--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('test');
-  });
-
-  it('cape test --help succeeds', async () => {
-    const result = await inProcess(['test', '--help']);
-    expect(result.status).toBe(0);
-  });
-});

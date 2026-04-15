@@ -14,7 +14,6 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubConformLayer,
-  stubTestLayer,
   stubValidateLayer,
 } from '../testStubs';
 
@@ -74,7 +73,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubBrLayer,
     stubHookLayer,
     stubPrLayer,
-    stubTestLayer,
     stubValidateLayer,
     stubConformLayer,
   );

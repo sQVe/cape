@@ -70,9 +70,10 @@ Parse the argument to determine what to review:
 | branch name       | Diff of that branch vs main                |
 | PR number         | Diff of PR branch vs its base              |
 
-Run `cape check` as a pre-review gate. If exit code is non-zero, stop — do not proceed. Read
-`checkResults` from JSON output and report entries where `passed: false`. Fix build/test errors
-before reviewing code.
+Run `cape check` as a baseline signal. On non-zero exit, read `checkResults` from JSON output and
+surface entries where `passed: false` as warnings, then continue reviewing — pre-existing failures
+are context for the review, not a blocker. Only halt if the review author explicitly asks for a
+clean baseline first.
 
 **Detect main branch and changed files:**
 
