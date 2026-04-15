@@ -109,14 +109,19 @@ const brCloseCheck = Command.make(
   'close-check',
   {
     id: Argument.string('id').pipe(Argument.withDescription('Bead ID to check close readiness for')),
+    allowFailingChecks: Flag.boolean('allow-failing-checks').pipe(
+      Flag.withDescription('Exit 0 even if project checks fail. Open subtasks still block. Use when a known-flaky or unrelated test blocks close.'),
+      Flag.withDefault(false),
+    ),
   },
-  Effect.fn(function* ({ id }) {
-    const { ready, openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
+  Effect.fn(function* ({ id, allowFailingChecks }) {
+    const { openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
 
-    const result = { canClose: ready, openSubtasks: openItems, checksPassed, checkResults };
+    const canClose = openItems.length === 0 && (checksPassed || allowFailingChecks);
+    const result = { canClose, openSubtasks: openItems, checksPassed, checkResults };
     yield* Console.log(JSON.stringify(result, null, 2));
 
-    if (!ready) {
+    if (!canClose) {
       const error = `close-check failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`;
       yield* dieWithError(error);
     }

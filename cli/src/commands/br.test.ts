@@ -400,6 +400,33 @@ describe('br close-check command', () => {
     expect(result.checksPassed).toBe(false);
     console_.restore();
   });
+
+  it('returns canClose:true when checks fail but --allow-failing-checks is set', async () => {
+    const console_ = spyConsole();
+    const checks: CheckResult[] = [{ check: 'vitest', passed: false, output: 'FAIL' }];
+    await Effect.runPromise(
+      run(['br', 'close-check', 'test-id', '--allow-failing-checks']).pipe(
+        Effect.provide(makeCloseCheckLayers([], checks)),
+      ),
+    );
+    const result = JSON.parse(console_.output());
+    expect(result.canClose).toBe(true);
+    expect(result.checksPassed).toBe(false);
+    console_.restore();
+  });
+
+  it('still blocks close when subtasks are open even with --allow-failing-checks', async () => {
+    const console_ = spyConsole();
+    const children: ChildStatus[] = [{ id: 'test.1', title: 'Task 1', status: 'open' }];
+    await expect(
+      Effect.runPromise(
+        run(['br', 'close-check', 'test-id', '--allow-failing-checks']).pipe(
+          Effect.provide(makeCloseCheckLayers(children, [])),
+        ),
+      ),
+    ).rejects.toThrow('close-check failed for test-id: 1 open task(s)');
+    console_.restore();
+  });
 });
 
 describe('br close command', () => {
