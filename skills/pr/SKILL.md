@@ -85,14 +85,15 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 ---
 
-## Step 4: Check contribution requirements (opt-in)
+## Step 4: Check contribution requirements
 
-Skip this step unless the user explicitly asks for contribution-artifact checks (e.g., "update the
-changelog", "run changeset", "check contribution requirements"). When asked, look for:
+Auto-detect contribution artifacts by checking for these files. Act only on what exists:
 
-- **CONTRIBUTING.md** — note any PR requirements
-- **CHANGELOG.md** — if it has an "Unreleased" section, add an entry for this change
+- **CONTRIBUTING.md** — if present, note any PR requirements relevant to the change
+- **CHANGELOG.md** — if present with an "Unreleased" section, add an entry for this change
 - **.changeset/** — if present, run `npx changeset` interactively
+
+If none exist, skip.
 
 ---
 
