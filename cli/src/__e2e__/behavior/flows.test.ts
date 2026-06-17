@@ -71,6 +71,61 @@ describe('flow 3: session-start clears logs', () => {
     expect(parsed.additionalContext).toEqual(expect.any(String));
     expect(parsed.additionalContext.length).toBeGreaterThan(0);
   });
+
+  it('renders the ABU-15 banner from a seeded tracker cache with network disabled', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({
+        flowPhase: {
+          phase: 'BUILD',
+          issueId: 'ABU-15',
+          timestamp: Date.now(),
+        },
+      }),
+    );
+    writeFileSync(
+      join(contextDir, 'tracker.json'),
+      JSON.stringify({
+        version: 1,
+        timestamp: Date.now(),
+        epics: {
+          'ABU-15': {
+            id: 'ABU-15',
+            title: 'Cape V2',
+            status: 'In Progress',
+            tasks: [
+              {
+                id: 'ABU-16',
+                title: 'Tracker seam',
+                status: 'Done',
+                stateType: 'completed',
+              },
+              {
+                id: 'ABU-17',
+                title: 'Session banner',
+                status: 'Todo',
+                stateType: 'unstarted',
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    const result = cape(['hook', 'session-start'], '', {
+      ...env,
+      HTTP_PROXY: 'http://127.0.0.1:9',
+      HTTPS_PROXY: 'http://127.0.0.1:9',
+      LINEAR_API_KEY: '',
+    });
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(parsed.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(parsed.additionalContext).toContain('| Next   ABU-17 - Session banner');
+    expect(parsed.additionalContext).toContain('| Branch ');
+  });
 });
 
 describe('flow 4: full commit pipeline', () => {
