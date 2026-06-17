@@ -1,25 +1,39 @@
 ---
 name: review
 description: >
-  Review code changes for bugs, logic errors, security issues, and design problems using structural
-  analysis from the code-review-graph. Use whenever the user wants a code review — explicit requests
-  ("review my changes", "review this", "check my code", "/cape:review") and implicit ones ("anything
-  wrong here?", "is this ready?", "look this over"). Also use when reviewing someone else's PR or
-  branch. Covers self-review before committing, pre-PR review, and reviewing others' work. Do NOT
-  use for writing review (prose, docs) or for committing (use cape:commit).
+  Review code changes for bugs, logic errors, security issues, design problems, and documented
+  convention violations using structural analysis from the code-review-graph plus cape conform. Use
+  whenever the user wants a code review — explicit requests ("review my changes", "review this",
+  "check my code", "/cape:review") and implicit ones ("anything wrong here?", "is this ready?",
+  "look this over"). Also use when reviewing someone else's PR or branch. Covers self-review before
+  committing, pre-PR review, and reviewing others' work. Do NOT use for writing review (prose, docs)
+  or for committing (use cape:commit).
 ---
 
 <skill_overview> Review code changes using code-review-graph for structural intelligence — blast
-radius, dependency chains, test coverage gaps. Produces a verdict-first report grouped by file.
-Optionally tracks critical findings as br bugs for later resolution.
+radius, dependency chains, test coverage gaps — and `cape conform` for documented convention
+violations. Produces a verdict-first report grouped by file. Optionally tracks critical findings as
+br bugs for later resolution.
 
 The graph gives this skill something raw diffs can't: who calls what you changed, what breaks if
 this behaves differently, and which functions have no tests. One structurally-aware reviewer finds
 more than three blind ones. </skill_overview>
 
-<rigidity_level> LOW FREEDOM — The process order (scope → graph → review → report → follow-up) is
-fixed. The report format (verdict first, grouped by file, severity-tagged findings) is
-non-negotiable. Depth adapts to change size. </rigidity_level>
+<reviewer_contract>
+
+- **Read-only:** cite findings and stop. Do not apply fixes during review.
+- **File-line evidence:** every finding, including convention violations, cites `file:line`.
+- **Claims are unverified:** implementer rationales and code comments are hypotheses, not facts.
+- **Impact-derived severity:** severity comes from observed behavior, reach, and risk; never
+  pre-judge by category. Convention violations are binary rule hits, not severity-ranked correctness
+  findings.
+
+</reviewer_contract>
+
+<rigidity_level> LOW FREEDOM — The process order (scope → graph → conventions → review → report →
+follow-up) is fixed. The report format (verdict first, grouped by file, severity-tagged correctness
+findings plus sourced convention violations) is non-negotiable. Depth adapts to change size.
+</rigidity_level>
 
 <when_to_use>
 
@@ -34,7 +48,6 @@ non-negotiable. Depth adapts to change size. </rigidity_level>
 - Committing changes (use cape:commit)
 - Creating PRs (use cape:pr)
 - Diagnosing or fixing a specific bug (use cape:fix-bug)
-- Convention/style checking against CLAUDE.md rules (use cape:conform)
 
 </when_to_use>
 
@@ -52,6 +65,8 @@ non-negotiable. Depth adapts to change size. </rigidity_level>
 7. **Always attempt the graph** — even for small changes, blast radius is cheap. Fall back to
    diff-only when the graph returns 0 nodes (non-code repo) or is genuinely unavailable.
 8. **Check dependents of deleted files** — a deletion that breaks importers is a critical finding
+9. **Run conventions through cape conform** — use the CLI output for rule discovery, changed files,
+   and rule sources. Do not infer undocumented conventions.
 
 </critical_rules>
 
@@ -117,7 +132,31 @@ context doesn't apply to them.
 
 ---
 
-## Step 3: Review
+## Step 3: Check documented conventions
+
+Run `cape conform [scope]` for the same review scope before judging convention adherence:
+
+| Review scope      | Conform scope                                                      |
+| ----------------- | ------------------------------------------------------------------ |
+| (none)            | `cape conform branch`                                              |
+| `unstaged`        | `cape conform unstaged`                                            |
+| `staged`          | `cape conform staged`                                              |
+| branch name or PR | `cape conform branch` after the target diff is available locally   |
+| file path or glob | `cape conform branch`, then limit convention findings to the files |
+
+Use the JSON output as the source of truth for rule files and changed file contents. For each
+changed file, apply only rules whose globs match that path. Check each applicable rule mechanically:
+violated or not violated. Report violations alongside correctness findings, attributed to their rule
+source (`CLAUDE.md`, `typescript.md`, etc.). Do not assign critical/important/suggestion severity to
+convention violations unless the same observation also creates a correctness finding.
+
+If `cape conform` finds no applicable rules, say so in the summary. If it fails because the target
+is not available as a local diff, report that the conventions check was unavailable and continue
+with the code review.
+
+---
+
+## Step 4: Review
 
 Work through each changed file using the graph context. For each file:
 
@@ -160,7 +199,7 @@ as suggestions unless they create maintenance risk.
 
 ---
 
-## STOP — Step 4: Present the report (OUTPUT GATE)
+## STOP — Step 5: Present the report (OUTPUT GATE)
 
 Structure the report as follows. Lead with the verdict — the reader should know the outcome before
 reading details.
@@ -185,6 +224,9 @@ Suggestion: {how to fix}
 
 **[Suggestion]** L{line}: {description}
 
+**[Convention: {rule_source}]** L{line}: {description}
+Rule: {short rule or heading from the rule source}
+
 #### {next_file_path}
 ...
 
@@ -195,13 +237,17 @@ Suggestion: {how to fix}
 
 ### Summary
 
-{critical_count} critical, {important_count} important, {suggestion_count} suggestions
+{critical_count} critical, {important_count} important, {suggestion_count} suggestions,
+{convention_count} convention violations
 ```
 
 **Verdict criteria:**
 
 - **Passes review** — no critical findings, no important findings, or only suggestions
 - **Needs changes** — any critical or important finding
+
+Convention violations are binary rule findings. They do not change severity counts, but a review
+with any convention violation should still call them out in the verdict line or summary.
 
 **Risk assessment:**
 
@@ -216,15 +262,16 @@ If no issues found:
 
 Passes review. No issues found.
 
-{N} files reviewed, {M} in blast radius. All changed functions have test coverage.
+{N} files reviewed, {M} in blast radius. All changed functions have test coverage. No documented
+convention violations found.
 ```
 
-End output with `---` separator. After the separator, immediately proceed to step 5. Do not announce
+End output with `---` separator. After the separator, immediately proceed to step 6. Do not announce
 intent or say "Let me..." after the separator.
 
 ---
 
-## Step 5: Follow-up actions
+## Step 6: Follow-up actions
 
 Use `AskUserQuestion` with context-appropriate options:
 

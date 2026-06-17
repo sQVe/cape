@@ -68,7 +68,7 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`     | End of build chain                                                                      |
 | Commit, save changes, wrap this up                                  | `cape:commit`          | Standalone                                                                              |
 | Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`              | Standalone                                                                              |
-| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`          | Standalone                                                                              |
+| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`          | Standalone; covers bugs/logic plus conventions under reviewer contract                  |
 | br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`           | Reference skill                                                                         |
 
 **Internal skills** (called by other skills, not user-routed):
