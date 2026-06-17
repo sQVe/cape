@@ -9,7 +9,6 @@ import { CheckService, getCheckResults, resolveCheckCommands } from '../services
 import type { DetectResult } from '../services/detect';
 import { DetectService } from '../services/detect';
 import {
-  stubBrLayer,
   stubCommitLayer,
   stubGitLayer,
   stubHookLayer,
@@ -64,7 +63,6 @@ const commandLayers = Layer.mergeAll(
   makeTestCheckLayer(),
   stubGitLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -87,7 +85,6 @@ describe('check command wiring', () => {
       makeFailingCheckLayer([{ check: 'vitest', passed: false, output: 'FAIL' }]),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
@@ -112,7 +109,6 @@ describe('check command wiring', () => {
       makeTestCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
@@ -130,7 +126,6 @@ describe('check command wiring', () => {
       makeErrorCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,

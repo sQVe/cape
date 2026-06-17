@@ -1,6 +1,5 @@
 import { Command } from 'effect/unstable/cli';
 
-import { br } from './commands/br';
 import { check } from './commands/check';
 import { conform } from './commands/conform';
 import { commit } from './commands/commit';
@@ -17,5 +16,5 @@ import { worktree } from './commands/worktree';
 
 export const main = Command.make('cape').pipe(
   Command.withDescription('Cape CLI — opinionated Claude Code workflow tools.'),
-  Command.withSubcommands([br, check, commit, conform, detect, epic, git, hook, pr, state, stats, tracker, validate, worktree]),
+  Command.withSubcommands([check, commit, conform, detect, epic, git, hook, pr, state, stats, tracker, validate, worktree]),
 );

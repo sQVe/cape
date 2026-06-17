@@ -7,7 +7,6 @@ import { main } from '../main';
 import type { BranchValidation } from '../services/git';
 import { GitService } from '../services/git';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubConformLayer,
@@ -78,7 +77,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,

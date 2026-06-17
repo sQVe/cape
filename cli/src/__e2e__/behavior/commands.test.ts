@@ -13,7 +13,7 @@ describe('cape --help', () => {
   it('lists all subcommands', async () => {
     const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
-    for (const sub of ['br', 'check', 'commit', 'detect', 'git', 'hook', 'pr', 'validate']) {
+    for (const sub of ['check', 'commit', 'detect', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
     }
   });
@@ -73,72 +73,6 @@ describe('cape git context', () => {
   });
 });
 
-describe('cape br close-check', () => {
-  it('cape br --help lists close-check subcommand', async () => {
-    const result = await inProcess(['br', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('close-check');
-  });
-
-  it('requires an id argument', async () => {
-    const result = await inProcess(['br', 'close-check']);
-    expect(result.status).not.toBe(0);
-  });
-});
-
-describe('cape br close', () => {
-  it('cape br --help lists close subcommand', async () => {
-    const result = await inProcess(['br', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('close');
-  });
-
-  it('requires an id argument', async () => {
-    const result = await inProcess(['br', 'close']);
-    expect(result.status).not.toBe(0);
-  });
-});
-
-describe('cape br create', () => {
-  it('cape br --help lists create subcommand', async () => {
-    const result = await inProcess(['br', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('create');
-  });
-
-  it('errors when --type is missing', async () => {
-    const result = await inProcess(['br', 'create', 'Test', '--priority', 'P1', '--labels', 'hitl']);
-    expect(result.status).not.toBe(0);
-  });
-
-  it('errors when --priority is missing', async () => {
-    const result = await inProcess(['br', 'create', 'Test', '--type', 'task', '--labels', 'hitl']);
-    expect(result.status).not.toBe(0);
-  });
-
-  it('errors when --labels is missing', async () => {
-    const result = await inProcess(['br', 'create', 'Test', '--type', 'task', '--priority', 'P1']);
-    expect(result.status).not.toBe(0);
-  });
-
-  it('rejects --design flag', async () => {
-    const result = await inProcess([
-      'br',
-      'create',
-      'Test',
-      '--type',
-      'task',
-      '--priority',
-      'P1',
-      '--labels',
-      'hitl',
-      '--design',
-      'content',
-    ]);
-    expect(result.status).not.toBe(0);
-  });
-});
-
 describe('cape epic verify', () => {
   it('cape --help lists epic subcommand', async () => {
     const result = await inProcess(['--help']);
@@ -154,34 +88,6 @@ describe('cape epic verify', () => {
   it('requires an id argument', async () => {
     const result = await inProcess(['epic', 'verify']);
     expect(result.status).not.toBe(0);
-  });
-});
-
-describe('cape br template', () => {
-  it('outputs epic template with required sections', async () => {
-    const result = await inProcess(['br', 'template', '--type', 'epic']);
-    expect(result.status).toBe(0);
-    const headings = result.stdout.match(/^## .+$/gm) ?? [];
-    expect(headings.length).toBeGreaterThanOrEqual(4);
-  });
-
-  it('outputs task template', async () => {
-    const result = await inProcess(['br', 'template', '--type', 'task']);
-    expect(result.status).toBe(0);
-    const headings = result.stdout.match(/^## .+$/gm) ?? [];
-    expect(headings.length).toBeGreaterThanOrEqual(2);
-  });
-
-  it('outputs bug template', async () => {
-    const result = await inProcess(['br', 'template', '--type', 'bug']);
-    expect(result.status).toBe(0);
-    const headings = result.stdout.match(/^## .+$/gm) ?? [];
-    expect(headings.length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('exits 1 for unknown type', async () => {
-    const result = await inProcess(['br', 'template', '--type', 'unknown']);
-    expect(result.status).toBe(1);
   });
 });
 
@@ -558,21 +464,6 @@ describe('cape state', () => {
   });
 });
 
-describe('cape br validate', () => {
-  it('exits 1 when neither id nor --type provided', async () => {
-    const result = await inProcess(['br', 'validate']);
-    expect(result.status).toBe(1);
-  });
-});
-
-describe('cape br design', () => {
-  it('cape br --help lists design subcommand', async () => {
-    const result = await inProcess(['br', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('design');
-  });
-});
-
 describe('cape detect --map', () => {
   it('returns JSON mapping source files to test files', async () => {
     const result = await inProcess(['detect', '--map', '.']);
@@ -588,29 +479,6 @@ describe('cape detect --map', () => {
     for (const value of Object.values(parsed)) {
       expect(value === null || typeof value === 'string').toBe(true);
     }
-  });
-});
-
-describe('cape br update', () => {
-  it('cape br --help lists update subcommand', async () => {
-    const result = await inProcess(['br', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('update');
-  });
-
-  it('requires an id argument', async () => {
-    const result = await inProcess(['br', 'update']);
-    expect(result.status).not.toBe(0);
-  });
-
-  it('rejects hyphenated status values', async () => {
-    const result = await inProcess(['br', 'update', 'bd-test', '--status', 'in-progress']);
-    expect(result.status).not.toBe(0);
-  });
-
-  it('rejects done as status and redirects to cape br close', async () => {
-    const result = await inProcess(['br', 'update', 'bd-test', '--status', 'done']);
-    expect(result.status).not.toBe(0);
   });
 });
 

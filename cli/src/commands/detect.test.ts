@@ -21,7 +21,6 @@ import {
 } from '../services/detect';
 import { findWorkspaceRoot } from '../services/detectLive';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubGitLayer,
@@ -78,7 +77,6 @@ const commandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -91,7 +89,6 @@ const errorCommandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,

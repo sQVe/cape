@@ -1,6 +1,5 @@
 import { Effect, Layer } from 'effect';
 
-import { BrValidateService } from './services/brValidate';
 import { CheckService } from './services/check';
 import { CommitService } from './services/commit';
 import { ConformService } from './services/conform';
@@ -39,26 +38,12 @@ export const stubCommitLayer = Layer.succeed(CommitService)({
   commitNoEdit: () => Effect.succeed(undefined),
 });
 
-export const stubBrLayer = Layer.succeed(BrValidateService)({
-  show: () =>
-    Effect.succeed({
-      id: '',
-      issue_type: 'task',
-      description: '',
-      design: null,
-    }),
-  updateDesign: () => Effect.succeed(undefined),
-  readStdin: () => Effect.succeed(''),
-  listChildren: () => Effect.succeed([]),
-});
-
 export const stubHookLayer = Layer.succeed(HookService)({
   pluginRoot: () => '/test',
   readFile: () => Effect.succeed(null),
   writeFile: () => Effect.succeed(undefined),
   removeFile: () => Effect.succeed(undefined),
   ensureDir: () => Effect.succeed(undefined),
-  brQuery: () => Effect.succeed(null),
   readStdin: () => Effect.succeed(''),
   spawnGit: () => Effect.succeed(null),
   fileExists: () => Effect.succeed(false),

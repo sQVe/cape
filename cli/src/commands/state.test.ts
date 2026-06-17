@@ -6,7 +6,6 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import { HookService } from '../services/hook';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubDetectLayer,
@@ -31,7 +30,6 @@ const makeHookLayer = (stateContent: string | null = null) =>
     writeFile: () => Effect.succeed(undefined),
     removeFile: () => Effect.succeed(undefined),
     ensureDir: () => Effect.succeed(undefined),
-    brQuery: () => Effect.succeed(null),
     readStdin: () => Effect.succeed(''),
     spawnGit: () => Effect.succeed(null),
     fileExists: () => Effect.succeed(false),
@@ -44,7 +42,6 @@ const makeLayers = (stateContent: string | null = null) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     stubPrLayer,
     stubValidateLayer,
     stubConformLayer,

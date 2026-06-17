@@ -172,7 +172,7 @@ describe('unknown matchers', () => {
 
 describe('event name normalization', () => {
   it('PascalCase PreToolUse works the same as kebab-case', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'br create --type task' } });
+    const stdin = JSON.stringify({ tool_input: { command: 'git commit -m "feat: test"' } });
 
     const kebab = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     const pascal = cape(['hook', 'PreToolUse', '--matcher', 'Bash'], stdin, env);
@@ -228,7 +228,7 @@ describe('event name normalization', () => {
 
 describe('encoding edge cases', () => {
   it('denies unicode command containing denial trigger', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && br create --type task' } });
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git commit -m "feat"' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
@@ -254,7 +254,7 @@ describe('encoding edge cases', () => {
   it('denies very long command containing a denial trigger', () => {
     const longArg = 'a'.repeat(50_000);
     const stdin = JSON.stringify({
-      tool_input: { command: `echo ${longArg} && br create --type bug` },
+      tool_input: { command: `echo ${longArg} && git commit -m "feat"` },
     });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);

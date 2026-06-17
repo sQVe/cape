@@ -1,10 +1,16 @@
 import { Effect } from 'effect';
 
 import { logEvent } from '../../eventLog';
-import { safeParseJson } from '../../utils/json';
 import { denyTable } from './denyTable';
 import { parseCommand, parseSkillInput, stripQuotedContent } from './parsing';
-import { HookService, readState } from './state';
+import {
+  HookService,
+  isDoneTask,
+  isReadyTask,
+  readFlowPhaseContext,
+  readState,
+  readTrackerCache,
+} from './state';
 
 export { denyTable } from './denyTable';
 
@@ -72,20 +78,19 @@ type GateResult = ReturnType<typeof denyWith> | ContextResult | null;
 const gateExecutePlan = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const epics = yield* service.brQuery(['list', '--type', 'epic', '--status', 'open']);
-    if (epics === null) {
+    const cache = yield* readTrackerCache();
+    if (cache === null) {
       return null;
     }
-    if (!epics) {
+    if (Object.keys(cache.epics).length === 0) {
       return denyWith(
         'No open epic exists. Load cape:brainstorm to explore the problem, then cape:write-plan to create an epic.',
       );
     }
-    const ready = yield* service.brQuery(['ready']);
-    if (ready === null) {
-      return null;
-    }
-    if (!ready) {
+    const flowPhase = yield* readFlowPhaseContext();
+    const activeEpic = flowPhase == null ? null : cache.epics[flowPhase.issueId];
+    const readyTask = activeEpic?.tasks.find(isReadyTask);
+    if (readyTask == null) {
       return denyWith(
         'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
       );
@@ -107,40 +112,20 @@ const gateExecutePlan = () =>
     return null;
   });
 
-const parseEpicStatusEntry = (raw: unknown): { epicId: string | null; openCount: number } => {
-  if (typeof raw !== 'object' || raw == null) {
-    return { epicId: null, openCount: 0 };
-  }
-  const total =
-    'total_children' in raw && typeof raw.total_children === 'number' ? raw.total_children : 0;
-  const closed =
-    'closed_children' in raw && typeof raw.closed_children === 'number' ? raw.closed_children : 0;
-  let epicId: string | null = null;
-  if ('epic' in raw && typeof raw.epic === 'object' && raw.epic != null && 'id' in raw.epic) {
-    epicId = String(raw.epic.id);
-  }
-  return { epicId, openCount: total - closed };
-};
-
 const gateFinishEpic = (targetEpicId: string | null) =>
   Effect.gen(function* () {
-    const service = yield* HookService;
-    const output = yield* service.brQuery(['epic', 'status', '--json']);
-    if (output === null) {
+    const cache = yield* readTrackerCache();
+    if (cache === null) {
       return null;
     }
-    const epics = safeParseJson(output);
-    if (!Array.isArray(epics)) {
-      return null;
-    }
-    for (const raw of epics) {
-      const { epicId, openCount } = parseEpicStatusEntry(raw);
-      if (targetEpicId != null && epicId !== targetEpicId) {
+    for (const epic of Object.values(cache.epics)) {
+      if (targetEpicId != null && epic.id !== targetEpicId) {
         continue;
       }
-      if (openCount > 0 && epicId != null) {
+      const openCount = epic.tasks.filter((task) => !isDoneTask(task)).length;
+      if (openCount > 0) {
         return denyWith(
-          `Epic ${epicId} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
+          `Epic ${epic.id} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
         );
       }
     }
@@ -148,19 +133,9 @@ const gateFinishEpic = (targetEpicId: string | null) =>
   });
 
 const gateFixBug = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const bugs = yield* service.brQuery(['list', '--type', 'bug', '--status', 'open']);
-    if (bugs === null) {
-      return null;
-    }
-    if (!bugs) {
-      return {
-        additionalContext:
-          'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
-      };
-    }
-    return null;
+  Effect.succeed({
+    additionalContext:
+      'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
   });
 
 const gateInternalSkill = () =>

@@ -11,10 +11,6 @@ describe('smoke', () => {
     expect(capeCmd(['--version']).status).toBe(0);
   });
 
-  it('br boots and exits 0', () => {
-    expect(capeCmd(['br', '--help']).status).toBe(0);
-  });
-
   it('check boots and exits 0', () => {
     expect(capeCmd(['check', '--help']).status).toBe(0);
   });

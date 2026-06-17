@@ -4,7 +4,7 @@ import { logEvent } from '../../eventLog';
 import { TRACKER_CACHE_TTL_MS } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { safeParseJson } from '../../utils/json';
-import { detectBeadsSkill, detectBugReport, detectExecutePlan, parseCommand } from './parsing';
+import { detectBeadsSkill, detectBugReport, detectExecutePlan } from './parsing';
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
@@ -20,7 +20,6 @@ export class HookService extends ServiceMap.Service<
     readonly writeFile: (path: string, content: string) => Effect.Effect<void>;
     readonly removeFile: (path: string) => Effect.Effect<void>;
     readonly ensureDir: (path: string) => Effect.Effect<void>;
-    readonly brQuery: (args: readonly string[]) => Effect.Effect<string | null>;
     readonly readStdin: () => Effect.Effect<string>;
     readonly spawnGit: (args: readonly string[]) => Effect.Effect<string | null>;
     readonly fileExists: (path: string) => Effect.Effect<boolean>;
@@ -97,7 +96,7 @@ export const readFlowPhase = () =>
     return entry.phase;
   });
 
-const readFlowPhaseContext = () =>
+export const readFlowPhaseContext = () =>
   Effect.gen(function* () {
     const entry = yield* readStateKey('flowPhase', FLOW_PHASE_TTL_MS);
     if (entry == null || typeof entry.phase !== 'string' || typeof entry.issueId !== 'string') {
@@ -159,7 +158,7 @@ const isTrackerCache = (value: unknown): value is TrackerCache => {
   return Object.values(cache.epics).every(isTrackerEpic);
 };
 
-const readTrackerCache = () =>
+export const readTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
@@ -177,13 +176,13 @@ const readTrackerCache = () =>
     return isStale ? null : parsed;
   });
 
-const isDoneTask = (task: TrackerTask) => {
+export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed';
 };
 
-const isReadyTask = (task: TrackerTask) => {
+export const isReadyTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return (
@@ -235,13 +234,7 @@ const readSessionBanner = () =>
     return buildSessionBanner(epic, flowPhase.phase, branch);
   });
 
-export const clearLogs = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const root = service.pluginRoot();
-    yield* service.ensureDir(`${root}/hooks/context`);
-    yield* service.writeFile(`${root}/hooks/context/br-show-log.txt`, '');
-  });
+export const clearLogs = () => Effect.succeed(undefined);
 
 export const sessionStart = (clearLogsFlag: boolean) =>
   Effect.gen(function* () {
@@ -337,27 +330,4 @@ export const userPromptSubmit = () =>
     };
   });
 
-export const postToolUseBash = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const input = yield* service.readStdin();
-    const command = parseCommand(input);
-    if (!command) {
-      return null;
-    }
-
-    const root = service.pluginRoot();
-    const contextPath = `${root}/hooks/context`;
-
-    const showMatch = command.match(/\bbr\s+show\s+(\S+)/);
-    if (showMatch) {
-      yield* service.ensureDir(contextPath);
-      const existing = yield* service.readFile(`${contextPath}/br-show-log.txt`);
-      yield* service.writeFile(
-        `${contextPath}/br-show-log.txt`,
-        `${existing ?? ''}${showMatch[1]}\n`,
-      );
-    }
-
-    return null;
-  });
+export const postToolUseBash = () => Effect.succeed(null);

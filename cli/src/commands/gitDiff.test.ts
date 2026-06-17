@@ -7,7 +7,6 @@ import { main } from '../main';
 import { GitService, getGitDiff } from '../services/git';
 import type { DiffScope, GitContext } from '../services/git';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubDetectLayer,
@@ -70,7 +69,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,

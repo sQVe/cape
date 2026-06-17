@@ -37,26 +37,6 @@ export const denyTable: readonly DenyEntry[] = [
       'Use `cape commit` instead of raw `git commit`. Run `cape commit --help` to learn the workflow.',
     tier: 'redirect',
   },
-  // Re-enable as each cape command is implemented:
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+create\b/,
-    message:
-      'Use `cape br create` instead of raw `br create`. Run `cape br create --help` to learn the workflow.',
-    tier: 'redirect',
-  },
-  // { pattern: /(?<!\bcape\s)\bbr\s+q\b/, message: 'Use `cape br q` to query beads.', tier: 'redirect' },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+update\b.*--status\b/,
-    message:
-      'Use `cape br update` to change issue status. Run `cape br update --help` to learn the workflow.',
-    tier: 'redirect',
-  },
-  {
-    pattern: /(?<!\bcape\s)\bbr\s+close\b/,
-    message:
-      'Use `cape br close` to close an issue. Run `cape br close --help` to learn the workflow.',
-    tier: 'redirect',
-  },
   {
     pattern: /(?<!\bcape\s)\bgh\s+pr\s+create\b/,
     message:

@@ -8,7 +8,6 @@ import { Command } from 'effect/unstable/cli';
 import { vi } from 'vitest';
 
 import { main } from '../main';
-import { BrValidateServiceLive } from '../services/brValidateLive';
 import { CheckServiceLive } from '../services/checkLive';
 import { CommitServiceLive } from '../services/commitLive';
 import { ConformServiceLive } from '../services/conformLive';
@@ -60,7 +59,6 @@ const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
 
 const liveCommandLayers = Layer.mergeAll(
   NodeServices.layer,
-  BrValidateServiceLive,
   CheckServiceLive,
   CommitServiceLive,
   ConformServiceLive,

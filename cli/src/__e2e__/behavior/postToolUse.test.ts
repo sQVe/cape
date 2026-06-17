@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -25,13 +25,12 @@ afterEach(() => {
 });
 
 describe('PostToolUse/Bash', () => {
-  it('produces no state changes for non-br-show, non-test commands', () => {
+  it('produces no state changes for shell commands', () => {
     const stdin = JSON.stringify({
       tool_input: { command: 'ls -la' },
     });
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
     expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
@@ -41,45 +40,17 @@ describe('PostToolUse/Bash', () => {
     });
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
     expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
-  });
-
-  it('appends multiple br show ids to the log', () => {
-    const ids = ['cape-abc', 'cape-def', 'cape-ghi'];
-    for (const id of ids) {
-      const stdin = JSON.stringify({
-        tool_input: { command: `br show ${id}` },
-      });
-      cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    }
-
-    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    for (const id of ids) {
-      expect(log).toContain(id);
-    }
-    const lines = log.trim().split('\n');
-    expect(lines).toHaveLength(3);
-  });
-
-  it('ignores br show with no ID argument', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'br show' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
   });
 
   it('handles malformed JSON input gracefully', () => {
     const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], 'not json', env);
     expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'br-show-log.txt'))).toBe(false);
     expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
   });
 
   it('returns null output (no stdout) for all commands', () => {
-    const commands = ['ls -la', 'br show cape-1'];
+    const commands = ['ls -la', 'git status'];
     for (const command of commands) {
       const stdin = JSON.stringify({ tool_input: { command } });
       const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
@@ -180,23 +151,5 @@ describe('PostToolUse/Edit', () => {
     expect(result.status).toBe(0);
     expect(result.stdout).toBe('');
   });
-});
-
-
-describe('context directory creation', () => {
-  it('creates context directory when it does not exist for br show', () => {
-    spawnSync('rm', ['-rf', contextDir]);
-    expect(existsSync(contextDir)).toBe(false);
-
-    const stdin = JSON.stringify({
-      tool_input: { command: 'br show cape-new' },
-    });
-    cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-
-    expect(existsSync(contextDir)).toBe(true);
-    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    expect(log).toContain('cape-new');
-  });
-
 });
 
