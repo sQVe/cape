@@ -289,16 +289,17 @@ br ready --parent <epic-id>
 - **Ready task exists** — skip task creation; go to Step 4 and checkpoint to that task
 - **No ready tasks** — run reflection below and decide: create a task or initiate finish-epic
 
-After closing the task, review and optionally challenge before planning the next step.
+After closing the task, review and run a brief inline self-check before planning the next step.
 
 **Review implementation:** Dispatch `cape:code-reviewer` (model: sonnet) to review the completed
 task against the epic's requirements and anti-patterns. Address any critical findings before
 creating the next task.
 
-**Challenge completed work (opt-in):** Ask: "Want me to load `cape:challenge` to check for scope
-creep or over-engineering, or proceed to the next task?" If the user accepts, load `cape:challenge`
-with the Skill tool, focusing on scope creep, unrequested features, and over-engineering. Skip for
-straightforward single-file changes.
+**Inline scope/assumption self-check:** For non-trivial tasks, audit what was completed against the
+task goal and epic contract. Check for scope creep, unrequested behavior, over-engineering,
+unverified assumptions, and deviations from anti-patterns. Resolve concrete issues before creating
+the next task; record unresolved questions in the reflection. Keep this brief for straightforward
+single-file changes.
 
 **Verify claims:** Optionally dispatch `cape:fact-checker` (model: sonnet) if the task made specific
 claims about codebase structure, API behavior, or dependencies that should be confirmed before
@@ -445,24 +446,6 @@ signatures, import relationships). **Expect back:** per-claim verdict: Confirmed
 correct/Unverifiable with file:line evidence.
 
 </agent_references>
-
-<skill_references>
-
-## Load `cape:challenge` with the Skill tool (opt-in) when:
-
-- Task is complete and touched multiple components or took longer than expected
-- User accepts the challenge offer from step 3
-
-**Pass as context:**
-
-- The task's goal and what was actually built
-- The epic's requirements and anti-patterns
-
-**Expect back:**
-
-- Challenge summary with confirmed constraints and rejected assumptions
-
-</skill_references>
 
 <key_principles>
 

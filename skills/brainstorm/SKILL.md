@@ -50,8 +50,8 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
 4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
    simple ideas with obvious paths
-5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't load
-   automatically
+5. **Assumption audit is inline** — after approach selection, offer a focused audit and resolve
+   assumptions one at a time when accepted
 6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
 7. **Stop after design summary** — present summary and wait for user to run write-plan
 8. **Design summary must be self-contained** — write-plan should not need to re-ask questions
@@ -209,19 +209,44 @@ Iterate until the user signals satisfaction with a direction. Only then proceed 
 
 ---
 
-## Step 3: Challenge assumptions (opt-in)
+## Step 3: Audit assumptions
 
-After the approach is selected, offer challenge:
+After the approach is selected, offer an inline assumption audit:
 
-"Want me to load `cape:challenge` to stress-test this design for hidden assumptions, or skip
-straight to the design summary?"
+"Want me to stress-test this design for hidden assumptions, one at a time, or skip straight to the
+design summary?"
 
-If the user wants challenge:
+If the user accepts, run the three-step audit inline:
 
-- Load `cape:challenge` with the Skill tool to surface hidden assumptions
-- Challenge walks each assumption interactively — one per turn — with researched recommendations
-- Confirmed assumptions become requirements or anti-patterns in the design summary
-- Rejected ones trigger scope reductions or requirement changes
+1. **Gather context:** review the selected approach, prior decisions, and codebase findings.
+   Research before presenting; dispatch `cape:codebase-investigator` in default mode (model: haiku)
+   when codebase evidence could resolve a question. Resolve assumptions silently when evidence
+   answers them; only surface items that need human judgment.
+2. **Extract and assess:** scan for scope creep, implicit constraints, unstated requirements, hidden
+   dependencies, over-engineering, and under-specification. Risk-rank by impact and reversibility:
+   high first, then medium, then low. Skip low-risk items when the design is simple, but never skip
+   high-risk assumptions.
+3. **Resolve interactively:** walk assumptions one per turn. For each, explain the context, give a
+   researched recommendation, and present options with trade-offs. Confirmed assumptions become
+   explicit requirements or anti-patterns in the design summary. Rejected assumptions trigger scope
+   reductions, requirement changes, or revised architecture before Step 4.
+
+Use this format for each turn:
+
+```
+**Assumption [N/total]: [Topic]** [Risk]
+
+[Context — why this matters and what research/codebase evidence showed]
+
+Recommended: [Recommendation and reasoning]
+
+a) [Recommendation] — [trade-off]
+b) [Alternative] — [trade-off]
+c) [Different direction] — [trade-off]
+```
+
+The user can say "lock it" to end early. Summarize confirmed constraints, rejected assumptions, and
+remaining open questions before proceeding.
 
 If the user skips, proceed directly to Step 4.
 
@@ -310,18 +335,6 @@ evidence. Remove or correct claims based on the verdicts.
 3. Research yields nothing → ask user for direction
 
 </agent_references>
-
-<skill_references>
-
-## Load `cape:challenge` with the Skill tool when (opt-in):
-
-- User accepts the challenge offer from Step 3
-- The selected approach has assumptions worth stress-testing
-
-Challenge walks each assumption interactively — confirmed assumptions become requirements or
-anti-patterns in the design summary. Rejected ones trigger scope reductions.
-
-</skill_references>
 
 <examples>
 
