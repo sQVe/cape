@@ -5,7 +5,7 @@ description: >
   after cape:brainstorm has produced a design summary. Triggers on: user runs /cape:write-plan,
   "create the epic", "formalize this design", "write the plan", transitioning from brainstorm to
   implementation. Do NOT use for initial exploration (use cape:brainstorm), executing existing plans
-  (use cape:execute-plan), or bug investigation (use cape:debug-issue).
+  (use cape:execute-plan), or bug diagnosis and fixes (use cape:fix-bug).
 ---
 
 <skill_overview> Formalize a validated design into a `br` epic with immutable requirements,
@@ -29,7 +29,7 @@ are non-negotiable. Validation depth and detail-filling adapt to the design's co
 
 - No design exists yet (use `cape:brainstorm`)
 - Epic already exists (use `cape:execute-plan`)
-- Bug investigation (use `cape:debug-issue`)
+- Bug diagnosis and fixes (use `cape:fix-bug`)
 
 </when_to_use>
 

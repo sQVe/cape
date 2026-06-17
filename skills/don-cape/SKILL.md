@@ -3,14 +3,14 @@ name: don-cape
 description: >
   Meta-skill that activates cape's workflow system. Injected at session start — always active, never
   manually triggered. Routes every task to the right cape skill and enforces workflow chains:
-  brainstorm before planning, plan before coding, TDD during implementation, debug before fixing. If
-  you're about to act on a user request, check this skill's routing table first. When a cape skill
-  matches the task, using it is mandatory.
+  brainstorm before planning, plan before coding, TDD during implementation, diagnosis before
+  fixing. If you're about to act on a user request, check this skill's routing table first. When a
+  cape skill matches the task, using it is mandatory.
 ---
 
 <skill_overview> Route every task to the right cape skill and enforce the order skills run in. Cape
-skills form build (brainstorm → write-plan → execute-plan) and fix (debug-issue → fix-bug → commit)
-chains. Skipping a link breaks the chain.
+skills form build (brainstorm → write-plan → execute-plan) and fix (fix-bug → tdd → commit) chains.
+Skipping a link breaks the chain.
 
 Core contract: before acting on any user request, check the routing table. If a cape skill matches,
 load it with the Skill tool and follow it. </skill_overview>
@@ -60,8 +60,8 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | Large restructuring requiring design decisions                      | `cape:brainstorm`      | When target design is unclear                                                           |
 | Formalize a design into an epic                                     | `cape:write-plan`      | Requires brainstorm output                                                              |
 | "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`    | Run `br ready` first; if empty + open epic exists, suggest finish-epic (see note below) |
-| Something broken, error, stack trace, "doesn't work"                | `cape:debug-issue`     | Investigation only                                                                      |
-| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`         | Requires br bug to exist                                                                |
+| Something broken, error, stack trace, "doesn't work"                | `cape:fix-bug`         | Diagnose-then-patch                                                                     |
+| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`         | Diagnose-then-patch                                                                     |
 | Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`       | Standalone                                                                              |
 | Refine a task, stress-test br-N, "is this task ready", edge cases   | `cape:task-refinement` | Opt-in between write-plan and execute-plan                                              |
 | Start work in an epic worktree, create/enter per-epic worktree      | `cape:worktree`        | Standalone                                                                              |
@@ -87,13 +87,13 @@ anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                                                                  | Dispatched by                                                             | Purpose                                                                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                                        | Review implementation against plan and standards                                            |
-| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, debug-issue, expand-task, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
-| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                                 | Verify claims and assumptions against codebase evidence                                     |
-| `cape:internet-researcher` (model: sonnet)                             | brainstorm, debug-issue, fix-bug                                          | Research external APIs, libraries, community practices                                      |
-| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                                      | Run tests and hooks without polluting context                                               |
+| Agent                                                                  | Dispatched by                                                | Purpose                                                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                           | Review implementation against plan and standards                                            |
+| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, expand-task, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
+| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                    | Verify claims and assumptions against codebase evidence                                     |
+| `cape:internet-researcher` (model: sonnet)                             | brainstorm, fix-bug                                          | Research external APIs, libraries, community practices                                      |
+| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                         | Run tests and hooks without polluting context                                               |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.
@@ -125,11 +125,11 @@ brainstorm [challenge optional] → write-plan → STOP → execute-plan (expand
 **Fix chain** — for bugs and defects:
 
 ```
-debug-issue → fix-bug → commit
+fix-bug (diagnose-then-patch) → tdd → commit
 ```
 
-- `debug-issue` investigates to root cause, creates a br bug
-- `fix-bug` writes a failing test, implements the minimal fix, verifies, prompts for commit
+- `fix-bug` diagnoses to root cause, creates or adopts a br bug, writes a failing test, implements
+  the minimal fix, and verifies
 - `commit` persists the fix
 
 **Why chains matter:** brainstorm researches the codebase and surfaces assumptions before you commit
@@ -177,10 +177,9 @@ cause (missing charset header in the middleware) remains.
 
 **Right:**
 
-1. Route: "something broken" → cape:debug-issue
+1. Route: "something broken" → cape:fix-bug
 2. Reproduce, trace to root cause, create br bug with evidence
-3. Route: diagnosed bug → cape:fix-bug
-4. Write failing test, implement minimal fix, verify, commit </example>
+3. Write failing test, implement minimal fix, verify, commit </example>
 
 <example>
 <scenario>User gives a specific instruction that still needs the chain</scenario>

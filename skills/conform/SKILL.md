@@ -6,7 +6,7 @@ description: >
   "lint conventions", "check rules", "/cape:conform", or any request to verify code follows
   documented standards. Covers project and global CLAUDE.md rules plus per-language rule files in
   ~/.claude/rules/. Do NOT use for bug-finding or code quality review (use cape:review), running
-  external linters (use cape check), or investigating bugs (use cape:debug-issue).
+  external linters (use cape check), or diagnosing and fixing bugs (use cape:fix-bug).
 ---
 
 <skill_overview> Check whether changed code conforms to the user's documented conventions — the
@@ -33,7 +33,7 @@ granularity adapts to scope size. </rigidity_level>
 
 - Bug-finding or code quality review (use cape:review)
 - Running external linters/formatters (use `cape check`)
-- Investigating bugs (use cape:debug-issue)
+- Diagnosing and fixing bugs (use cape:fix-bug)
 - Writing or prose review
 
 </when_to_use>

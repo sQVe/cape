@@ -30,7 +30,7 @@ adapts to context. </rigidity_level>
 **Don't use for:**
 
 - No epic exists yet (use `cape:brainstorm` then `cape:write-plan`)
-- Investigating a defect (use `cape:debug-issue`)
+- Diagnosing or fixing a defect (use `cape:fix-bug`)
 - Requirements still unclear (use `cape:brainstorm`)
 
 </when_to_use>

@@ -8,7 +8,7 @@ description: >
   cases or failure modes in the context of a br task. Also use when the user wants to harden a task
   description or feels unsure whether a task captures enough detail. Do NOT use for creating epics
   or tasks from scratch (use cape:write-plan), executing tasks (use cape:execute-plan), or
-  investigating bugs (use cape:debug-issue).
+  diagnosing or fixing bugs (use cape:fix-bug).
 ---
 
 <skill_overview> Review a single br task with SRE-level scrutiny: surface missing edge cases, vague
@@ -33,7 +33,7 @@ non-negotiable. How deep you go in each category adapts to the task's complexity
 
 - No task exists yet (use `cape:write-plan`)
 - Executing a task (use `cape:execute-plan`)
-- Bug investigation (use `cape:debug-issue`)
+- Bug diagnosis or fixes (use `cape:fix-bug`)
 - Epic-level review (review the epic's requirements in `cape:brainstorm`)
 
 </when_to_use>

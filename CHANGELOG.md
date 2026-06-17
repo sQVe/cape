@@ -11,6 +11,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Agents: consolidated to 5; merged bug-tracer, test-auditor, and notebox-researcher into
   codebase-investigator modes.
+- Skills: folded standalone bug diagnosis into fix-bug as a loop-first diagnosis gate.
 
 ### Removed
 

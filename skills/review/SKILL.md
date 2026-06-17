@@ -33,7 +33,7 @@ non-negotiable. Depth adapts to change size. </rigidity_level>
 - Writing or prose review (docs, markdown, READMEs)
 - Committing changes (use cape:commit)
 - Creating PRs (use cape:pr)
-- Investigating a specific bug (use cape:debug-issue)
+- Diagnosing or fixing a specific bug (use cape:fix-bug)
 - Convention/style checking against CLAUDE.md rules (use cape:conform)
 
 </when_to_use>

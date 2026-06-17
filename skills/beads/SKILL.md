@@ -299,12 +299,11 @@ makes findings trackable, prioritizable, and closeable.
 
 ### Mapping skill outputs to br types
 
-| Skill         | br type         | Example title                            |
-| ------------- | --------------- | ---------------------------------------- |
-| `challenge`   | `task`          | "Clarify risky assumption in auth flow"  |
-| `review`      | `bug` or `task` | "Bug: XSS in user input rendering"       |
-| `debug-issue` | `bug`           | "Bug: Race condition in session cleanup" |
-| `fix-bug`     | `bug`           | "Bug: Off-by-one in pagination offset"   |
+| Skill       | br type         | Example title                           |
+| ----------- | --------------- | --------------------------------------- |
+| `challenge` | `task`          | "Clarify risky assumption in auth flow" |
+| `review`    | `bug` or `task` | "Bug: XSS in user input rendering"      |
+| `fix-bug`   | `bug`           | "Bug: Off-by-one in pagination offset"  |
 
 ### Conventions for skill-created issues
 
