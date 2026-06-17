@@ -180,21 +180,20 @@ const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): TrackerCache 
       continue;
     }
 
-    let taskChanged = false;
-    const tasks = epic.tasks.map((task) => {
-      if (task.id !== targetIssueId) {
-        return task;
+    const tasks: TrackerTask[] = [];
+    for (const task of epic.tasks) {
+      if (task.id === targetIssueId) {
+        tasks.push({
+          ...task,
+          status,
+          stateType: stateType ?? task.stateType,
+        });
+      } else {
+        tasks.push(task);
       }
+    }
 
-      taskChanged = true;
-      return {
-        ...task,
-        status,
-        stateType: stateType ?? task.stateType,
-      };
-    });
-
-    if (taskChanged) {
+    if (tasks.some((task, index) => task !== epic.tasks[index])) {
       changed = true;
       epics[epicId] = { ...epic, tasks };
       continue;
