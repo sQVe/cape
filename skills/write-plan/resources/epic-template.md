@@ -10,6 +10,11 @@ from research findings, user decisions, and design validation captured during th
 - [Specific, testable statement]
 - [Specific, testable statement]
 
+## Global constraints
+[For multi-task epics: shared rules every task inherits from requirements, anti-patterns, architecture, and user decisions. For single-task epics: "N/A — single task."]
+- [Shared rule]
+- [Shared rule]
+
 ## Success criteria
 - [ ] [Objective, testable criterion]
 - [ ] [Objective, testable criterion]
@@ -107,6 +112,11 @@ br create "Epic: OAuth authentication" \
 - Tokens stored in httpOnly cookies (NOT localStorage)
 - Session expires after 24h inactivity
 - Integrates with existing User model at db/models/user.ts
+
+## Global constraints
+- Every task must preserve existing session-based auth behavior
+- Every task must use existing User model and passport.js extension points
+- OAuth tokens must never be exposed to browser JavaScript
 
 ## Success criteria
 - [ ] Login redirects to Google and back

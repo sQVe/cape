@@ -9,8 +9,8 @@ description: >
 ---
 
 <skill_overview> Formalize a validated design into a `br` epic with immutable requirements,
-anti-patterns, and a first task. The bridge between exploration (brainstorm) and implementation
-(execute-plan).
+anti-patterns, global constraints, and a first task. The bridge between exploration (brainstorm) and
+implementation (execute-plan).
 
 Core contract: no epic without a design summary in conversation context. No task without an epic.
 </skill_overview>
@@ -40,6 +40,9 @@ are non-negotiable. Validation depth and detail-filling adapt to the design's co
 3. **Create ONLY first task** -- subsequent tasks created iteratively
 4. **Stop after creation** -- present summary and wait for user to run execute-plan
 5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
+6. **Stress-test the first task before creation** -- verify against the codebase and close vague
+   criteria, missing edge cases, failure modes, implicit assumptions, stale references, and test
+   gaps
 
 </critical_rules>
 
@@ -69,8 +72,34 @@ the brainstorm's high-level design gets refined into epic-grade specifics:
 - **Durable decisions:** extract decisions that survive refactors (routes, schema shapes, auth
   patterns, external service boundaries) into their own section
 - **Anti-patterns:** ensure every entry has reasoning ("NO X (reason: Y)")
+- **Global constraints:** for multi-task epics, extract shared rules every task inherits from the
+  epic requirements, anti-patterns, architecture, and user decisions. Keep this proportional:
+  single-task epics skip the ceremony.
 - **Architecture:** flesh out with concrete files, components, data flow
 - **Success criteria:** derive from requirements, make objectively measurable
+- **First task interface:** for multi-task epics, define the first task's expected inputs, outputs,
+  and side effects so future tasks can compose with it. For single-task epics, keep the interface
+  inline with the task goal.
+
+Before formalizing the first task, stress-test the draft through six lenses with codebase
+verification:
+
+1. Dispatch `cape:codebase-investigator` in default mode (model: haiku) to verify that file paths,
+   function names, implementation references, module patterns, test setup, API shapes, dependencies,
+   utilities, and helper reuse assumptions match the actual codebase. If agents are unavailable,
+   verify manually with Glob/Grep/Read.
+2. Review what is already strong: specific criteria, covered edge cases, and well-chosen references.
+3. Tighten vague criteria into observable outcomes a reviewer can verify without extra context.
+4. Add missing edge cases as implementation checklist/test items when they are in scope.
+5. Specify failure modes for external interactions, user input, file I/O, database calls, network
+   calls, and partial failures.
+6. Make implicit assumptions explicit as preconditions, requirements, or tests.
+7. Correct stale references using the investigation results.
+8. Ensure every success criterion and edge case has corresponding test coverage.
+
+If the investigation reveals a blocker -- nonexistent core dependency, wrong repository, invalid
+architecture premise -- lead with it and re-scope before creating the epic or task. Refinement
+tightens the chosen design; it must not add unrelated features.
 
 Confirm each chunk: "Does this look right so far?"
 
@@ -101,6 +130,11 @@ br create "Epic: [Feature Name]" \
 [Specific, testable statements derived from the design summary]
 - Requirement 1
 - Requirement 2
+
+## Global constraints
+[For multi-task epics only: shared rules every task inherits from requirements, anti-patterns, architecture, and user decisions. Single-task epics may say "N/A — single task."]
+- Constraint 1
+- Constraint 2
 
 ## Durable decisions
 [Choices that survive refactors — routes, schemas, auth patterns, external boundaries]
@@ -136,6 +170,12 @@ br create "Task 1: [Specific deliverable]" \
 ## Goal
 [What this task delivers — one clear outcome]
 
+## Interface
+[For multi-task epics: expected inputs, outputs, and side effects this task exposes to later tasks. For single-task epics: keep this brief or mark N/A.]
+- Inputs: [what the task consumes]
+- Outputs: [what the task produces]
+- Side effects: [state, files, APIs, data, or user-visible behavior changed]
+
 ## Execution mode
 [HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
 
@@ -169,9 +209,9 @@ risk. Vertical slices prove the system works end-to-end sooner and are independe
 Epic [id] created with immutable requirements and success criteria.
 First task [id] is ready to execute.
 
-The epic has [N] requirements, [N] anti-patterns, and [N] success criteria.
+The epic has [N] requirements, [N] global constraints, [N] anti-patterns, and [N] success criteria.
+The first task has been codebase-verified and stress-tested through the six validation lenses.
 
-Optionally stress-test the first task with `cape:task-refinement` before executing.
 Continue with `cape:execute-plan` to start building.
 ```
 
