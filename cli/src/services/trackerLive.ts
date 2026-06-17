@@ -37,6 +37,7 @@ interface TrackerLiveDependencies {
   readonly now: () => number;
   readonly readCache: () => Effect.Effect<TrackerCache | null, Error>;
   readonly writeCache: (cache: TrackerCache) => Effect.Effect<void, Error>;
+  // Keep read operations on their existing string issue-id argument; writes use typed payloads.
   readonly callLinear: <Operation extends LinearOperation>(
     operation: Operation,
     argument: LinearCallArguments[Operation],
@@ -74,6 +75,14 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
     status: issueStatus(issue),
     stateType: issueStateType(issue),
   };
+};
+
+const toTaskFromUnknown = (value: unknown): TrackerTask | null => {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
+    return null;
+  }
+
+  return toTask(value as LinearIssue);
 };
 
 const toEpic = (value: unknown): TrackerEpic | null => {
@@ -153,6 +162,17 @@ const writeEpicToCacheBestEffort = (dependencies: TrackerLiveDependencies, epic:
     yield* dependencies.writeCache(mergeEpic(cache, epic, dependencies.now()));
   }).pipe(Effect.orElseSucceed(() => undefined));
 
+const writeCreatedTasksToCacheBestEffort = (
+  dependencies: TrackerLiveDependencies,
+  epicId: string,
+  tasks: readonly TrackerTask[],
+) =>
+  Effect.gen(function* () {
+    const cache = yield* dependencies.readCache();
+    const existingTasks = cache?.epics[epicId]?.tasks ?? [];
+    yield* dependencies.writeCache(mergeTasks(cache, epicId, [...existingTasks, ...tasks], dependencies.now()));
+  }).pipe(Effect.orElseSucceed(() => undefined));
+
 const unsupportedWrite = () => Effect.fail(new Error('Tracker writes are not implemented yet'));
 
 const isTrackerCache = (value: unknown): value is TrackerCache => {
@@ -177,7 +197,26 @@ export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
         yield* writeEpicToCacheBestEffort(dependencies, epic);
         return epic;
       }),
-    createTasks: unsupportedWrite,
+    createTasks: (epicId, tasks) =>
+      Effect.gen(function* () {
+        if (tasks.length === 0) {
+          return [];
+        }
+
+        const createdTasks: TrackerTask[] = [];
+        // Linear save_issue creates a single issue, so createTasks fans out one call per task.
+        for (const task of tasks) {
+          const raw = yield* dependencies.callLinear('createTask', { epicId, title: task.title });
+          const createdTask = toTaskFromUnknown(raw);
+          if (createdTask == null) {
+            return yield* Effect.fail(new Error('Linear createTask response did not include an issue id'));
+          }
+          createdTasks.push(createdTask);
+        }
+
+        yield* writeCreatedTasksToCacheBestEffort(dependencies, epicId, createdTasks);
+        return createdTasks;
+      }),
     getEpic: (epicId) =>
       Effect.gen(function* () {
         const raw = yield* dependencies.callLinear('getEpic', epicId);
