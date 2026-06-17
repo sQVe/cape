@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DX & Ergonomics — Cape V2</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #161920;
+    --surface2: #1e2230;
+    --border: #2a2f40;
+    --text: #e4e8f0;
+    --muted: #7a8099;
+    --accent: #6c8ef5;
+    --accent-dim: #3d5299;
+    --green: #4ade80;
+    --green-dim: #1a4a2e;
+    --amber: #fbbf24;
+    --amber-dim: #4a3a0a;
+    --red: #f87171;
+    --red-dim: #4a1a1a;
+    --purple: #c084fc;
+    --purple-dim: #3a1a5a;
+    --teal: #2dd4bf;
+    --teal-dim: #0a3a35;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 48px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* ── Header ── */
+  .header {
+    margin-bottom: 56px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .subtitle {
+    margin-top: 12px;
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 580px;
+  }
+  .data-badge {
+    display: inline-block;
+    margin-top: 16px;
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .data-badge span { color: var(--amber); }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 56px;
+  }
+  h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Problem Cards ── */
+  .problems {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .problem-card .label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+  .problem-card .stat {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .problem-card .desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* ── Trigger Map ── */
+  .trigger-map {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    overflow-x: auto;
+  }
+
+  .map-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-auto   { background: var(--green); }
+  .dot-slash  { background: var(--accent); }
+  .dot-hook   { background: var(--amber); }
+  .dot-dead   { background: var(--red); opacity: 0.5; }
+
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+
+  .map-column {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .map-col-header {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+  .col-auto   { background: var(--green-dim);  color: var(--green); }
+  .col-slash  { background: var(--accent-dim); color: var(--accent); }
+  .col-hook   { background: var(--amber-dim);  color: var(--amber); }
+
+  .map-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 12px;
+  }
+  .map-item .skill-name {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .map-item .count {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .item-auto  .skill-name { color: var(--green); }
+  .item-slash .skill-name { color: var(--accent); }
+  .item-hook  .skill-name { color: var(--amber); }
+
+  .dead-skills {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: var(--radius-sm);
+    font-size: 11px;
+    color: var(--red);
+    opacity: 0.8;
+  }
+  .dead-skills .label { font-weight: 700; margin-bottom: 4px; }
+  .dead-skills code {
+    font-family: monospace;
+    background: rgba(248,113,113,0.1);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
+
+  /* ── Happy Path Flow ── */
+  .happy-path {
+    overflow-x: auto;
+  }
+  .flow-wrapper {
+    min-width: 700px;
+    padding: 8px 0;
+  }
+
+  .flow-phases {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+  .flow-phase {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+  .flow-phase:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 32px;
+    width: 2px;
+    height: 20px;
+    background: var(--border);
+  }
+
+  .phase-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .keystroke-chain {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 0 8px;
+  }
+
+  .ks-node {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .ks-user {
+    background: var(--surface2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .ks-auto {
+    background: var(--green-dim);
+    border-color: var(--green);
+    color: var(--green);
+    font-size: 11px;
+    font-style: italic;
+    font-weight: 400;
+  }
+  .ks-hook {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+    font-size: 11px;
+    font-style: italic;
+    font-weight: 400;
+  }
+  .ks-arrow {
+    font-size: 16px;
+    color: var(--border);
+  }
+  .ks-label {
+    font-size: 10px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 32px;
+    color: var(--border);
+    font-size: 20px;
+  }
+
+  /* ── Changes table ── */
+  .changes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .change-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .change-card.before {
+    border-left: 3px solid var(--red);
+  }
+  .change-card.after {
+    border-left: 3px solid var(--green);
+  }
+  .change-card h3 {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: var(--muted);
+  }
+  .change-card.before h3 { color: var(--red); }
+  .change-card.after h3  { color: var(--green); }
+
+  .change-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .change-list li {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .change-list li .icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .before .icon { color: var(--red); }
+  .after  .icon { color: var(--green); }
+
+  /* ── Proposals ── */
+  .proposals {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .proposal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+  .proposal-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .proposal-body h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .proposal-body p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .proposal-body code {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--teal);
+  }
+  .proposal-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .tag-hook   { background: var(--amber-dim);  color: var(--amber); }
+  .tag-remove { background: var(--red-dim);    color: var(--red); }
+  .tag-auto   { background: var(--green-dim);  color: var(--green); }
+  .tag-chain  { background: var(--purple-dim); color: var(--purple); }
+  .tag-resume { background: var(--teal-dim);   color: var(--teal); }
+
+  /* ── Session resume ── */
+  .resume-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .resume-flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .resume-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 100px;
+  }
+  .resume-step .icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    border: 1px solid var(--border);
+  }
+  .resume-step .step-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .resume-arrow {
+    color: var(--border);
+    font-size: 20px;
+  }
+  .ic-new-session { background: var(--surface2); }
+  .ic-hook        { background: var(--amber-dim); }
+  .ic-state       { background: var(--teal-dim); }
+  .ic-ready       { background: var(--green-dim); }
+
+  .resume-detail {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .resume-detail strong { color: var(--text); }
+  .resume-detail code {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--teal);
+    background: rgba(45,212,191,0.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: gap;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .footer a { color: var(--muted); text-decoration: none; }
+
+  @media (max-width: 700px) {
+    .map-grid { grid-template-columns: 1fr; }
+    .changes-grid { grid-template-columns: 1fr; }
+    .flow-phases { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="eyebrow">Cape V2 Design Series · 03</div>
+  <h1>DX &amp; Ergonomics</h1>
+  <p class="subtitle">Redesigning the human interaction surface — fewer keystrokes, less remembering, frictionless session resumption.</p>
+  <div class="data-badge">Grounded in <span>10 days</span> of real Claude Code logs · <span>22 skills</span> · <span>37 /clear commands</span></div>
+</div>
+
+<!-- ── Problems ── -->
+<div class="section">
+  <h2>What the data shows</h2>
+  <div class="problems">
+    <div class="problem-card">
+      <div class="label">Invisible friction</div>
+      <div class="stat">37</div>
+      <div class="desc"><code style="background:rgba(255,255,255,0.05);padding:2px 5px;border-radius:3px;font-family:monospace;">/clear</code> commands in 10 days — workflow is fractured across many short sessions with no automatic state recovery.</div>
+    </div>
+    <div class="problem-card">
+      <div class="label">Gate never run</div>
+      <div class="stat">9 vs 6</div>
+      <div class="desc">write-plan invoked via slash 9 times but only 6 skill runs completed. Failed invocations leave the user in no-man's-land.</div>
+    </div>
+    <div class="problem-card">
+      <div class="label">Post-hoc quality</div>
+      <div class="stat">7×</div>
+      <div class="desc">conform runs <em>after</em> committing — it's a gate the user must remember to invoke. It caught violations too late to be a gate.</div>
+    </div>
+    <div class="problem-card">
+      <div class="label">Dead weight</div>
+      <div class="stat">5</div>
+      <div class="desc">Skills never triggered in 10 days: analyze-tests, branch, design-an-interface, explain, find-test-gaps. Discoverable but unused.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Trigger Map ── -->
+<div class="section">
+  <h2>V2 trigger map — auto vs slash vs hook</h2>
+  <div class="trigger-map">
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot dot-auto"></div>Auto-triggered (don-cape routes)</div>
+      <div class="legend-item"><div class="legend-dot dot-slash"></div>Slash (user-initiated)</div>
+      <div class="legend-item"><div class="legend-dot dot-hook"></div>Hook (post-action, automatic)</div>
+      <div class="legend-item"><div class="legend-dot dot-dead"></div>Remove or merge in V2</div>
+    </div>
+
+    <div class="map-grid">
+      <!-- AUTO column -->
+      <div class="map-column">
+        <div class="map-col-header col-auto">Auto · don-cape routes</div>
+        <div class="map-item item-auto">
+          <span class="skill-name">tdd</span>
+          <span class="count">11 runs</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">execute-plan</span>
+          <span class="count">7 runs</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">finish-epic</span>
+          <span class="count">4 runs</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">challenge</span>
+          <span class="count">7 runs</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">debug-issue</span>
+          <span class="count">auto</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">fix-bug</span>
+          <span class="count">3 runs</span>
+        </div>
+        <div class="map-item item-auto">
+          <span class="skill-name">refactor</span>
+          <span class="count">auto</span>
+        </div>
+      </div>
+
+      <!-- SLASH column -->
+      <div class="map-column">
+        <div class="map-col-header col-slash">Slash · explicit user intent</div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/commit</span>
+          <span class="count">29 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/pr</span>
+          <span class="count">12 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/review</span>
+          <span class="count">12 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/brainstorm</span>
+          <span class="count">8 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/write-plan</span>
+          <span class="count">6 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/conform</span>
+          <span class="count">7 runs</span>
+        </div>
+        <div class="map-item item-slash">
+          <span class="skill-name">/beads</span>
+          <span class="count">3 runs</span>
+        </div>
+      </div>
+
+      <!-- HOOK column -->
+      <div class="map-column">
+        <div class="map-col-header col-hook">Hook · post-action, automatic</div>
+        <div class="map-item item-hook">
+          <span class="skill-name">conform</span>
+          <span class="count">↳ after commit</span>
+        </div>
+        <div class="map-item item-hook">
+          <span class="skill-name">review</span>
+          <span class="count">↳ before /pr</span>
+        </div>
+        <div class="map-item item-hook">
+          <span class="skill-name">session-restore</span>
+          <span class="count">↳ on /start</span>
+        </div>
+        <div class="map-item item-hook" style="opacity:0.6;font-style:italic;">
+          <span class="skill-name" style="color:var(--muted);">analyze-tests</span>
+          <span class="count">merge into tdd</span>
+        </div>
+        <div class="map-item item-hook" style="opacity:0.6;font-style:italic;">
+          <span class="skill-name" style="color:var(--muted);">find-test-gaps</span>
+          <span class="count">merge into tdd</span>
+        </div>
+
+        <div class="dead-skills">
+          <div class="label">Remove in V2</div>
+          <code>explain</code> · <code>branch</code> · <code>design-an-interface</code> — zero real usage. fold into don-cape routing or prose answers.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Happy Path ── -->
+<div class="section">
+  <h2>Happy-path keystroke flow</h2>
+  <div class="happy-path">
+    <div class="flow-wrapper">
+      <div class="flow-phases">
+
+        <!-- Phase 1: Discover -->
+        <div class="flow-phase">
+          <div class="phase-label">1 · Discover</div>
+          <div class="keystroke-chain">
+            <div class="ks-node ks-user">"/brainstorm X"</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-auto">challenge fires auto</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-user">"looks good"</div>
+            <div class="ks-label">2 keystrokes</div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="connector">→</div>
+
+        <!-- Phase 2: Plan -->
+        <div class="flow-phase">
+          <div class="phase-label">2 · Plan</div>
+          <div class="keystroke-chain">
+            <div class="ks-node ks-user">"/write-plan"</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-auto">epic + task 1 created</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-user">"approve"</div>
+            <div class="ks-label">2 keystrokes</div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="connector">→</div>
+
+        <!-- Phase 3: Build -->
+        <div class="flow-phase">
+          <div class="phase-label">3 · Build</div>
+          <div class="keystroke-chain">
+            <div class="ks-node ks-user">"continue"</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-auto">tdd · execute-plan auto-chain</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-hook ks-hook" style="background:var(--amber-dim);border-color:var(--amber);color:var(--amber);">conform runs on save</div>
+            <div class="ks-label">1 keystroke per task</div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="connector">→</div>
+
+        <!-- Phase 4: Ship -->
+        <div class="flow-phase">
+          <div class="phase-label">4 · Ship</div>
+          <div class="keystroke-chain">
+            <div class="ks-node ks-user">"/commit"</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-user">"/pr"</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-auto">review runs before pr opens</div>
+            <div class="ks-label">2 keystrokes</div>
+          </div>
+        </div>
+
+        <!-- Arrow -->
+        <div class="connector">→</div>
+
+        <!-- Phase 5: Close -->
+        <div class="flow-phase">
+          <div class="phase-label">5 · Close</div>
+          <div class="keystroke-chain">
+            <div class="ks-node ks-auto">finish-epic fires auto when all tasks done</div>
+            <div class="ks-arrow">↓</div>
+            <div class="ks-node ks-user">"done"</div>
+            <div class="ks-label">0 keystrokes to trigger</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Session Resume ── -->
+<div class="section">
+  <h2>Frictionless session resumption (the /clear problem)</h2>
+  <div class="resume-box">
+    <p style="color:var(--muted);font-size:13px;">37 /clear commands in 10 days means the user restarts context constantly. V2 treats every session start as a potential resume.</p>
+    <div class="resume-flow">
+      <div class="resume-step">
+        <div class="icon-box ic-new-session">🔄</div>
+        <div class="step-label">New session<br>starts</div>
+      </div>
+      <div class="resume-arrow">→</div>
+      <div class="resume-step">
+        <div class="icon-box ic-hook">⚡</div>
+        <div class="step-label">session-start<br>hook fires</div>
+      </div>
+      <div class="resume-arrow">→</div>
+      <div class="resume-step">
+        <div class="icon-box ic-state">📋</div>
+        <div class="step-label">br ready output<br>injected into context</div>
+      </div>
+      <div class="resume-arrow">→</div>
+      <div class="resume-step">
+        <div class="icon-box ic-ready">✓</div>
+        <div class="step-label">User sees:<br>"Ready. Next: br-7.3"</div>
+      </div>
+    </div>
+    <div class="resume-detail">
+      <strong>Mechanism:</strong> Claude Code <code>hooks.sessionStart</code> runs <code>br ready --short</code> and injects the result as a system prompt prefix. If there's an open epic with ready tasks, the first message the user sees is the task title and its acceptance criteria — no hunting, no "where was I?". The don-cape router already has short-circuit logic for bare br IDs — this just surfaces the ID automatically.
+    </div>
+  </div>
+</div>
+
+<!-- ── Concrete Changes ── -->
+<div class="section">
+  <h2>Concrete V2 changes</h2>
+  <div class="proposals">
+
+    <div class="proposal">
+      <div class="proposal-num">1</div>
+      <div class="proposal-body">
+        <h3>Move conform from slash to commit hook</h3>
+        <p>conform ran 7 times, always after committing — too late to be a gate. In V2, conform runs automatically as part of the commit skill's pre-execution step (before <code>git commit</code> is called). User never has to remember it. Violations surface at the moment they matter.</p>
+        <div class="proposal-tags">
+          <span class="tag tag-hook">Hook</span>
+          <span class="tag tag-chain">Chain step</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="proposal">
+      <div class="proposal-num">2</div>
+      <div class="proposal-body">
+        <h3>Add session-start hook that surfaces br state</h3>
+        <p>37 /clear commands = 37 cold restarts with no context. A <code>hooks.sessionStart</code> entry runs <code>br ready --short</code> and prepends the result as a system prompt. The don-cape router sees this output and can immediately load execute-plan. Zero keystrokes to resume.</p>
+        <div class="proposal-tags">
+          <span class="tag tag-hook">Hook</span>
+          <span class="tag tag-resume">Resume</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="proposal">
+      <div class="proposal-num">3</div>
+      <div class="proposal-body">
+        <h3>Gate /pr behind auto-review (not optional)</h3>
+        <p>review ran 12 times, same frequency as /pr — but run order was inconsistent. In V2, the pr skill runs review as step 1 before opening the PR. If review finds blockers, it stops and reports them. The user doesn't need to remember to run review separately; the cost is zero extra keystrokes.</p>
+        <div class="proposal-tags">
+          <span class="tag tag-chain">Chain step</span>
+          <span class="tag tag-auto">Auto</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="proposal">
+      <div class="proposal-num">4</div>
+      <div class="proposal-body">
+        <h3>Drop five zero-use skills; fold into prose answers</h3>
+        <p>analyze-tests, branch, design-an-interface, explain, and find-test-gaps were never triggered. Don't maintain them as separate skills — don-cape can answer explain-type questions inline, branch creation is a one-liner in a hook, and test gap analysis folds into tdd's pre-pass. Fewer skills = fewer routing misses and a smaller surface for failed slash invocations.</p>
+        <div class="proposal-tags">
+          <span class="tag tag-remove">Remove</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Before / After ── -->
+<div class="section">
+  <h2>Before vs after</h2>
+  <div class="changes-grid">
+    <div class="change-card before">
+      <h3>V1 — what you have to remember</h3>
+      <ul class="change-list">
+        <li><span class="icon">✗</span>Run /conform before /commit (easy to skip)</li>
+        <li><span class="icon">✗</span>Run /review before /pr (inconsistent order)</li>
+        <li><span class="icon">✗</span>After /clear, hunt for where you left off</li>
+        <li><span class="icon">✗</span>9 slash → 6 actual runs: write-plan silently dropped</li>
+        <li><span class="icon">✗</span>22 skills discoverable but 5 are dead weight</li>
+        <li><span class="icon">✗</span>challenge + finish-epic fire auto but user isn't told they will</li>
+      </ul>
+    </div>
+    <div class="change-card after">
+      <h3>V2 — what you get automatically</h3>
+      <ul class="change-list">
+        <li><span class="icon">✓</span>conform baked into commit step — can't skip</li>
+        <li><span class="icon">✓</span>review baked into pr step — always runs first</li>
+        <li><span class="icon">✓</span>session-start hook surfaces br ready task immediately</li>
+        <li><span class="icon">✓</span>slash → skill failure surfaces error inline, not silence</li>
+        <li><span class="icon">✓</span>17 active skills (5 removed) — every one has evidence of use</li>
+        <li><span class="icon">✓</span>don-cape trigger table documents auto vs slash explicitly</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<div class="footer">
+  <div>Cape V2 Design · DX &amp; Ergonomics · <span style="color:var(--accent);">03/0x</span></div>
+  <div>Data: 10 days real logs · 22 skills · 8 agents</div>
+</div>
+
+</body>
+</html>

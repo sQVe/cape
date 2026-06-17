@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cape V2 — The Minimalist</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --border: #252525;
+    --text: #e8e8e8;
+    --muted: #6b6b6b;
+    --keep: #16a34a;
+    --keep-bg: #052e16;
+    --keep-border: #166534;
+    --merge: #0284c7;
+    --merge-bg: #082f49;
+    --merge-border: #0369a1;
+    --cut: #dc2626;
+    --cut-bg: #450a0a;
+    --cut-border: #991b1b;
+    --accent: #f59e0b;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    margin-bottom: 56px;
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    color: #fff;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .tagline {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 520px;
+  }
+
+  /* ── Shrink visual ── */
+  .shrink-section {
+    margin-bottom: 56px;
+  }
+
+  .shrink-section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .shrink-visual {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .shrink-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 120px;
+  }
+
+  .bar {
+    width: 80px;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .bar-before {
+    background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+    height: 110px;
+  }
+
+  .bar-after {
+    background: linear-gradient(180deg, #065f46 0%, #052e16 100%);
+    height: 60px;
+  }
+
+  .bar-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .arrow-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 28px;
+  }
+
+  .arrow-svg {
+    width: 60px;
+  }
+
+  .counts-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .count-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .count-num {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .count-num.before { color: #6b7280; }
+  .count-num.after  { color: var(--keep); }
+  .count-num.cut    { color: var(--cut); }
+  .count-num.merged { color: var(--merge); }
+
+  .count-label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ── Decision table ── */
+  .section {
+    margin-bottom: 48px;
+  }
+
+  .section h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #1a1a1a;
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover {
+    background: #181818;
+  }
+
+  td {
+    padding: 10px 12px;
+    vertical-align: top;
+  }
+
+  .name {
+    font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .uses {
+    text-align: right;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .uses.high  { color: var(--keep); }
+  .uses.mid   { color: var(--accent); }
+  .uses.low   { color: #f97316; }
+  .uses.zero  { color: var(--cut); }
+
+  .verdict {
+    white-space: nowrap;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .badge-keep  { background: var(--keep-bg);  color: #4ade80; border: 1px solid var(--keep-border); }
+  .badge-merge { background: var(--merge-bg); color: #38bdf8; border: 1px solid var(--merge-border); }
+  .badge-cut   { background: var(--cut-bg);   color: #f87171; border: 1px solid var(--cut-border); }
+
+  .reason {
+    color: #9ca3af;
+    font-size: 13px;
+  }
+
+  /* ── Agent table ── */
+  /* reuses same table styles */
+
+  /* ── Roster ── */
+  .roster {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .roster-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid;
+  }
+
+  .roster-item.skill-item  { background: var(--keep-bg);  border-color: var(--keep-border); }
+  .roster-item.agent-item  { background: var(--merge-bg); border-color: var(--merge-border); }
+
+  .roster-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .roster-dot.skill  { background: #4ade80; }
+  .roster-dot.agent  { background: #38bdf8; }
+
+  .roster-name {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    color: #e5e7eb;
+  }
+
+  /* ── Chains ── */
+  .chains {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .chain {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .chain-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-right: 8px;
+    white-space: nowrap;
+  }
+
+  .chain-step {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #1e1e1e;
+    border: 1px solid var(--border);
+    color: #d1d5db;
+    white-space: nowrap;
+  }
+
+  .chain-arrow {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="label">Cape V2 · Design Document 02</div>
+    <h1>The Minimalist</h1>
+    <p class="tagline">Cut every skill that 10 days of real usage didn't justify. What remains is what developers actually reach for.</p>
+  </div>
+
+  <!-- Shrink visual -->
+  <div class="shrink-section">
+    <h2>Before → After</h2>
+    <div style="display:flex; align-items:flex-end; gap:32px; margin-bottom:24px;">
+
+      <div class="shrink-block">
+        <div class="bar-wrap">
+          <div class="bar bar-before">22</div>
+        </div>
+        <div class="bar-label">Skills<br>before</div>
+      </div>
+
+      <div class="arrow-wrap">
+        <svg class="arrow-svg" viewBox="0 0 60 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 12 H48" stroke="#374151" stroke-width="2"/>
+          <path d="M42 6 L54 12 L42 18" stroke="#374151" stroke-width="2" fill="none"/>
+          <text x="16" y="8" fill="#6b7280" font-size="8" font-family="system-ui">−8</text>
+        </svg>
+      </div>
+
+      <div class="shrink-block">
+        <div class="bar-wrap">
+          <div class="bar bar-after" style="height:60px;">14</div>
+        </div>
+        <div class="bar-label">Skills<br>after</div>
+      </div>
+
+      <div style="width: 32px;"></div>
+
+      <div class="shrink-block">
+        <div class="bar-wrap">
+          <div class="bar" style="background:linear-gradient(180deg,#1e3a5f 0%,#0c1d2e 100%);height:88px;">8</div>
+        </div>
+        <div class="bar-label">Agents<br>before</div>
+      </div>
+
+      <div class="arrow-wrap">
+        <svg class="arrow-svg" viewBox="0 0 60 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 12 H48" stroke="#374151" stroke-width="2"/>
+          <path d="M42 6 L54 12 L42 18" stroke="#374151" stroke-width="2" fill="none"/>
+          <text x="16" y="8" fill="#6b7280" font-size="8" font-family="system-ui">−3</text>
+        </svg>
+      </div>
+
+      <div class="shrink-block">
+        <div class="bar-wrap">
+          <div class="bar" style="background:linear-gradient(180deg,#0c2340 0%,#061020 100%);height:55px;">5</div>
+        </div>
+        <div class="bar-label">Agents<br>after</div>
+      </div>
+    </div>
+
+    <div class="counts-row">
+      <div class="count-item">
+        <span class="count-num before">30</span>
+        <span class="count-label">Total before</span>
+      </div>
+      <div class="count-item">
+        <span class="count-num after">19</span>
+        <span class="count-label">Total after</span>
+      </div>
+      <div class="count-item">
+        <span class="count-num cut">8</span>
+        <span class="count-label">Skills cut</span>
+      </div>
+      <div class="count-item">
+        <span class="count-num merged" style="color:var(--merge)">3</span>
+        <span class="count-label">Agents cut</span>
+      </div>
+      <div class="count-item">
+        <span class="count-num" style="color:var(--accent)">37%</span>
+        <span class="count-label">Surface removed</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Skills decision table -->
+  <div class="section">
+    <h2>Skills — Decision table</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:160px">Skill</th>
+          <th style="width:60px;text-align:right">Uses<br><span style="font-weight:400;color:#4b5563">(10d)</span></th>
+          <th style="width:90px">Verdict</th>
+          <th>Rationale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">commit</td>
+          <td class="uses high">29</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Most-used skill by far. Sole path to clean conventional commits.</td>
+        </tr>
+        <tr>
+          <td class="name">review</td>
+          <td class="uses high">12</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Strong signal, used equally in pre-commit and PR contexts.</td>
+        </tr>
+        <tr>
+          <td class="name">pr</td>
+          <td class="uses high">12</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Terminal ship step — irreplaceable, no overlap with review.</td>
+        </tr>
+        <tr>
+          <td class="name">test-driven-development</td>
+          <td class="uses high">11</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">RED-GREEN-REFACTOR cycle is a genuine discipline enforcer, used in every BUILD chain.</td>
+        </tr>
+        <tr>
+          <td class="name">brainstorm</td>
+          <td class="uses mid">9</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Anchors the PLAN chain; challenge always fires inside it (see challenge verdict).</td>
+        </tr>
+        <tr>
+          <td class="name">execute-plan</td>
+          <td class="uses mid">7</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Core BUILD driver; dispatches expand-task internally.</td>
+        </tr>
+        <tr>
+          <td class="name">conform</td>
+          <td class="uses mid">7</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Post-commit convention check fills a distinct gap review doesn't cover (rules files).</td>
+        </tr>
+        <tr>
+          <td class="name">challenge</td>
+          <td class="uses mid">7</td>
+          <td class="verdict"><span class="badge badge-merge">Merge → brainstorm</span></td>
+          <td class="reason">Data shows challenge is always called inside planning, never standalone. Fold adversarial questioning into brainstorm's closing phase. Eliminates a separate invocation with no loss.</td>
+        </tr>
+        <tr>
+          <td class="name">write-plan</td>
+          <td class="uses mid">6</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Formalises brainstorm output into br epics — distinct artifact, needed to enter BUILD.</td>
+        </tr>
+        <tr>
+          <td class="name">finish-epic</td>
+          <td class="uses low">4</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Low-frequency-but-necessary: every completed epic needs closure. Not dead — low frequency matches low epic completion rate.</td>
+        </tr>
+        <tr>
+          <td class="name">fix-bug</td>
+          <td class="uses low">3</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Bugs happen infrequently but need a reliable end-to-end path. Keeping; 3 uses in 10 days is a healthy rate for bugs.</td>
+        </tr>
+        <tr>
+          <td class="name">beads</td>
+          <td class="uses low">3</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">br integration is foundational to the whole planning/tracking system. 3 direct invocations undercount — it's used implicitly everywhere.</td>
+        </tr>
+        <tr>
+          <td class="name">expand-task</td>
+          <td class="uses low">2</td>
+          <td class="verdict"><span class="badge badge-merge">Merge → execute-plan</span></td>
+          <td class="reason">Internal sub-skill with no user-facing value. 2 invocations were likely accidental direct calls. Inline the expansion logic into execute-plan.</td>
+        </tr>
+        <tr>
+          <td class="name">task-refinement</td>
+          <td class="uses low">1</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">1 use in 10 days. Stress-testing edge cases before implementation is good practice, but nobody's reaching for this skill — it's not part of any established chain. Dead in practice.</td>
+        </tr>
+        <tr>
+          <td class="name">refactor</td>
+          <td class="uses low">1</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">1 use. Behavior-preserving refactoring is real work, but TDD already enforces the safe-refactor cycle. The distinct skill adds surface without adding behaviour.</td>
+        </tr>
+        <tr>
+          <td class="name">debug-issue</td>
+          <td class="uses low">1</td>
+          <td class="verdict"><span class="badge badge-merge">Merge → fix-bug</span></td>
+          <td class="reason">1 standalone use. Investigation and fixing are the same session in practice. Fold investigation mode into fix-bug (--investigate flag or opening phase).</td>
+        </tr>
+        <tr>
+          <td class="name">analyze-tests</td>
+          <td class="uses zero">0</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">Zero uses. Test quality concerns are handled implicitly by TDD + review. Dead, not low-frequency-but-valuable.</td>
+        </tr>
+        <tr>
+          <td class="name">branch</td>
+          <td class="uses zero">0</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">Zero uses. Git branch creation doesn't need a skill — it's a one-liner. Cognitive overhead without value.</td>
+        </tr>
+        <tr>
+          <td class="name">design-an-interface</td>
+          <td class="uses zero">0</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">Zero uses. Interface design is either handled in brainstorm or is too domain-specific to generalise. Dead.</td>
+        </tr>
+        <tr>
+          <td class="name">explain</td>
+          <td class="uses zero">0</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">Zero uses. Code explanation is a base Claude capability, not a workflow skill. Wrapper with no added value.</td>
+        </tr>
+        <tr>
+          <td class="name">find-test-gaps</td>
+          <td class="uses zero">0</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">Zero uses. Gap analysis is valuable in theory, but TDD prevents gaps from accumulating in the first place. Redundant given TDD adoption.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Agents decision table -->
+  <div class="section">
+    <h2>Agents — Decision table</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:200px">Agent</th>
+          <th style="width:60px;text-align:right">Uses<br><span style="font-weight:400;color:#4b5563">(10d)</span></th>
+          <th style="width:90px">Verdict</th>
+          <th>Rationale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">codebase-investigator</td>
+          <td class="uses high">30</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Most-used agent. Dispatched everywhere — planning, debugging, task expansion.</td>
+        </tr>
+        <tr>
+          <td class="name">test-runner</td>
+          <td class="uses high">20</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Keeps verbose test output out of main context. Used in every TDD cycle.</td>
+        </tr>
+        <tr>
+          <td class="name">fact-checker</td>
+          <td class="uses mid">12</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Hallucination prevention — high value, used consistently across planning and debugging.</td>
+        </tr>
+        <tr>
+          <td class="name">internet-researcher</td>
+          <td class="uses mid">10</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">External knowledge fetch during planning and debugging. Clear distinct role.</td>
+        </tr>
+        <tr>
+          <td class="name">code-reviewer</td>
+          <td class="uses low">8</td>
+          <td class="verdict"><span class="badge badge-keep">Keep</span></td>
+          <td class="reason">Reviews implementation against epic contracts — different scope from the review skill (which covers diffs).</td>
+        </tr>
+        <tr>
+          <td class="name">test-auditor</td>
+          <td class="uses low">2</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">2 uses, paired with analyze-tests skill (also cut). Without that skill, this agent has no dispatch path. Dead in V2.</td>
+        </tr>
+        <tr>
+          <td class="name">notebox-researcher</td>
+          <td class="uses low">2</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">2 uses. Surfacing past notebox decisions is valuable in theory, but this data shows it's not a real habit. Low-frequency-but-not-valuable — the user doesn't read their notes this way.</td>
+        </tr>
+        <tr>
+          <td class="name">bug-tracer</td>
+          <td class="uses low">2</td>
+          <td class="verdict"><span class="badge badge-cut">Cut</span></td>
+          <td class="reason">2 uses. Bug investigation is now inside fix-bug (via merged debug-issue). codebase-investigator already handles execution tracing. Redundant role.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Final roster -->
+  <div class="section">
+    <h2>Final roster — 14 skills · 5 agents</h2>
+    <div class="roster">
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">commit</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">review</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">pr</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">test-driven-development</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">brainstorm <em style="color:#6b7280;font-size:11px">+challenge</em></span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">execute-plan <em style="color:#6b7280;font-size:11px">+expand-task</em></span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">conform</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">write-plan</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">finish-epic</span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">fix-bug <em style="color:#6b7280;font-size:11px">+debug-issue</em></span></div>
+      <div class="roster-item skill-item"><span class="roster-dot skill"></span><span class="roster-name">beads</span></div>
+      <div class="roster-item agent-item"><span class="roster-dot agent"></span><span class="roster-name">codebase-investigator</span></div>
+      <div class="roster-item agent-item"><span class="roster-dot agent"></span><span class="roster-name">test-runner</span></div>
+      <div class="roster-item agent-item"><span class="roster-dot agent"></span><span class="roster-name">fact-checker</span></div>
+      <div class="roster-item agent-item"><span class="roster-dot agent"></span><span class="roster-name">internet-researcher</span></div>
+      <div class="roster-item agent-item"><span class="roster-dot agent"></span><span class="roster-name">code-reviewer</span></div>
+    </div>
+    <p style="margin-top:16px;color:var(--muted);font-size:13px;">
+      Skills shown with italic annotation absorbed a neighbour skill or sub-skill during the merge.
+    </p>
+  </div>
+
+  <!-- Workflow chains -->
+  <div class="section">
+    <h2>Workflow chains — unchanged structure, fewer steps</h2>
+    <div class="chains">
+      <div class="chain">
+        <span class="chain-label">Plan</span>
+        <span class="chain-step">brainstorm</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step" style="color:#6b6b6b;text-decoration:line-through">challenge</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">write-plan</span>
+        <span style="margin-left:12px;font-size:12px;color:var(--muted)">challenge folded into brainstorm closing phase</span>
+      </div>
+      <div class="chain">
+        <span class="chain-label">Build</span>
+        <span class="chain-step">execute-plan</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step" style="color:#6b6b6b;text-decoration:line-through">expand-task</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">tdd</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">commit</span>
+        <span style="margin-left:12px;font-size:12px;color:var(--muted)">expand-task inlined, invisible to user</span>
+      </div>
+      <div class="chain">
+        <span class="chain-label">Ship</span>
+        <span class="chain-step">finish-epic</span>
+        <span class="chain-arrow">→</span>
+        <span class="chain-step">pr</span>
+        <span class="chain-arrow">+</span>
+        <span class="chain-step">conform</span>
+      </div>
+      <div class="chain">
+        <span class="chain-label">Bug</span>
+        <span class="chain-step">fix-bug</span>
+        <span style="margin-left:12px;font-size:12px;color:var(--muted)">debug-issue is now its opening investigation phase</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key principles -->
+  <div class="section">
+    <h2>Cuts defended — the hard cases</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Skill</th>
+          <th>Why "never used" = dead here</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="name">analyze-tests / find-test-gaps</td>
+          <td class="reason">TDD at 11 invocations means gaps are prevented, not discovered after the fact. These skills assume a workflow that doesn't exist in practice.</td>
+        </tr>
+        <tr>
+          <td class="name">design-an-interface</td>
+          <td class="reason">Interface design happens inside brainstorm. A separate skill implies a separate session that never materialised in 10 days of real work.</td>
+        </tr>
+        <tr>
+          <td class="name">explain</td>
+          <td class="reason">Pure base model capability. Wrapping it as a skill adds discovery friction without any specialisation. The CLI shouldn't compete with just asking Claude.</td>
+        </tr>
+        <tr>
+          <td class="name">branch</td>
+          <td class="reason">`git checkout -b` is faster to type than invoking a skill. Skills justify themselves through complex orchestration, not wrapping one-liners.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <span>Cape V2 · The Minimalist · Design Document 02</span>
+    <span>22 skills + 8 agents → 14 skills + 5 agents · 37% surface removed</span>
+  </div>
+
+</div>
+</body>
+</html>
