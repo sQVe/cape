@@ -77,7 +77,7 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
   };
 };
 
-const toTaskFromUnknown = (value: unknown): TrackerTask | null => {
+export const toTaskFromUnknown = (value: unknown): TrackerTask | null => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
     return null;
   }
@@ -85,7 +85,7 @@ const toTaskFromUnknown = (value: unknown): TrackerTask | null => {
   return toTask(value as LinearIssue);
 };
 
-const toEpic = (value: unknown): TrackerEpic | null => {
+export const toEpic = (value: unknown): TrackerEpic | null => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
     return null;
   }
@@ -110,7 +110,7 @@ const toEpic = (value: unknown): TrackerEpic | null => {
   };
 };
 
-const toTasks = (value: unknown): readonly TrackerTask[] => {
+export const toTasks = (value: unknown): readonly TrackerTask[] => {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -125,7 +125,7 @@ const toTasks = (value: unknown): readonly TrackerTask[] => {
   });
 };
 
-const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: number): TrackerCache => ({
+export const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: number): TrackerCache => ({
   version: 1,
   timestamp,
   epics: {
@@ -134,7 +134,7 @@ const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: num
   },
 });
 
-const mergeTasks = (
+export const mergeTasks = (
   cache: TrackerCache | null,
   epicId: string,
   tasks: readonly TrackerTask[],
@@ -164,7 +164,7 @@ interface CachedIssueStatusUpdate {
   readonly timestamp: number;
 }
 
-const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): TrackerCache | null => {
+export const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): TrackerCache | null => {
   const { cache, targetIssueId, status, stateType, timestamp } = update;
   if (cache == null) {
     return null;
@@ -266,7 +266,7 @@ const writeIssueStatusToCacheBestEffort = (
     }
   }).pipe(Effect.orElseSucceed(() => undefined));
 
-const isTrackerCache = (value: unknown): value is TrackerCache => {
+export const isTrackerCache = (value: unknown): value is TrackerCache => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
     return false;
   }
@@ -343,7 +343,7 @@ export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
       }),
   });
 
-const readCacheFile = () =>
+export const readCacheFile = () =>
   Effect.try({
     try: () => {
       const raw = safeParseJson(readFileSync(trackerCachePath(pluginRoot()), 'utf-8'));
@@ -356,7 +356,7 @@ const readCacheFile = () =>
       error instanceof Error ? error : new Error('failed to read tracker cache', { cause: error }),
   }).pipe(Effect.orElseSucceed(() => null));
 
-const writeCacheFile = (cache: TrackerCache) =>
+export const writeCacheFile = (cache: TrackerCache) =>
   Effect.try({
     try: () => {
       const root = pluginRoot();
