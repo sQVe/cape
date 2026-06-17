@@ -214,6 +214,22 @@ const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): TrackerCache 
   };
 };
 
+const statusFromLinearResponse = (value: unknown, fallbackStatus: string) => {
+  const task = toTaskFromUnknown(value);
+  const epic = toEpic(value);
+  let status = fallbackStatus;
+  if (task?.status != null && task.status !== '') {
+    status = task.status;
+  } else if (epic?.status != null && epic.status !== '') {
+    status = epic.status;
+  }
+
+  return {
+    status,
+    stateType: task?.stateType ?? null,
+  };
+};
+
 const writeEpicToCacheBestEffort = (dependencies: TrackerLiveDependencies, epic: TrackerEpic) =>
   Effect.gen(function* () {
     const cache = yield* dependencies.readCache();
@@ -250,8 +266,6 @@ const writeIssueStatusToCacheBestEffort = (
       yield* dependencies.writeCache(updatedCache);
     }
   }).pipe(Effect.orElseSucceed(() => undefined));
-
-const unsupportedWrite = () => Effect.fail(new Error('Tracker writes are not implemented yet'));
 
 const isTrackerCache = (value: unknown): value is TrackerCache => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
@@ -318,17 +332,16 @@ export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
     updateStatus: (targetIssueId, status) =>
       Effect.gen(function* () {
         const raw = yield* dependencies.callLinear('updateStatus', { issueId: targetIssueId, status });
-        const task = toTaskFromUnknown(raw);
-        const epic = toEpic(raw);
-        let nextStatus = status;
-        if (task?.status != null && task.status !== '') {
-          nextStatus = task.status;
-        } else if (epic?.status != null && epic.status !== '') {
-          nextStatus = epic.status;
-        }
-        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, nextStatus, task?.stateType ?? null);
+        const next = statusFromLinearResponse(raw, status);
+        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, next.status, next.stateType);
       }),
-    close: unsupportedWrite,
+    close: (targetIssueId) =>
+      Effect.gen(function* () {
+        const raw = yield* dependencies.callLinear('close', { issueId: targetIssueId });
+        const next = statusFromLinearResponse(raw, 'Done');
+        const stateType = next.stateType != null && next.stateType !== '' ? next.stateType : 'completed';
+        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, next.status, stateType);
+      }),
   });
 
 const readCacheFile = () =>
