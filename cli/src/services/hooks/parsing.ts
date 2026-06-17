@@ -30,7 +30,7 @@ const errorPatterns = [
   /(?:this|it)\s+(?:is\s+)?(?:broken|crashing|failing)(?!\s+(?:into|down|up|to)\b)/i,
 ];
 
-export const detectDebugIssue = (prompt: string) =>
+export const detectBugReport = (prompt: string) =>
   errorPatterns.some((pattern) => pattern.test(prompt));
 
 const continuePatterns = [
@@ -86,4 +86,3 @@ export const parseSkillInput = (input: string): SkillInput | null => {
     return null;
   }
 };
-

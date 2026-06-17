@@ -13,7 +13,7 @@ import {
   denyTable,
   denyWith,
   detectBeadsSkill,
-  detectDebugIssue,
+  detectBugReport,
   detectExecutePlan,
   normalizeEventName,
   postToolUseBash,
@@ -79,43 +79,43 @@ describe('detectBeadsSkill', () => {
   });
 });
 
-describe('detectDebugIssue', () => {
+describe('detectBugReport', () => {
   it('detects JS stack trace', () => {
     const prompt = 'I got this error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
-    expect(detectDebugIssue(prompt)).toBe(true);
+    expect(detectBugReport(prompt)).toBe(true);
   });
 
   it('detects Python traceback', () => {
     const prompt = 'Traceback (most recent call last)\n  File "app.py", line 10';
-    expect(detectDebugIssue(prompt)).toBe(true);
+    expect(detectBugReport(prompt)).toBe(true);
   });
 
   it('detects Go panic', () => {
-    expect(detectDebugIssue('panic: runtime error: index out of range')).toBe(true);
+    expect(detectBugReport('panic: runtime error: index out of range')).toBe(true);
   });
 
   it('detects JS error names', () => {
-    expect(detectDebugIssue('TypeError: Cannot read properties of undefined')).toBe(true);
+    expect(detectBugReport('TypeError: Cannot read properties of undefined')).toBe(true);
   });
 
   it('detects explicit error report', () => {
-    expect(detectDebugIssue("I'm getting an error when I run the build")).toBe(true);
+    expect(detectBugReport("I'm getting an error when I run the build")).toBe(true);
   });
 
   it('detects broken/crashing language', () => {
-    expect(detectDebugIssue('this is broken after the last deploy')).toBe(true);
+    expect(detectBugReport('this is broken after the last deploy')).toBe(true);
   });
 
   it('does not detect error discussion', () => {
-    expect(detectDebugIssue('how does error handling work in this codebase')).toBe(false);
+    expect(detectBugReport('how does error handling work in this codebase')).toBe(false);
   });
 
   it('does not detect figurative broken', () => {
-    expect(detectDebugIssue('this is broken into smaller pieces')).toBe(false);
+    expect(detectBugReport('this is broken into smaller pieces')).toBe(false);
   });
 
   it('does not detect unrelated prompts', () => {
-    expect(detectDebugIssue('add a new user endpoint')).toBe(false);
+    expect(detectBugReport('add a new user endpoint')).toBe(false);
   });
 });
 
@@ -509,13 +509,13 @@ describe('userPromptSubmit', () => {
     expect(result).toEqual({ decision: 'approve' });
   });
 
-  it('injects debug-issue for stack trace', async () => {
+  it('injects fix-bug for stack trace', async () => {
     const prompt = 'Error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('cape:debug-issue');
+    expect(result.additionalContext).toContain('cape:fix-bug');
   });
 
   it('injects execute-plan for continue', async () => {
@@ -526,7 +526,7 @@ describe('userPromptSubmit', () => {
     expect(result.additionalContext).toContain('cape:execute-plan');
   });
 
-  it('does not inject debug-issue for error discussion', async () => {
+  it('does not inject fix-bug for error discussion', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'how does error handling work' }),
     });
@@ -1088,13 +1088,15 @@ describe('preToolUseSkill', () => {
     expectDeny(result, 'cape-target');
   });
 
-  it('denies fix-bug when no open bug exists', async () => {
+  it('adds diagnosis gate context for fix-bug when no open bug exists', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:fix-bug'),
       brResponses: { '--type bug': '' },
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'debug-issue');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('diagnosis gate'),
+    });
   });
 
   it('allows fix-bug when open bug exists', async () => {

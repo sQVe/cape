@@ -4,7 +4,7 @@ import { logEvent } from '../../eventLog';
 import { TRACKER_CACHE_TTL_MS } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { safeParseJson } from '../../utils/json';
-import { detectBeadsSkill, detectDebugIssue, detectExecutePlan, parseCommand } from './parsing';
+import { detectBeadsSkill, detectBugReport, detectExecutePlan, parseCommand } from './parsing';
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
@@ -304,8 +304,8 @@ export const userPromptSubmit = () =>
     if (detectBeadsSkill(prompt)) {
       skills.push('cape:beads');
     }
-    if (detectDebugIssue(prompt)) {
-      skills.push('cape:debug-issue');
+    if (detectBugReport(prompt)) {
+      skills.push('cape:fix-bug');
     }
     if (detectExecutePlan(prompt)) {
       skills.push('cape:execute-plan');

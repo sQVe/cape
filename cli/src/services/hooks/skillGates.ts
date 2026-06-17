@@ -156,9 +156,10 @@ const gateFixBug = () =>
       return null;
     }
     if (!bugs) {
-      return denyWith(
-        'No open bug exists. Load cape:debug-issue to investigate the problem first, then create a bug with cape:beads.',
-      );
+      return {
+        additionalContext:
+          'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a bug with cape:beads.',
+      };
     }
     return null;
   });

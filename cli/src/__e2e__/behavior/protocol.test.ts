@@ -343,7 +343,7 @@ describe('user-prompt-submit beads detection', () => {
 });
 
 describe('user-prompt-submit intent routing', () => {
-  it('detects stack trace and includes cape:debug-issue', () => {
+  it('detects stack trace and includes cape:fix-bug', () => {
     const stdin = JSON.stringify({
       prompt: 'I got this:\n  at Object.<anonymous> (/src/index.ts:42:10)',
     });
@@ -351,7 +351,7 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:debug-issue');
+    expect(parsed.additionalContext).toContain('cape:fix-bug');
   });
 
   it('detects continue intent and includes cape:execute-plan', () => {
@@ -372,7 +372,7 @@ describe('user-prompt-submit intent routing', () => {
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
     expect(parsed.additionalContext).toContain('cape:beads');
-    expect(parsed.additionalContext).toContain('cape:debug-issue');
+    expect(parsed.additionalContext).toContain('cape:fix-bug');
   });
 
   it('passes through ambiguous input without routing', () => {
@@ -381,7 +381,7 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext ?? '').not.toContain('cape:debug-issue');
+    expect(parsed.additionalContext ?? '').not.toContain('cape:fix-bug');
     expect(parsed.additionalContext ?? '').not.toContain('cape:execute-plan');
   });
 });
