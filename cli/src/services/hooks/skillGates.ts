@@ -59,7 +59,6 @@ export const preToolUseBash = () =>
 
 const gatedSkills = new Set([
   'execute-plan',
-  'expand-task',
   'finish-epic',
   'fix-bug',
   'test-driven-development',
@@ -88,7 +87,7 @@ const gateExecutePlan = () =>
     }
     if (!ready) {
       return denyWith(
-        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Use cape:expand-task or create a new task with cape:beads.',
+        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion now runs inside cape:execute-plan; create a new task with cape:beads if more work remains.',
       );
     }
     const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
@@ -180,7 +179,6 @@ const skillGates: Record<
   (args: string | null) => Effect.Effect<GateResult, never, HookService>
 > = {
   'execute-plan': () => gateExecutePlan(),
-  'expand-task': () => gateInternalSkill(),
   'finish-epic': (args) => gateFinishEpic(args),
   'fix-bug': () => gateFixBug(),
   'test-driven-development': () => gateInternalSkill(),

@@ -15,7 +15,8 @@ const STATE_KEY_CATALOG = [
   },
   {
     key: 'workflowActive',
-    description: 'Gates internal skills (expand-task, test-driven-development) for direct invocation',
+    description:
+      'Gates internal test-driven-development for direct invocation; task expansion runs inside execute-plan',
     validValues: 'true (boolean, set or absent)',
     valueShape: '{ value: true }',
     ttlMs: null,

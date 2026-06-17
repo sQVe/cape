@@ -14,6 +14,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: folded standalone bug diagnosis into fix-bug as a loop-first diagnosis gate.
 - Skills: folded conform into review for bugs/logic plus conventions, and added the reviewer
   contract.
+- Skills: inlined expand-task into execute-plan, added a lightweight pre-flight plan scan, and
+  removed the dead standalone expansion gate.
 
 ### Removed
 

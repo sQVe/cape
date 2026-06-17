@@ -974,7 +974,14 @@ describe('preToolUseBash', () => {
 });
 
 describe('preToolUseSkill', () => {
-  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:worktree', 'cape:brainstorm', 'cape:write-plan'])(
+  it.each([
+    'cape:commit',
+    'cape:review',
+    'cape:beads',
+    'cape:worktree',
+    'cape:brainstorm',
+    'cape:write-plan',
+  ])(
     'allows non-gated skill %s',
     async (skill) => {
       const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
@@ -1157,23 +1164,6 @@ describe('preToolUseSkill', () => {
 
   it('allows fix-bug when br fails', async () => {
     const layer = makeStubHookLayer({ stdin: skillStdin('cape:fix-bug') });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('denies expand-task when no workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:expand-task'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'internal');
-  });
-
-  it('allows expand-task when workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:expand-task'),
-      files: stateFile({ workflowActive: { value: true, timestamp: Date.now() } }),
-    });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
