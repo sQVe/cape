@@ -1,1106 +1,1260 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Automation & Power-User — Cape V2</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0d0f14;
-    --surface: #151820;
-    --surface2: #1c2030;
-    --border: #252a3a;
-    --border-bright: #3a4155;
-    --text: #c9d1e0;
-    --text-muted: #6b7490;
-    --text-dim: #4a5068;
-    --accent: #5b8aff;
-    --accent-dim: #2a3d6e;
-    --green: #3dd68c;
-    --green-dim: #1a4033;
-    --red: #ff5f57;
-    --red-dim: #4a1a18;
-    --amber: #f5a623;
-    --amber-dim: #3d2a0a;
-    --purple: #9b6dff;
-    --purple-dim: #2d1e5a;
-    --teal: #2dd4bf;
-    --teal-dim: #0f3330;
-    --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-sans);
-    font-size: 14px;
-    line-height: 1.6;
-    padding: 40px 24px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  /* ── Header ── */
-  header {
-    margin-bottom: 56px;
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 32px;
-  }
-
-  .eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 12px;
-  }
-
-  h1 {
-    font-size: 38px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: #edf2ff;
-    line-height: 1.15;
-    margin-bottom: 16px;
-  }
-
-  .subtitle {
-    font-size: 16px;
-    color: var(--text-muted);
-    max-width: 680px;
-    line-height: 1.7;
-  }
-
-  .data-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 20px;
-  }
-
-  .pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-
-  .pill-num {
-    color: var(--accent);
-    font-weight: 700;
-  }
-
-  /* ── Section titles ── */
-  .section-title {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 24px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-title::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  section { margin-bottom: 56px; }
-
-  /* ── DIAGRAM: Hook vs Skill layers ── */
-  .layer-diagram {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 32px;
-    margin-bottom: 24px;
-  }
-
-  .diagram-title {
-    font-size: 12px;
-    font-family: var(--font-mono);
-    color: var(--text-muted);
-    margin-bottom: 24px;
-    text-align: center;
-  }
-
-  .layers {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    position: relative;
-  }
-
-  .layer {
-    display: flex;
-    align-items: stretch;
-    gap: 4px;
-    min-height: 52px;
-  }
-
-  .layer-label {
-    width: 110px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 14px;
-    font-size: 10px;
-    font-family: var(--font-mono);
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-  }
-
-  .layer-body {
-    flex: 1;
-    border-radius: 8px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  .layer-body.harness {
-    background: linear-gradient(135deg, rgba(255,95,87,0.12), rgba(255,95,87,0.05));
-    border: 1px solid rgba(255,95,87,0.3);
-  }
-
-  .layer-body.hooks-pre {
-    background: linear-gradient(135deg, rgba(255,95,87,0.08), rgba(91,138,255,0.05));
-    border: 1px solid rgba(255,95,87,0.2);
-  }
-
-  .layer-body.hooks-post {
-    background: linear-gradient(135deg, rgba(91,138,255,0.08), rgba(91,138,255,0.04));
-    border: 1px solid rgba(91,138,255,0.2);
-  }
-
-  .layer-body.skills {
-    background: linear-gradient(135deg, rgba(61,214,140,0.08), rgba(61,214,140,0.03));
-    border: 1px solid rgba(61,214,140,0.2);
-  }
-
-  .layer-body.agents {
-    background: linear-gradient(135deg, rgba(155,109,255,0.08), rgba(155,109,255,0.03));
-    border: 1px solid rgba(155,109,255,0.2);
-  }
-
-  .layer-body.state {
-    background: linear-gradient(135deg, rgba(245,166,35,0.08), rgba(245,166,35,0.03));
-    border: 1px solid rgba(245,166,35,0.2);
-  }
-
-  .layer-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    border-radius: 5px;
-    padding: 3px 8px;
-    font-size: 11px;
-    font-family: var(--font-mono);
-    white-space: nowrap;
-  }
-
-  .tag-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,95,87,0.25); }
-  .tag-blue { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(91,138,255,0.25); }
-  .tag-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(61,214,140,0.25); }
-  .tag-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(155,109,255,0.25); }
-  .tag-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.25); }
-  .tag-teal { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(45,212,191,0.25); }
-
-  .layer-arrow {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 110px;
-    color: var(--text-dim);
-    font-size: 16px;
-    height: 20px;
-  }
-
-  .layer-badge {
-    margin-left: auto;
-    font-size: 10px;
-    font-family: var(--font-mono);
-    padding: 2px 8px;
-    border-radius: 20px;
-  }
-
-  .badge-deny { background: rgba(255,95,87,0.15); color: var(--red); }
-  .badge-gate { background: rgba(91,138,255,0.15); color: var(--accent); }
-  .badge-model { background: rgba(61,214,140,0.15); color: var(--green); }
-  .badge-durable { background: rgba(245,166,35,0.15); color: var(--amber); }
-
-  /* ── Hook events table ── */
-  .hook-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  .hook-table th {
-    text-align: left;
-    padding: 8px 14px;
-    font-size: 10px;
-    font-family: var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .hook-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  .hook-table tr:last-child td { border-bottom: none; }
-  .hook-table tr:hover td { background: var(--surface2); }
-
-  .hook-event {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--accent);
-  }
-
-  .hook-action-deny { color: var(--red); font-weight: 600; }
-  .hook-action-warn { color: var(--amber); }
-  .hook-action-gate { color: var(--green); }
-  .hook-action-inject { color: var(--purple); }
-
-  .matcher-tag {
-    display: inline-block;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1px 6px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--text-muted);
-    margin: 1px;
-  }
-
-  /* ── Agent map ── */
-  .agent-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-  }
-
-  @media (max-width: 768px) {
-    .agent-grid { grid-template-columns: 1fr; }
-  }
-
-  .agent-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
-    position: relative;
-    transition: border-color 0.15s;
-  }
-
-  .agent-card:hover { border-color: var(--border-bright); }
-
-  .agent-card.dead {
-    opacity: 0.45;
-    filter: grayscale(0.6);
-  }
-
-  .agent-card.merged {
-    border-style: dashed;
-    opacity: 0.6;
-  }
-
-  .agent-name {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--accent);
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .agent-count {
-    font-size: 10px;
-    color: var(--text-dim);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 1px 7px;
-  }
-
-  .count-high { color: var(--green); }
-  .count-mid { color: var(--amber); }
-  .count-low { color: var(--red); }
-
-  .agent-desc {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin-bottom: 10px;
-  }
-
-  .agent-callers {
-    font-size: 10px;
-    font-family: var(--font-mono);
-    color: var(--text-dim);
-  }
-
-  .agent-verdict {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    font-size: 9px;
-    font-family: var(--font-mono);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .verdict-keep { background: rgba(61,214,140,0.12); color: var(--green); }
-  .verdict-cut { background: rgba(255,95,87,0.12); color: var(--red); }
-  .verdict-merge { background: rgba(245,166,35,0.12); color: var(--amber); }
-
-  /* ── br state machine ── */
-  .state-flow {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-
-  .state-node {
-    flex-shrink: 0;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    min-width: 130px;
-    text-align: center;
-  }
-
-  .state-node.active {
-    border-color: var(--accent);
-    background: var(--accent-dim);
-  }
-
-  .state-node.session-break {
-    border-style: dashed;
-    border-color: var(--amber);
-    background: rgba(245,166,35,0.05);
-  }
-
-  .state-node-label {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .state-node-sub {
-    font-size: 10px;
-    color: var(--text-dim);
-  }
-
-  .state-arrow {
-    display: flex;
-    align-items: center;
-    color: var(--text-dim);
-    padding: 0 6px;
-    font-size: 13px;
-    align-self: center;
-    flex-shrink: 0;
-  }
-
-  .state-arrow.break {
-    color: var(--amber);
-    font-size: 18px;
-  }
-
-  /* ── Enforcement gates ── */
-  .gate-flow {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .gate-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 14px;
-    background: var(--surface);
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    font-size: 12px;
-  }
-
-  .gate-row.deny { border-left: 3px solid var(--red); }
-  .gate-row.warn { border-left: 3px solid var(--amber); }
-  .gate-row.pass { border-left: 3px solid var(--green); }
-  .gate-row.inject { border-left: 3px solid var(--purple); }
-
-  .gate-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
-  .gate-label { color: var(--text); flex: 1; }
-  .gate-label strong { color: #edf2ff; }
-  .gate-meta { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); }
-
-  /* ── Composer blocks ── */
-  .compose-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-
-  @media (max-width: 640px) {
-    .compose-grid { grid-template-columns: 1fr; }
-  }
-
-  .compose-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px;
-  }
-
-  .compose-card h4 {
-    font-size: 13px;
-    color: #edf2ff;
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
-
-  .compose-card p {
-    font-size: 12px;
-    color: var(--text-muted);
-    line-height: 1.6;
-    margin-bottom: 10px;
-  }
-
-  pre {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    overflow-x: auto;
-    line-height: 1.5;
-  }
-
-  pre .c { color: var(--text-dim); }
-  pre .k { color: var(--accent); }
-  pre .s { color: var(--green); }
-  pre .p { color: var(--purple); }
-  pre .a { color: var(--amber); }
-
-  /* ── TDD state table ── */
-  .tdd-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    font-family: var(--font-mono);
-  }
-
-  .tdd-table th {
-    text-align: center;
-    padding: 8px;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .tdd-table th:first-child { text-align: left; }
-
-  .tdd-table td {
-    padding: 8px;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-muted);
-  }
-
-  .tdd-table td:first-child {
-    text-align: left;
-    color: var(--accent);
-  }
-
-  .tdd-table tr:last-child td { border-bottom: none; }
-
-  .allow { color: var(--green); font-weight: 600; }
-  .deny-cell { color: var(--red); font-weight: 600; }
-
-  /* ── Callout ── */
-  .callout {
-    border-radius: 8px;
-    padding: 14px 18px;
-    margin: 16px 0;
-    font-size: 13px;
-    line-height: 1.6;
-  }
-
-  .callout.info {
-    background: var(--accent-dim);
-    border: 1px solid rgba(91,138,255,0.2);
-    color: #9bb8ff;
-  }
-
-  .callout.warn {
-    background: var(--amber-dim);
-    border: 1px solid rgba(245,166,35,0.2);
-    color: #f5c96e;
-  }
-
-  .callout strong { color: #edf2ff; }
-
-  /* ── Two-col layout ── */
-  .two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    align-items: start;
-  }
-
-  @media (max-width: 640px) {
-    .two-col { grid-template-columns: 1fr; }
-  }
-
-  /* ── Table card ── */
-  .table-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  /* ── Footer ── */
-  footer {
-    margin-top: 64px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: gap;
-    gap: 8px;
-  }
-
-  .footer-label {
-    font-size: 11px;
-    font-family: var(--font-mono);
-    color: var(--text-dim);
-  }
-</style>
-</head>
-<body>
-
-<!-- ── HEADER ── -->
-<header>
-  <p class="eyebrow">Cape V2 Design Series · Doc 05 of 06</p>
-  <h1>Automation &amp; Power-User</h1>
-  <p class="subtitle">
-    Hooks enforce invariants the model cannot. Skills orchestrate judgment the harness cannot.
-    V2 draws that line sharply — and makes br the durable state machine that survives every
-    <code>/clear</code>.
-  </p>
-  <div class="data-pills">
-    <span class="pill"><span class="pill-num">37</span> /clear sessions observed</span>
-    <span class="pill"><span class="pill-num">29</span> commit invocations</span>
-    <span class="pill"><span class="pill-num">30</span> codebase-investigator dispatches</span>
-    <span class="pill"><span class="pill-num">22</span> skills · <span class="pill-num">8</span> agents</span>
-    <span class="pill"><span class="pill-num">7</span> conform runs as gate</span>
-    <span class="pill">tddState tracked in hooks</span>
-  </div>
-</header>
-
-<!-- ── SECTION 1: LAYER DIAGRAM ── -->
-<section>
-  <p class="section-title">Enforcement architecture</p>
-
-  <div class="layer-diagram">
-    <p class="diagram-title">CAPE V2 — ENFORCEMENT LAYERS (top = soonest, bottom = latest)</p>
-
-    <div class="layers">
-
-      <div class="layer">
-        <div class="layer-label">USER INPUT</div>
-        <div class="layer-body harness">
-          <span class="layer-tag tag-red">PromptSubmit</span>
-          <span class="layer-tag tag-red">TDD safety-net: inject don-cape reminder if workflowActive &amp; tdd-state=null</span>
-          <span class="layer-badge badge-deny">BLOCK</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">PRE-TOOL</div>
-        <div class="layer-body hooks-pre">
-          <span class="layer-tag tag-red">Edit(prod) deny if tdd-state=null|writing-test</span>
-          <span class="layer-tag tag-red">Write(prod) deny if tdd-state=null|writing-test</span>
-          <span class="layer-tag tag-red">Bash(git commit) deny if conform=dirty</span>
-          <span class="layer-badge badge-deny">DENY</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">TOOL RUNS</div>
-        <div class="layer-body skills" style="background:rgba(20,25,40,0.6); border-color: var(--border);">
-          <span class="layer-tag" style="background:var(--surface2);color:var(--text-muted);border-color:var(--border);">Edit · Write · Bash · Agent · Skill · …</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">POST-TOOL</div>
-        <div class="layer-body hooks-post">
-          <span class="layer-tag tag-blue">Edit(test) → tdd-state=writing-test</span>
-          <span class="layer-tag tag-blue">Write(test) → tdd-state=writing-test</span>
-          <span class="layer-tag tag-blue">Bash(test pass) → tdd-state=green</span>
-          <span class="layer-tag tag-blue">Bash(test fail) → tdd-state=red</span>
-          <span class="layer-tag tag-blue">Bash(git commit) → run conform gate</span>
-          <span class="layer-badge badge-gate">OBSERVE</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">SKILLS</div>
-        <div class="layer-body skills">
-          <span class="layer-tag tag-green">don-cape router</span>
-          <span class="layer-tag tag-green">execute-plan</span>
-          <span class="layer-tag tag-green">test-driven-development</span>
-          <span class="layer-tag tag-green">conform</span>
-          <span class="layer-tag tag-green">commit</span>
-          <span class="layer-tag tag-green">finish-epic</span>
-          <span class="layer-badge badge-model">MODEL-DRIVEN</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">AGENTS</div>
-        <div class="layer-body agents">
-          <span class="layer-tag tag-purple">codebase-investigator</span>
-          <span class="layer-tag tag-purple">test-runner</span>
-          <span class="layer-tag tag-purple">fact-checker</span>
-          <span class="layer-tag tag-purple">internet-researcher</span>
-          <span class="layer-tag tag-purple">code-reviewer</span>
-          <span class="layer-badge badge-model">TOOL-CALL</span>
-        </div>
-      </div>
-
-      <div class="layer-arrow">↓</div>
-
-      <div class="layer">
-        <div class="layer-label">DURABLE STATE</div>
-        <div class="layer-body state">
-          <span class="layer-tag tag-amber">br epic</span>
-          <span class="layer-tag tag-amber">br tasks</span>
-          <span class="layer-tag tag-amber">br bugs</span>
-          <span class="layer-tag tag-amber">verify.json checkpoints</span>
-          <span class="layer-tag tag-amber">cape state flags</span>
-          <span class="layer-badge badge-durable">SURVIVES /clear</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="callout info">
-    <strong>The core principle:</strong> hooks are deterministic C code (the harness always fires
-    them). Skills are probabilistic (the model interprets them). Put invariants in hooks. Put
-    judgment in skills. Never swap them.
-  </div>
-</section>
-
-<!-- ── SECTION 2: HOOK EVENTS CATALOG ── -->
-<section>
-  <p class="section-title">Hook events catalog — V2 proposals</p>
-
-  <div class="table-card">
-    <table class="hook-table">
-      <thead>
-        <tr>
-          <th>Event</th>
-          <th>Matcher</th>
-          <th>Action</th>
-          <th>Behavior</th>
-          <th>Why hook not skill</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="hook-event">PreToolUse</span></td>
-          <td><span class="matcher-tag">Edit</span> <span class="matcher-tag">Write</span></td>
-          <td><span class="hook-action-deny">DENY</span></td>
-          <td>Block prod edits when tdd-state ∈ {null, writing-test}</td>
-          <td>Model-driven TDD bypasses consistently fail under time pressure</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">PreToolUse</span></td>
-          <td><span class="matcher-tag">Bash</span> git commit</td>
-          <td><span class="hook-action-deny">DENY</span></td>
-          <td>Block commit if cape conform staged returns violations</td>
-          <td>Conform as gate, not suggestion — 7 manual invocations become 0</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">PostToolUse</span></td>
-          <td><span class="matcher-tag">Edit</span> <span class="matcher-tag">Write</span></td>
-          <td><span class="hook-action-gate">OBSERVE</span></td>
-          <td>Detect test file writes → set tdd-state=writing-test</td>
-          <td>State transition must be atomic with the edit, not rely on model instruction</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">PostToolUse</span></td>
-          <td><span class="matcher-tag">Bash</span> test runner</td>
-          <td><span class="hook-action-gate">OBSERVE</span></td>
-          <td>Parse exit code → tdd-state = red (fail) or green (pass)</td>
-          <td>State machine correctness; model cannot reliably parse its own test output</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">PostToolUse</span></td>
-          <td><span class="matcher-tag">Bash</span> git commit</td>
-          <td><span class="hook-action-warn">WARN</span></td>
-          <td>Run conform branch; append violations as additionalContext</td>
-          <td>Post-commit review loop; violations visible before next task begins</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">UserPromptSubmit</span></td>
-          <td>(any)</td>
-          <td><span class="hook-action-inject">INJECT</span></td>
-          <td>If workflowActive &amp; tdd-state=null → prepend TDD reminder</td>
-          <td>Safety net for resumed sessions after /clear; skill state lost, hook state survives</td>
-        </tr>
-        <tr>
-          <td><span class="hook-event">Stop</span></td>
-          <td>(any)</td>
-          <td><span class="hook-action-warn">WARN</span></td>
-          <td>If workflowActive → remind user to /clear before next task (HITL mode)</td>
-          <td>Structural checkpoint discipline cannot rely on model remembering every time</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="callout warn" style="margin-top:16px;">
-    <strong>Escape hatch:</strong> <code>cape state set tdd-bypass</code> suspends
-    PreToolUse deny for the current session. Manual set/clear only — no auto-clear, no TTL.
-    Hidden coupling between flags is worse than occasional manual bypass.
-  </div>
-</section>
-
-<!-- ── SECTION 3: TDD STATE MACHINE ── -->
-<section>
-  <p class="section-title">TDD state machine — hook-enforced</p>
-
-  <div class="two-col">
-    <div class="table-card">
-      <table class="tdd-table">
-        <thead>
-          <tr>
-            <th>tdd-state</th>
-            <th>prod edit</th>
-            <th>test edit</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>null (no TDD active)</td>
-            <td class="deny-cell">DENY</td>
-            <td class="allow">allow</td>
-          </tr>
-          <tr>
-            <td>writing-test</td>
-            <td class="deny-cell">DENY</td>
-            <td class="deny-cell">DENY</td>
-          </tr>
-          <tr>
-            <td>red (test failing)</td>
-            <td class="allow">allow</td>
-            <td class="allow">allow</td>
-          </tr>
-          <tr>
-            <td>green (test passing)</td>
-            <td class="allow">allow</td>
-            <td class="allow">allow</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div>
-      <div class="gate-flow">
-        <div class="gate-row inject">
-          <span class="gate-icon">⟳</span>
-          <span class="gate-label"><strong>Step begins</strong> — execute-plan resets tdd-state → null</span>
-          <span class="gate-meta">per-step, not per-edit</span>
-        </div>
-        <div class="gate-row deny">
-          <span class="gate-icon">✕</span>
-          <span class="gate-label"><strong>Write prod code?</strong> — PreToolUse DENY</span>
-          <span class="gate-meta">Edit/Write matchers</span>
-        </div>
-        <div class="gate-row pass">
-          <span class="gate-icon">✓</span>
-          <span class="gate-label"><strong>Write failing test</strong> → tdd-state=writing-test</span>
-          <span class="gate-meta">PostToolUse Edit/Write</span>
-        </div>
-        <div class="gate-row deny">
-          <span class="gate-icon">✕</span>
-          <span class="gate-label"><strong>Write more tests?</strong> — DENY (batching)</span>
-          <span class="gate-meta">stay atomic</span>
-        </div>
-        <div class="gate-row warn">
-          <span class="gate-icon">→</span>
-          <span class="gate-label"><strong>Run test</strong> — exit 1 → tdd-state=red</span>
-          <span class="gate-meta">PostToolUse Bash</span>
-        </div>
-        <div class="gate-row pass">
-          <span class="gate-icon">✓</span>
-          <span class="gate-label"><strong>Prod edit allowed</strong> (GREEN phase)</span>
-          <span class="gate-meta">state=red unblocks</span>
-        </div>
-        <div class="gate-row pass">
-          <span class="gate-icon">✓</span>
-          <span class="gate-label"><strong>Test passes</strong> → tdd-state=green (refactor free)</span>
-          <span class="gate-meta">PostToolUse Bash</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ── SECTION 4: AGENTS AS TOOLS ── -->
-<section>
-  <p class="section-title">Agents as reusable tools — dispatch map</p>
-
-  <div class="agent-grid">
-    <!-- KEEP: codebase-investigator -->
-    <div class="agent-card">
-      <span class="agent-verdict verdict-keep">keep · first-class</span>
-      <div class="agent-name">
-        codebase-investigator
-        <span class="agent-count count-high">30 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Workhorse. Dispatched by brainstorm, debug-issue, explain, fix-bug, refactor,
-        expand-task, find-test-gaps, analyze-tests, challenge, design-an-interface.
-        Uses code-review-graph + Glob/Grep/Read chain.
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automation & Power-User — Cape V2</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0d0f14;
+        --surface: #151820;
+        --surface2: #1c2030;
+        --border: #252a3a;
+        --border-bright: #3a4155;
+        --text: #c9d1e0;
+        --text-muted: #6b7490;
+        --text-dim: #4a5068;
+        --accent: #5b8aff;
+        --accent-dim: #2a3d6e;
+        --green: #3dd68c;
+        --green-dim: #1a4033;
+        --red: #ff5f57;
+        --red-dim: #4a1a18;
+        --amber: #f5a623;
+        --amber-dim: #3d2a0a;
+        --purple: #9b6dff;
+        --purple-dim: #2d1e5a;
+        --teal: #2dd4bf;
+        --teal-dim: #0f3330;
+        --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        line-height: 1.6;
+        padding: 40px 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* ── Header ── */
+      header {
+        margin-bottom: 56px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 32px;
+      }
+
+      .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        font-size: 38px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #edf2ff;
+        line-height: 1.15;
+        margin-bottom: 16px;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        color: var(--text-muted);
+        max-width: 680px;
+        line-height: 1.7;
+      }
+
+      .data-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 20px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-muted);
+      }
+
+      .pill-num {
+        color: var(--accent);
+        font-weight: 700;
+      }
+
+      /* ── Section titles ── */
+      .section-title {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+
+      section {
+        margin-bottom: 56px;
+      }
+
+      /* ── DIAGRAM: Hook vs Skill layers ── */
+      .layer-diagram {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 32px;
+        margin-bottom: 24px;
+      }
+
+      .diagram-title {
+        font-size: 12px;
+        font-family: var(--font-mono);
+        color: var(--text-muted);
+        margin-bottom: 24px;
+        text-align: center;
+      }
+
+      .layers {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        position: relative;
+      }
+
+      .layer {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
+        min-height: 52px;
+      }
+
+      .layer-label {
+        width: 110px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 14px;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        letter-spacing: 0.06em;
+        color: var(--text-dim);
+      }
+
+      .layer-body {
+        flex: 1;
+        border-radius: 8px;
+        padding: 10px 14px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .layer-body.harness {
+        background: linear-gradient(135deg, rgba(255, 95, 87, 0.12), rgba(255, 95, 87, 0.05));
+        border: 1px solid rgba(255, 95, 87, 0.3);
+      }
+
+      .layer-body.hooks-pre {
+        background: linear-gradient(135deg, rgba(255, 95, 87, 0.08), rgba(91, 138, 255, 0.05));
+        border: 1px solid rgba(255, 95, 87, 0.2);
+      }
+
+      .layer-body.hooks-post {
+        background: linear-gradient(135deg, rgba(91, 138, 255, 0.08), rgba(91, 138, 255, 0.04));
+        border: 1px solid rgba(91, 138, 255, 0.2);
+      }
+
+      .layer-body.skills {
+        background: linear-gradient(135deg, rgba(61, 214, 140, 0.08), rgba(61, 214, 140, 0.03));
+        border: 1px solid rgba(61, 214, 140, 0.2);
+      }
+
+      .layer-body.agents {
+        background: linear-gradient(135deg, rgba(155, 109, 255, 0.08), rgba(155, 109, 255, 0.03));
+        border: 1px solid rgba(155, 109, 255, 0.2);
+      }
+
+      .layer-body.state {
+        background: linear-gradient(135deg, rgba(245, 166, 35, 0.08), rgba(245, 166, 35, 0.03));
+        border: 1px solid rgba(245, 166, 35, 0.2);
+      }
+
+      .layer-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-size: 11px;
+        font-family: var(--font-mono);
+        white-space: nowrap;
+      }
+
+      .tag-red {
+        background: var(--red-dim);
+        color: var(--red);
+        border: 1px solid rgba(255, 95, 87, 0.25);
+      }
+      .tag-blue {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border: 1px solid rgba(91, 138, 255, 0.25);
+      }
+      .tag-green {
+        background: var(--green-dim);
+        color: var(--green);
+        border: 1px solid rgba(61, 214, 140, 0.25);
+      }
+      .tag-purple {
+        background: var(--purple-dim);
+        color: var(--purple);
+        border: 1px solid rgba(155, 109, 255, 0.25);
+      }
+      .tag-amber {
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid rgba(245, 166, 35, 0.25);
+      }
+      .tag-teal {
+        background: var(--teal-dim);
+        color: var(--teal);
+        border: 1px solid rgba(45, 212, 191, 0.25);
+      }
+
+      .layer-arrow {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding-left: 110px;
+        color: var(--text-dim);
+        font-size: 16px;
+        height: 20px;
+      }
+
+      .layer-badge {
+        margin-left: auto;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        padding: 2px 8px;
+        border-radius: 20px;
+      }
+
+      .badge-deny {
+        background: rgba(255, 95, 87, 0.15);
+        color: var(--red);
+      }
+      .badge-gate {
+        background: rgba(91, 138, 255, 0.15);
+        color: var(--accent);
+      }
+      .badge-model {
+        background: rgba(61, 214, 140, 0.15);
+        color: var(--green);
+      }
+      .badge-durable {
+        background: rgba(245, 166, 35, 0.15);
+        color: var(--amber);
+      }
+
+      /* ── Hook events table ── */
+      .hook-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      .hook-table th {
+        text-align: left;
+        padding: 8px 14px;
+        font-size: 10px;
+        font-family: var(--font-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .hook-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      .hook-table tr:last-child td {
+        border-bottom: none;
+      }
+      .hook-table tr:hover td {
+        background: var(--surface2);
+      }
+
+      .hook-event {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--accent);
+      }
+
+      .hook-action-deny {
+        color: var(--red);
+        font-weight: 600;
+      }
+      .hook-action-warn {
+        color: var(--amber);
+      }
+      .hook-action-gate {
+        color: var(--green);
+      }
+      .hook-action-inject {
+        color: var(--purple);
+      }
+
+      .matcher-tag {
+        display: inline-block;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-muted);
+        margin: 1px;
+      }
+
+      /* ── Agent map ── */
+      .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+
+      @media (max-width: 768px) {
+        .agent-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .agent-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        position: relative;
+        transition: border-color 0.15s;
+      }
+
+      .agent-card:hover {
+        border-color: var(--border-bright);
+      }
+
+      .agent-card.dead {
+        opacity: 0.45;
+        filter: grayscale(0.6);
+      }
+
+      .agent-card.merged {
+        border-style: dashed;
+        opacity: 0.6;
+      }
+
+      .agent-name {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--accent);
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .agent-count {
+        font-size: 10px;
+        color: var(--text-dim);
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 1px 7px;
+      }
+
+      .count-high {
+        color: var(--green);
+      }
+      .count-mid {
+        color: var(--amber);
+      }
+      .count-low {
+        color: var(--red);
+      }
+
+      .agent-desc {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.5;
+        margin-bottom: 10px;
+      }
+
+      .agent-callers {
+        font-size: 10px;
+        font-family: var(--font-mono);
+        color: var(--text-dim);
+      }
+
+      .agent-verdict {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: 9px;
+        font-family: var(--font-mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+
+      .verdict-keep {
+        background: rgba(61, 214, 140, 0.12);
+        color: var(--green);
+      }
+      .verdict-cut {
+        background: rgba(255, 95, 87, 0.12);
+        color: var(--red);
+      }
+      .verdict-merge {
+        background: rgba(245, 166, 35, 0.12);
+        color: var(--amber);
+      }
+
+      /* ── br state machine ── */
+      .state-flow {
+        display: flex;
+        align-items: flex-start;
+        gap: 0;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      .state-node {
+        flex-shrink: 0;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        min-width: 130px;
+        text-align: center;
+      }
+
+      .state-node.active {
+        border-color: var(--accent);
+        background: var(--accent-dim);
+      }
+
+      .state-node.session-break {
+        border-style: dashed;
+        border-color: var(--amber);
+        background: rgba(245, 166, 35, 0.05);
+      }
+
+      .state-node-label {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+
+      .state-node-sub {
+        font-size: 10px;
+        color: var(--text-dim);
+      }
+
+      .state-arrow {
+        display: flex;
+        align-items: center;
+        color: var(--text-dim);
+        padding: 0 6px;
+        font-size: 13px;
+        align-self: center;
+        flex-shrink: 0;
+      }
+
+      .state-arrow.break {
+        color: var(--amber);
+        font-size: 18px;
+      }
+
+      /* ── Enforcement gates ── */
+      .gate-flow {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .gate-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 14px;
+        background: var(--surface);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        font-size: 12px;
+      }
+
+      .gate-row.deny {
+        border-left: 3px solid var(--red);
+      }
+      .gate-row.warn {
+        border-left: 3px solid var(--amber);
+      }
+      .gate-row.pass {
+        border-left: 3px solid var(--green);
+      }
+      .gate-row.inject {
+        border-left: 3px solid var(--purple);
+      }
+
+      .gate-icon {
+        font-size: 14px;
+        width: 20px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .gate-label {
+        color: var(--text);
+        flex: 1;
+      }
+      .gate-label strong {
+        color: #edf2ff;
+      }
+      .gate-meta {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--text-dim);
+      }
+
+      /* ── Composer blocks ── */
+      .compose-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      @media (max-width: 640px) {
+        .compose-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .compose-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px;
+      }
+
+      .compose-card h4 {
+        font-size: 13px;
+        color: #edf2ff;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .compose-card p {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.6;
+        margin-bottom: 10px;
+      }
+
+      pre {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--text-muted);
+        overflow-x: auto;
+        line-height: 1.5;
+      }
+
+      pre .c {
+        color: var(--text-dim);
+      }
+      pre .k {
+        color: var(--accent);
+      }
+      pre .s {
+        color: var(--green);
+      }
+      pre .p {
+        color: var(--purple);
+      }
+      pre .a {
+        color: var(--amber);
+      }
+
+      /* ── TDD state table ── */
+      .tdd-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        font-family: var(--font-mono);
+      }
+
+      .tdd-table th {
+        text-align: center;
+        padding: 8px;
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-dim);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .tdd-table th:first-child {
+        text-align: left;
+      }
+
+      .tdd-table td {
+        padding: 8px;
+        text-align: center;
+        border-bottom: 1px solid var(--border);
+        color: var(--text-muted);
+      }
+
+      .tdd-table td:first-child {
+        text-align: left;
+        color: var(--accent);
+      }
+
+      .tdd-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .allow {
+        color: var(--green);
+        font-weight: 600;
+      }
+      .deny-cell {
+        color: var(--red);
+        font-weight: 600;
+      }
+
+      /* ── Callout ── */
+      .callout {
+        border-radius: 8px;
+        padding: 14px 18px;
+        margin: 16px 0;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+
+      .callout.info {
+        background: var(--accent-dim);
+        border: 1px solid rgba(91, 138, 255, 0.2);
+        color: #9bb8ff;
+      }
+
+      .callout.warn {
+        background: var(--amber-dim);
+        border: 1px solid rgba(245, 166, 35, 0.2);
+        color: #f5c96e;
+      }
+
+      .callout strong {
+        color: #edf2ff;
+      }
+
+      /* ── Two-col layout ── */
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+
+      @media (max-width: 640px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* ── Table card ── */
+      .table-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+
+      /* ── Footer ── */
+      footer {
+        margin-top: 64px;
+        padding-top: 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: gap;
+        gap: 8px;
+      }
+
+      .footer-label {
+        font-size: 11px;
+        font-family: var(--font-mono);
+        color: var(--text-dim);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ── HEADER ── -->
+    <header>
+      <p class="eyebrow">Cape V2 Design Series · Doc 05 of 06</p>
+      <h1>Automation &amp; Power-User</h1>
+      <p class="subtitle">
+        Hooks enforce invariants the model cannot. Skills orchestrate judgment the harness cannot.
+        V2 draws that line sharply — and makes br the durable state machine that survives every
+        <code>/clear</code>.
       </p>
-      <div class="agent-callers">→ 10 skills dispatch this agent</div>
-    </div>
+      <div class="data-pills">
+        <span class="pill"><span class="pill-num">37</span> /clear sessions observed</span>
+        <span class="pill"><span class="pill-num">29</span> commit invocations</span>
+        <span class="pill"><span class="pill-num">30</span> codebase-investigator dispatches</span>
+        <span class="pill"
+          ><span class="pill-num">22</span> skills · <span class="pill-num">8</span> agents</span
+        >
+        <span class="pill"><span class="pill-num">7</span> conform runs as gate</span>
+        <span class="pill">tddState tracked in hooks</span>
+      </div>
+    </header>
 
-    <!-- KEEP: test-runner -->
-    <div class="agent-card">
-      <span class="agent-verdict verdict-keep">keep · first-class</span>
-      <div class="agent-name">
-        test-runner
-        <span class="agent-count count-high">20 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Context firewall. Absorbs all verbose test output; returns only pass/fail summary
-        and full failure traces. V2: promote to also own the PreToolUse conform gate
-        execution, keeping noise out of main context.
-      </p>
-      <div class="agent-callers">→ tdd, finish-epic, refactor + V2: pre-commit gate</div>
-    </div>
+    <!-- ── SECTION 1: LAYER DIAGRAM ── -->
+    <section>
+      <p class="section-title">Enforcement architecture</p>
 
-    <!-- KEEP: fact-checker -->
-    <div class="agent-card">
-      <span class="agent-verdict verdict-keep">keep · first-class</span>
-      <div class="agent-name">
-        fact-checker
-        <span class="agent-count count-mid">12 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Verifies codebase claims before they harden into plans. Catches hallucinated
-        paths, wrong signatures, stale patterns. Dispatched post-expand-task to
-        confirm that assumptions still hold.
-      </p>
-      <div class="agent-callers">→ brainstorm, execute-plan (post-expand)</div>
-    </div>
+      <div class="layer-diagram">
+        <p class="diagram-title">CAPE V2 — ENFORCEMENT LAYERS (top = soonest, bottom = latest)</p>
 
-    <!-- KEEP: internet-researcher -->
-    <div class="agent-card">
-      <span class="agent-verdict verdict-keep">keep · first-class</span>
-      <div class="agent-name">
-        internet-researcher
-        <span class="agent-count count-mid">10 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        External knowledge. API docs, library patterns, community practices. Paired with
-        codebase-investigator in brainstorm (codebase-in + internet-out = complete picture).
-      </p>
-      <div class="agent-callers">→ brainstorm, debug-issue, fix-bug, design-an-interface</div>
-    </div>
+        <div class="layers">
+          <div class="layer">
+            <div class="layer-label">USER INPUT</div>
+            <div class="layer-body harness">
+              <span class="layer-tag tag-red">PromptSubmit</span>
+              <span class="layer-tag tag-red"
+                >TDD safety-net: inject don-cape reminder if workflowActive &amp;
+                tdd-state=null</span
+              >
+              <span class="layer-badge badge-deny">BLOCK</span>
+            </div>
+          </div>
 
-    <!-- KEEP: code-reviewer -->
-    <div class="agent-card">
-      <span class="agent-verdict verdict-keep">keep · first-class</span>
-      <div class="agent-name">
-        code-reviewer
-        <span class="agent-count count-mid">8 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Post-task gate. Reviews implementation against epic contract and standards.
-        Uses code-review-graph for structural analysis. Returns Critical/Important/
-        Suggestion verdict.
-      </p>
-      <div class="agent-callers">→ execute-plan, finish-epic, fix-bug, refactor</div>
-    </div>
+          <div class="layer-arrow">↓</div>
 
-    <!-- CUT: test-auditor -->
-    <div class="agent-card merged">
-      <span class="agent-verdict verdict-merge">merge into codebase-investigator</span>
-      <div class="agent-name">
-        test-auditor
-        <span class="agent-count count-low">2 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Near-dead. Specialized knowledge (tautological tests, weak assertions) is a
-        narrowing of codebase-investigator's investigation scope. Merge as a
-        <code>--mode=audit-tests</code> invocation rather than a separate agent.
-      </p>
-      <div class="agent-callers">→ analyze-tests only</div>
-    </div>
+          <div class="layer">
+            <div class="layer-label">PRE-TOOL</div>
+            <div class="layer-body hooks-pre">
+              <span class="layer-tag tag-red">Edit(prod) deny if tdd-state=null|writing-test</span>
+              <span class="layer-tag tag-red">Write(prod) deny if tdd-state=null|writing-test</span>
+              <span class="layer-tag tag-red">Bash(git commit) deny if conform=dirty</span>
+              <span class="layer-badge badge-deny">DENY</span>
+            </div>
+          </div>
 
-    <!-- CUT: notebox-researcher -->
-    <div class="agent-card dead">
-      <span class="agent-verdict verdict-cut">cut</span>
-      <div class="agent-name">
-        notebox-researcher
-        <span class="agent-count count-low">2 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Near-dead. Personal notebox lookup is a one-step file read, not an agent-worthy
-        investigation. Fold into brainstorm as an optional context-pull step.
-      </p>
-      <div class="agent-callers">→ brainstorm (opt-in step, not a separate agent)</div>
-    </div>
+          <div class="layer-arrow">↓</div>
 
-    <!-- MERGE: bug-tracer -->
-    <div class="agent-card merged">
-      <span class="agent-verdict verdict-merge">merge into codebase-investigator</span>
-      <div class="agent-name">
-        bug-tracer
-        <span class="agent-count count-low">2 dispatches</span>
-      </div>
-      <p class="agent-desc">
-        Near-dead. Backward trace from an error is a codebase-investigator investigation
-        with a specific entry point. Merge as <code>--mode=trace-bug</code>. Reduces
-        agent proliferation without losing capability.
-      </p>
-      <div class="agent-callers">→ debug-issue, fix-bug</div>
-    </div>
+          <div class="layer">
+            <div class="layer-label">TOOL RUNS</div>
+            <div
+              class="layer-body skills"
+              style="background: rgba(20, 25, 40, 0.6); border-color: var(--border)"
+            >
+              <span
+                class="layer-tag"
+                style="
+                  background: var(--surface2);
+                  color: var(--text-muted);
+                  border-color: var(--border);
+                "
+                >Edit · Write · Bash · Agent · Skill · …</span
+              >
+            </div>
+          </div>
 
-    <!-- RESULT -->
-    <div class="agent-card" style="border-color:var(--accent-dim); background: linear-gradient(135deg, rgba(91,138,255,0.06), transparent);">
-      <div class="agent-name" style="color:#edf2ff;">V2 result: 5 agents</div>
-      <p class="agent-desc" style="font-size:12px;">
-        codebase-investigator (absorbs bug-tracer + test-auditor modes) · test-runner ·
-        fact-checker · internet-researcher · code-reviewer. Fewer moving parts; each
-        agent has a clear, non-overlapping role.
-      </p>
-      <div class="agent-callers" style="color:var(--green);">↓ from 8 agents → 5 agents</div>
-    </div>
-  </div>
-</section>
+          <div class="layer-arrow">↓</div>
 
-<!-- ── SECTION 5: br AS STATE MACHINE ── -->
-<section>
-  <p class="section-title">br (beads) as durable state machine — session-spanning pipelines</p>
+          <div class="layer">
+            <div class="layer-label">POST-TOOL</div>
+            <div class="layer-body hooks-post">
+              <span class="layer-tag tag-blue">Edit(test) → tdd-state=writing-test</span>
+              <span class="layer-tag tag-blue">Write(test) → tdd-state=writing-test</span>
+              <span class="layer-tag tag-blue">Bash(test pass) → tdd-state=green</span>
+              <span class="layer-tag tag-blue">Bash(test fail) → tdd-state=red</span>
+              <span class="layer-tag tag-blue">Bash(git commit) → run conform gate</span>
+              <span class="layer-badge badge-gate">OBSERVE</span>
+            </div>
+          </div>
 
-  <div style="overflow-x:auto; margin-bottom:16px;">
-    <div class="state-flow">
-      <div class="state-node">
-        <div class="state-node-label">brainstorm</div>
-        <div class="state-node-sub">design summary</div>
-      </div>
-      <div class="state-arrow">→</div>
-      <div class="state-node">
-        <div class="state-node-label">write-plan</div>
-        <div class="state-node-sub">epic created</div>
-      </div>
-      <div class="state-arrow break">✦</div>
-      <div class="state-node session-break">
-        <div class="state-node-label">/clear</div>
-        <div class="state-node-sub">br state survives</div>
-      </div>
-      <div class="state-arrow break">✦</div>
-      <div class="state-node active">
-        <div class="state-node-label">execute-plan</div>
-        <div class="state-node-sub">br ready → task</div>
-      </div>
-      <div class="state-arrow">→</div>
-      <div class="state-node">
-        <div class="state-node-label">expand-task</div>
-        <div class="state-node-sub">verify.json</div>
-      </div>
-      <div class="state-arrow">→</div>
-      <div class="state-node">
-        <div class="state-node-label">TDD loop</div>
-        <div class="state-node-sub">step checkpoints</div>
-      </div>
-      <div class="state-arrow">→</div>
-      <div class="state-node">
-        <div class="state-node-label">br close task</div>
-        <div class="state-node-sub">Outcome appended</div>
-      </div>
-      <div class="state-arrow break">✦</div>
-      <div class="state-node session-break">
-        <div class="state-node-label">/clear</div>
-        <div class="state-node-sub">37 observed</div>
-      </div>
-      <div class="state-arrow break">✦</div>
-      <div class="state-node">
-        <div class="state-node-label">finish-epic</div>
-        <div class="state-node-sub">criteria verified</div>
-      </div>
-    </div>
-  </div>
+          <div class="layer-arrow">↓</div>
 
-  <div class="callout info" style="margin-bottom:16px;">
-    <strong>37 /clear events in 10 days</strong> — every session boundary is a context wipe.
-    br epics, tasks, bugs, verify.json step checksums, and cape state flags are the only
-    persistence. V2 leans harder on this: every skill action writes to br or verify.json
-    <em>before</em> stopping, so resumption is always from a known state, never from conversation memory.
-  </div>
+          <div class="layer">
+            <div class="layer-label">SKILLS</div>
+            <div class="layer-body skills">
+              <span class="layer-tag tag-green">don-cape router</span>
+              <span class="layer-tag tag-green">execute-plan</span>
+              <span class="layer-tag tag-green">test-driven-development</span>
+              <span class="layer-tag tag-green">conform</span>
+              <span class="layer-tag tag-green">commit</span>
+              <span class="layer-tag tag-green">finish-epic</span>
+              <span class="layer-badge badge-model">MODEL-DRIVEN</span>
+            </div>
+          </div>
 
-  <div class="two-col">
-    <div class="compose-card">
-      <h4>V2 br state write discipline</h4>
-      <p>Every skill that touches state must write it to br before handing off to the user.
-      No state lives only in conversation context.</p>
-      <pre><span class="c"># Before checkpoint/stop:</span>
+          <div class="layer-arrow">↓</div>
+
+          <div class="layer">
+            <div class="layer-label">AGENTS</div>
+            <div class="layer-body agents">
+              <span class="layer-tag tag-purple">codebase-investigator</span>
+              <span class="layer-tag tag-purple">test-runner</span>
+              <span class="layer-tag tag-purple">fact-checker</span>
+              <span class="layer-tag tag-purple">internet-researcher</span>
+              <span class="layer-tag tag-purple">code-reviewer</span>
+              <span class="layer-badge badge-model">TOOL-CALL</span>
+            </div>
+          </div>
+
+          <div class="layer-arrow">↓</div>
+
+          <div class="layer">
+            <div class="layer-label">DURABLE STATE</div>
+            <div class="layer-body state">
+              <span class="layer-tag tag-amber">br epic</span>
+              <span class="layer-tag tag-amber">br tasks</span>
+              <span class="layer-tag tag-amber">br bugs</span>
+              <span class="layer-tag tag-amber">verify.json checkpoints</span>
+              <span class="layer-tag tag-amber">cape state flags</span>
+              <span class="layer-badge badge-durable">SURVIVES /clear</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info">
+        <strong>The core principle:</strong> hooks are deterministic C code (the harness always
+        fires them). Skills are probabilistic (the model interprets them). Put invariants in hooks.
+        Put judgment in skills. Never swap them.
+      </div>
+    </section>
+
+    <!-- ── SECTION 2: HOOK EVENTS CATALOG ── -->
+    <section>
+      <p class="section-title">Hook events catalog — V2 proposals</p>
+
+      <div class="table-card">
+        <table class="hook-table">
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Matcher</th>
+              <th>Action</th>
+              <th>Behavior</th>
+              <th>Why hook not skill</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="hook-event">PreToolUse</span></td>
+              <td><span class="matcher-tag">Edit</span> <span class="matcher-tag">Write</span></td>
+              <td><span class="hook-action-deny">DENY</span></td>
+              <td>Block prod edits when tdd-state ∈ {null, writing-test}</td>
+              <td>Model-driven TDD bypasses consistently fail under time pressure</td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">PreToolUse</span></td>
+              <td><span class="matcher-tag">Bash</span> git commit</td>
+              <td><span class="hook-action-deny">DENY</span></td>
+              <td>Block commit if cape conform staged returns violations</td>
+              <td>Conform as gate, not suggestion — 7 manual invocations become 0</td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">PostToolUse</span></td>
+              <td><span class="matcher-tag">Edit</span> <span class="matcher-tag">Write</span></td>
+              <td><span class="hook-action-gate">OBSERVE</span></td>
+              <td>Detect test file writes → set tdd-state=writing-test</td>
+              <td>State transition must be atomic with the edit, not rely on model instruction</td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">PostToolUse</span></td>
+              <td><span class="matcher-tag">Bash</span> test runner</td>
+              <td><span class="hook-action-gate">OBSERVE</span></td>
+              <td>Parse exit code → tdd-state = red (fail) or green (pass)</td>
+              <td>State machine correctness; model cannot reliably parse its own test output</td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">PostToolUse</span></td>
+              <td><span class="matcher-tag">Bash</span> git commit</td>
+              <td><span class="hook-action-warn">WARN</span></td>
+              <td>Run conform branch; append violations as additionalContext</td>
+              <td>Post-commit review loop; violations visible before next task begins</td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">UserPromptSubmit</span></td>
+              <td>(any)</td>
+              <td><span class="hook-action-inject">INJECT</span></td>
+              <td>If workflowActive &amp; tdd-state=null → prepend TDD reminder</td>
+              <td>
+                Safety net for resumed sessions after /clear; skill state lost, hook state survives
+              </td>
+            </tr>
+            <tr>
+              <td><span class="hook-event">Stop</span></td>
+              <td>(any)</td>
+              <td><span class="hook-action-warn">WARN</span></td>
+              <td>If workflowActive → remind user to /clear before next task (HITL mode)</td>
+              <td>Structural checkpoint discipline cannot rely on model remembering every time</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout warn" style="margin-top: 16px">
+        <strong>Escape hatch:</strong> <code>cape state set tdd-bypass</code> suspends PreToolUse
+        deny for the current session. Manual set/clear only — no auto-clear, no TTL. Hidden coupling
+        between flags is worse than occasional manual bypass.
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: TDD STATE MACHINE ── -->
+    <section>
+      <p class="section-title">TDD state machine — hook-enforced</p>
+
+      <div class="two-col">
+        <div class="table-card">
+          <table class="tdd-table">
+            <thead>
+              <tr>
+                <th>tdd-state</th>
+                <th>prod edit</th>
+                <th>test edit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>null (no TDD active)</td>
+                <td class="deny-cell">DENY</td>
+                <td class="allow">allow</td>
+              </tr>
+              <tr>
+                <td>writing-test</td>
+                <td class="deny-cell">DENY</td>
+                <td class="deny-cell">DENY</td>
+              </tr>
+              <tr>
+                <td>red (test failing)</td>
+                <td class="allow">allow</td>
+                <td class="allow">allow</td>
+              </tr>
+              <tr>
+                <td>green (test passing)</td>
+                <td class="allow">allow</td>
+                <td class="allow">allow</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <div class="gate-flow">
+            <div class="gate-row inject">
+              <span class="gate-icon">⟳</span>
+              <span class="gate-label"
+                ><strong>Step begins</strong> — execute-plan resets tdd-state → null</span
+              >
+              <span class="gate-meta">per-step, not per-edit</span>
+            </div>
+            <div class="gate-row deny">
+              <span class="gate-icon">✕</span>
+              <span class="gate-label"><strong>Write prod code?</strong> — PreToolUse DENY</span>
+              <span class="gate-meta">Edit/Write matchers</span>
+            </div>
+            <div class="gate-row pass">
+              <span class="gate-icon">✓</span>
+              <span class="gate-label"
+                ><strong>Write failing test</strong> → tdd-state=writing-test</span
+              >
+              <span class="gate-meta">PostToolUse Edit/Write</span>
+            </div>
+            <div class="gate-row deny">
+              <span class="gate-icon">✕</span>
+              <span class="gate-label"><strong>Write more tests?</strong> — DENY (batching)</span>
+              <span class="gate-meta">stay atomic</span>
+            </div>
+            <div class="gate-row warn">
+              <span class="gate-icon">→</span>
+              <span class="gate-label"><strong>Run test</strong> — exit 1 → tdd-state=red</span>
+              <span class="gate-meta">PostToolUse Bash</span>
+            </div>
+            <div class="gate-row pass">
+              <span class="gate-icon">✓</span>
+              <span class="gate-label"><strong>Prod edit allowed</strong> (GREEN phase)</span>
+              <span class="gate-meta">state=red unblocks</span>
+            </div>
+            <div class="gate-row pass">
+              <span class="gate-icon">✓</span>
+              <span class="gate-label"
+                ><strong>Test passes</strong> → tdd-state=green (refactor free)</span
+              >
+              <span class="gate-meta">PostToolUse Bash</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 4: AGENTS AS TOOLS ── -->
+    <section>
+      <p class="section-title">Agents as reusable tools — dispatch map</p>
+
+      <div class="agent-grid">
+        <!-- KEEP: codebase-investigator -->
+        <div class="agent-card">
+          <span class="agent-verdict verdict-keep">keep · first-class</span>
+          <div class="agent-name">
+            codebase-investigator
+            <span class="agent-count count-high">30 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Workhorse. Dispatched by brainstorm, debug-issue, explain, fix-bug, refactor,
+            expand-task, find-test-gaps, analyze-tests, challenge, design-an-interface. Uses
+            code-review-graph + Glob/Grep/Read chain.
+          </p>
+          <div class="agent-callers">→ 10 skills dispatch this agent</div>
+        </div>
+
+        <!-- KEEP: test-runner -->
+        <div class="agent-card">
+          <span class="agent-verdict verdict-keep">keep · first-class</span>
+          <div class="agent-name">
+            test-runner
+            <span class="agent-count count-high">20 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Context firewall. Absorbs all verbose test output; returns only pass/fail summary and
+            full failure traces. V2: promote to also own the PreToolUse conform gate execution,
+            keeping noise out of main context.
+          </p>
+          <div class="agent-callers">→ tdd, finish-epic, refactor + V2: pre-commit gate</div>
+        </div>
+
+        <!-- KEEP: fact-checker -->
+        <div class="agent-card">
+          <span class="agent-verdict verdict-keep">keep · first-class</span>
+          <div class="agent-name">
+            fact-checker
+            <span class="agent-count count-mid">12 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Verifies codebase claims before they harden into plans. Catches hallucinated paths,
+            wrong signatures, stale patterns. Dispatched post-expand-task to confirm that
+            assumptions still hold.
+          </p>
+          <div class="agent-callers">→ brainstorm, execute-plan (post-expand)</div>
+        </div>
+
+        <!-- KEEP: internet-researcher -->
+        <div class="agent-card">
+          <span class="agent-verdict verdict-keep">keep · first-class</span>
+          <div class="agent-name">
+            internet-researcher
+            <span class="agent-count count-mid">10 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            External knowledge. API docs, library patterns, community practices. Paired with
+            codebase-investigator in brainstorm (codebase-in + internet-out = complete picture).
+          </p>
+          <div class="agent-callers">→ brainstorm, debug-issue, fix-bug, design-an-interface</div>
+        </div>
+
+        <!-- KEEP: code-reviewer -->
+        <div class="agent-card">
+          <span class="agent-verdict verdict-keep">keep · first-class</span>
+          <div class="agent-name">
+            code-reviewer
+            <span class="agent-count count-mid">8 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Post-task gate. Reviews implementation against epic contract and standards. Uses
+            code-review-graph for structural analysis. Returns Critical/Important/ Suggestion
+            verdict.
+          </p>
+          <div class="agent-callers">→ execute-plan, finish-epic, fix-bug, refactor</div>
+        </div>
+
+        <!-- CUT: test-auditor -->
+        <div class="agent-card merged">
+          <span class="agent-verdict verdict-merge">merge into codebase-investigator</span>
+          <div class="agent-name">
+            test-auditor
+            <span class="agent-count count-low">2 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Near-dead. Specialized knowledge (tautological tests, weak assertions) is a narrowing of
+            codebase-investigator's investigation scope. Merge as a
+            <code>--mode=audit-tests</code> invocation rather than a separate agent.
+          </p>
+          <div class="agent-callers">→ analyze-tests only</div>
+        </div>
+
+        <!-- CUT: notebox-researcher -->
+        <div class="agent-card dead">
+          <span class="agent-verdict verdict-cut">cut</span>
+          <div class="agent-name">
+            notebox-researcher
+            <span class="agent-count count-low">2 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Near-dead. Personal notebox lookup is a one-step file read, not an agent-worthy
+            investigation. Fold into brainstorm as an optional context-pull step.
+          </p>
+          <div class="agent-callers">→ brainstorm (opt-in step, not a separate agent)</div>
+        </div>
+
+        <!-- MERGE: bug-tracer -->
+        <div class="agent-card merged">
+          <span class="agent-verdict verdict-merge">merge into codebase-investigator</span>
+          <div class="agent-name">
+            bug-tracer
+            <span class="agent-count count-low">2 dispatches</span>
+          </div>
+          <p class="agent-desc">
+            Near-dead. Backward trace from an error is a codebase-investigator investigation with a
+            specific entry point. Merge as <code>--mode=trace-bug</code>. Reduces agent
+            proliferation without losing capability.
+          </p>
+          <div class="agent-callers">→ debug-issue, fix-bug</div>
+        </div>
+
+        <!-- RESULT -->
+        <div
+          class="agent-card"
+          style="
+            border-color: var(--accent-dim);
+            background: linear-gradient(135deg, rgba(91, 138, 255, 0.06), transparent);
+          "
+        >
+          <div class="agent-name" style="color: #edf2ff">V2 result: 5 agents</div>
+          <p class="agent-desc" style="font-size: 12px">
+            codebase-investigator (absorbs bug-tracer + test-auditor modes) · test-runner ·
+            fact-checker · internet-researcher · code-reviewer. Fewer moving parts; each agent has a
+            clear, non-overlapping role.
+          </p>
+          <div class="agent-callers" style="color: var(--green)">↓ from 8 agents → 5 agents</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION 5: br AS STATE MACHINE ── -->
+    <section>
+      <p class="section-title">br (beads) as durable state machine — session-spanning pipelines</p>
+
+      <div style="overflow-x: auto; margin-bottom: 16px">
+        <div class="state-flow">
+          <div class="state-node">
+            <div class="state-node-label">brainstorm</div>
+            <div class="state-node-sub">design summary</div>
+          </div>
+          <div class="state-arrow">→</div>
+          <div class="state-node">
+            <div class="state-node-label">write-plan</div>
+            <div class="state-node-sub">epic created</div>
+          </div>
+          <div class="state-arrow break">✦</div>
+          <div class="state-node session-break">
+            <div class="state-node-label">/clear</div>
+            <div class="state-node-sub">br state survives</div>
+          </div>
+          <div class="state-arrow break">✦</div>
+          <div class="state-node active">
+            <div class="state-node-label">execute-plan</div>
+            <div class="state-node-sub">br ready → task</div>
+          </div>
+          <div class="state-arrow">→</div>
+          <div class="state-node">
+            <div class="state-node-label">expand-task</div>
+            <div class="state-node-sub">verify.json</div>
+          </div>
+          <div class="state-arrow">→</div>
+          <div class="state-node">
+            <div class="state-node-label">TDD loop</div>
+            <div class="state-node-sub">step checkpoints</div>
+          </div>
+          <div class="state-arrow">→</div>
+          <div class="state-node">
+            <div class="state-node-label">br close task</div>
+            <div class="state-node-sub">Outcome appended</div>
+          </div>
+          <div class="state-arrow break">✦</div>
+          <div class="state-node session-break">
+            <div class="state-node-label">/clear</div>
+            <div class="state-node-sub">37 observed</div>
+          </div>
+          <div class="state-arrow break">✦</div>
+          <div class="state-node">
+            <div class="state-node-label">finish-epic</div>
+            <div class="state-node-sub">criteria verified</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout info" style="margin-bottom: 16px">
+        <strong>37 /clear events in 10 days</strong> — every session boundary is a context wipe. br
+        epics, tasks, bugs, verify.json step checksums, and cape state flags are the only
+        persistence. V2 leans harder on this: every skill action writes to br or verify.json
+        <em>before</em> stopping, so resumption is always from a known state, never from
+        conversation memory.
+      </div>
+
+      <div class="two-col">
+        <div class="compose-card">
+          <h4>V2 br state write discipline</h4>
+          <p>
+            Every skill that touches state must write it to br before handing off to the user. No
+            state lives only in conversation context.
+          </p>
+          <pre><span class="c"># Before checkpoint/stop:</span>
 <span class="k">cape br design</span> &lt;task-id&gt; <span class="s">"Outcome"</span>
 <span class="k">cape br close</span> &lt;task-id&gt;
 <span class="k">cape state clear</span> workflowActive
@@ -1109,13 +1263,15 @@
 <span class="k">br list</span> --status in_progress
 <span class="k">br ready</span> --parent &lt;epic-id&gt;
 <span class="k">cat</span> .beads/&lt;epic&gt;/verify.json</pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>Resumable step checksums</h4>
-      <p>verify.json records HEAD SHA per completed step. On resume, execute-plan
-      skips steps whose SHA matches HEAD — idempotent re-entry after /clear or failure.</p>
-      <pre><span class="c">// .beads/&lt;epic-id&gt;/verify.json</span>
+        <div class="compose-card">
+          <h4>Resumable step checksums</h4>
+          <p>
+            verify.json records HEAD SHA per completed step. On resume, execute-plan skips steps
+            whose SHA matches HEAD — idempotent re-entry after /clear or failure.
+          </p>
+          <pre><span class="c">// .beads/&lt;epic-id&gt;/verify.json</span>
 {
   <span class="s">"step-1"</span>: <span class="s">"a3f8c12"</span>,
   <span class="s">"step-2"</span>: <span class="s">"b91e4d7"</span>
@@ -1124,21 +1280,23 @@
 <span class="c"># Gate check before each step:</span>
 <span class="k">if</span> sha matches HEAD:
   <span class="p">skip</span> → <span class="a">"Step N already passed"</span></pre>
-    </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </section>
 
-<!-- ── SECTION 6: CI / EXTERNAL INTEGRATION ── -->
-<section>
-  <p class="section-title">CI and external integration</p>
+    <!-- ── SECTION 6: CI / EXTERNAL INTEGRATION ── -->
+    <section>
+      <p class="section-title">CI and external integration</p>
 
-  <div class="compose-grid">
-    <div class="compose-card">
-      <h4>Hook → CI bridge</h4>
-      <p>PostToolUse Bash (git push) can trigger a cape CI check that polls
-      the remote status and surfaces failures back as additionalContext.
-      This closes the loop without the user switching context.</p>
-      <pre><span class="c"># hooks.json matcher:</span>
+      <div class="compose-grid">
+        <div class="compose-card">
+          <h4>Hook → CI bridge</h4>
+          <p>
+            PostToolUse Bash (git push) can trigger a cape CI check that polls the remote status and
+            surfaces failures back as additionalContext. This closes the loop without the user
+            switching context.
+          </p>
+          <pre><span class="c"># hooks.json matcher:</span>
 {
   <span class="s">"event"</span>: <span class="s">"PostToolUse"</span>,
   <span class="s">"matcher"</span>: <span class="s">"Bash"</span>,
@@ -1149,14 +1307,15 @@
 <span class="k">gh run watch</span> --exit-status
 <span class="k">echo</span> <span class="s">"CI: PASS"</span> &gt;&amp;2 || \
   <span class="k">cape br create</span> --type bug <span class="s">"CI failed"</span></pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>br as issue sink for CI</h4>
-      <p>CI failures auto-create br bugs via a webhook or post-push hook.
-      debug-issue then closes the loop: bug already exists, root cause
-      investigation starts immediately.</p>
-      <pre><span class="c"># CI webhook → br bug:</span>
+        <div class="compose-card">
+          <h4>br as issue sink for CI</h4>
+          <p>
+            CI failures auto-create br bugs via a webhook or post-push hook. debug-issue then closes
+            the loop: bug already exists, root cause investigation starts immediately.
+          </p>
+          <pre><span class="c"># CI webhook → br bug:</span>
 <span class="k">cape br create</span> <span class="s">"CI: test_auth fails"</span> \
   --type bug \
   --priority high \
@@ -1165,48 +1324,54 @@
 <span class="c"># Model picks up on next session:</span>
 <span class="k">br list</span> --type bug --status open
 <span class="c"># → routes to debug-issue automatically</span></pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>cape validate in CI</h4>
-      <p>Run <code>cape validate skills</code> and <code>cape validate agents</code>
-      in CI to catch malformed skill frontmatter before it ships. Skills are
-      configuration — they should be linted like code.</p>
-      <pre><span class="c"># .github/workflows/cape.yml:</span>
+        <div class="compose-card">
+          <h4>cape validate in CI</h4>
+          <p>
+            Run <code>cape validate skills</code> and <code>cape validate agents</code> in CI to
+            catch malformed skill frontmatter before it ships. Skills are configuration — they
+            should be linted like code.
+          </p>
+          <pre><span class="c"># .github/workflows/cape.yml:</span>
 <span class="k">- run:</span> <span class="s">cape validate</span>
 <span class="k">- run:</span> <span class="s">pnpm check</span>
 
 <span class="c"># Catches: missing required fields,</span>
 <span class="c"># unknown agent names in dispatch</span>
 <span class="c"># tables, broken Skill tool refs.</span></pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>Conform as pre-push gate</h4>
-      <p>PostToolUse Bash (git push) can run conform branch and block push
-      if violations exist. Stricter than pre-commit; covers multi-commit branches.</p>
-      <pre><span class="c"># PreToolUse Bash git push:</span>
+        <div class="compose-card">
+          <h4>Conform as pre-push gate</h4>
+          <p>
+            PostToolUse Bash (git push) can run conform branch and block push if violations exist.
+            Stricter than pre-commit; covers multi-commit branches.
+          </p>
+          <pre><span class="c"># PreToolUse Bash git push:</span>
 <span class="k">cape conform</span> branch --json \
   | <span class="k">jq</span> <span class="s">'.violations | length'</span>
 
 <span class="c"># exit 1 → deny push</span>
 <span class="c"># exit 0 → allow push</span>
 <span class="c"># Violations appear as hook message</span></pre>
-    </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </section>
 
-<!-- ── SECTION 7: POWER USER EXTENSION ── -->
-<section>
-  <p class="section-title">Power-user extension model</p>
+    <!-- ── SECTION 7: POWER USER EXTENSION ── -->
+    <section>
+      <p class="section-title">Power-user extension model</p>
 
-  <div class="compose-grid">
-    <div class="compose-card">
-      <h4>Custom hook matchers</h4>
-      <p>hooks.json accepts user-defined matchers. Any tool + pattern
-      combination can invoke a cape CLI command. This is how conform,
-      TDD state, and the CI bridge all work — no core changes needed.</p>
-      <pre><span class="c">// hooks/hooks.json</span>
+      <div class="compose-grid">
+        <div class="compose-card">
+          <h4>Custom hook matchers</h4>
+          <p>
+            hooks.json accepts user-defined matchers. Any tool + pattern combination can invoke a
+            cape CLI command. This is how conform, TDD state, and the CI bridge all work — no core
+            changes needed.
+          </p>
+          <pre><span class="c">// hooks/hooks.json</span>
 {
   <span class="s">"hooks"</span>: [{
     <span class="s">"event"</span>: <span class="s">"PreToolUse"</span>,
@@ -1218,30 +1383,32 @@
     <span class="s">"command"</span>: <span class="s">"cape hook post-edit"</span>
   }]
 }</pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>Skill composition via Skill tool</h4>
-      <p>Skills call other skills via the Skill tool — not by embedding their
-      instructions. This means skill authors can compose workflows without
-      forking core skills. execute-plan → expand-task → TDD → refactor is
-      pure composition; each link is swappable.</p>
-      <pre><span class="c"># Swap TDD implementation:</span>
+        <div class="compose-card">
+          <h4>Skill composition via Skill tool</h4>
+          <p>
+            Skills call other skills via the Skill tool — not by embedding their instructions. This
+            means skill authors can compose workflows without forking core skills. execute-plan →
+            expand-task → TDD → refactor is pure composition; each link is swappable.
+          </p>
+          <pre><span class="c"># Swap TDD implementation:</span>
 <span class="c"># replace "cape:test-driven-development"</span>
 <span class="c"># with "myorg:tdd-strict"</span>
 <span class="c"># in execute-plan SKILL.md only.</span>
 
 <span class="c"># All callers inherit the change</span>
 <span class="c"># because they load by name.</span></pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>AFK mode (autonomous pipeline)</h4>
-      <p>Execute-plan's AFK execution mode skips HITL stops and chains
-      tasks automatically. Controlled by the epic's "Execution mode" field.
-      Power users set AFK for well-understood, low-risk epics;
-      keep HITL for exploratory work.</p>
-      <pre><span class="c"># Epic design field:</span>
+        <div class="compose-card">
+          <h4>AFK mode (autonomous pipeline)</h4>
+          <p>
+            Execute-plan's AFK execution mode skips HITL stops and chains tasks automatically.
+            Controlled by the epic's "Execution mode" field. Power users set AFK for
+            well-understood, low-risk epics; keep HITL for exploratory work.
+          </p>
+          <pre><span class="c"># Epic design field:</span>
 <span class="s">## Execution mode</span>
 <span class="a">AFK</span>
 
@@ -1249,15 +1416,17 @@
 <span class="c"># task → commit → next task</span>
 <span class="c"># → commit → ... → finish-epic</span>
 <span class="c"># No stops until epic closes.</span></pre>
-    </div>
+        </div>
 
-    <div class="compose-card">
-      <h4>Custom agent wiring</h4>
-      <p>The 5 core agents are dispatched by name. Skills reference agent
-      names in their SKILL.md, not inline instructions. Adding a project-specific
-      agent (e.g., <code>myorg:db-schema-checker</code>) means adding one
-      agent file and one dispatch line in the relevant skill.</p>
-      <pre><span class="c"># In expand-task SKILL.md:</span>
+        <div class="compose-card">
+          <h4>Custom agent wiring</h4>
+          <p>
+            The 5 core agents are dispatched by name. Skills reference agent names in their
+            SKILL.md, not inline instructions. Adding a project-specific agent (e.g.,
+            <code>myorg:db-schema-checker</code>) means adding one agent file and one dispatch line
+            in the relevant skill.
+          </p>
+          <pre><span class="c"># In expand-task SKILL.md:</span>
 <span class="c"># dispatch cape:codebase-investigator</span>
 <span class="c"># OR myorg:db-schema-checker</span>
 <span class="c"># when task touches DB layer.</span>
@@ -1265,71 +1434,72 @@
 <span class="c"># The agent protocol is:</span>
 <span class="c"># pass context → expect verdict</span>
 <span class="c"># No skill core changes needed.</span></pre>
-    </div>
-  </div>
-</section>
+        </div>
+      </div>
+    </section>
 
-<!-- ── SECTION 8: V2 CHANGE SUMMARY ── -->
-<section>
-  <p class="section-title">V2 concrete changes</p>
+    <!-- ── SECTION 8: V2 CHANGE SUMMARY ── -->
+    <section>
+      <p class="section-title">V2 concrete changes</p>
 
-  <div class="gate-flow">
-    <div class="gate-row deny">
-      <span class="gate-icon">1</span>
-      <span class="gate-label">
-        <strong>PreToolUse Edit/Write DENY when tdd-state ∈ {null, writing-test}.</strong>
-        Moves TDD from advisory PostToolUse warning to blocking PreToolUse deny.
-        Eliminates the 80% of TDD violations that happen when the model is "in flow."
-      </span>
-      <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
-    </div>
-    <div class="gate-row deny">
-      <span class="gate-icon">2</span>
-      <span class="gate-label">
-        <strong>PreToolUse Bash (git commit) DENY when conform staged returns violations.</strong>
-        Conform runs 7× manually today; V2 makes it automatic and blocking.
-        Zero-config for users — it just fires.
-      </span>
-      <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
-    </div>
-    <div class="gate-row warn">
-      <span class="gate-icon">3</span>
-      <span class="gate-label">
-        <strong>Cut bug-tracer, notebox-researcher; merge modes into codebase-investigator.</strong>
-        2 dispatches each in 10 days — not worth the agent overhead. codebase-investigator
-        gains <code>--mode=trace-bug</code> and <code>--mode=audit-tests</code>
-        invocation patterns. 8 agents → 5.
-      </span>
-      <span class="gate-meta">agents/ directory</span>
-    </div>
-    <div class="gate-row pass">
-      <span class="gate-icon">4</span>
-      <span class="gate-label">
-        <strong>br write discipline: every skill writes state before stopping.</strong>
-        With 37 /clear events, any state held only in conversation context is
-        silently lost. Outcome, next task, cape state flags — all written to br
-        before the checkpoint stop.
-      </span>
-      <span class="gate-meta">skills/execute-plan/SKILL.md · skills/finish-epic/SKILL.md</span>
-    </div>
-    <div class="gate-row inject">
-      <span class="gate-icon">5</span>
-      <span class="gate-label">
-        <strong>Stop hook: if workflowActive, remind user to /clear.</strong>
-        Structural checkpoint discipline is non-negotiable but the model forgets.
-        A Stop hook fires after every model turn — the reminder is guaranteed,
-        not probabilistic.
-      </span>
-      <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
-    </div>
-  </div>
-</section>
+      <div class="gate-flow">
+        <div class="gate-row deny">
+          <span class="gate-icon">1</span>
+          <span class="gate-label">
+            <strong>PreToolUse Edit/Write DENY when tdd-state ∈ {null, writing-test}.</strong>
+            Moves TDD from advisory PostToolUse warning to blocking PreToolUse deny. Eliminates the
+            80% of TDD violations that happen when the model is "in flow."
+          </span>
+          <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
+        </div>
+        <div class="gate-row deny">
+          <span class="gate-icon">2</span>
+          <span class="gate-label">
+            <strong
+              >PreToolUse Bash (git commit) DENY when conform staged returns violations.</strong
+            >
+            Conform runs 7× manually today; V2 makes it automatic and blocking. Zero-config for
+            users — it just fires.
+          </span>
+          <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
+        </div>
+        <div class="gate-row warn">
+          <span class="gate-icon">3</span>
+          <span class="gate-label">
+            <strong
+              >Cut bug-tracer, notebox-researcher; merge modes into codebase-investigator.</strong
+            >
+            2 dispatches each in 10 days — not worth the agent overhead. codebase-investigator gains
+            <code>--mode=trace-bug</code> and <code>--mode=audit-tests</code>
+            invocation patterns. 8 agents → 5.
+          </span>
+          <span class="gate-meta">agents/ directory</span>
+        </div>
+        <div class="gate-row pass">
+          <span class="gate-icon">4</span>
+          <span class="gate-label">
+            <strong>br write discipline: every skill writes state before stopping.</strong>
+            With 37 /clear events, any state held only in conversation context is silently lost.
+            Outcome, next task, cape state flags — all written to br before the checkpoint stop.
+          </span>
+          <span class="gate-meta">skills/execute-plan/SKILL.md · skills/finish-epic/SKILL.md</span>
+        </div>
+        <div class="gate-row inject">
+          <span class="gate-icon">5</span>
+          <span class="gate-label">
+            <strong>Stop hook: if workflowActive, remind user to /clear.</strong>
+            Structural checkpoint discipline is non-negotiable but the model forgets. A Stop hook
+            fires after every model turn — the reminder is guaranteed, not probabilistic.
+          </span>
+          <span class="gate-meta">hooks/hooks.json · cli/src/services/hook.ts</span>
+        </div>
+      </div>
+    </section>
 
-<!-- ── FOOTER ── -->
-<footer>
-  <span class="footer-label">Cape V2 Design Series · 05-automation-poweruser</span>
-  <span class="footer-label">Data: 10-day Claude Code session logs · 2026-06-17</span>
-</footer>
-
-</body>
+    <!-- ── FOOTER ── -->
+    <footer>
+      <span class="footer-label">Cape V2 Design Series · 05-automation-poweruser</span>
+      <span class="footer-label">Data: 10-day Claude Code session logs · 2026-06-17</span>
+    </footer>
+  </body>
 </html>

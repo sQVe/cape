@@ -1,1108 +1,1919 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cape V2 — Information Architect</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  :root {
-    --bg: #0e1117;
-    --surface: #161b27;
-    --surface2: #1e2535;
-    --border: #2a3347;
-    --text: #e2e8f0;
-    --muted: #8893a6;
-    --accent: #5b8dee;
-    --accent2: #7c5ce8;
-    --green: #43d17a;
-    --amber: #f4a640;
-    --red: #f0605a;
-    --cyan: #38bdf8;
-
-    --build: #5b8dee;
-    --fix: #f0605a;
-    --evolve: #43d17a;
-    --quality: #a78bfa;
-    --ship: #f4a640;
-    --internal: #38bdf8;
-  }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 15px;
-    line-height: 1.6;
-    padding: 40px 24px 80px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-
-  h1 { font-size: 2.4rem; font-weight: 700; letter-spacing: -0.03em; }
-  h2 { font-size: 1.3rem; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 16px; }
-  h3 { font-size: 1rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-
-  .badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  header {
-    border-bottom: 1px solid var(--border);
-    padding-bottom: 32px;
-    margin-bottom: 48px;
-  }
-
-  .role-tag {
-    display: inline-block;
-    background: var(--accent);
-    color: #fff;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .subtitle {
-    color: var(--muted);
-    font-size: 1.05rem;
-    margin-top: 8px;
-    max-width: 600px;
-  }
-
-  .stats-row {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-    margin-top: 24px;
-  }
-
-  .stat {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 20px;
-    min-width: 140px;
-  }
-
-  .stat-num {
-    font-size: 2rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--accent);
-  }
-
-  .stat-label {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 4px;
-  }
-
-  section { margin-bottom: 56px; }
-
-  /* ── BEFORE/AFTER DIAGRAM ── */
-  .compare-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-top: 0;
-  }
-
-  .compare-panel {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-  }
-
-  .compare-panel.before { border-color: var(--red); }
-  .compare-panel.after  { border-color: var(--green); }
-
-  .compare-panel .panel-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 16px;
-  }
-
-  .before .panel-label { color: var(--red); }
-  .after  .panel-label { color: var(--green); }
-
-  .flat-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .flat-chip {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 3px 9px;
-    font-size: 12px;
-    color: var(--muted);
-    font-family: monospace;
-  }
-
-  .flat-chip.unused {
-    border-color: var(--red);
-    color: var(--red);
-    opacity: 0.6;
-  }
-
-  /* ── TAXONOMY TREE (SVG) ── */
-  .svg-wrap {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px 16px;
-    overflow-x: auto;
-  }
-
-  /* ── TRACK CARDS ── */
-  .tracks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-  }
-
-  .track-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .track-card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-  }
-
-  .track-card.build::before  { background: var(--build); }
-  .track-card.fix::before    { background: var(--fix); }
-  .track-card.evolve::before { background: var(--evolve); }
-  .track-card.quality::before{ background: var(--quality); }
-  .track-card.ship::before   { background: var(--ship); }
-  .track-card.meta::before   { background: var(--cyan); }
-
-  .track-title {
-    font-weight: 700;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
-  }
-
-  .track-ns {
-    font-family: monospace;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    display: inline-block;
-    margin-bottom: 12px;
-  }
-
-  .build  .track-ns { background: #1a2744; color: var(--build); }
-  .fix    .track-ns { background: #2a1616; color: var(--fix); }
-  .evolve .track-ns { background: #132612; color: var(--evolve); }
-  .quality .track-ns{ background: #1e1635; color: var(--quality); }
-  .ship   .track-ns { background: #2a1f0a; color: var(--ship); }
-  .meta   .track-ns { background: #0d2030; color: var(--cyan); }
-
-  .track-skills {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .skill-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
-  }
-
-  .skill-name {
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--text);
-  }
-
-  .skill-count {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .build  .dot { background: var(--build); }
-  .fix    .dot { background: var(--fix); }
-  .evolve .dot { background: var(--evolve); }
-  .quality .dot{ background: var(--quality); }
-  .ship   .dot { background: var(--ship); }
-  .meta   .dot { background: var(--cyan); }
-
-  .divider { height: 1px; background: var(--border); margin: 6px 0; }
-
-  .skill-row.internal .skill-name { color: var(--muted); font-style: italic; }
-
-  /* ── ROUTING TABLE ── */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-
-  th {
-    text-align: left;
-    padding: 10px 14px;
-    background: var(--surface2);
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    border-bottom: 1px solid var(--border);
-  }
-
-  td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: var(--surface2); }
-
-  .track-pill {
-    padding: 2px 8px;
-    border-radius: 3px;
-    font-size: 11px;
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .tp-build  { background: #1a2744; color: var(--build); }
-  .tp-fix    { background: #2a1616; color: var(--fix); }
-  .tp-evolve { background: #132612; color: var(--evolve); }
-  .tp-quality{ background: #1e1635; color: var(--quality); }
-  .tp-ship   { background: #2a1f0a; color: var(--ship); }
-  .tp-meta   { background: #0d2030; color: var(--cyan); }
-
-  code {
-    font-family: monospace;
-    font-size: 12px;
-    background: var(--surface2);
-    padding: 1px 5px;
-    border-radius: 3px;
-    color: var(--text);
-  }
-
-  /* ── FINDINGS ── */
-  .findings-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-  }
-
-  .finding {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 18px 20px;
-  }
-
-  .finding-num {
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--border);
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-
-  .finding-title {
-    font-weight: 600;
-    margin-bottom: 6px;
-    font-size: 0.95rem;
-  }
-
-  .finding-body {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.55;
-  }
-
-  .highlight { color: var(--text); }
-
-  /* ── PROGRESSIVE DISCLOSURE ── */
-  .pd-diagram {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 24px;
-    font-size: 13px;
-  }
-
-  .pd-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .pd-row:last-child { border-bottom: none; }
-
-  .pd-tier {
-    min-width: 90px;
-    font-weight: 700;
-    font-size: 11px;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    padding-top: 2px;
-  }
-
-  .pd-t1 { color: var(--accent); }
-  .pd-t2 { color: var(--amber); }
-  .pd-t3 { color: var(--muted); }
-
-  .pd-desc { color: var(--muted); }
-  .pd-items { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .pd-chip {
-    font-family: monospace;
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 3px;
-    border: 1px solid var(--border);
-    color: var(--text);
-    background: var(--surface2);
-  }
-
-  /* ── AGENTS ── */
-  .agent-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 12px;
-  }
-
-  .agent-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 14px 16px;
-  }
-
-  .agent-name {
-    font-family: monospace;
-    font-size: 12px;
-    color: var(--cyan);
-    margin-bottom: 4px;
-    font-weight: 600;
-  }
-
-  .agent-desc {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  .agent-callers {
-    margin-top: 8px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .caller-tag {
-    font-size: 10px;
-    font-family: monospace;
-    padding: 1px 5px;
-    border-radius: 3px;
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-
-  @media (max-width: 640px) {
-    .compare-grid { grid-template-columns: 1fr; }
-    h1 { font-size: 1.8rem; }
-  }
-</style>
-</head>
-<body>
-
-<header>
-  <div class="role-tag">Information Architect</div>
-  <h1>Cape V2 Taxonomy</h1>
-  <p class="subtitle">Redesigning the mental model, naming, and routing for 22 skills, 8 agents across a real dev workflow — grounded in 10 days of usage logs.</p>
-
-  <div class="stats-row">
-    <div class="stat">
-      <div class="stat-num">22</div>
-      <div class="stat-label">Skills in catalog</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">5</div>
-      <div class="stat-label">Never fired once</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">8</div>
-      <div class="stat-label">Agents</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num" style="color:var(--red)">1000+</div>
-      <div class="stat-label">Catalog injections / session</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">29</div>
-      <div class="stat-label">commit (most-used)</div>
-    </div>
-  </div>
-</header>
-
-
-<!-- ── SECTION 1: BEFORE / AFTER ── -->
-<section>
-  <h2>The problem: flat chaos → tracked taxonomy</h2>
-
-  <div class="compare-grid">
-    <div class="compare-panel before">
-      <div class="panel-label">V1 — Flat, no grouping</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">22 names in one unordered bag. No lifecycle signal. No namespace. 5 skills (red) never triggered in 10 days.</p>
-      <div class="flat-list">
-        <span class="flat-chip">brainstorm</span>
-        <span class="flat-chip">write-plan</span>
-        <span class="flat-chip">execute-plan</span>
-        <span class="flat-chip">finish-epic</span>
-        <span class="flat-chip unused">analyze-tests</span>
-        <span class="flat-chip unused">branch</span>
-        <span class="flat-chip unused">design-an-interface</span>
-        <span class="flat-chip unused">explain</span>
-        <span class="flat-chip unused">find-test-gaps</span>
-        <span class="flat-chip">debug-issue</span>
-        <span class="flat-chip">fix-bug</span>
-        <span class="flat-chip">conform</span>
-        <span class="flat-chip">challenge</span>
-        <span class="flat-chip">refactor</span>
-        <span class="flat-chip">beads</span>
-        <span class="flat-chip">commit</span>
-        <span class="flat-chip">pr</span>
-        <span class="flat-chip">review</span>
-        <span class="flat-chip">tdd</span>
-        <span class="flat-chip">task-refinement</span>
-        <span class="flat-chip">expand-task</span>
-        <span class="flat-chip">don-cape</span>
-      </div>
-      <p style="font-size:12px;color:var(--red);margin-top:12px;">Problems: debug-issue vs fix-bug (noun vs verb), conform vs challenge (adjective vs verb), beads (tool name). No mental grouping.</p>
-    </div>
-
-    <div class="compare-panel after">
-      <div class="panel-label">V2 — Six tracks, consistent verbs</div>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Names follow <code>track:verb</code>. Every skill has a home. Router knows the track — loads only what's needed.</p>
-      <div class="flat-list">
-        <span class="flat-chip" style="border-color:var(--build);color:var(--build)">build:explore</span>
-        <span class="flat-chip" style="border-color:var(--build);color:var(--build)">build:plan</span>
-        <span class="flat-chip" style="border-color:var(--build);color:var(--build)">build:run</span>
-        <span class="flat-chip" style="border-color:var(--build);color:var(--build)">build:close</span>
-        <span class="flat-chip" style="border-color:var(--fix);color:var(--fix)">fix:diagnose</span>
-        <span class="flat-chip" style="border-color:var(--fix);color:var(--fix)">fix:patch</span>
-        <span class="flat-chip" style="border-color:var(--evolve);color:var(--evolve)">evolve:refactor</span>
-        <span class="flat-chip" style="border-color:var(--evolve);color:var(--evolve)">evolve:challenge</span>
-        <span class="flat-chip" style="border-color:var(--quality);color:var(--quality)">quality:review</span>
-        <span class="flat-chip" style="border-color:var(--quality);color:var(--quality)">quality:conform</span>
-        <span class="flat-chip" style="border-color:var(--quality);color:var(--quality)">quality:audit</span>
-        <span class="flat-chip" style="border-color:var(--quality);color:var(--quality)">quality:gaps</span>
-        <span class="flat-chip" style="border-color:var(--ship);color:var(--ship)">ship:commit</span>
-        <span class="flat-chip" style="border-color:var(--ship);color:var(--ship)">ship:pr</span>
-        <span class="flat-chip" style="border-color:var(--cyan);color:var(--cyan)">meta:route</span>
-        <span class="flat-chip" style="border-color:var(--cyan);color:var(--cyan)">meta:track</span>
-      </div>
-      <p style="font-size:12px;color:var(--green);margin-top:12px;">Benefits: track prefix predicts content, verb suffix predicts action. Router loads the track manifest first, then the specific skill — cuts cold-start context by ~60%.</p>
-    </div>
-  </div>
-</section>
-
-
-<!-- ── SECTION 2: TAXONOMY TREE SVG ── -->
-<section>
-  <h2>V2 taxonomy — six tracks</h2>
-  <div class="svg-wrap">
-    <svg viewBox="0 0 980 520" xmlns="http://www.w3.org/2000/svg" style="width:100%;min-width:680px;">
-      <defs>
-        <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-          <path d="M0,0 L0,6 L8,3 z" fill="#2a3347"/>
-        </marker>
-      </defs>
-
-      <!-- ROOT -->
-      <rect x="390" y="20" width="200" height="42" rx="8" fill="#1e2535" stroke="#5b8dee" stroke-width="1.5"/>
-      <text x="490" y="36" text-anchor="middle" font-family="monospace" font-size="13" fill="#5b8dee" font-weight="700">cape</text>
-      <text x="490" y="52" text-anchor="middle" font-family="monospace" font-size="11" fill="#8893a6">workflow system</text>
-
-      <!-- Lines from root to tracks -->
-      <!-- build -->
-      <line x1="490" y1="62" x2="490" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="490" y1="80" x2="85" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="85" y1="80" x2="85" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-      <!-- fix -->
-      <line x1="490" y1="80" x2="245" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="245" y1="80" x2="245" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-      <!-- evolve -->
-      <line x1="490" y1="80" x2="410" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="410" y1="80" x2="410" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-      <!-- quality -->
-      <line x1="490" y1="80" x2="570" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="570" y1="80" x2="570" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-      <!-- ship -->
-      <line x1="490" y1="80" x2="737" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="737" y1="80" x2="737" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-      <!-- meta -->
-      <line x1="490" y1="80" x2="900" y2="80" stroke="#2a3347" stroke-width="1.5"/>
-      <line x1="900" y1="80" x2="900" y2="116" stroke="#2a3347" stroke-width="1.5"/>
-
-      <!-- ─── BUILD track ─── -->
-      <rect x="15" y="116" width="140" height="38" rx="7" fill="#1a2744" stroke="#5b8dee" stroke-width="1.5"/>
-      <text x="85" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#5b8dee" font-weight="700">build:</text>
-      <text x="85" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">New features</text>
-
-      <!-- build children -->
-      <line x1="85" y1="154" x2="85" y2="175" stroke="#1e3060" stroke-width="1"/>
-      <line x1="85" y1="175" x2="20" y2="175" stroke="#1e3060" stroke-width="1"/>
-      <line x1="85" y1="175" x2="55" y2="175" stroke="#1e3060" stroke-width="1"/>
-      <line x1="85" y1="175" x2="90" y2="175" stroke="#1e3060" stroke-width="1"/>
-      <line x1="85" y1="175" x2="140" y2="175" stroke="#1e3060" stroke-width="1"/>
-      <line x1="20" y1="175" x2="20" y2="192" stroke="#1e3060" stroke-width="1"/>
-      <line x1="55" y1="175" x2="55" y2="192" stroke="#1e3060" stroke-width="1"/>
-      <line x1="90" y1="175" x2="90" y2="192" stroke="#1e3060" stroke-width="1"/>
-      <line x1="140" y1="175" x2="140" y2="192" stroke="#1e3060" stroke-width="1"/>
-
-      <rect x="0"  y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60"/>
-      <text x="21" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">explore</text>
-      <rect x="34" y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60"/>
-      <text x="55" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">plan</text>
-      <rect x="68" y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60"/>
-      <text x="89" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">run</text>
-      <rect x="117" y="192" width="46" height="28" rx="4" fill="#0e1825" stroke="#2a3a60"/>
-      <text x="140" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">close</text>
-
-      <!-- ─── FIX track ─── -->
-      <rect x="175" y="116" width="140" height="38" rx="7" fill="#2a1616" stroke="#f0605a" stroke-width="1.5"/>
-      <text x="245" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#f0605a" font-weight="700">fix:</text>
-      <text x="245" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">Bugs & defects</text>
-
-      <line x1="245" y1="154" x2="245" y2="175" stroke="#60201a" stroke-width="1"/>
-      <line x1="210" y1="175" x2="280" y2="175" stroke="#60201a" stroke-width="1"/>
-      <line x1="210" y1="175" x2="210" y2="192" stroke="#60201a" stroke-width="1"/>
-      <line x1="280" y1="175" x2="280" y2="192" stroke="#60201a" stroke-width="1"/>
-
-      <rect x="183" y="192" width="54" height="28" rx="4" fill="#1a0e0e" stroke="#60201a"/>
-      <text x="210" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#f0605a">diagnose</text>
-      <rect x="252" y="192" width="54" height="28" rx="4" fill="#1a0e0e" stroke="#60201a"/>
-      <text x="279" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#f0605a">patch</text>
-
-      <!-- ─── EVOLVE track ─── -->
-      <rect x="340" y="116" width="140" height="38" rx="7" fill="#132612" stroke="#43d17a" stroke-width="1.5"/>
-      <text x="410" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#43d17a" font-weight="700">evolve:</text>
-      <text x="410" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">Structure & design</text>
-
-      <line x1="410" y1="154" x2="410" y2="175" stroke="#1e4020" stroke-width="1"/>
-      <line x1="370" y1="175" x2="450" y2="175" stroke="#1e4020" stroke-width="1"/>
-      <line x1="370" y1="175" x2="370" y2="192" stroke="#1e4020" stroke-width="1"/>
-      <line x1="450" y1="175" x2="450" y2="192" stroke="#1e4020" stroke-width="1"/>
-
-      <rect x="342" y="192" width="58" height="28" rx="4" fill="#0a1a0a" stroke="#1e4020"/>
-      <text x="371" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#43d17a">refactor</text>
-      <rect x="420" y="192" width="58" height="28" rx="4" fill="#0a1a0a" stroke="#1e4020"/>
-      <text x="449" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#43d17a">challenge</text>
-
-      <!-- ─── QUALITY track ─── -->
-      <rect x="500" y="116" width="140" height="38" rx="7" fill="#1e1635" stroke="#a78bfa" stroke-width="1.5"/>
-      <text x="570" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#a78bfa" font-weight="700">quality:</text>
-      <text x="570" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">Review & standards</text>
-
-      <line x1="570" y1="154" x2="570" y2="175" stroke="#3a2860" stroke-width="1"/>
-      <line x1="510" y1="175" x2="635" y2="175" stroke="#3a2860" stroke-width="1"/>
-      <line x1="510" y1="175" x2="510" y2="192" stroke="#3a2860" stroke-width="1"/>
-      <line x1="553" y1="175" x2="553" y2="192" stroke="#3a2860" stroke-width="1"/>
-      <line x1="596" y1="175" x2="596" y2="192" stroke="#3a2860" stroke-width="1"/>
-      <line x1="635" y1="175" x2="635" y2="192" stroke="#3a2860" stroke-width="1"/>
-
-      <rect x="488" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860"/>
-      <text x="511" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa">review</text>
-      <rect x="529" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860"/>
-      <text x="552" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa">conform</text>
-      <rect x="573" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860"/>
-      <text x="596" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa">audit</text>
-      <rect x="613" y="192" width="44" height="28" rx="4" fill="#12102a" stroke="#3a2860"/>
-      <text x="635" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#a78bfa">gaps</text>
-
-      <!-- ─── SHIP track ─── -->
-      <rect x="667" y="116" width="140" height="38" rx="7" fill="#2a1f0a" stroke="#f4a640" stroke-width="1.5"/>
-      <text x="737" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#f4a640" font-weight="700">ship:</text>
-      <text x="737" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">Commit & publish</text>
-
-      <line x1="737" y1="154" x2="737" y2="175" stroke="#604020" stroke-width="1"/>
-      <line x1="700" y1="175" x2="775" y2="175" stroke="#604020" stroke-width="1"/>
-      <line x1="700" y1="175" x2="700" y2="192" stroke="#604020" stroke-width="1"/>
-      <line x1="775" y1="175" x2="775" y2="192" stroke="#604020" stroke-width="1"/>
-
-      <rect x="672" y="192" width="54" height="28" rx="4" fill="#1a1408" stroke="#604020"/>
-      <text x="699" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#f4a640">commit</text>
-      <rect x="748" y="192" width="54" height="28" rx="4" fill="#1a1408" stroke="#604020"/>
-      <text x="775" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#f4a640">pr</text>
-
-      <!-- ─── META track ─── -->
-      <rect x="830" y="116" width="140" height="38" rx="7" fill="#0d2030" stroke="#38bdf8" stroke-width="1.5"/>
-      <text x="900" y="130" text-anchor="middle" font-family="monospace" font-size="12" fill="#38bdf8" font-weight="700">meta:</text>
-      <text x="900" y="146" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#8893a6">Routing & tracking</text>
-
-      <line x1="900" y1="154" x2="900" y2="175" stroke="#1e4060" stroke-width="1"/>
-      <line x1="862" y1="175" x2="940" y2="175" stroke="#1e4060" stroke-width="1"/>
-      <line x1="862" y1="175" x2="862" y2="192" stroke="#1e4060" stroke-width="1"/>
-      <line x1="940" y1="175" x2="940" y2="192" stroke="#1e4060" stroke-width="1"/>
-
-      <rect x="834" y="192" width="54" height="28" rx="4" fill="#081420" stroke="#1e4060"/>
-      <text x="861" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">route</text>
-      <rect x="910" y="192" width="54" height="28" rx="4" fill="#081420" stroke="#1e4060"/>
-      <text x="937" y="210" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">track</text>
-
-      <!-- ─── AGENTS row ─── -->
-      <text x="490" y="275" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#4a5568" font-weight="700" letter-spacing="0.1em">AGENTS (dispatched internally — never user-routed)</text>
-
-      <rect x="30"  y="290" width="115" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="87"  y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">codebase-investigator</text>
-
-      <rect x="155" y="290" width="105" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="207" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">code-reviewer</text>
-
-      <rect x="270" y="290" width="95" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="317" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">bug-tracer</text>
-
-      <rect x="375" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="420" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">fact-checker</text>
-
-      <rect x="475" y="290" width="105" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="527" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">internet-researcher</text>
-
-      <rect x="590" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="635" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">test-runner</text>
-
-      <rect x="690" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="735" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">test-auditor</text>
-
-      <rect x="790" y="290" width="110" height="32" rx="5" fill="#0d2030" stroke="#1e4060"/>
-      <text x="845" y="310" text-anchor="middle" font-family="monospace" font-size="10" fill="#38bdf8">notebox-researcher</text>
-
-      <!-- ─── CHAIN diagram ─── -->
-      <text x="490" y="370" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#4a5568" font-weight="700" letter-spacing="0.1em">WORKFLOW CHAINS</text>
-
-      <!-- Build chain -->
-      <text x="30" y="394" font-family="sans-serif" font-size="10" fill="#5b8dee" font-weight="700">BUILD</text>
-      <rect x="68"  y="382" width="70" height="22" rx="4" fill="#1a2744" stroke="#2a3a60"/>
-      <text x="103" y="397" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">build:explore</text>
-      <text x="142" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="150" y="382" width="64" height="22" rx="4" fill="#1a2744" stroke="#2a3a60"/>
-      <text x="182" y="397" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">build:plan</text>
-      <text x="218" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="226" y="382" width="56" height="22" rx="4" fill="#1a2744" stroke="#2a3a60"/>
-      <text x="254" y="397" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">build:run</text>
-      <text x="286" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="294" y="382" width="62" height="22" rx="4" fill="#1a2744" stroke="#2a3a60"/>
-      <text x="325" y="397" text-anchor="middle" font-family="monospace" font-size="10" fill="#5b8dee">build:close</text>
-      <text x="360" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="368" y="382" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020"/>
-      <text x="396" y="397" text-anchor="middle" font-family="monospace" font-size="10" fill="#f4a640">ship:commit</text>
-
-      <!-- Fix chain -->
-      <text x="30" y="432" font-family="sans-serif" font-size="10" fill="#f0605a" font-weight="700">FIX</text>
-      <rect x="68"  y="420" width="66" height="22" rx="4" fill="#2a1616" stroke="#60201a"/>
-      <text x="101" y="435" text-anchor="middle" font-family="monospace" font-size="10" fill="#f0605a">fix:diagnose</text>
-      <text x="138" y="435" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="146" y="420" width="56" height="22" rx="4" fill="#2a1616" stroke="#60201a"/>
-      <text x="174" y="435" text-anchor="middle" font-family="monospace" font-size="10" fill="#f0605a">fix:patch</text>
-      <text x="206" y="435" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="214" y="420" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020"/>
-      <text x="242" y="435" text-anchor="middle" font-family="monospace" font-size="10" fill="#f4a640">ship:commit</text>
-
-      <!-- Evolve chain -->
-      <text x="30" y="470" font-family="sans-serif" font-size="10" fill="#43d17a" font-weight="700">EVOLVE</text>
-      <rect x="68"  y="458" width="76" height="22" rx="4" fill="#132612" stroke="#1e4020"/>
-      <text x="106" y="473" text-anchor="middle" font-family="monospace" font-size="10" fill="#43d17a">evolve:refactor</text>
-      <text x="148" y="473" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
-      <rect x="156" y="458" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020"/>
-      <text x="184" y="473" text-anchor="middle" font-family="monospace" font-size="10" fill="#f4a640">ship:commit</text>
-    </svg>
-  </div>
-</section>
-
-
-<!-- ── SECTION 3: TRACK CARDS ── -->
-<section>
-  <h2>Track detail — skills, usage, mapping</h2>
-  <div class="tracks-grid">
-
-    <div class="track-card build">
-      <h3>Build track</h3>
-      <div class="track-title">New features & integrations</div>
-      <span class="track-ns">build:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">build:explore</span>
-          <span class="skill-count">← brainstorm (9×)</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cape V2 — Information Architect</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0e1117;
+        --surface: #161b27;
+        --surface2: #1e2535;
+        --border: #2a3347;
+        --text: #e2e8f0;
+        --muted: #8893a6;
+        --accent: #5b8dee;
+        --accent2: #7c5ce8;
+        --green: #43d17a;
+        --amber: #f4a640;
+        --red: #f0605a;
+        --cyan: #38bdf8;
+
+        --build: #5b8dee;
+        --fix: #f0605a;
+        --evolve: #43d17a;
+        --quality: #a78bfa;
+        --ship: #f4a640;
+        --internal: #38bdf8;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 15px;
+        line-height: 1.6;
+        padding: 40px 24px 80px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+      h2 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin-bottom: 16px;
+      }
+      h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 32px;
+        margin-bottom: 48px;
+      }
+
+      .role-tag {
+        display: inline-block;
+        background: var(--accent);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 1.05rem;
+        margin-top: 8px;
+        max-width: 600px;
+      }
+
+      .stats-row {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+      }
+
+      .stat {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 20px;
+        min-width: 140px;
+      }
+
+      .stat-num {
+        font-size: 2rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--accent);
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      section {
+        margin-bottom: 56px;
+      }
+
+      /* ── BEFORE/AFTER DIAGRAM ── */
+      .compare-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-top: 0;
+      }
+
+      .compare-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .compare-panel.before {
+        border-color: var(--red);
+      }
+      .compare-panel.after {
+        border-color: var(--green);
+      }
+
+      .compare-panel .panel-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 16px;
+      }
+
+      .before .panel-label {
+        color: var(--red);
+      }
+      .after .panel-label {
+        color: var(--green);
+      }
+
+      .flat-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .flat-chip {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 3px 9px;
+        font-size: 12px;
+        color: var(--muted);
+        font-family: monospace;
+      }
+
+      .flat-chip.unused {
+        border-color: var(--red);
+        color: var(--red);
+        opacity: 0.6;
+      }
+
+      /* ── TAXONOMY TREE (SVG) ── */
+      .svg-wrap {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px 16px;
+        overflow-x: auto;
+      }
+
+      /* ── TRACK CARDS ── */
+      .tracks-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .track-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .track-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+      }
+
+      .track-card.build::before {
+        background: var(--build);
+      }
+      .track-card.fix::before {
+        background: var(--fix);
+      }
+      .track-card.evolve::before {
+        background: var(--evolve);
+      }
+      .track-card.quality::before {
+        background: var(--quality);
+      }
+      .track-card.ship::before {
+        background: var(--ship);
+      }
+      .track-card.meta::before {
+        background: var(--cyan);
+      }
+
+      .track-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+      }
+
+      .track-ns {
+        font-family: monospace;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+
+      .build .track-ns {
+        background: #1a2744;
+        color: var(--build);
+      }
+      .fix .track-ns {
+        background: #2a1616;
+        color: var(--fix);
+      }
+      .evolve .track-ns {
+        background: #132612;
+        color: var(--evolve);
+      }
+      .quality .track-ns {
+        background: #1e1635;
+        color: var(--quality);
+      }
+      .ship .track-ns {
+        background: #2a1f0a;
+        color: var(--ship);
+      }
+      .meta .track-ns {
+        background: #0d2030;
+        color: var(--cyan);
+      }
+
+      .track-skills {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .skill-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .skill-name {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--text);
+      }
+
+      .skill-count {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .build .dot {
+        background: var(--build);
+      }
+      .fix .dot {
+        background: var(--fix);
+      }
+      .evolve .dot {
+        background: var(--evolve);
+      }
+      .quality .dot {
+        background: var(--quality);
+      }
+      .ship .dot {
+        background: var(--ship);
+      }
+      .meta .dot {
+        background: var(--cyan);
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 6px 0;
+      }
+
+      .skill-row.internal .skill-name {
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      /* ── ROUTING TABLE ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+
+      th {
+        text-align: left;
+        padding: 10px 14px;
+        background: var(--surface2);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        border-bottom: 1px solid var(--border);
+      }
+
+      td {
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tr:hover td {
+        background: var(--surface2);
+      }
+
+      .track-pill {
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .tp-build {
+        background: #1a2744;
+        color: var(--build);
+      }
+      .tp-fix {
+        background: #2a1616;
+        color: var(--fix);
+      }
+      .tp-evolve {
+        background: #132612;
+        color: var(--evolve);
+      }
+      .tp-quality {
+        background: #1e1635;
+        color: var(--quality);
+      }
+      .tp-ship {
+        background: #2a1f0a;
+        color: var(--ship);
+      }
+      .tp-meta {
+        background: #0d2030;
+        color: var(--cyan);
+      }
+
+      code {
+        font-family: monospace;
+        font-size: 12px;
+        background: var(--surface2);
+        padding: 1px 5px;
+        border-radius: 3px;
+        color: var(--text);
+      }
+
+      /* ── FINDINGS ── */
+      .findings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .finding {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px 20px;
+      }
+
+      .finding-num {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--border);
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+
+      .finding-title {
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 0.95rem;
+      }
+
+      .finding-body {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .highlight {
+        color: var(--text);
+      }
+
+      /* ── PROGRESSIVE DISCLOSURE ── */
+      .pd-diagram {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        font-size: 13px;
+      }
+
+      .pd-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .pd-row:last-child {
+        border-bottom: none;
+      }
+
+      .pd-tier {
+        min-width: 90px;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        padding-top: 2px;
+      }
+
+      .pd-t1 {
+        color: var(--accent);
+      }
+      .pd-t2 {
+        color: var(--amber);
+      }
+      .pd-t3 {
+        color: var(--muted);
+      }
+
+      .pd-desc {
+        color: var(--muted);
+      }
+      .pd-items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 6px;
+      }
+      .pd-chip {
+        font-family: monospace;
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 3px;
+        border: 1px solid var(--border);
+        color: var(--text);
+        background: var(--surface2);
+      }
+
+      /* ── AGENTS ── */
+      .agent-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+      }
+
+      .agent-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+      }
+
+      .agent-name {
+        font-family: monospace;
+        font-size: 12px;
+        color: var(--cyan);
+        margin-bottom: 4px;
+        font-weight: 600;
+      }
+
+      .agent-desc {
+        font-size: 12px;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .agent-callers {
+        margin-top: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+      }
+
+      .caller-tag {
+        font-size: 10px;
+        font-family: monospace;
+        padding: 1px 5px;
+        border-radius: 3px;
+        background: var(--surface2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      @media (max-width: 640px) {
+        .compare-grid {
+          grid-template-columns: 1fr;
+        }
+        h1 {
+          font-size: 1.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="role-tag">Information Architect</div>
+      <h1>Cape V2 Taxonomy</h1>
+      <p class="subtitle">
+        Redesigning the mental model, naming, and routing for 22 skills, 8 agents across a real dev
+        workflow — grounded in 10 days of usage logs.
+      </p>
+
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-num">22</div>
+          <div class="stat-label">Skills in catalog</div>
         </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">build:plan</span>
-          <span class="skill-count">← write-plan (6×)</span>
+        <div class="stat">
+          <div class="stat-num">5</div>
+          <div class="stat-label">Never fired once</div>
         </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">build:run</span>
-          <span class="skill-count">← execute-plan (7×)</span>
+        <div class="stat">
+          <div class="stat-num">8</div>
+          <div class="stat-label">Agents</div>
         </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">build:close</span>
-          <span class="skill-count">← finish-epic (4×)</span>
+        <div class="stat">
+          <div class="stat-num" style="color: var(--red)">1000+</div>
+          <div class="stat-label">Catalog injections / session</div>
         </div>
-        <div class="divider"></div>
-        <div class="skill-row internal">
-          <div class="dot"></div>
-          <span class="skill-name">build:expand</span>
-          <span class="skill-count">← expand-task (internal)</span>
-        </div>
-        <div class="skill-row internal">
-          <div class="dot"></div>
-          <span class="skill-name">build:tdd</span>
-          <span class="skill-count">← tdd (internal)</span>
-        </div>
-        <div class="skill-row internal">
-          <div class="dot"></div>
-          <span class="skill-name">build:refine</span>
-          <span class="skill-count">← task-refinement (opt-in)</span>
+        <div class="stat">
+          <div class="stat-num">29</div>
+          <div class="stat-label">commit (most-used)</div>
         </div>
       </div>
-    </div>
+    </header>
 
-    <div class="track-card fix">
-      <h3>Fix track</h3>
-      <div class="track-title">Bugs, defects, regressions</div>
-      <span class="track-ns">fix:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">fix:diagnose</span>
-          <span class="skill-count">← debug-issue</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">fix:patch</span>
-          <span class="skill-count">← fix-bug</span>
-        </div>
-      </div>
-    </div>
+    <!-- ── SECTION 1: BEFORE / AFTER ── -->
+    <section>
+      <h2>The problem: flat chaos → tracked taxonomy</h2>
 
-    <div class="track-card evolve">
-      <h3>Evolve track</h3>
-      <div class="track-title">Behavior-preserving structural change</div>
-      <span class="track-ns">evolve:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">evolve:refactor</span>
-          <span class="skill-count">← refactor</span>
+      <div class="compare-grid">
+        <div class="compare-panel before">
+          <div class="panel-label">V1 — Flat, no grouping</div>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px">
+            22 names in one unordered bag. No lifecycle signal. No namespace. 5 skills (red) never
+            triggered in 10 days.
+          </p>
+          <div class="flat-list">
+            <span class="flat-chip">brainstorm</span>
+            <span class="flat-chip">write-plan</span>
+            <span class="flat-chip">execute-plan</span>
+            <span class="flat-chip">finish-epic</span>
+            <span class="flat-chip unused">analyze-tests</span>
+            <span class="flat-chip unused">branch</span>
+            <span class="flat-chip unused">design-an-interface</span>
+            <span class="flat-chip unused">explain</span>
+            <span class="flat-chip unused">find-test-gaps</span>
+            <span class="flat-chip">debug-issue</span>
+            <span class="flat-chip">fix-bug</span>
+            <span class="flat-chip">conform</span>
+            <span class="flat-chip">challenge</span>
+            <span class="flat-chip">refactor</span>
+            <span class="flat-chip">beads</span>
+            <span class="flat-chip">commit</span>
+            <span class="flat-chip">pr</span>
+            <span class="flat-chip">review</span>
+            <span class="flat-chip">tdd</span>
+            <span class="flat-chip">task-refinement</span>
+            <span class="flat-chip">expand-task</span>
+            <span class="flat-chip">don-cape</span>
+          </div>
+          <p style="font-size: 12px; color: var(--red); margin-top: 12px">
+            Problems: debug-issue vs fix-bug (noun vs verb), conform vs challenge (adjective vs
+            verb), beads (tool name). No mental grouping.
+          </p>
         </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">evolve:challenge</span>
-          <span class="skill-count">← challenge (7×)</span>
-        </div>
-        <div class="divider"></div>
-        <p style="font-size:11px;color:var(--muted)">design-an-interface absorbed into build:explore. branch removed — too rarely used (0×) to justify a skill.</p>
-      </div>
-    </div>
 
-    <div class="track-card quality">
-      <h3>Quality track</h3>
-      <div class="track-title">Review, standards, test analysis</div>
-      <span class="track-ns">quality:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">quality:review</span>
-          <span class="skill-count">← review (12×)</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">quality:conform</span>
-          <span class="skill-count">← conform (7×)</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">quality:audit</span>
-          <span class="skill-count">← analyze-tests (0×)</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">quality:gaps</span>
-          <span class="skill-count">← find-test-gaps (0×)</span>
-        </div>
-        <div class="divider"></div>
-        <p style="font-size:11px;color:var(--muted)">audit + gaps moved here — were orphaned with no lifecycle home. V2 router surfaces them as optional quality gates after build:close.</p>
-      </div>
-    </div>
-
-    <div class="track-card ship">
-      <h3>Ship track</h3>
-      <div class="track-title">Persist and publish completed work</div>
-      <span class="track-ns">ship:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">ship:commit</span>
-          <span class="skill-count">← commit (29×)</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">ship:pr</span>
-          <span class="skill-count">← pr (12×)</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="track-card meta">
-      <h3>Meta track</h3>
-      <div class="track-title">Routing and issue tracking</div>
-      <span class="track-ns">meta:</span>
-      <div class="track-skills">
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">meta:route</span>
-          <span class="skill-count">← don-cape (always-on)</span>
-        </div>
-        <div class="skill-row">
-          <div class="dot"></div>
-          <span class="skill-name">meta:track</span>
-          <span class="skill-count">← beads</span>
-        </div>
-        <div class="divider"></div>
-        <p style="font-size:11px;color:var(--muted)">explain removed as standalone — absorbed into build:explore research phase. meta:route loads track manifests lazily.</p>
-      </div>
-    </div>
-
-  </div>
-</section>
-
-
-<!-- ── SECTION 4: PROGRESSIVE DISCLOSURE ── -->
-<section>
-  <h2>Progressive disclosure — killing the 1000-injection problem</h2>
-
-  <div class="pd-diagram">
-    <div class="pd-row">
-      <div class="pd-tier pd-t1">Tier 1<br>Always</div>
-      <div>
-        <div class="pd-desc">Injected at session start. Tiny. Just the track manifest — 6 names + one-line descriptions + chain order. &lt;200 tokens.</div>
-        <div class="pd-items">
-          <span class="pd-chip">meta:route</span>
-          <span class="pd-chip">build: manifest</span>
-          <span class="pd-chip">fix: manifest</span>
-          <span class="pd-chip">evolve: manifest</span>
-          <span class="pd-chip">quality: manifest</span>
-          <span class="pd-chip">ship: manifest</span>
+        <div class="compare-panel after">
+          <div class="panel-label">V2 — Six tracks, consistent verbs</div>
+          <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px">
+            Names follow <code>track:verb</code>. Every skill has a home. Router knows the track —
+            loads only what's needed.
+          </p>
+          <div class="flat-list">
+            <span class="flat-chip" style="border-color: var(--build); color: var(--build)"
+              >build:explore</span
+            >
+            <span class="flat-chip" style="border-color: var(--build); color: var(--build)"
+              >build:plan</span
+            >
+            <span class="flat-chip" style="border-color: var(--build); color: var(--build)"
+              >build:run</span
+            >
+            <span class="flat-chip" style="border-color: var(--build); color: var(--build)"
+              >build:close</span
+            >
+            <span class="flat-chip" style="border-color: var(--fix); color: var(--fix)"
+              >fix:diagnose</span
+            >
+            <span class="flat-chip" style="border-color: var(--fix); color: var(--fix)"
+              >fix:patch</span
+            >
+            <span class="flat-chip" style="border-color: var(--evolve); color: var(--evolve)"
+              >evolve:refactor</span
+            >
+            <span class="flat-chip" style="border-color: var(--evolve); color: var(--evolve)"
+              >evolve:challenge</span
+            >
+            <span class="flat-chip" style="border-color: var(--quality); color: var(--quality)"
+              >quality:review</span
+            >
+            <span class="flat-chip" style="border-color: var(--quality); color: var(--quality)"
+              >quality:conform</span
+            >
+            <span class="flat-chip" style="border-color: var(--quality); color: var(--quality)"
+              >quality:audit</span
+            >
+            <span class="flat-chip" style="border-color: var(--quality); color: var(--quality)"
+              >quality:gaps</span
+            >
+            <span class="flat-chip" style="border-color: var(--ship); color: var(--ship)"
+              >ship:commit</span
+            >
+            <span class="flat-chip" style="border-color: var(--ship); color: var(--ship)"
+              >ship:pr</span
+            >
+            <span class="flat-chip" style="border-color: var(--cyan); color: var(--cyan)"
+              >meta:route</span
+            >
+            <span class="flat-chip" style="border-color: var(--cyan); color: var(--cyan)"
+              >meta:track</span
+            >
+          </div>
+          <p style="font-size: 12px; color: var(--green); margin-top: 12px">
+            Benefits: track prefix predicts content, verb suffix predicts action. Router loads the
+            track manifest first, then the specific skill — cuts cold-start context by ~60%.
+          </p>
         </div>
       </div>
-    </div>
-    <div class="pd-row">
-      <div class="pd-tier pd-t2">Tier 2<br>On-track</div>
-      <div>
-        <div class="pd-desc">Router identifies the active track from user intent. Loads that track's skill definitions only. ~400 tokens per track vs ~1000 for full catalog.</div>
-        <div class="pd-items">
-          <span class="pd-chip">build:explore definition</span>
-          <span class="pd-chip">build:plan definition</span>
-          <span class="pd-chip">build:run definition</span>
-          <span class="pd-chip">build:close definition</span>
+    </section>
+
+    <!-- ── SECTION 2: TAXONOMY TREE SVG ── -->
+    <section>
+      <h2>V2 taxonomy — six tracks</h2>
+      <div class="svg-wrap">
+        <svg
+          viewBox="0 0 980 520"
+          xmlns="http://www.w3.org/2000/svg"
+          style="width: 100%; min-width: 680px"
+        >
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="#2a3347" />
+            </marker>
+          </defs>
+
+          <!-- ROOT -->
+          <rect
+            x="390"
+            y="20"
+            width="200"
+            height="42"
+            rx="8"
+            fill="#1e2535"
+            stroke="#5b8dee"
+            stroke-width="1.5"
+          />
+          <text
+            x="490"
+            y="36"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="13"
+            fill="#5b8dee"
+            font-weight="700"
+          >
+            cape
+          </text>
+          <text
+            x="490"
+            y="52"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="11"
+            fill="#8893a6"
+          >
+            workflow system
+          </text>
+
+          <!-- Lines from root to tracks -->
+          <!-- build -->
+          <line x1="490" y1="62" x2="490" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="490" y1="80" x2="85" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="85" y1="80" x2="85" y2="116" stroke="#2a3347" stroke-width="1.5" />
+          <!-- fix -->
+          <line x1="490" y1="80" x2="245" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="245" y1="80" x2="245" y2="116" stroke="#2a3347" stroke-width="1.5" />
+          <!-- evolve -->
+          <line x1="490" y1="80" x2="410" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="410" y1="80" x2="410" y2="116" stroke="#2a3347" stroke-width="1.5" />
+          <!-- quality -->
+          <line x1="490" y1="80" x2="570" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="570" y1="80" x2="570" y2="116" stroke="#2a3347" stroke-width="1.5" />
+          <!-- ship -->
+          <line x1="490" y1="80" x2="737" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="737" y1="80" x2="737" y2="116" stroke="#2a3347" stroke-width="1.5" />
+          <!-- meta -->
+          <line x1="490" y1="80" x2="900" y2="80" stroke="#2a3347" stroke-width="1.5" />
+          <line x1="900" y1="80" x2="900" y2="116" stroke="#2a3347" stroke-width="1.5" />
+
+          <!-- ─── BUILD track ─── -->
+          <rect
+            x="15"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#1a2744"
+            stroke="#5b8dee"
+            stroke-width="1.5"
+          />
+          <text
+            x="85"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#5b8dee"
+            font-weight="700"
+          >
+            build:
+          </text>
+          <text
+            x="85"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            New features
+          </text>
+
+          <!-- build children -->
+          <line x1="85" y1="154" x2="85" y2="175" stroke="#1e3060" stroke-width="1" />
+          <line x1="85" y1="175" x2="20" y2="175" stroke="#1e3060" stroke-width="1" />
+          <line x1="85" y1="175" x2="55" y2="175" stroke="#1e3060" stroke-width="1" />
+          <line x1="85" y1="175" x2="90" y2="175" stroke="#1e3060" stroke-width="1" />
+          <line x1="85" y1="175" x2="140" y2="175" stroke="#1e3060" stroke-width="1" />
+          <line x1="20" y1="175" x2="20" y2="192" stroke="#1e3060" stroke-width="1" />
+          <line x1="55" y1="175" x2="55" y2="192" stroke="#1e3060" stroke-width="1" />
+          <line x1="90" y1="175" x2="90" y2="192" stroke="#1e3060" stroke-width="1" />
+          <line x1="140" y1="175" x2="140" y2="192" stroke="#1e3060" stroke-width="1" />
+
+          <rect x="0" y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60" />
+          <text
+            x="21"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            explore
+          </text>
+          <rect x="34" y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60" />
+          <text
+            x="55"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            plan
+          </text>
+          <rect x="68" y="192" width="42" height="28" rx="4" fill="#0e1825" stroke="#2a3a60" />
+          <text
+            x="89"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            run
+          </text>
+          <rect x="117" y="192" width="46" height="28" rx="4" fill="#0e1825" stroke="#2a3a60" />
+          <text
+            x="140"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            close
+          </text>
+
+          <!-- ─── FIX track ─── -->
+          <rect
+            x="175"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#2a1616"
+            stroke="#f0605a"
+            stroke-width="1.5"
+          />
+          <text
+            x="245"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#f0605a"
+            font-weight="700"
+          >
+            fix:
+          </text>
+          <text
+            x="245"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            Bugs & defects
+          </text>
+
+          <line x1="245" y1="154" x2="245" y2="175" stroke="#60201a" stroke-width="1" />
+          <line x1="210" y1="175" x2="280" y2="175" stroke="#60201a" stroke-width="1" />
+          <line x1="210" y1="175" x2="210" y2="192" stroke="#60201a" stroke-width="1" />
+          <line x1="280" y1="175" x2="280" y2="192" stroke="#60201a" stroke-width="1" />
+
+          <rect x="183" y="192" width="54" height="28" rx="4" fill="#1a0e0e" stroke="#60201a" />
+          <text
+            x="210"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f0605a"
+          >
+            diagnose
+          </text>
+          <rect x="252" y="192" width="54" height="28" rx="4" fill="#1a0e0e" stroke="#60201a" />
+          <text
+            x="279"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f0605a"
+          >
+            patch
+          </text>
+
+          <!-- ─── EVOLVE track ─── -->
+          <rect
+            x="340"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#132612"
+            stroke="#43d17a"
+            stroke-width="1.5"
+          />
+          <text
+            x="410"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#43d17a"
+            font-weight="700"
+          >
+            evolve:
+          </text>
+          <text
+            x="410"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            Structure & design
+          </text>
+
+          <line x1="410" y1="154" x2="410" y2="175" stroke="#1e4020" stroke-width="1" />
+          <line x1="370" y1="175" x2="450" y2="175" stroke="#1e4020" stroke-width="1" />
+          <line x1="370" y1="175" x2="370" y2="192" stroke="#1e4020" stroke-width="1" />
+          <line x1="450" y1="175" x2="450" y2="192" stroke="#1e4020" stroke-width="1" />
+
+          <rect x="342" y="192" width="58" height="28" rx="4" fill="#0a1a0a" stroke="#1e4020" />
+          <text
+            x="371"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#43d17a"
+          >
+            refactor
+          </text>
+          <rect x="420" y="192" width="58" height="28" rx="4" fill="#0a1a0a" stroke="#1e4020" />
+          <text
+            x="449"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#43d17a"
+          >
+            challenge
+          </text>
+
+          <!-- ─── QUALITY track ─── -->
+          <rect
+            x="500"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#1e1635"
+            stroke="#a78bfa"
+            stroke-width="1.5"
+          />
+          <text
+            x="570"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#a78bfa"
+            font-weight="700"
+          >
+            quality:
+          </text>
+          <text
+            x="570"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            Review & standards
+          </text>
+
+          <line x1="570" y1="154" x2="570" y2="175" stroke="#3a2860" stroke-width="1" />
+          <line x1="510" y1="175" x2="635" y2="175" stroke="#3a2860" stroke-width="1" />
+          <line x1="510" y1="175" x2="510" y2="192" stroke="#3a2860" stroke-width="1" />
+          <line x1="553" y1="175" x2="553" y2="192" stroke="#3a2860" stroke-width="1" />
+          <line x1="596" y1="175" x2="596" y2="192" stroke="#3a2860" stroke-width="1" />
+          <line x1="635" y1="175" x2="635" y2="192" stroke="#3a2860" stroke-width="1" />
+
+          <rect x="488" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860" />
+          <text
+            x="511"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#a78bfa"
+          >
+            review
+          </text>
+          <rect x="529" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860" />
+          <text
+            x="552"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#a78bfa"
+          >
+            conform
+          </text>
+          <rect x="573" y="192" width="46" height="28" rx="4" fill="#12102a" stroke="#3a2860" />
+          <text
+            x="596"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#a78bfa"
+          >
+            audit
+          </text>
+          <rect x="613" y="192" width="44" height="28" rx="4" fill="#12102a" stroke="#3a2860" />
+          <text
+            x="635"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#a78bfa"
+          >
+            gaps
+          </text>
+
+          <!-- ─── SHIP track ─── -->
+          <rect
+            x="667"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#2a1f0a"
+            stroke="#f4a640"
+            stroke-width="1.5"
+          />
+          <text
+            x="737"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#f4a640"
+            font-weight="700"
+          >
+            ship:
+          </text>
+          <text
+            x="737"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            Commit & publish
+          </text>
+
+          <line x1="737" y1="154" x2="737" y2="175" stroke="#604020" stroke-width="1" />
+          <line x1="700" y1="175" x2="775" y2="175" stroke="#604020" stroke-width="1" />
+          <line x1="700" y1="175" x2="700" y2="192" stroke="#604020" stroke-width="1" />
+          <line x1="775" y1="175" x2="775" y2="192" stroke="#604020" stroke-width="1" />
+
+          <rect x="672" y="192" width="54" height="28" rx="4" fill="#1a1408" stroke="#604020" />
+          <text
+            x="699"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f4a640"
+          >
+            commit
+          </text>
+          <rect x="748" y="192" width="54" height="28" rx="4" fill="#1a1408" stroke="#604020" />
+          <text
+            x="775"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f4a640"
+          >
+            pr
+          </text>
+
+          <!-- ─── META track ─── -->
+          <rect
+            x="830"
+            y="116"
+            width="140"
+            height="38"
+            rx="7"
+            fill="#0d2030"
+            stroke="#38bdf8"
+            stroke-width="1.5"
+          />
+          <text
+            x="900"
+            y="130"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="12"
+            fill="#38bdf8"
+            font-weight="700"
+          >
+            meta:
+          </text>
+          <text
+            x="900"
+            y="146"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#8893a6"
+          >
+            Routing & tracking
+          </text>
+
+          <line x1="900" y1="154" x2="900" y2="175" stroke="#1e4060" stroke-width="1" />
+          <line x1="862" y1="175" x2="940" y2="175" stroke="#1e4060" stroke-width="1" />
+          <line x1="862" y1="175" x2="862" y2="192" stroke="#1e4060" stroke-width="1" />
+          <line x1="940" y1="175" x2="940" y2="192" stroke="#1e4060" stroke-width="1" />
+
+          <rect x="834" y="192" width="54" height="28" rx="4" fill="#081420" stroke="#1e4060" />
+          <text
+            x="861"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            route
+          </text>
+          <rect x="910" y="192" width="54" height="28" rx="4" fill="#081420" stroke="#1e4060" />
+          <text
+            x="937"
+            y="210"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            track
+          </text>
+
+          <!-- ─── AGENTS row ─── -->
+          <text
+            x="490"
+            y="275"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#4a5568"
+            font-weight="700"
+            letter-spacing="0.1em"
+          >
+            AGENTS (dispatched internally — never user-routed)
+          </text>
+
+          <rect x="30" y="290" width="115" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="87"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            codebase-investigator
+          </text>
+
+          <rect x="155" y="290" width="105" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="207"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            code-reviewer
+          </text>
+
+          <rect x="270" y="290" width="95" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="317"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            bug-tracer
+          </text>
+
+          <rect x="375" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="420"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            fact-checker
+          </text>
+
+          <rect x="475" y="290" width="105" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="527"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            internet-researcher
+          </text>
+
+          <rect x="590" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="635"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            test-runner
+          </text>
+
+          <rect x="690" y="290" width="90" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="735"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            test-auditor
+          </text>
+
+          <rect x="790" y="290" width="110" height="32" rx="5" fill="#0d2030" stroke="#1e4060" />
+          <text
+            x="845"
+            y="310"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#38bdf8"
+          >
+            notebox-researcher
+          </text>
+
+          <!-- ─── CHAIN diagram ─── -->
+          <text
+            x="490"
+            y="370"
+            text-anchor="middle"
+            font-family="sans-serif"
+            font-size="11"
+            fill="#4a5568"
+            font-weight="700"
+            letter-spacing="0.1em"
+          >
+            WORKFLOW CHAINS
+          </text>
+
+          <!-- Build chain -->
+          <text
+            x="30"
+            y="394"
+            font-family="sans-serif"
+            font-size="10"
+            fill="#5b8dee"
+            font-weight="700"
+          >
+            BUILD
+          </text>
+          <rect x="68" y="382" width="70" height="22" rx="4" fill="#1a2744" stroke="#2a3a60" />
+          <text
+            x="103"
+            y="397"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            build:explore
+          </text>
+          <text x="142" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="150" y="382" width="64" height="22" rx="4" fill="#1a2744" stroke="#2a3a60" />
+          <text
+            x="182"
+            y="397"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            build:plan
+          </text>
+          <text x="218" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="226" y="382" width="56" height="22" rx="4" fill="#1a2744" stroke="#2a3a60" />
+          <text
+            x="254"
+            y="397"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            build:run
+          </text>
+          <text x="286" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="294" y="382" width="62" height="22" rx="4" fill="#1a2744" stroke="#2a3a60" />
+          <text
+            x="325"
+            y="397"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#5b8dee"
+          >
+            build:close
+          </text>
+          <text x="360" y="397" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="368" y="382" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020" />
+          <text
+            x="396"
+            y="397"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f4a640"
+          >
+            ship:commit
+          </text>
+
+          <!-- Fix chain -->
+          <text
+            x="30"
+            y="432"
+            font-family="sans-serif"
+            font-size="10"
+            fill="#f0605a"
+            font-weight="700"
+          >
+            FIX
+          </text>
+          <rect x="68" y="420" width="66" height="22" rx="4" fill="#2a1616" stroke="#60201a" />
+          <text
+            x="101"
+            y="435"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f0605a"
+          >
+            fix:diagnose
+          </text>
+          <text x="138" y="435" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="146" y="420" width="56" height="22" rx="4" fill="#2a1616" stroke="#60201a" />
+          <text
+            x="174"
+            y="435"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f0605a"
+          >
+            fix:patch
+          </text>
+          <text x="206" y="435" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="214" y="420" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020" />
+          <text
+            x="242"
+            y="435"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f4a640"
+          >
+            ship:commit
+          </text>
+
+          <!-- Evolve chain -->
+          <text
+            x="30"
+            y="470"
+            font-family="sans-serif"
+            font-size="10"
+            fill="#43d17a"
+            font-weight="700"
+          >
+            EVOLVE
+          </text>
+          <rect x="68" y="458" width="76" height="22" rx="4" fill="#132612" stroke="#1e4020" />
+          <text
+            x="106"
+            y="473"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#43d17a"
+          >
+            evolve:refactor
+          </text>
+          <text x="148" y="473" font-family="sans-serif" font-size="12" fill="#4a5568">→</text>
+          <rect x="156" y="458" width="56" height="22" rx="4" fill="#2a1f0a" stroke="#604020" />
+          <text
+            x="184"
+            y="473"
+            text-anchor="middle"
+            font-family="monospace"
+            font-size="10"
+            fill="#f4a640"
+          >
+            ship:commit
+          </text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ── SECTION 3: TRACK CARDS ── -->
+    <section>
+      <h2>Track detail — skills, usage, mapping</h2>
+      <div class="tracks-grid">
+        <div class="track-card build">
+          <h3>Build track</h3>
+          <div class="track-title">New features & integrations</div>
+          <span class="track-ns">build:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">build:explore</span>
+              <span class="skill-count">← brainstorm (9×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">build:plan</span>
+              <span class="skill-count">← write-plan (6×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">build:run</span>
+              <span class="skill-count">← execute-plan (7×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">build:close</span>
+              <span class="skill-count">← finish-epic (4×)</span>
+            </div>
+            <div class="divider"></div>
+            <div class="skill-row internal">
+              <div class="dot"></div>
+              <span class="skill-name">build:expand</span>
+              <span class="skill-count">← expand-task (internal)</span>
+            </div>
+            <div class="skill-row internal">
+              <div class="dot"></div>
+              <span class="skill-name">build:tdd</span>
+              <span class="skill-count">← tdd (internal)</span>
+            </div>
+            <div class="skill-row internal">
+              <div class="dot"></div>
+              <span class="skill-name">build:refine</span>
+              <span class="skill-count">← task-refinement (opt-in)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-card fix">
+          <h3>Fix track</h3>
+          <div class="track-title">Bugs, defects, regressions</div>
+          <span class="track-ns">fix:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">fix:diagnose</span>
+              <span class="skill-count">← debug-issue</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">fix:patch</span>
+              <span class="skill-count">← fix-bug</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-card evolve">
+          <h3>Evolve track</h3>
+          <div class="track-title">Behavior-preserving structural change</div>
+          <span class="track-ns">evolve:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">evolve:refactor</span>
+              <span class="skill-count">← refactor</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">evolve:challenge</span>
+              <span class="skill-count">← challenge (7×)</span>
+            </div>
+            <div class="divider"></div>
+            <p style="font-size: 11px; color: var(--muted)">
+              design-an-interface absorbed into build:explore. branch removed — too rarely used (0×)
+              to justify a skill.
+            </p>
+          </div>
+        </div>
+
+        <div class="track-card quality">
+          <h3>Quality track</h3>
+          <div class="track-title">Review, standards, test analysis</div>
+          <span class="track-ns">quality:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">quality:review</span>
+              <span class="skill-count">← review (12×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">quality:conform</span>
+              <span class="skill-count">← conform (7×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">quality:audit</span>
+              <span class="skill-count">← analyze-tests (0×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">quality:gaps</span>
+              <span class="skill-count">← find-test-gaps (0×)</span>
+            </div>
+            <div class="divider"></div>
+            <p style="font-size: 11px; color: var(--muted)">
+              audit + gaps moved here — were orphaned with no lifecycle home. V2 router surfaces
+              them as optional quality gates after build:close.
+            </p>
+          </div>
+        </div>
+
+        <div class="track-card ship">
+          <h3>Ship track</h3>
+          <div class="track-title">Persist and publish completed work</div>
+          <span class="track-ns">ship:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">ship:commit</span>
+              <span class="skill-count">← commit (29×)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">ship:pr</span>
+              <span class="skill-count">← pr (12×)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="track-card meta">
+          <h3>Meta track</h3>
+          <div class="track-title">Routing and issue tracking</div>
+          <span class="track-ns">meta:</span>
+          <div class="track-skills">
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">meta:route</span>
+              <span class="skill-count">← don-cape (always-on)</span>
+            </div>
+            <div class="skill-row">
+              <div class="dot"></div>
+              <span class="skill-name">meta:track</span>
+              <span class="skill-count">← beads</span>
+            </div>
+            <div class="divider"></div>
+            <p style="font-size: 11px; color: var(--muted)">
+              explain removed as standalone — absorbed into build:explore research phase. meta:route
+              loads track manifests lazily.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="pd-row">
-      <div class="pd-tier pd-t3">Tier 3<br>On-invoke</div>
-      <div>
-        <div class="pd-desc">Skill loads its own agents and internal sub-skills on demand via Skill tool. Agents are never in context unless dispatched.</div>
-        <div class="pd-items">
-          <span class="pd-chip">codebase-investigator</span>
-          <span class="pd-chip">fact-checker</span>
-          <span class="pd-chip">code-reviewer</span>
-          <span class="pd-chip">internet-researcher</span>
-          <span class="pd-chip">build:tdd (internal)</span>
-          <span class="pd-chip">build:expand (internal)</span>
+    </section>
+
+    <!-- ── SECTION 4: PROGRESSIVE DISCLOSURE ── -->
+    <section>
+      <h2>Progressive disclosure — killing the 1000-injection problem</h2>
+
+      <div class="pd-diagram">
+        <div class="pd-row">
+          <div class="pd-tier pd-t1">Tier 1<br />Always</div>
+          <div>
+            <div class="pd-desc">
+              Injected at session start. Tiny. Just the track manifest — 6 names + one-line
+              descriptions + chain order. &lt;200 tokens.
+            </div>
+            <div class="pd-items">
+              <span class="pd-chip">meta:route</span>
+              <span class="pd-chip">build: manifest</span>
+              <span class="pd-chip">fix: manifest</span>
+              <span class="pd-chip">evolve: manifest</span>
+              <span class="pd-chip">quality: manifest</span>
+              <span class="pd-chip">ship: manifest</span>
+            </div>
+          </div>
+        </div>
+        <div class="pd-row">
+          <div class="pd-tier pd-t2">Tier 2<br />On-track</div>
+          <div>
+            <div class="pd-desc">
+              Router identifies the active track from user intent. Loads that track's skill
+              definitions only. ~400 tokens per track vs ~1000 for full catalog.
+            </div>
+            <div class="pd-items">
+              <span class="pd-chip">build:explore definition</span>
+              <span class="pd-chip">build:plan definition</span>
+              <span class="pd-chip">build:run definition</span>
+              <span class="pd-chip">build:close definition</span>
+            </div>
+          </div>
+        </div>
+        <div class="pd-row">
+          <div class="pd-tier pd-t3">Tier 3<br />On-invoke</div>
+          <div>
+            <div class="pd-desc">
+              Skill loads its own agents and internal sub-skills on demand via Skill tool. Agents
+              are never in context unless dispatched.
+            </div>
+            <div class="pd-items">
+              <span class="pd-chip">codebase-investigator</span>
+              <span class="pd-chip">fact-checker</span>
+              <span class="pd-chip">code-reviewer</span>
+              <span class="pd-chip">internet-researcher</span>
+              <span class="pd-chip">build:tdd (internal)</span>
+              <span class="pd-chip">build:expand (internal)</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <p style="font-size:13px;color:var(--muted);margin-top:14px;">
-    Result: a commit-only session (the most common pattern — 29 of 97 invocations) loads <strong style="color:var(--text)">meta:route + ship: manifest + ship:commit</strong> — roughly 3 definitions instead of 22. Context overhead drops ~85% for single-track sessions.
-  </p>
-</section>
+      <p style="font-size: 13px; color: var(--muted); margin-top: 14px">
+        Result: a commit-only session (the most common pattern — 29 of 97 invocations) loads
+        <strong style="color: var(--text)">meta:route + ship: manifest + ship:commit</strong> —
+        roughly 3 definitions instead of 22. Context overhead drops ~85% for single-track sessions.
+      </p>
+    </section>
 
+    <!-- ── SECTION 5: ROUTER REDESIGN ── -->
+    <section>
+      <h2>Router redesign — from omniscient to thin</h2>
 
-<!-- ── SECTION 5: ROUTER REDESIGN ── -->
-<section>
-  <h2>Router redesign — from omniscient to thin</h2>
+      <div
+        style="
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 24px;
+          font-size: 13px;
+        "
+      >
+        <table>
+          <thead>
+            <tr>
+              <th>Dimension</th>
+              <th>V1 (don-cape)</th>
+              <th>V2 (meta:route)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Size</strong></td>
+              <td>Full routing table with 18 rows, all skill descriptions</td>
+              <td>6-row track dispatch + short-circuit rules only</td>
+            </tr>
+            <tr>
+              <td><strong>Skill knowledge</strong></td>
+              <td>Embeds trigger text for every skill inline</td>
+              <td>Delegates to track manifest; skills define their own triggers</td>
+            </tr>
+            <tr>
+              <td><strong>Chain enforcement</strong></td>
+              <td>Router knows full chain; must be kept in sync with skills</td>
+              <td>Each track manifest owns its chain — router just selects track</td>
+            </tr>
+            <tr>
+              <td><strong>Agent dispatch</strong></td>
+              <td>Router lists all 7 agents and which skills call them</td>
+              <td>Agents invisible to router; skills dispatch independently</td>
+            </tr>
+            <tr>
+              <td><strong>Maintenance burden</strong></td>
+              <td>Adding a skill = update router + skill file</td>
+              <td>Adding a skill = update track manifest only</td>
+            </tr>
+            <tr>
+              <td><strong>Never-fire skills</strong></td>
+              <td>Still injected every session (analyze-tests, branch, etc.)</td>
+              <td>Pruned or absorbed; quality:audit promoted via post-close hook</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;font-size:13px;">
-    <table>
-      <thead>
-        <tr>
-          <th>Dimension</th>
-          <th>V1 (don-cape)</th>
-          <th>V2 (meta:route)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Size</strong></td>
-          <td>Full routing table with 18 rows, all skill descriptions</td>
-          <td>6-row track dispatch + short-circuit rules only</td>
-        </tr>
-        <tr>
-          <td><strong>Skill knowledge</strong></td>
-          <td>Embeds trigger text for every skill inline</td>
-          <td>Delegates to track manifest; skills define their own triggers</td>
-        </tr>
-        <tr>
-          <td><strong>Chain enforcement</strong></td>
-          <td>Router knows full chain; must be kept in sync with skills</td>
-          <td>Each track manifest owns its chain — router just selects track</td>
-        </tr>
-        <tr>
-          <td><strong>Agent dispatch</strong></td>
-          <td>Router lists all 7 agents and which skills call them</td>
-          <td>Agents invisible to router; skills dispatch independently</td>
-        </tr>
-        <tr>
-          <td><strong>Maintenance burden</strong></td>
-          <td>Adding a skill = update router + skill file</td>
-          <td>Adding a skill = update track manifest only</td>
-        </tr>
-        <tr>
-          <td><strong>Never-fire skills</strong></td>
-          <td>Still injected every session (analyze-tests, branch, etc.)</td>
-          <td>Pruned or absorbed; quality:audit promoted via post-close hook</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</section>
+    <!-- ── SECTION 6: SKILL vs AGENT ── -->
+    <section>
+      <h2>Resolving skill vs agent conceptual overlap</h2>
 
+      <div
+        style="
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 24px;
+          font-size: 13px;
+          margin-bottom: 16px;
+        "
+      >
+        <p style="color: var(--muted); margin-bottom: 16px">
+          V1 ambiguity: <code>code-reviewer</code> exists as both an agent and
+          <code>review</code> exists as a user-facing skill. <code>codebase-investigator</code> was
+          used 30× but is invisible to users. The distinction was implicit.
+        </p>
 
-<!-- ── SECTION 6: SKILL vs AGENT ── -->
-<section>
-  <h2>Resolving skill vs agent conceptual overlap</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>V2 role</th>
+              <th>User-visible?</th>
+              <th>Invoked by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Skill</strong></td>
+              <td>
+                Orchestrates a user-facing workflow. Has a trigger, chain position, rigidity level,
+                stops for user input.
+              </td>
+              <td style="color: var(--green)">Yes — slash command or routing</td>
+              <td>User intent → meta:route</td>
+            </tr>
+            <tr>
+              <td><strong>Agent</strong></td>
+              <td>
+                Deep, sandboxed specialist. No chain, no user stops. Returns a result to the calling
+                skill.
+              </td>
+              <td style="color: var(--red)">No — internal only</td>
+              <td>Skills dispatch via Agent tool</td>
+            </tr>
+            <tr>
+              <td><strong>Internal skill</strong></td>
+              <td>
+                Sub-routine within a track. Has rigidity but no user trigger. E.g. build:expand,
+                build:tdd.
+              </td>
+              <td style="color: var(--amber)">Visible in docs, not routing</td>
+              <td>Parent skill calls Skill tool</td>
+            </tr>
+          </tbody>
+        </table>
 
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;font-size:13px;margin-bottom:16px;">
-    <p style="color:var(--muted);margin-bottom:16px;">V1 ambiguity: <code>code-reviewer</code> exists as both an agent and <code>review</code> exists as a user-facing skill. <code>codebase-investigator</code> was used 30× but is invisible to users. The distinction was implicit.</p>
+        <p style="color: var(--muted); margin-top: 14px">
+          Rule of thumb: if a user would ever type <code>/cape:&lt;name&gt;</code>, it's a skill. If
+          it does deep work and hands back a result, it's an agent. If it's a reusable step within
+          one track, it's an internal skill.
+        </p>
+      </div>
+    </section>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>V2 role</th>
-          <th>User-visible?</th>
-          <th>Invoked by</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Skill</strong></td>
-          <td>Orchestrates a user-facing workflow. Has a trigger, chain position, rigidity level, stops for user input.</td>
-          <td style="color:var(--green)">Yes — slash command or routing</td>
-          <td>User intent → meta:route</td>
-        </tr>
-        <tr>
-          <td><strong>Agent</strong></td>
-          <td>Deep, sandboxed specialist. No chain, no user stops. Returns a result to the calling skill.</td>
-          <td style="color:var(--red)">No — internal only</td>
-          <td>Skills dispatch via Agent tool</td>
-        </tr>
-        <tr>
-          <td><strong>Internal skill</strong></td>
-          <td>Sub-routine within a track. Has rigidity but no user trigger. E.g. build:expand, build:tdd.</td>
-          <td style="color:var(--amber)">Visible in docs, not routing</td>
-          <td>Parent skill calls Skill tool</td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- ── SECTION 7: KEY FINDINGS ── -->
+    <section>
+      <h2>Key findings from usage data</h2>
+      <div class="findings-grid">
+        <div class="finding">
+          <div class="finding-num">01</div>
+          <div class="finding-title">Five skills are dead weight</div>
+          <div class="finding-body">
+            <span class="highlight"
+              >analyze-tests, branch, design-an-interface, explain, find-test-gaps</span
+            >
+            fired zero times in 10 days. Each still injected every session. Either absorb into
+            existing skills or move to opt-in tier-3 only.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="finding-num">02</div>
+          <div class="finding-title">Naming is a cognitive tax</div>
+          <div class="finding-body">
+            V1 mixes naming axes: lifecycle verbs (<span class="highlight">execute-plan</span>),
+            problem nouns (<span class="highlight">debug-issue</span>), action verbs (<span
+              class="highlight"
+              >conform</span
+            >), tool names (<span class="highlight">beads</span>). A newcomer cannot predict what
+            any skill does from its name alone.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="finding-num">03</div>
+          <div class="finding-title">Router is a single point of truth AND failure</div>
+          <div class="finding-body">
+            don-cape carries the entire routing table, chain logic, and agent manifest. Adding any
+            skill requires updating the router. V2 delegates: tracks own their manifests, skills own
+            their triggers.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="finding-num">04</div>
+          <div class="finding-title">commit dominates (29×)</div>
+          <div class="finding-body">
+            The most-used skill by 2.5×. Yet it loads the same 22-skill context as a full build
+            session. A ship-only session should load only
+            <span class="highlight">meta:route + ship: manifest</span> — under 3 definitions total.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="finding-num">05</div>
+          <div class="finding-title">codebase-investigator is the real workhorse</div>
+          <div class="finding-body">
+            Used 30× internally but completely invisible to users. V2 formalizes the distinction:
+            agents are black-box specialists dispatched by skills, never user-invoked. Naming
+            reflects this — no user-facing alias.
+          </div>
+        </div>
+        <div class="finding">
+          <div class="finding-num">06</div>
+          <div class="finding-title">quality skills lack a home</div>
+          <div class="finding-body">
+            review, conform, analyze-tests, find-test-gaps are scattered in V1 with no shared
+            identity. Grouping them under <span class="highlight">quality:</span> makes them
+            discoverable as a unit and enables a "quality pass" gate after build:close.
+          </div>
+        </div>
+      </div>
+    </section>
 
-    <p style="color:var(--muted);margin-top:14px;">Rule of thumb: if a user would ever type <code>/cape:&lt;name&gt;</code>, it's a skill. If it does deep work and hands back a result, it's an agent. If it's a reusable step within one track, it's an internal skill.</p>
-  </div>
-</section>
-
-
-<!-- ── SECTION 7: KEY FINDINGS ── -->
-<section>
-  <h2>Key findings from usage data</h2>
-  <div class="findings-grid">
-    <div class="finding">
-      <div class="finding-num">01</div>
-      <div class="finding-title">Five skills are dead weight</div>
-      <div class="finding-body"><span class="highlight">analyze-tests, branch, design-an-interface, explain, find-test-gaps</span> fired zero times in 10 days. Each still injected every session. Either absorb into existing skills or move to opt-in tier-3 only.</div>
-    </div>
-    <div class="finding">
-      <div class="finding-num">02</div>
-      <div class="finding-title">Naming is a cognitive tax</div>
-      <div class="finding-body">V1 mixes naming axes: lifecycle verbs (<span class="highlight">execute-plan</span>), problem nouns (<span class="highlight">debug-issue</span>), action verbs (<span class="highlight">conform</span>), tool names (<span class="highlight">beads</span>). A newcomer cannot predict what any skill does from its name alone.</div>
-    </div>
-    <div class="finding">
-      <div class="finding-num">03</div>
-      <div class="finding-title">Router is a single point of truth AND failure</div>
-      <div class="finding-body">don-cape carries the entire routing table, chain logic, and agent manifest. Adding any skill requires updating the router. V2 delegates: tracks own their manifests, skills own their triggers.</div>
-    </div>
-    <div class="finding">
-      <div class="finding-num">04</div>
-      <div class="finding-title">commit dominates (29×)</div>
-      <div class="finding-body">The most-used skill by 2.5×. Yet it loads the same 22-skill context as a full build session. A ship-only session should load only <span class="highlight">meta:route + ship: manifest</span> — under 3 definitions total.</div>
-    </div>
-    <div class="finding">
-      <div class="finding-num">05</div>
-      <div class="finding-title">codebase-investigator is the real workhorse</div>
-      <div class="finding-body">Used 30× internally but completely invisible to users. V2 formalizes the distinction: agents are black-box specialists dispatched by skills, never user-invoked. Naming reflects this — no user-facing alias.</div>
-    </div>
-    <div class="finding">
-      <div class="finding-num">06</div>
-      <div class="finding-title">quality skills lack a home</div>
-      <div class="finding-body">review, conform, analyze-tests, find-test-gaps are scattered in V1 with no shared identity. Grouping them under <span class="highlight">quality:</span> makes them discoverable as a unit and enables a "quality pass" gate after build:close.</div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ── FOOTER ── -->
-<footer style="border-top:1px solid var(--border);padding-top:24px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-  <span>Cape V2 — Information Architect</span>
-  <span>Grounded in 10-day usage logs · 22 skills · 8 agents · 97 invocations analyzed</span>
-</footer>
-
-</body>
+    <!-- ── FOOTER ── -->
+    <footer
+      style="
+        border-top: 1px solid var(--border);
+        padding-top: 24px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      "
+    >
+      <span>Cape V2 — Information Architect</span>
+      <span>Grounded in 10-day usage logs · 22 skills · 8 agents · 97 invocations analyzed</span>
+    </footer>
+  </body>
 </html>

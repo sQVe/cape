@@ -1,990 +1,2169 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cape V2 — Workflow Architect</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cape V2 — Workflow Architect</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
 
-  :root {
-    --bg: #0f1117;
-    --surface: #1a1d27;
-    --surface2: #22263a;
-    --border: #2e3349;
-    --text: #e2e8f0;
-    --muted: #8892aa;
-    --accent: #6366f1;
-    --accent-dim: #3f4270;
-    --green: #22d3a5;
-    --green-dim: #0d4a3a;
-    --amber: #f59e0b;
-    --amber-dim: #3d2a06;
-    --red: #f87171;
-    --red-dim: #3d1212;
-    --blue: #60a5fa;
-    --blue-dim: #1a2f52;
-    --purple: #a78bfa;
-    --purple-dim: #2d2152;
-    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-  }
+      :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #22263a;
+        --border: #2e3349;
+        --text: #e2e8f0;
+        --muted: #8892aa;
+        --accent: #6366f1;
+        --accent-dim: #3f4270;
+        --green: #22d3a5;
+        --green-dim: #0d4a3a;
+        --amber: #f59e0b;
+        --amber-dim: #3d2a06;
+        --red: #f87171;
+        --red-dim: #3d1212;
+        --blue: #60a5fa;
+        --blue-dim: #1a2f52;
+        --purple: #a78bfa;
+        --purple-dim: #2d2152;
+        --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 15px;
-    line-height: 1.65;
-    padding: 0 0 80px;
-  }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 15px;
+        line-height: 1.65;
+        padding: 0 0 80px;
+      }
 
-  /* ── Header ── */
-  .header {
-    background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
-    border-bottom: 1px solid var(--border);
-    padding: 48px 48px 40px;
-    position: relative;
-    overflow: hidden;
-  }
-  .header::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 300px; height: 300px;
-    background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .perspective-label {
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-  h1 {
-    font-size: 32px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    line-height: 1.2;
-    margin-bottom: 14px;
-  }
-  .header-sub {
-    color: var(--muted);
-    font-size: 15px;
-    max-width: 640px;
-  }
+      /* ── Header ── */
+      .header {
+        background: linear-gradient(135deg, #1a1d27 0%, #12152a 100%);
+        border-bottom: 1px solid var(--border);
+        padding: 48px 48px 40px;
+        position: relative;
+        overflow: hidden;
+      }
+      .header::before {
+        content: '';
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+        pointer-events: none;
+      }
+      .perspective-label {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 10px;
+      }
+      h1 {
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+        margin-bottom: 14px;
+      }
+      .header-sub {
+        color: var(--muted);
+        font-size: 15px;
+        max-width: 640px;
+      }
 
-  /* ── Main layout ── */
-  .content {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 48px;
-  }
+      /* ── Main layout ── */
+      .content {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 48px;
+      }
 
-  /* ── Sections ── */
-  .section {
-    margin-top: 56px;
-  }
-  .section-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
-  }
-  h2 {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-    margin-bottom: 20px;
-    color: var(--text);
-  }
-  h3 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
-  p { color: var(--muted); margin-bottom: 14px; }
-  p:last-child { margin-bottom: 0; }
-  strong { color: var(--text); font-weight: 600; }
+      /* ── Sections ── */
+      .section {
+        margin-top: 56px;
+      }
+      .section-label {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin-bottom: 8px;
+      }
+      h2 {
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.3px;
+        margin-bottom: 20px;
+        color: var(--text);
+      }
+      h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text);
+      }
+      p {
+        color: var(--muted);
+        margin-bottom: 14px;
+      }
+      p:last-child {
+        margin-bottom: 0;
+      }
+      strong {
+        color: var(--text);
+        font-weight: 600;
+      }
 
-  /* ── Thesis ── */
-  .thesis {
-    background: linear-gradient(135deg, var(--accent-dim) 0%, #1e2040 100%);
-    border: 1px solid var(--accent);
-    border-radius: 10px;
-    padding: 24px 28px;
-    margin-top: 36px;
-    font-size: 17px;
-    line-height: 1.55;
-    color: var(--text);
-  }
-  .thesis strong { color: #a5b4fc; }
+      /* ── Thesis ── */
+      .thesis {
+        background: linear-gradient(135deg, var(--accent-dim) 0%, #1e2040 100%);
+        border: 1px solid var(--accent);
+        border-radius: 10px;
+        padding: 24px 28px;
+        margin-top: 36px;
+        font-size: 17px;
+        line-height: 1.55;
+        color: var(--text);
+      }
+      .thesis strong {
+        color: #a5b4fc;
+      }
 
-  /* ── Data grid ── */
-  .data-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-top: 24px;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-  }
-  .stat-number {
-    font-size: 32px;
-    font-weight: 700;
-    font-family: var(--mono);
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  .stat-label { font-size: 12px; color: var(--muted); letter-spacing: 0.03em; }
-  .stat-detail { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
+      /* ── Data grid ── */
+      .data-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-top: 24px;
+      }
+      .stat-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 20px;
+      }
+      .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+        font-family: var(--mono);
+        line-height: 1;
+        margin-bottom: 6px;
+      }
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        letter-spacing: 0.03em;
+      }
+      .stat-detail {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+        font-family: var(--mono);
+      }
 
-  /* ── Invocation bar chart ── */
-  .bar-chart {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 24px;
-    margin-top: 16px;
-  }
-  .bar-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .bar-row:last-child { margin-bottom: 0; }
-  .bar-name {
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--muted);
-    width: 160px;
-    flex-shrink: 0;
-    text-align: right;
-  }
-  .bar-track {
-    flex: 1;
-    height: 22px;
-    background: var(--surface2);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-  }
-  .bar-fill {
-    height: 100%;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    padding-left: 8px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: rgba(255,255,255,0.85);
-    font-weight: 600;
-    transition: width 0.3s ease;
-  }
-  .bar-dead {
-    background: repeating-linear-gradient(
-      45deg,
-      #1e2030,
-      #1e2030 4px,
-      #252840 4px,
-      #252840 8px
-    );
-    height: 100%;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    padding-left: 8px;
-    font-size: 11px;
-    font-family: var(--mono);
-    color: #444;
-  }
-  .bar-count {
-    font-family: var(--mono);
-    font-size: 12px;
-    width: 32px;
-    text-align: right;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-  .chain-tag {
-    font-size: 10px;
-    font-family: var(--mono);
-    padding: 1px 6px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    flex-shrink: 0;
-    width: 52px;
-    text-align: center;
-  }
-  .tag-plan { background: var(--purple-dim); color: var(--purple); }
-  .tag-build { background: var(--green-dim); color: var(--green); }
-  .tag-ship { background: var(--blue-dim); color: var(--blue); }
-  .tag-bug { background: var(--red-dim); color: var(--red); }
-  .tag-none { background: #1e2030; color: #444; }
-  .tag-quality { background: var(--amber-dim); color: var(--amber); }
+      /* ── Invocation bar chart ── */
+      .bar-chart {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 24px;
+        margin-top: 16px;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+      .bar-row:last-child {
+        margin-bottom: 0;
+      }
+      .bar-name {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        width: 160px;
+        flex-shrink: 0;
+        text-align: right;
+      }
+      .bar-track {
+        flex: 1;
+        height: 22px;
+        background: var(--surface2);
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+        font-size: 11px;
+        font-family: var(--mono);
+        color: rgba(255, 255, 255, 0.85);
+        font-weight: 600;
+        transition: width 0.3s ease;
+      }
+      .bar-dead {
+        background: repeating-linear-gradient(
+          45deg,
+          #1e2030,
+          #1e2030 4px,
+          #252840 4px,
+          #252840 8px
+        );
+        height: 100%;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+        font-size: 11px;
+        font-family: var(--mono);
+        color: #444;
+      }
+      .bar-count {
+        font-family: var(--mono);
+        font-size: 12px;
+        width: 32px;
+        text-align: right;
+        color: var(--muted);
+        flex-shrink: 0;
+      }
+      .chain-tag {
+        font-size: 10px;
+        font-family: var(--mono);
+        padding: 1px 6px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        flex-shrink: 0;
+        width: 52px;
+        text-align: center;
+      }
+      .tag-plan {
+        background: var(--purple-dim);
+        color: var(--purple);
+      }
+      .tag-build {
+        background: var(--green-dim);
+        color: var(--green);
+      }
+      .tag-ship {
+        background: var(--blue-dim);
+        color: var(--blue);
+      }
+      .tag-bug {
+        background: var(--red-dim);
+        color: var(--red);
+      }
+      .tag-none {
+        background: #1e2030;
+        color: #444;
+      }
+      .tag-quality {
+        background: var(--amber-dim);
+        color: var(--amber);
+      }
 
-  /* ── V1 vs V2 pipeline diagram ── */
-  .pipeline-container {
-    margin-top: 24px;
-  }
-  .pipeline-title {
-    font-size: 13px;
-    font-family: var(--mono);
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    padding-left: 4px;
-  }
-  .pipeline-label-bad { color: var(--red); }
-  .pipeline-label-good { color: var(--green); }
+      /* ── V1 vs V2 pipeline diagram ── */
+      .pipeline-container {
+        margin-top: 24px;
+      }
+      .pipeline-title {
+        font-size: 13px;
+        font-family: var(--mono);
+        color: var(--muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        padding-left: 4px;
+      }
+      .pipeline-label-bad {
+        color: var(--red);
+      }
+      .pipeline-label-good {
+        color: var(--green);
+      }
 
-  /* ── Changes list ── */
-  .changes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-top: 16px;
-  }
-  .change-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-  }
-  .change-number {
-    font-size: 11px;
-    font-family: var(--mono);
-    color: var(--accent);
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-  }
-  .change-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text);
-  }
-  .change-body { font-size: 13px; color: var(--muted); line-height: 1.6; }
-  .change-before {
-    margin-top: 14px;
-    font-size: 12px;
-    font-family: var(--mono);
-    background: var(--red-dim);
-    border-left: 3px solid var(--red);
-    padding: 8px 10px;
-    border-radius: 0 4px 4px 0;
-    color: #fca5a5;
-  }
-  .change-after {
-    margin-top: 6px;
-    font-size: 12px;
-    font-family: var(--mono);
-    background: var(--green-dim);
-    border-left: 3px solid var(--green);
-    padding: 8px 10px;
-    border-radius: 0 4px 4px 0;
-    color: #6ee7b7;
-  }
+      /* ── Changes list ── */
+      .changes-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 16px;
+      }
+      .change-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 20px;
+      }
+      .change-number {
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--accent);
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+      }
+      .change-title {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: var(--text);
+      }
+      .change-body {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .change-before {
+        margin-top: 14px;
+        font-size: 12px;
+        font-family: var(--mono);
+        background: var(--red-dim);
+        border-left: 3px solid var(--red);
+        padding: 8px 10px;
+        border-radius: 0 4px 4px 0;
+        color: #fca5a5;
+      }
+      .change-after {
+        margin-top: 6px;
+        font-size: 12px;
+        font-family: var(--mono);
+        background: var(--green-dim);
+        border-left: 3px solid var(--green);
+        padding: 8px 10px;
+        border-radius: 0 4px 4px 0;
+        color: #6ee7b7;
+      }
 
-  /* ── State machine table ── */
-  .phase-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    font-size: 13px;
-  }
-  .phase-table th {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 2px solid var(--border);
-    color: var(--muted);
-    font-weight: 500;
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    font-family: var(--mono);
-  }
-  .phase-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    vertical-align: top;
-  }
-  .phase-table tr:last-child td { border-bottom: none; }
-  .phase-table tr:hover td { background: var(--surface2); }
-  .phase-name {
-    font-weight: 600;
-    font-size: 13px;
-    white-space: nowrap;
-  }
-  .skill-pill {
-    display: inline-block;
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    margin: 2px;
-  }
-  .pill-plan { background: var(--purple-dim); color: var(--purple); border: 1px solid #4d3d80; }
-  .pill-build { background: var(--green-dim); color: var(--green); border: 1px solid #0d5c45; }
-  .pill-ship { background: var(--blue-dim); color: var(--blue); border: 1px solid #1a3a6a; }
-  .pill-bug { background: var(--red-dim); color: var(--red); border: 1px solid #5a1e1e; }
-  .pill-quality { background: var(--amber-dim); color: var(--amber); border: 1px solid #5c3a06; }
-  .pill-internal { background: #1e2030; color: #6b7280; border: 1px solid #2e3349; }
+      /* ── State machine table ── */
+      .phase-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 16px;
+        font-size: 13px;
+      }
+      .phase-table th {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 2px solid var(--border);
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        font-family: var(--mono);
+      }
+      .phase-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      .phase-table tr:last-child td {
+        border-bottom: none;
+      }
+      .phase-table tr:hover td {
+        background: var(--surface2);
+      }
+      .phase-name {
+        font-weight: 600;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      .skill-pill {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin: 2px;
+      }
+      .pill-plan {
+        background: var(--purple-dim);
+        color: var(--purple);
+        border: 1px solid #4d3d80;
+      }
+      .pill-build {
+        background: var(--green-dim);
+        color: var(--green);
+        border: 1px solid #0d5c45;
+      }
+      .pill-ship {
+        background: var(--blue-dim);
+        color: var(--blue);
+        border: 1px solid #1a3a6a;
+      }
+      .pill-bug {
+        background: var(--red-dim);
+        color: var(--red);
+        border: 1px solid #5a1e1e;
+      }
+      .pill-quality {
+        background: var(--amber-dim);
+        color: var(--amber);
+        border: 1px solid #5c3a06;
+      }
+      .pill-internal {
+        background: #1e2030;
+        color: #6b7280;
+        border: 1px solid #2e3349;
+      }
 
-  .trigger-type {
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-family: var(--mono);
-  }
-  .trigger-auto { background: #1e3020; color: #4ade80; }
-  .trigger-user { background: #1a2030; color: #60a5fa; }
+      .trigger-type {
+        font-size: 11px;
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-family: var(--mono);
+      }
+      .trigger-auto {
+        background: #1e3020;
+        color: #4ade80;
+      }
+      .trigger-user {
+        background: #1a2030;
+        color: #60a5fa;
+      }
 
-  /* ── Dead skills ── */
-  .dead-skills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 12px;
-  }
-  .dead-pill {
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 4px 10px;
-    border-radius: 5px;
-    background: repeating-linear-gradient(45deg, #1a1d27, #1a1d27 3px, #1e2030 3px, #1e2030 6px);
-    border: 1px solid #2e3349;
-    color: #4a5068;
-    text-decoration: line-through;
-  }
+      /* ── Dead skills ── */
+      .dead-skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .dead-pill {
+        font-family: var(--mono);
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 5px;
+        background: repeating-linear-gradient(
+          45deg,
+          #1a1d27,
+          #1a1d27 3px,
+          #1e2030 3px,
+          #1e2030 6px
+        );
+        border: 1px solid #2e3349;
+        color: #4a5068;
+        text-decoration: line-through;
+      }
 
-  /* ── Conformity note ── */
-  .callout {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--amber);
-    border-radius: 0 8px 8px 0;
-    padding: 16px 20px;
-    margin-top: 16px;
-    font-size: 13px;
-    color: var(--muted);
-  }
-  .callout strong { color: var(--amber); }
+      /* ── Conformity note ── */
+      .callout {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--amber);
+        border-radius: 0 8px 8px 0;
+        padding: 16px 20px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .callout strong {
+        color: var(--amber);
+      }
 
-  /* ── Divider ── */
-  .divider {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 60px 0 0;
-  }
+      /* ── Divider ── */
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 60px 0 0;
+      }
 
-  /* ── Footer ── */
-  .footer {
-    max-width: 1100px;
-    margin: 24px auto 0;
-    padding: 0 48px;
-    font-size: 12px;
-    color: #4a5068;
-    font-family: var(--mono);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="perspective-label">Perspective: Workflow Architect</div>
-  <h1>Cape V2: Three Chains, One State Machine</h1>
-  <div class="header-sub">
-    A redesign grounded in 10 days of real usage logs — 37 sessions, 120+ skill invocations across work-platform and aburaya repos.
-    Cape V1 is a bag of 22 skills. Cape V2 is a pipeline.
-  </div>
-</div>
-
-<div class="content">
-
-  <!-- Thesis -->
-  <div class="thesis">
-    <strong>Thesis:</strong> The usage data reveals three hardened chains (Plan → Build → Ship) and a dormant bug track.
-    V2 drops the menu metaphor and ships a <strong>state machine</strong> — phases with explicit entry/exit conditions,
-    br epics as cross-session persistence, and five dead skills pruned without mercy.
-  </div>
-
-  <!-- Evidence -->
-  <div class="section">
-    <div class="section-label">Evidence</div>
-    <h2>10 days of real invocation data</h2>
-    <p>37 /clear boundaries. Every skill invocation in two production repos. No self-reported estimates — raw log counts.</p>
-
-    <div class="data-grid">
-      <div class="stat-card">
-        <div class="stat-number" style="color: var(--accent);">120+</div>
-        <div class="stat-label">Total skill invocations</div>
-        <div class="stat-detail">22 skills available</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color: var(--green);">5</div>
-        <div class="stat-label">Never-used skills</div>
-        <div class="stat-detail">analyze-tests, branch,<br>design-an-interface,<br>explain, find-test-gaps</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color: var(--amber);">37</div>
-        <div class="stat-label">Context clears (/clear)</div>
-        <div class="stat-detail">br = persistence layer<br>across all resets</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" style="color: var(--blue);">30</div>
-        <div class="stat-label">codebase-investigator calls</div>
-        <div class="stat-detail">Most-used agent by far<br>(test-runner: 20)</div>
-      </div>
-    </div>
-
-    <div class="bar-chart" style="margin-top: 20px;">
-      <div style="font-size: 12px; color: var(--muted); margin-bottom: 16px; font-family: var(--mono); letter-spacing: 0.05em; text-transform: uppercase;">Skill invocation counts — color-coded by V2 phase</div>
-
-      <!-- commit 29 / max 29 = 100% -->
-      <div class="bar-row">
-        <span class="bar-name">commit</span>
-        <div class="bar-track"><div class="bar-fill" style="width:100%; background: var(--blue);">29×</div></div>
-        <span class="chain-tag tag-ship">ship</span>
-      </div>
-      <!-- review 12 -->
-      <div class="bar-row">
-        <span class="bar-name">review</span>
-        <div class="bar-track"><div class="bar-fill" style="width:41%; background: var(--amber);">12×</div></div>
-        <span class="chain-tag tag-quality">quality</span>
-      </div>
-      <!-- pr 12 -->
-      <div class="bar-row">
-        <span class="bar-name">pr</span>
-        <div class="bar-track"><div class="bar-fill" style="width:41%; background: var(--blue);">12×</div></div>
-        <span class="chain-tag tag-ship">ship</span>
-      </div>
-      <!-- tdd 11 -->
-      <div class="bar-row">
-        <span class="bar-name">test-driven-development</span>
-        <div class="bar-track"><div class="bar-fill" style="width:38%; background: var(--green);">11×</div></div>
-        <span class="chain-tag tag-build">build</span>
-      </div>
-      <!-- brainstorm 9 -->
-      <div class="bar-row">
-        <span class="bar-name">brainstorm</span>
-        <div class="bar-track"><div class="bar-fill" style="width:31%; background: var(--purple);">9×</div></div>
-        <span class="chain-tag tag-plan">plan</span>
-      </div>
-      <!-- execute-plan 7 -->
-      <div class="bar-row">
-        <span class="bar-name">execute-plan</span>
-        <div class="bar-track"><div class="bar-fill" style="width:24%; background: var(--green);">7×</div></div>
-        <span class="chain-tag tag-build">build</span>
-      </div>
-      <!-- conform 7 -->
-      <div class="bar-row">
-        <span class="bar-name">conform</span>
-        <div class="bar-track"><div class="bar-fill" style="width:24%; background: var(--amber);">7×</div></div>
-        <span class="chain-tag tag-quality">quality</span>
-      </div>
-      <!-- challenge 7 -->
-      <div class="bar-row">
-        <span class="bar-name">challenge</span>
-        <div class="bar-track"><div class="bar-fill" style="width:24%; background: var(--purple);">7×</div></div>
-        <span class="chain-tag tag-plan">plan</span>
-      </div>
-      <!-- write-plan 6 -->
-      <div class="bar-row">
-        <span class="bar-name">write-plan</span>
-        <div class="bar-track"><div class="bar-fill" style="width:21%; background: var(--purple);">6×</div></div>
-        <span class="chain-tag tag-plan">plan</span>
-      </div>
-      <!-- finish-epic 4 -->
-      <div class="bar-row">
-        <span class="bar-name">finish-epic</span>
-        <div class="bar-track"><div class="bar-fill" style="width:14%; background: var(--blue);">4×</div></div>
-        <span class="chain-tag tag-ship">ship</span>
-      </div>
-      <!-- fix-bug 3 -->
-      <div class="bar-row">
-        <span class="bar-name">fix-bug</span>
-        <div class="bar-track"><div class="bar-fill" style="width:10%; background: var(--red);">3×</div></div>
-        <span class="chain-tag tag-bug">bug</span>
-      </div>
-      <!-- beads 3 -->
-      <div class="bar-row">
-        <span class="bar-name">beads</span>
-        <div class="bar-track"><div class="bar-fill" style="width:10%; background: #6b7280;">3×</div></div>
-        <span class="chain-tag tag-none">misc</span>
-      </div>
-      <!-- expand-task 2 -->
-      <div class="bar-row">
-        <span class="bar-name">expand-task</span>
-        <div class="bar-track"><div class="bar-fill" style="width:7%; background: var(--green);">2×</div></div>
-        <span class="chain-tag tag-build">build</span>
-      </div>
-      <!-- task-refinement 1 -->
-      <div class="bar-row">
-        <span class="bar-name">task-refinement</span>
-        <div class="bar-track"><div class="bar-fill" style="width:3%; background: var(--purple);">1×</div></div>
-        <span class="chain-tag tag-plan">plan</span>
-      </div>
-      <!-- debug-issue 1 -->
-      <div class="bar-row">
-        <span class="bar-name">debug-issue</span>
-        <div class="bar-track"><div class="bar-fill" style="width:3%; background: var(--red);">1×</div></div>
-        <span class="chain-tag tag-bug">bug</span>
-      </div>
-      <!-- dead skills -->
-      <div class="bar-row">
-        <span class="bar-name" style="color:#3a4060;">analyze-tests</span>
-        <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
-        <span class="chain-tag tag-none">dead</span>
-      </div>
-      <div class="bar-row">
-        <span class="bar-name" style="color:#3a4060;">branch</span>
-        <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
-        <span class="chain-tag tag-none">dead</span>
-      </div>
-      <div class="bar-row">
-        <span class="bar-name" style="color:#3a4060;">design-an-interface</span>
-        <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
-        <span class="chain-tag tag-none">dead</span>
-      </div>
-      <div class="bar-row">
-        <span class="bar-name" style="color:#3a4060;">explain</span>
-        <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
-        <span class="chain-tag tag-none">dead</span>
-      </div>
-      <div class="bar-row">
-        <span class="bar-name" style="color:#3a4060;">find-test-gaps</span>
-        <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
-        <span class="chain-tag tag-none">dead</span>
+      /* ── Footer ── */
+      .footer {
+        max-width: 1100px;
+        margin: 24px auto 0;
+        padding: 0 48px;
+        font-size: 12px;
+        color: #4a5068;
+        font-family: var(--mono);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="perspective-label">Perspective: Workflow Architect</div>
+      <h1>Cape V2: Three Chains, One State Machine</h1>
+      <div class="header-sub">
+        A redesign grounded in 10 days of real usage logs — 37 sessions, 120+ skill invocations
+        across work-platform and aburaya repos. Cape V1 is a bag of 22 skills. Cape V2 is a
+        pipeline.
       </div>
     </div>
-  </div>
 
-  <!-- V1 Problem -->
-  <div class="section">
-    <div class="section-label">Diagnosis</div>
-    <h2>What V1 gets wrong</h2>
-    <p>V1 presents 22 skills as a flat menu. Don-cape tries to route via a lookup table. This creates three failure modes the data confirms:</p>
-
-    <div class="changes-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 16px;">
-      <div class="change-card" style="border-left: 3px solid var(--red);">
-        <div class="change-number">Problem 01</div>
-        <div class="change-title">Dead weight</div>
-        <div class="change-body">5 skills never fired in 10 days across two repos doing real work. They're not dormant — they're inert. Every skill adds routing surface and cognitive load for the LLM routing from don-cape.</div>
+    <div class="content">
+      <!-- Thesis -->
+      <div class="thesis">
+        <strong>Thesis:</strong> The usage data reveals three hardened chains (Plan → Build → Ship)
+        and a dormant bug track. V2 drops the menu metaphor and ships a
+        <strong>state machine</strong> — phases with explicit entry/exit conditions, br epics as
+        cross-session persistence, and five dead skills pruned without mercy.
       </div>
-      <div class="change-card" style="border-left: 3px solid var(--red);">
-        <div class="change-number">Problem 02</div>
-        <div class="change-title">debug-issue is orphaned</div>
-        <div class="change-body">The designed chain is debug-issue → fix-bug → commit. In practice: debug-issue fired 1×, fix-bug fired 3×. Bugs get fixed directly without the investigation step. The chain precondition (br bug must exist) isn't enforced.</div>
-      </div>
-      <div class="change-card" style="border-left: 3px solid var(--red);">
-        <div class="change-number">Problem 03</div>
-        <div class="change-title">conform runs post-hoc</div>
-        <div class="change-body">Conform appeared 7× but always after commit — as a check on work already done. Its value is real, but it's positioned as a standalone instead of a mandatory gate before closing a task.</div>
-      </div>
-    </div>
-  </div>
 
-  <!-- V2 State Machine Diagram -->
-  <div class="section">
-    <div class="section-label">V2 Architecture</div>
-    <h2>The V2 state machine</h2>
-    <p>Three primary tracks (Plan, Build, Ship) with explicit entry/exit, one bug track, and one quality gate. br epics are the only cross-session persistence.</p>
+      <!-- Evidence -->
+      <div class="section">
+        <div class="section-label">Evidence</div>
+        <h2>10 days of real invocation data</h2>
+        <p>
+          37 /clear boundaries. Every skill invocation in two production repos. No self-reported
+          estimates — raw log counts.
+        </p>
 
-    <div class="pipeline-container">
-
-      <svg viewBox="0 0 1000 620" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; background:#1a1d27; border-radius:12px; border:1px solid #2e3349; display:block;">
-        <defs>
-          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#4a5068"/>
-          </marker>
-          <marker id="arrow-green" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#22d3a5"/>
-          </marker>
-          <marker id="arrow-purple" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#a78bfa"/>
-          </marker>
-          <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#60a5fa"/>
-          </marker>
-          <marker id="arrow-red" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#f87171"/>
-          </marker>
-          <marker id="arrow-amber" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M1,1 L7,4 L1,7 Z" fill="#f59e0b"/>
-          </marker>
-        </defs>
-
-        <!-- Track labels -->
-        <text x="24" y="86" font-family="monospace" font-size="10" fill="#4a5068" letter-spacing="2" text-transform="uppercase">PLAN</text>
-        <text x="24" y="222" font-family="monospace" font-size="10" fill="#4a5068" letter-spacing="2">BUILD</text>
-        <text x="24" y="362" font-family="monospace" font-size="10" fill="#4a5068" letter-spacing="2">SHIP</text>
-        <text x="24" y="492" font-family="monospace" font-size="10" fill="#4a5068" letter-spacing="2">BUG</text>
-
-        <!-- Track separators -->
-        <line x1="60" y1="138" x2="980" y2="138" stroke="#2e3349" stroke-width="1" stroke-dasharray="4 4"/>
-        <line x1="60" y1="278" x2="980" y2="278" stroke="#2e3349" stroke-width="1" stroke-dasharray="4 4"/>
-        <line x1="60" y1="418" x2="980" y2="418" stroke="#2e3349" stroke-width="1" stroke-dasharray="4 4"/>
-
-        <!-- ── PLAN TRACK ── -->
-        <!-- brainstorm -->
-        <rect x="72" y="56" width="140" height="60" rx="8" fill="#2d2152" stroke="#a78bfa" stroke-width="1.5"/>
-        <text x="142" y="82" text-anchor="middle" font-family="monospace" font-size="12" fill="#a78bfa" font-weight="600">brainstorm</text>
-        <text x="142" y="98" text-anchor="middle" font-family="monospace" font-size="10" fill="#7c6bcc">user-driven</text>
-        <text x="142" y="111" text-anchor="middle" font-family="monospace" font-size="10" fill="#7c6bcc">9×</text>
-
-        <!-- arrow -->
-        <line x1="213" y1="86" x2="258" y2="86" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
-
-        <!-- challenge (opt-in) -->
-        <rect x="260" y="56" width="120" height="60" rx="8" fill="#1e1a2e" stroke="#4d3d70" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <text x="320" y="79" text-anchor="middle" font-family="monospace" font-size="11" fill="#7c6bcc">challenge</text>
-        <text x="320" y="95" text-anchor="middle" font-family="monospace" font-size="9" fill="#4d3d70">opt-in</text>
-        <text x="320" y="109" text-anchor="middle" font-family="monospace" font-size="9" fill="#4d3d70">7×</text>
-
-        <!-- arrow -->
-        <line x1="381" y1="86" x2="426" y2="86" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
-
-        <!-- write-plan -->
-        <rect x="428" y="56" width="120" height="60" rx="8" fill="#2d2152" stroke="#a78bfa" stroke-width="1.5"/>
-        <text x="488" y="82" text-anchor="middle" font-family="monospace" font-size="12" fill="#a78bfa" font-weight="600">write-plan</text>
-        <text x="488" y="98" text-anchor="middle" font-family="monospace" font-size="10" fill="#7c6bcc">→ br epic</text>
-        <text x="488" y="111" text-anchor="middle" font-family="monospace" font-size="10" fill="#7c6bcc">6×</text>
-
-        <!-- STOP gate -->
-        <rect x="578" y="68" width="56" height="36" rx="6" fill="#3d2a06" stroke="#f59e0b" stroke-width="1.5"/>
-        <text x="606" y="88" text-anchor="middle" font-family="monospace" font-size="11" fill="#f59e0b" font-weight="700">STOP</text>
-        <text x="606" y="100" text-anchor="middle" font-family="monospace" font-size="9" fill="#9c7020">human</text>
-        <line x1="549" y1="86" x2="577" y2="86" stroke="#a78bfa" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
-
-        <!-- br epic persistence box -->
-        <rect x="750" y="50" width="160" height="72" rx="8" fill="#12152a" stroke="#3f4270" stroke-width="1" stroke-dasharray="3 3"/>
-        <text x="830" y="74" text-anchor="middle" font-family="monospace" font-size="11" fill="#6366f1" font-weight="600">br epic</text>
-        <text x="830" y="90" text-anchor="middle" font-family="monospace" font-size="10" fill="#4a5068">persists across /clear</text>
-        <text x="830" y="106" text-anchor="middle" font-family="monospace" font-size="10" fill="#4a5068">requirements · anti-patterns</text>
-        <!-- arrow from write-plan to br epic -->
-        <line x1="635" y1="86" x2="748" y2="86" stroke="#3f4270" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-
-        <!-- ── BUILD TRACK ── -->
-        <!-- execute-plan -->
-        <rect x="72" y="160" width="140" height="60" rx="8" fill="#0d4a3a" stroke="#22d3a5" stroke-width="1.5"/>
-        <text x="142" y="186" text-anchor="middle" font-family="monospace" font-size="12" fill="#22d3a5" font-weight="600">execute-plan</text>
-        <text x="142" y="202" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">auto-chains</text>
-        <text x="142" y="215" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">7×</text>
-
-        <!-- arrow -->
-        <line x1="213" y1="190" x2="258" y2="190" stroke="#22d3a5" stroke-width="1.5" marker-end="url(#arrow-green)"/>
-
-        <!-- expand-task (internal) -->
-        <rect x="260" y="160" width="120" height="60" rx="8" fill="#0a2e20" stroke="#0d5c45" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <text x="320" y="183" text-anchor="middle" font-family="monospace" font-size="11" fill="#22d3a5">expand-task</text>
-        <text x="320" y="199" text-anchor="middle" font-family="monospace" font-size="9" fill="#0d5c45">internal</text>
-        <text x="320" y="213" text-anchor="middle" font-family="monospace" font-size="9" fill="#0d5c45">auto</text>
-
-        <!-- arrow -->
-        <line x1="381" y1="190" x2="426" y2="190" stroke="#22d3a5" stroke-width="1.5" marker-end="url(#arrow-green)"/>
-
-        <!-- tdd -->
-        <rect x="428" y="160" width="120" height="60" rx="8" fill="#0d4a3a" stroke="#22d3a5" stroke-width="1.5"/>
-        <text x="488" y="183" text-anchor="middle" font-family="monospace" font-size="11" fill="#22d3a5" font-weight="600">tdd</text>
-        <text x="488" y="199" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">auto-chains</text>
-        <text x="488" y="213" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">11×</text>
-
-        <!-- arrow -->
-        <line x1="549" y1="190" x2="590" y2="190" stroke="#22d3a5" stroke-width="1.5" marker-end="url(#arrow-green)"/>
-
-        <!-- conform gate (NEW: mandatory) -->
-        <rect x="592" y="160" width="120" height="60" rx="8" fill="#3d2a06" stroke="#f59e0b" stroke-width="1.5"/>
-        <text x="652" y="183" text-anchor="middle" font-family="monospace" font-size="11" fill="#f59e0b" font-weight="600">conform</text>
-        <text x="652" y="199" text-anchor="middle" font-family="monospace" font-size="10" fill="#9c7020">gate (V2 new)</text>
-        <text x="652" y="213" text-anchor="middle" font-family="monospace" font-size="10" fill="#9c7020">7×</text>
-
-        <!-- arrow -->
-        <line x1="713" y1="190" x2="754" y2="190" stroke="#22d3a5" stroke-width="1.5" marker-end="url(#arrow-green)"/>
-
-        <!-- commit -->
-        <rect x="756" y="160" width="120" height="60" rx="8" fill="#0d4a3a" stroke="#22d3a5" stroke-width="1.5"/>
-        <text x="816" y="186" text-anchor="middle" font-family="monospace" font-size="12" fill="#22d3a5" font-weight="600">commit</text>
-        <text x="816" y="202" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">close task</text>
-        <text x="816" y="215" text-anchor="middle" font-family="monospace" font-size="10" fill="#0d9068">29×</text>
-
-        <!-- loop arrow from commit back to execute-plan (below track) -->
-        <path d="M816,221 Q816,250 488,250 Q210,250 142,250 L142,221" fill="none" stroke="#22d3a5" stroke-width="1.5" stroke-dasharray="5 3" marker-end="url(#arrow-green)"/>
-        <text x="488" y="265" text-anchor="middle" font-family="monospace" font-size="9" fill="#0d5c45">next task (loop)</text>
-
-        <!-- arrow down from write-plan (plan track) to execute-plan (build track) -->
-        <line x1="488" y1="117" x2="488" y2="140" stroke="#4d3d70" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-        <!-- then left to execute-plan -->
-        <line x1="488" y1="140" x2="142" y2="140" stroke="#4d3d70" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <line x1="142" y1="140" x2="142" y2="158" stroke="#4d3d70" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-
-        <!-- ── SHIP TRACK ── -->
-        <!-- finish-epic -->
-        <rect x="72" y="298" width="140" height="60" rx="8" fill="#1a2f52" stroke="#60a5fa" stroke-width="1.5"/>
-        <text x="142" y="322" text-anchor="middle" font-family="monospace" font-size="12" fill="#60a5fa" font-weight="600">finish-epic</text>
-        <text x="142" y="338" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">auto from build</text>
-        <text x="142" y="351" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">4×</text>
-
-        <!-- arrow -->
-        <line x1="213" y1="328" x2="258" y2="328" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
-
-        <!-- review -->
-        <rect x="260" y="298" width="120" height="60" rx="8" fill="#1a2f52" stroke="#60a5fa" stroke-width="1.5"/>
-        <text x="320" y="322" text-anchor="middle" font-family="monospace" font-size="12" fill="#60a5fa" font-weight="600">review</text>
-        <text x="320" y="338" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">user-driven</text>
-        <text x="320" y="351" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">12×</text>
-
-        <!-- arrow -->
-        <line x1="381" y1="328" x2="426" y2="328" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
-
-        <!-- pr -->
-        <rect x="428" y="298" width="120" height="60" rx="8" fill="#1a2f52" stroke="#60a5fa" stroke-width="1.5"/>
-        <text x="488" y="322" text-anchor="middle" font-family="monospace" font-size="12" fill="#60a5fa" font-weight="600">pr</text>
-        <text x="488" y="338" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">user-driven</text>
-        <text x="488" y="351" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a6090">12×</text>
-
-        <!-- done terminal -->
-        <rect x="596" y="308" width="80" height="40" rx="6" fill="#0d2e10" stroke="#22d3a5" stroke-width="1.5"/>
-        <text x="636" y="332" text-anchor="middle" font-family="monospace" font-size="12" fill="#22d3a5" font-weight="700">DONE</text>
-        <line x1="549" y1="328" x2="594" y2="328" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#arrow-blue)"/>
-
-        <!-- arrow down from commit (build) to finish-epic (ship) -->
-        <line x1="816" y1="221" x2="816" y2="270" stroke="#3a5270" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <line x1="816" y1="270" x2="142" y2="270" stroke="#3a5270" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <line x1="142" y1="270" x2="142" y2="297" stroke="#3a5270" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
-        <text x="500" y="268" text-anchor="middle" font-family="monospace" font-size="9" fill="#3a5270">all tasks done</text>
-
-        <!-- ── BUG TRACK ── -->
-        <!-- debug-issue -->
-        <rect x="72" y="440" width="120" height="60" rx="8" fill="#3d1212" stroke="#f87171" stroke-width="1.5"/>
-        <text x="132" y="464" text-anchor="middle" font-family="monospace" font-size="11" fill="#f87171" font-weight="600">debug-issue</text>
-        <text x="132" y="480" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a3a3a">→ br bug</text>
-        <text x="132" y="494" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a3a3a">1×</text>
-
-        <!-- arrow -->
-        <line x1="193" y1="470" x2="238" y2="470" stroke="#f87171" stroke-width="1.5" marker-end="url(#arrow-red)"/>
-
-        <!-- fix-bug -->
-        <rect x="240" y="440" width="120" height="60" rx="8" fill="#3d1212" stroke="#f87171" stroke-width="1.5"/>
-        <text x="300" y="464" text-anchor="middle" font-family="monospace" font-size="12" fill="#f87171" font-weight="600">fix-bug</text>
-        <text x="300" y="480" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a3a3a">tdd inside</text>
-        <text x="300" y="494" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a3a3a">3×</text>
-
-        <!-- arrow -->
-        <line x1="361" y1="470" x2="406" y2="470" stroke="#f87171" stroke-width="1.5" marker-end="url(#arrow-red)"/>
-
-        <!-- commit (bug) -->
-        <rect x="408" y="440" width="120" height="60" rx="8" fill="#3d1212" stroke="#f87171" stroke-width="1.5"/>
-        <text x="468" y="464" text-anchor="middle" font-family="monospace" font-size="12" fill="#f87171" font-weight="600">commit</text>
-        <text x="468" y="480" text-anchor="middle" font-family="monospace" font-size="10" fill="#8a3a3a">close br bug</text>
-
-        <!-- note: debug-issue precondition -->
-        <text x="132" y="516" text-anchor="middle" font-family="monospace" font-size="9" fill="#6a2a2a">V2: enforce br bug precondition</text>
-
-        <!-- Legend -->
-        <rect x="700" y="430" width="272" height="156" rx="8" fill="#12152a" stroke="#2e3349" stroke-width="1"/>
-        <text x="836" y="452" text-anchor="middle" font-family="monospace" font-size="10" fill="#4a5068" letter-spacing="2">LEGEND</text>
-        <rect x="716" y="462" width="16" height="10" rx="2" fill="#2d2152" stroke="#a78bfa" stroke-width="1.5"/>
-        <text x="740" y="473" font-family="monospace" font-size="10" fill="#7c6bcc">Plan phase</text>
-        <rect x="716" y="480" width="16" height="10" rx="2" fill="#0d4a3a" stroke="#22d3a5" stroke-width="1.5"/>
-        <text x="740" y="491" font-family="monospace" font-size="10" fill="#0d9068">Build phase</text>
-        <rect x="716" y="498" width="16" height="10" rx="2" fill="#1a2f52" stroke="#60a5fa" stroke-width="1.5"/>
-        <text x="740" y="509" font-family="monospace" font-size="10" fill="#3a6090">Ship phase</text>
-        <rect x="716" y="516" width="16" height="10" rx="2" fill="#3d1212" stroke="#f87171" stroke-width="1.5"/>
-        <text x="740" y="527" font-family="monospace" font-size="10" fill="#8a3a3a">Bug track</text>
-        <rect x="716" y="534" width="16" height="10" rx="2" fill="#3d2a06" stroke="#f59e0b" stroke-width="1.5"/>
-        <text x="740" y="545" font-family="monospace" font-size="10" fill="#9c7020">Quality gate</text>
-        <line x1="716" y1="561" x2="732" y2="561" stroke="#4a5068" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <text x="740" y="566" font-family="monospace" font-size="10" fill="#4a5068">Optional / internal</text>
-
-        <!-- Title -->
-        <text x="500" y="598" text-anchor="middle" font-family="monospace" font-size="10" fill="#3a4060" letter-spacing="1">Cape V2 — Three-Chain State Machine / br epics = cross-session state</text>
-      </svg>
-    </div>
-  </div>
-
-  <!-- V2 Phase table -->
-  <div class="section">
-    <div class="section-label">V2 Components</div>
-    <h2>Phase definitions and handoff contracts</h2>
-    <p>Each phase has a mandatory entry condition, a single primary output, and an explicit exit that triggers the next phase. br epics carry state across /clear boundaries.</p>
-
-    <table class="phase-table" style="margin-top: 20px;">
-      <thead>
-        <tr>
-          <th>Phase</th>
-          <th>Skills</th>
-          <th>Entry condition</th>
-          <th>Primary output</th>
-          <th>Exit → Next</th>
-          <th>Trigger</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><span class="phase-name" style="color: var(--purple);">Plan</span></td>
-          <td>
-            <span class="skill-pill pill-plan">brainstorm</span>
-            <span class="skill-pill pill-plan">challenge</span>
-            <span class="skill-pill pill-plan">write-plan</span>
-          </td>
-          <td style="color: var(--muted); font-size: 13px;">No br epic for this work</td>
-          <td style="color: var(--muted); font-size: 13px;">br epic with requirements, anti-patterns, first task</td>
-          <td style="color: var(--muted); font-size: 13px;">User says "continue" → Build</td>
-          <td><span class="trigger-type trigger-user">user</span></td>
-        </tr>
-        <tr>
-          <td><span class="phase-name" style="color: var(--green);">Build</span></td>
-          <td>
-            <span class="skill-pill pill-build">execute-plan</span>
-            <span class="skill-pill pill-internal">expand-task</span>
-            <span class="skill-pill pill-build">tdd</span>
-            <span class="skill-pill pill-quality">conform</span>
-            <span class="skill-pill pill-build">commit</span>
-          </td>
-          <td style="color: var(--muted); font-size: 13px;">br epic open, ready task exists</td>
-          <td style="color: var(--muted); font-size: 13px;">Passing tests, committed code, closed task</td>
-          <td style="color: var(--muted); font-size: 13px;">All tasks closed → Ship</td>
-          <td><span class="trigger-type trigger-auto">auto</span></td>
-        </tr>
-        <tr>
-          <td><span class="phase-name" style="color: var(--blue);">Ship</span></td>
-          <td>
-            <span class="skill-pill pill-ship">finish-epic</span>
-            <span class="skill-pill pill-ship">review</span>
-            <span class="skill-pill pill-ship">pr</span>
-          </td>
-          <td style="color: var(--muted); font-size: 13px;">All br tasks closed, epic open</td>
-          <td style="color: var(--muted); font-size: 13px;">Merged PR, closed epic</td>
-          <td style="color: var(--muted); font-size: 13px;">PR merged → Done</td>
-          <td><span class="trigger-type trigger-auto">auto</span></td>
-        </tr>
-        <tr>
-          <td><span class="phase-name" style="color: var(--red);">Bug</span></td>
-          <td>
-            <span class="skill-pill pill-bug">debug-issue</span>
-            <span class="skill-pill pill-bug">fix-bug</span>
-            <span class="skill-pill pill-build">commit</span>
-          </td>
-          <td style="color: var(--muted); font-size: 13px;">Error / broken behavior reported</td>
-          <td style="color: var(--muted); font-size: 13px;">br bug with root cause, minimal fix, regression test</td>
-          <td style="color: var(--muted); font-size: 13px;">Committed fix → Done</td>
-          <td><span class="trigger-type trigger-user">user</span></td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="callout">
-      <strong>New in V2: conform is a mandatory gate inside Build, not a post-hoc check.</strong>
-      It runs after tdd passes and before commit is allowed. Current V1 behavior — conform firing after commit — turns it into a retrospective that generates rework. Shifting it left means convention violations fail at the task boundary, not after the work is shipped.
-    </div>
-  </div>
-
-  <!-- Top 3 changes -->
-  <div class="section">
-    <div class="section-label">V2 Changes</div>
-    <h2>Three concrete changes from V1 to V2</h2>
-
-    <div class="changes-grid">
-      <div class="change-card">
-        <div class="change-number">Change 01 — Prune dead skills</div>
-        <div class="change-title">Delete 5 skills. Zero survivors without 1 invocation.</div>
-        <div class="change-body">
-          Five skills fired 0× in 10 days of real work. They're not dormant features — they're routing noise. Every entry in don-cape's lookup table is a path the LLM can misfire into. Prune them.
+        <div class="data-grid">
+          <div class="stat-card">
+            <div class="stat-number" style="color: var(--accent)">120+</div>
+            <div class="stat-label">Total skill invocations</div>
+            <div class="stat-detail">22 skills available</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color: var(--green)">5</div>
+            <div class="stat-label">Never-used skills</div>
+            <div class="stat-detail">
+              analyze-tests, branch,<br />design-an-interface,<br />explain, find-test-gaps
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color: var(--amber)">37</div>
+            <div class="stat-label">Context clears (/clear)</div>
+            <div class="stat-detail">br = persistence layer<br />across all resets</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="color: var(--blue)">30</div>
+            <div class="stat-label">codebase-investigator calls</div>
+            <div class="stat-detail">Most-used agent by far<br />(test-runner: 20)</div>
+          </div>
         </div>
-        <div class="change-before">V1: 22 skills, 5 unreachable in practice</div>
-        <div class="change-after">V2: 17 skills, dead ones deleted outright</div>
-        <div class="dead-skills" style="margin-top: 14px;">
-          <span class="dead-pill">analyze-tests</span>
-          <span class="dead-pill">branch</span>
-          <span class="dead-pill">design-an-interface</span>
-          <span class="dead-pill">explain</span>
-          <span class="dead-pill">find-test-gaps</span>
+
+        <div class="bar-chart" style="margin-top: 20px">
+          <div
+            style="
+              font-size: 12px;
+              color: var(--muted);
+              margin-bottom: 16px;
+              font-family: var(--mono);
+              letter-spacing: 0.05em;
+              text-transform: uppercase;
+            "
+          >
+            Skill invocation counts — color-coded by V2 phase
+          </div>
+
+          <!-- commit 29 / max 29 = 100% -->
+          <div class="bar-row">
+            <span class="bar-name">commit</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 100%; background: var(--blue)">29×</div>
+            </div>
+            <span class="chain-tag tag-ship">ship</span>
+          </div>
+          <!-- review 12 -->
+          <div class="bar-row">
+            <span class="bar-name">review</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 41%; background: var(--amber)">12×</div>
+            </div>
+            <span class="chain-tag tag-quality">quality</span>
+          </div>
+          <!-- pr 12 -->
+          <div class="bar-row">
+            <span class="bar-name">pr</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 41%; background: var(--blue)">12×</div>
+            </div>
+            <span class="chain-tag tag-ship">ship</span>
+          </div>
+          <!-- tdd 11 -->
+          <div class="bar-row">
+            <span class="bar-name">test-driven-development</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 38%; background: var(--green)">11×</div>
+            </div>
+            <span class="chain-tag tag-build">build</span>
+          </div>
+          <!-- brainstorm 9 -->
+          <div class="bar-row">
+            <span class="bar-name">brainstorm</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 31%; background: var(--purple)">9×</div>
+            </div>
+            <span class="chain-tag tag-plan">plan</span>
+          </div>
+          <!-- execute-plan 7 -->
+          <div class="bar-row">
+            <span class="bar-name">execute-plan</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 24%; background: var(--green)">7×</div>
+            </div>
+            <span class="chain-tag tag-build">build</span>
+          </div>
+          <!-- conform 7 -->
+          <div class="bar-row">
+            <span class="bar-name">conform</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 24%; background: var(--amber)">7×</div>
+            </div>
+            <span class="chain-tag tag-quality">quality</span>
+          </div>
+          <!-- challenge 7 -->
+          <div class="bar-row">
+            <span class="bar-name">challenge</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 24%; background: var(--purple)">7×</div>
+            </div>
+            <span class="chain-tag tag-plan">plan</span>
+          </div>
+          <!-- write-plan 6 -->
+          <div class="bar-row">
+            <span class="bar-name">write-plan</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 21%; background: var(--purple)">6×</div>
+            </div>
+            <span class="chain-tag tag-plan">plan</span>
+          </div>
+          <!-- finish-epic 4 -->
+          <div class="bar-row">
+            <span class="bar-name">finish-epic</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 14%; background: var(--blue)">4×</div>
+            </div>
+            <span class="chain-tag tag-ship">ship</span>
+          </div>
+          <!-- fix-bug 3 -->
+          <div class="bar-row">
+            <span class="bar-name">fix-bug</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 10%; background: var(--red)">3×</div>
+            </div>
+            <span class="chain-tag tag-bug">bug</span>
+          </div>
+          <!-- beads 3 -->
+          <div class="bar-row">
+            <span class="bar-name">beads</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 10%; background: #6b7280">3×</div>
+            </div>
+            <span class="chain-tag tag-none">misc</span>
+          </div>
+          <!-- expand-task 2 -->
+          <div class="bar-row">
+            <span class="bar-name">expand-task</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 7%; background: var(--green)">2×</div>
+            </div>
+            <span class="chain-tag tag-build">build</span>
+          </div>
+          <!-- task-refinement 1 -->
+          <div class="bar-row">
+            <span class="bar-name">task-refinement</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 3%; background: var(--purple)">1×</div>
+            </div>
+            <span class="chain-tag tag-plan">plan</span>
+          </div>
+          <!-- debug-issue 1 -->
+          <div class="bar-row">
+            <span class="bar-name">debug-issue</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: 3%; background: var(--red)">1×</div>
+            </div>
+            <span class="chain-tag tag-bug">bug</span>
+          </div>
+          <!-- dead skills -->
+          <div class="bar-row">
+            <span class="bar-name" style="color: #3a4060">analyze-tests</span>
+            <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
+            <span class="chain-tag tag-none">dead</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name" style="color: #3a4060">branch</span>
+            <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
+            <span class="chain-tag tag-none">dead</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name" style="color: #3a4060">design-an-interface</span>
+            <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
+            <span class="chain-tag tag-none">dead</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name" style="color: #3a4060">explain</span>
+            <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
+            <span class="chain-tag tag-none">dead</span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-name" style="color: #3a4060">find-test-gaps</span>
+            <div class="bar-track"><div class="bar-dead">0× — dead</div></div>
+            <span class="chain-tag tag-none">dead</span>
+          </div>
         </div>
       </div>
 
-      <div class="change-card">
-        <div class="change-number">Change 02 — conform becomes a gate</div>
-        <div class="change-title">Move conform left: after tdd, before commit.</div>
-        <div class="change-body">
-          Conform ran 7× in V1 — always post-commit, as a retrospective gate. That means convention violations are discovered after the work is done and committed, requiring a fixup commit. Shifting it into the Build loop as a mandatory step before <code style="font-family: var(--mono); color: var(--text);">commit</code> is allowed makes convention enforcement proactive, not reactive.
+      <!-- V1 Problem -->
+      <div class="section">
+        <div class="section-label">Diagnosis</div>
+        <h2>What V1 gets wrong</h2>
+        <p>
+          V1 presents 22 skills as a flat menu. Don-cape tries to route via a lookup table. This
+          creates three failure modes the data confirms:
+        </p>
+
+        <div class="changes-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 16px">
+          <div class="change-card" style="border-left: 3px solid var(--red)">
+            <div class="change-number">Problem 01</div>
+            <div class="change-title">Dead weight</div>
+            <div class="change-body">
+              5 skills never fired in 10 days across two repos doing real work. They're not dormant
+              — they're inert. Every skill adds routing surface and cognitive load for the LLM
+              routing from don-cape.
+            </div>
+          </div>
+          <div class="change-card" style="border-left: 3px solid var(--red)">
+            <div class="change-number">Problem 02</div>
+            <div class="change-title">debug-issue is orphaned</div>
+            <div class="change-body">
+              The designed chain is debug-issue → fix-bug → commit. In practice: debug-issue fired
+              1×, fix-bug fired 3×. Bugs get fixed directly without the investigation step. The
+              chain precondition (br bug must exist) isn't enforced.
+            </div>
+          </div>
+          <div class="change-card" style="border-left: 3px solid var(--red)">
+            <div class="change-number">Problem 03</div>
+            <div class="change-title">conform runs post-hoc</div>
+            <div class="change-body">
+              Conform appeared 7× but always after commit — as a check on work already done. Its
+              value is real, but it's positioned as a standalone instead of a mandatory gate before
+              closing a task.
+            </div>
+          </div>
         </div>
-        <div class="change-before">V1: tdd → commit → (user runs conform)</div>
-        <div class="change-after">V2: tdd → conform [gate] → commit</div>
       </div>
 
-      <div class="change-card">
-        <div class="change-number">Change 03 — enforce bug track precondition</div>
-        <div class="change-title">fix-bug requires a br bug. No shortcut entry.</div>
-        <div class="change-body">
-          debug-issue fired 1×. fix-bug fired 3×. The chain is being bypassed — bugs get fixed without root cause analysis. V2 makes fix-bug check for a br bug at entry. If none exists, it routes to debug-issue first. This isn't dogma — it's preventing fixes that mask symptoms.
+      <!-- V2 State Machine Diagram -->
+      <div class="section">
+        <div class="section-label">V2 Architecture</div>
+        <h2>The V2 state machine</h2>
+        <p>
+          Three primary tracks (Plan, Build, Ship) with explicit entry/exit, one bug track, and one
+          quality gate. br epics are the only cross-session persistence.
+        </p>
+
+        <div class="pipeline-container">
+          <svg
+            viewBox="0 0 1000 620"
+            xmlns="http://www.w3.org/2000/svg"
+            style="
+              width: 100%;
+              height: auto;
+              background: #1a1d27;
+              border-radius: 12px;
+              border: 1px solid #2e3349;
+              display: block;
+            "
+          >
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M1,1 L7,4 L1,7 Z" fill="#4a5068" />
+              </marker>
+              <marker
+                id="arrow-green"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M1,1 L7,4 L1,7 Z" fill="#22d3a5" />
+              </marker>
+              <marker
+                id="arrow-purple"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M1,1 L7,4 L1,7 Z" fill="#a78bfa" />
+              </marker>
+              <marker
+                id="arrow-blue"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M1,1 L7,4 L1,7 Z" fill="#60a5fa" />
+              </marker>
+              <marker
+                id="arrow-red"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M1,1 L7,4 L1,7 Z" fill="#f87171" />
+              </marker>
+              <marker
+                id="arrow-amber"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="4"
+                orient="auto"
+              >
+                <path d="M1,1 L7,4 L1,7 Z" fill="#f59e0b" />
+              </marker>
+            </defs>
+
+            <!-- Track labels -->
+            <text
+              x="24"
+              y="86"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+              letter-spacing="2"
+              text-transform="uppercase"
+            >
+              PLAN
+            </text>
+            <text
+              x="24"
+              y="222"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+              letter-spacing="2"
+            >
+              BUILD
+            </text>
+            <text
+              x="24"
+              y="362"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+              letter-spacing="2"
+            >
+              SHIP
+            </text>
+            <text
+              x="24"
+              y="492"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+              letter-spacing="2"
+            >
+              BUG
+            </text>
+
+            <!-- Track separators -->
+            <line
+              x1="60"
+              y1="138"
+              x2="980"
+              y2="138"
+              stroke="#2e3349"
+              stroke-width="1"
+              stroke-dasharray="4 4"
+            />
+            <line
+              x1="60"
+              y1="278"
+              x2="980"
+              y2="278"
+              stroke="#2e3349"
+              stroke-width="1"
+              stroke-dasharray="4 4"
+            />
+            <line
+              x1="60"
+              y1="418"
+              x2="980"
+              y2="418"
+              stroke="#2e3349"
+              stroke-width="1"
+              stroke-dasharray="4 4"
+            />
+
+            <!-- ── PLAN TRACK ── -->
+            <!-- brainstorm -->
+            <rect
+              x="72"
+              y="56"
+              width="140"
+              height="60"
+              rx="8"
+              fill="#2d2152"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+            />
+            <text
+              x="142"
+              y="82"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#a78bfa"
+              font-weight="600"
+            >
+              brainstorm
+            </text>
+            <text
+              x="142"
+              y="98"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#7c6bcc"
+            >
+              user-driven
+            </text>
+            <text
+              x="142"
+              y="111"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#7c6bcc"
+            >
+              9×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="213"
+              y1="86"
+              x2="258"
+              y2="86"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-purple)"
+            />
+
+            <!-- challenge (opt-in) -->
+            <rect
+              x="260"
+              y="56"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#1e1a2e"
+              stroke="#4d3d70"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <text
+              x="320"
+              y="79"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#7c6bcc"
+            >
+              challenge
+            </text>
+            <text
+              x="320"
+              y="95"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#4d3d70"
+            >
+              opt-in
+            </text>
+            <text
+              x="320"
+              y="109"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#4d3d70"
+            >
+              7×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="381"
+              y1="86"
+              x2="426"
+              y2="86"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-purple)"
+            />
+
+            <!-- write-plan -->
+            <rect
+              x="428"
+              y="56"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#2d2152"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+            />
+            <text
+              x="488"
+              y="82"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#a78bfa"
+              font-weight="600"
+            >
+              write-plan
+            </text>
+            <text
+              x="488"
+              y="98"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#7c6bcc"
+            >
+              → br epic
+            </text>
+            <text
+              x="488"
+              y="111"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#7c6bcc"
+            >
+              6×
+            </text>
+
+            <!-- STOP gate -->
+            <rect
+              x="578"
+              y="68"
+              width="56"
+              height="36"
+              rx="6"
+              fill="#3d2a06"
+              stroke="#f59e0b"
+              stroke-width="1.5"
+            />
+            <text
+              x="606"
+              y="88"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#f59e0b"
+              font-weight="700"
+            >
+              STOP
+            </text>
+            <text
+              x="606"
+              y="100"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#9c7020"
+            >
+              human
+            </text>
+            <line
+              x1="549"
+              y1="86"
+              x2="577"
+              y2="86"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-purple)"
+            />
+
+            <!-- br epic persistence box -->
+            <rect
+              x="750"
+              y="50"
+              width="160"
+              height="72"
+              rx="8"
+              fill="#12152a"
+              stroke="#3f4270"
+              stroke-width="1"
+              stroke-dasharray="3 3"
+            />
+            <text
+              x="830"
+              y="74"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#6366f1"
+              font-weight="600"
+            >
+              br epic
+            </text>
+            <text
+              x="830"
+              y="90"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+            >
+              persists across /clear
+            </text>
+            <text
+              x="830"
+              y="106"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+            >
+              requirements · anti-patterns
+            </text>
+            <!-- arrow from write-plan to br epic -->
+            <line
+              x1="635"
+              y1="86"
+              x2="748"
+              y2="86"
+              stroke="#3f4270"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+              marker-end="url(#arrow)"
+            />
+
+            <!-- ── BUILD TRACK ── -->
+            <!-- execute-plan -->
+            <rect
+              x="72"
+              y="160"
+              width="140"
+              height="60"
+              rx="8"
+              fill="#0d4a3a"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+            />
+            <text
+              x="142"
+              y="186"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#22d3a5"
+              font-weight="600"
+            >
+              execute-plan
+            </text>
+            <text
+              x="142"
+              y="202"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              auto-chains
+            </text>
+            <text
+              x="142"
+              y="215"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              7×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="213"
+              y1="190"
+              x2="258"
+              y2="190"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+              marker-end="url(#arrow-green)"
+            />
+
+            <!-- expand-task (internal) -->
+            <rect
+              x="260"
+              y="160"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#0a2e20"
+              stroke="#0d5c45"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <text
+              x="320"
+              y="183"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#22d3a5"
+            >
+              expand-task
+            </text>
+            <text
+              x="320"
+              y="199"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#0d5c45"
+            >
+              internal
+            </text>
+            <text
+              x="320"
+              y="213"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#0d5c45"
+            >
+              auto
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="381"
+              y1="190"
+              x2="426"
+              y2="190"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+              marker-end="url(#arrow-green)"
+            />
+
+            <!-- tdd -->
+            <rect
+              x="428"
+              y="160"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#0d4a3a"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+            />
+            <text
+              x="488"
+              y="183"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#22d3a5"
+              font-weight="600"
+            >
+              tdd
+            </text>
+            <text
+              x="488"
+              y="199"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              auto-chains
+            </text>
+            <text
+              x="488"
+              y="213"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              11×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="549"
+              y1="190"
+              x2="590"
+              y2="190"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+              marker-end="url(#arrow-green)"
+            />
+
+            <!-- conform gate (NEW: mandatory) -->
+            <rect
+              x="592"
+              y="160"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#3d2a06"
+              stroke="#f59e0b"
+              stroke-width="1.5"
+            />
+            <text
+              x="652"
+              y="183"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#f59e0b"
+              font-weight="600"
+            >
+              conform
+            </text>
+            <text
+              x="652"
+              y="199"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#9c7020"
+            >
+              gate (V2 new)
+            </text>
+            <text
+              x="652"
+              y="213"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#9c7020"
+            >
+              7×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="713"
+              y1="190"
+              x2="754"
+              y2="190"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+              marker-end="url(#arrow-green)"
+            />
+
+            <!-- commit -->
+            <rect
+              x="756"
+              y="160"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#0d4a3a"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+            />
+            <text
+              x="816"
+              y="186"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#22d3a5"
+              font-weight="600"
+            >
+              commit
+            </text>
+            <text
+              x="816"
+              y="202"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              close task
+            </text>
+            <text
+              x="816"
+              y="215"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#0d9068"
+            >
+              29×
+            </text>
+
+            <!-- loop arrow from commit back to execute-plan (below track) -->
+            <path
+              d="M816,221 Q816,250 488,250 Q210,250 142,250 L142,221"
+              fill="none"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+              stroke-dasharray="5 3"
+              marker-end="url(#arrow-green)"
+            />
+            <text
+              x="488"
+              y="265"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#0d5c45"
+            >
+              next task (loop)
+            </text>
+
+            <!-- arrow down from write-plan (plan track) to execute-plan (build track) -->
+            <line
+              x1="488"
+              y1="117"
+              x2="488"
+              y2="140"
+              stroke="#4d3d70"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+              marker-end="url(#arrow)"
+            />
+            <!-- then left to execute-plan -->
+            <line
+              x1="488"
+              y1="140"
+              x2="142"
+              y2="140"
+              stroke="#4d3d70"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <line
+              x1="142"
+              y1="140"
+              x2="142"
+              y2="158"
+              stroke="#4d3d70"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+              marker-end="url(#arrow)"
+            />
+
+            <!-- ── SHIP TRACK ── -->
+            <!-- finish-epic -->
+            <rect
+              x="72"
+              y="298"
+              width="140"
+              height="60"
+              rx="8"
+              fill="#1a2f52"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+            />
+            <text
+              x="142"
+              y="322"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#60a5fa"
+              font-weight="600"
+            >
+              finish-epic
+            </text>
+            <text
+              x="142"
+              y="338"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              auto from build
+            </text>
+            <text
+              x="142"
+              y="351"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              4×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="213"
+              y1="328"
+              x2="258"
+              y2="328"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-blue)"
+            />
+
+            <!-- review -->
+            <rect
+              x="260"
+              y="298"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#1a2f52"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+            />
+            <text
+              x="320"
+              y="322"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#60a5fa"
+              font-weight="600"
+            >
+              review
+            </text>
+            <text
+              x="320"
+              y="338"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              user-driven
+            </text>
+            <text
+              x="320"
+              y="351"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              12×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="381"
+              y1="328"
+              x2="426"
+              y2="328"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-blue)"
+            />
+
+            <!-- pr -->
+            <rect
+              x="428"
+              y="298"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#1a2f52"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+            />
+            <text
+              x="488"
+              y="322"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#60a5fa"
+              font-weight="600"
+            >
+              pr
+            </text>
+            <text
+              x="488"
+              y="338"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              user-driven
+            </text>
+            <text
+              x="488"
+              y="351"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a6090"
+            >
+              12×
+            </text>
+
+            <!-- done terminal -->
+            <rect
+              x="596"
+              y="308"
+              width="80"
+              height="40"
+              rx="6"
+              fill="#0d2e10"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+            />
+            <text
+              x="636"
+              y="332"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#22d3a5"
+              font-weight="700"
+            >
+              DONE
+            </text>
+            <line
+              x1="549"
+              y1="328"
+              x2="594"
+              y2="328"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+              marker-end="url(#arrow-blue)"
+            />
+
+            <!-- arrow down from commit (build) to finish-epic (ship) -->
+            <line
+              x1="816"
+              y1="221"
+              x2="816"
+              y2="270"
+              stroke="#3a5270"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <line
+              x1="816"
+              y1="270"
+              x2="142"
+              y2="270"
+              stroke="#3a5270"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <line
+              x1="142"
+              y1="270"
+              x2="142"
+              y2="297"
+              stroke="#3a5270"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+              marker-end="url(#arrow)"
+            />
+            <text
+              x="500"
+              y="268"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#3a5270"
+            >
+              all tasks done
+            </text>
+
+            <!-- ── BUG TRACK ── -->
+            <!-- debug-issue -->
+            <rect
+              x="72"
+              y="440"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#3d1212"
+              stroke="#f87171"
+              stroke-width="1.5"
+            />
+            <text
+              x="132"
+              y="464"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="11"
+              fill="#f87171"
+              font-weight="600"
+            >
+              debug-issue
+            </text>
+            <text
+              x="132"
+              y="480"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#8a3a3a"
+            >
+              → br bug
+            </text>
+            <text
+              x="132"
+              y="494"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#8a3a3a"
+            >
+              1×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="193"
+              y1="470"
+              x2="238"
+              y2="470"
+              stroke="#f87171"
+              stroke-width="1.5"
+              marker-end="url(#arrow-red)"
+            />
+
+            <!-- fix-bug -->
+            <rect
+              x="240"
+              y="440"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#3d1212"
+              stroke="#f87171"
+              stroke-width="1.5"
+            />
+            <text
+              x="300"
+              y="464"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#f87171"
+              font-weight="600"
+            >
+              fix-bug
+            </text>
+            <text
+              x="300"
+              y="480"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#8a3a3a"
+            >
+              tdd inside
+            </text>
+            <text
+              x="300"
+              y="494"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#8a3a3a"
+            >
+              3×
+            </text>
+
+            <!-- arrow -->
+            <line
+              x1="361"
+              y1="470"
+              x2="406"
+              y2="470"
+              stroke="#f87171"
+              stroke-width="1.5"
+              marker-end="url(#arrow-red)"
+            />
+
+            <!-- commit (bug) -->
+            <rect
+              x="408"
+              y="440"
+              width="120"
+              height="60"
+              rx="8"
+              fill="#3d1212"
+              stroke="#f87171"
+              stroke-width="1.5"
+            />
+            <text
+              x="468"
+              y="464"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="12"
+              fill="#f87171"
+              font-weight="600"
+            >
+              commit
+            </text>
+            <text
+              x="468"
+              y="480"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#8a3a3a"
+            >
+              close br bug
+            </text>
+
+            <!-- note: debug-issue precondition -->
+            <text
+              x="132"
+              y="516"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="9"
+              fill="#6a2a2a"
+            >
+              V2: enforce br bug precondition
+            </text>
+
+            <!-- Legend -->
+            <rect
+              x="700"
+              y="430"
+              width="272"
+              height="156"
+              rx="8"
+              fill="#12152a"
+              stroke="#2e3349"
+              stroke-width="1"
+            />
+            <text
+              x="836"
+              y="452"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#4a5068"
+              letter-spacing="2"
+            >
+              LEGEND
+            </text>
+            <rect
+              x="716"
+              y="462"
+              width="16"
+              height="10"
+              rx="2"
+              fill="#2d2152"
+              stroke="#a78bfa"
+              stroke-width="1.5"
+            />
+            <text x="740" y="473" font-family="monospace" font-size="10" fill="#7c6bcc">
+              Plan phase
+            </text>
+            <rect
+              x="716"
+              y="480"
+              width="16"
+              height="10"
+              rx="2"
+              fill="#0d4a3a"
+              stroke="#22d3a5"
+              stroke-width="1.5"
+            />
+            <text x="740" y="491" font-family="monospace" font-size="10" fill="#0d9068">
+              Build phase
+            </text>
+            <rect
+              x="716"
+              y="498"
+              width="16"
+              height="10"
+              rx="2"
+              fill="#1a2f52"
+              stroke="#60a5fa"
+              stroke-width="1.5"
+            />
+            <text x="740" y="509" font-family="monospace" font-size="10" fill="#3a6090">
+              Ship phase
+            </text>
+            <rect
+              x="716"
+              y="516"
+              width="16"
+              height="10"
+              rx="2"
+              fill="#3d1212"
+              stroke="#f87171"
+              stroke-width="1.5"
+            />
+            <text x="740" y="527" font-family="monospace" font-size="10" fill="#8a3a3a">
+              Bug track
+            </text>
+            <rect
+              x="716"
+              y="534"
+              width="16"
+              height="10"
+              rx="2"
+              fill="#3d2a06"
+              stroke="#f59e0b"
+              stroke-width="1.5"
+            />
+            <text x="740" y="545" font-family="monospace" font-size="10" fill="#9c7020">
+              Quality gate
+            </text>
+            <line
+              x1="716"
+              y1="561"
+              x2="732"
+              y2="561"
+              stroke="#4a5068"
+              stroke-width="1.5"
+              stroke-dasharray="4 3"
+            />
+            <text x="740" y="566" font-family="monospace" font-size="10" fill="#4a5068">
+              Optional / internal
+            </text>
+
+            <!-- Title -->
+            <text
+              x="500"
+              y="598"
+              text-anchor="middle"
+              font-family="monospace"
+              font-size="10"
+              fill="#3a4060"
+              letter-spacing="1"
+            >
+              Cape V2 — Three-Chain State Machine / br epics = cross-session state
+            </text>
+          </svg>
         </div>
-        <div class="change-before">V1: fix-bug fires directly, no br bug required</div>
-        <div class="change-after">V2: fix-bug entry checks for br bug → debug-issue if missing</div>
+      </div>
+
+      <!-- V2 Phase table -->
+      <div class="section">
+        <div class="section-label">V2 Components</div>
+        <h2>Phase definitions and handoff contracts</h2>
+        <p>
+          Each phase has a mandatory entry condition, a single primary output, and an explicit exit
+          that triggers the next phase. br epics carry state across /clear boundaries.
+        </p>
+
+        <table class="phase-table" style="margin-top: 20px">
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Skills</th>
+              <th>Entry condition</th>
+              <th>Primary output</th>
+              <th>Exit → Next</th>
+              <th>Trigger</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="phase-name" style="color: var(--purple)">Plan</span></td>
+              <td>
+                <span class="skill-pill pill-plan">brainstorm</span>
+                <span class="skill-pill pill-plan">challenge</span>
+                <span class="skill-pill pill-plan">write-plan</span>
+              </td>
+              <td style="color: var(--muted); font-size: 13px">No br epic for this work</td>
+              <td style="color: var(--muted); font-size: 13px">
+                br epic with requirements, anti-patterns, first task
+              </td>
+              <td style="color: var(--muted); font-size: 13px">User says "continue" → Build</td>
+              <td><span class="trigger-type trigger-user">user</span></td>
+            </tr>
+            <tr>
+              <td><span class="phase-name" style="color: var(--green)">Build</span></td>
+              <td>
+                <span class="skill-pill pill-build">execute-plan</span>
+                <span class="skill-pill pill-internal">expand-task</span>
+                <span class="skill-pill pill-build">tdd</span>
+                <span class="skill-pill pill-quality">conform</span>
+                <span class="skill-pill pill-build">commit</span>
+              </td>
+              <td style="color: var(--muted); font-size: 13px">br epic open, ready task exists</td>
+              <td style="color: var(--muted); font-size: 13px">
+                Passing tests, committed code, closed task
+              </td>
+              <td style="color: var(--muted); font-size: 13px">All tasks closed → Ship</td>
+              <td><span class="trigger-type trigger-auto">auto</span></td>
+            </tr>
+            <tr>
+              <td><span class="phase-name" style="color: var(--blue)">Ship</span></td>
+              <td>
+                <span class="skill-pill pill-ship">finish-epic</span>
+                <span class="skill-pill pill-ship">review</span>
+                <span class="skill-pill pill-ship">pr</span>
+              </td>
+              <td style="color: var(--muted); font-size: 13px">All br tasks closed, epic open</td>
+              <td style="color: var(--muted); font-size: 13px">Merged PR, closed epic</td>
+              <td style="color: var(--muted); font-size: 13px">PR merged → Done</td>
+              <td><span class="trigger-type trigger-auto">auto</span></td>
+            </tr>
+            <tr>
+              <td><span class="phase-name" style="color: var(--red)">Bug</span></td>
+              <td>
+                <span class="skill-pill pill-bug">debug-issue</span>
+                <span class="skill-pill pill-bug">fix-bug</span>
+                <span class="skill-pill pill-build">commit</span>
+              </td>
+              <td style="color: var(--muted); font-size: 13px">Error / broken behavior reported</td>
+              <td style="color: var(--muted); font-size: 13px">
+                br bug with root cause, minimal fix, regression test
+              </td>
+              <td style="color: var(--muted); font-size: 13px">Committed fix → Done</td>
+              <td><span class="trigger-type trigger-user">user</span></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <strong
+            >New in V2: conform is a mandatory gate inside Build, not a post-hoc check.</strong
+          >
+          It runs after tdd passes and before commit is allowed. Current V1 behavior — conform
+          firing after commit — turns it into a retrospective that generates rework. Shifting it
+          left means convention violations fail at the task boundary, not after the work is shipped.
+        </div>
+      </div>
+
+      <!-- Top 3 changes -->
+      <div class="section">
+        <div class="section-label">V2 Changes</div>
+        <h2>Three concrete changes from V1 to V2</h2>
+
+        <div class="changes-grid">
+          <div class="change-card">
+            <div class="change-number">Change 01 — Prune dead skills</div>
+            <div class="change-title">Delete 5 skills. Zero survivors without 1 invocation.</div>
+            <div class="change-body">
+              Five skills fired 0× in 10 days of real work. They're not dormant features — they're
+              routing noise. Every entry in don-cape's lookup table is a path the LLM can misfire
+              into. Prune them.
+            </div>
+            <div class="change-before">V1: 22 skills, 5 unreachable in practice</div>
+            <div class="change-after">V2: 17 skills, dead ones deleted outright</div>
+            <div class="dead-skills" style="margin-top: 14px">
+              <span class="dead-pill">analyze-tests</span>
+              <span class="dead-pill">branch</span>
+              <span class="dead-pill">design-an-interface</span>
+              <span class="dead-pill">explain</span>
+              <span class="dead-pill">find-test-gaps</span>
+            </div>
+          </div>
+
+          <div class="change-card">
+            <div class="change-number">Change 02 — conform becomes a gate</div>
+            <div class="change-title">Move conform left: after tdd, before commit.</div>
+            <div class="change-body">
+              Conform ran 7× in V1 — always post-commit, as a retrospective gate. That means
+              convention violations are discovered after the work is done and committed, requiring a
+              fixup commit. Shifting it into the Build loop as a mandatory step before
+              <code style="font-family: var(--mono); color: var(--text)">commit</code> is allowed
+              makes convention enforcement proactive, not reactive.
+            </div>
+            <div class="change-before">V1: tdd → commit → (user runs conform)</div>
+            <div class="change-after">V2: tdd → conform [gate] → commit</div>
+          </div>
+
+          <div class="change-card">
+            <div class="change-number">Change 03 — enforce bug track precondition</div>
+            <div class="change-title">fix-bug requires a br bug. No shortcut entry.</div>
+            <div class="change-body">
+              debug-issue fired 1×. fix-bug fired 3×. The chain is being bypassed — bugs get fixed
+              without root cause analysis. V2 makes fix-bug check for a br bug at entry. If none
+              exists, it routes to debug-issue first. This isn't dogma — it's preventing fixes that
+              mask symptoms.
+            </div>
+            <div class="change-before">V1: fix-bug fires directly, no br bug required</div>
+            <div class="change-after">
+              V2: fix-bug entry checks for br bug → debug-issue if missing
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- State persistence note -->
+      <div class="section">
+        <div class="section-label">Cross-session state</div>
+        <h2>br epics as the persistence layer</h2>
+        <p>
+          37 /clear boundaries in 10 days. That's 37 context resets. The only thing that survived
+          every reset is br state — epic requirements, anti-patterns, task status, expanded plans.
+          This is the architecture, not a detail.
+        </p>
+
+        <div class="data-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 16px">
+          <div class="stat-card" style="border-left: 3px solid var(--accent)">
+            <h3 style="margin-bottom: 8px">What br stores (cross-session)</h3>
+            <div
+              style="font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 2"
+            >
+              Epic requirements (immutable)<br />
+              Anti-patterns with reasoning<br />
+              Success criteria (checkable)<br />
+              Task expanded plans (step-by-step)<br />
+              Verify.json (checkpoint SHAs)<br />
+              Outcome sections (per-task learnings)
+            </div>
+          </div>
+          <div class="stat-card" style="border-left: 3px solid var(--border)">
+            <h3 style="margin-bottom: 8px">What /clear correctly destroys</h3>
+            <div
+              style="font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 2"
+            >
+              Conversation history<br />
+              Agent dispatch results<br />
+              Research findings (in-memory)<br />
+              Design summary drafts<br />
+              Intermediate reasoning<br />
+              All "I was just thinking..." context
+            </div>
+          </div>
+        </div>
+
+        <div class="callout" style="border-left-color: var(--accent); margin-top: 20px">
+          <strong>V2 design principle:</strong> If a skill needs something to survive /clear, it
+          must write it to br before the checkpoint. expand-task writes the expanded plan to the
+          task's design field for exactly this reason. V2 extends this pattern: conform results,
+          divergence logs, and outcome notes are all written to br before the checkpoint stop —
+          never left in conversation context.
+        </div>
+      </div>
+
+      <hr class="divider" />
+      <div class="footer">
+        <span>cape v2-redesign / 01-workflow-architect</span>
+        <span>Workflow Architect perspective · 2026-06-17</span>
+        <span>grounded in 120+ real invocations, 37 sessions</span>
       </div>
     </div>
-  </div>
-
-  <!-- State persistence note -->
-  <div class="section">
-    <div class="section-label">Cross-session state</div>
-    <h2>br epics as the persistence layer</h2>
-    <p>37 /clear boundaries in 10 days. That's 37 context resets. The only thing that survived every reset is br state — epic requirements, anti-patterns, task status, expanded plans. This is the architecture, not a detail.</p>
-
-    <div class="data-grid" style="grid-template-columns: repeat(2, 1fr); margin-top: 16px;">
-      <div class="stat-card" style="border-left: 3px solid var(--accent);">
-        <h3 style="margin-bottom: 8px;">What br stores (cross-session)</h3>
-        <div style="font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 2;">
-          Epic requirements (immutable)<br>
-          Anti-patterns with reasoning<br>
-          Success criteria (checkable)<br>
-          Task expanded plans (step-by-step)<br>
-          Verify.json (checkpoint SHAs)<br>
-          Outcome sections (per-task learnings)
-        </div>
-      </div>
-      <div class="stat-card" style="border-left: 3px solid var(--border);">
-        <h3 style="margin-bottom: 8px;">What /clear correctly destroys</h3>
-        <div style="font-family: var(--mono); font-size: 12px; color: var(--muted); line-height: 2;">
-          Conversation history<br>
-          Agent dispatch results<br>
-          Research findings (in-memory)<br>
-          Design summary drafts<br>
-          Intermediate reasoning<br>
-          All "I was just thinking..." context
-        </div>
-      </div>
-    </div>
-
-    <div class="callout" style="border-left-color: var(--accent); margin-top: 20px;">
-      <strong>V2 design principle:</strong> If a skill needs something to survive /clear, it must write it to br before the checkpoint. expand-task writes the expanded plan to the task's design field for exactly this reason. V2 extends this pattern: conform results, divergence logs, and outcome notes are all written to br before the checkpoint stop — never left in conversation context.
-    </div>
-  </div>
-
-  <hr class="divider">
-  <div class="footer">
-    <span>cape v2-redesign / 01-workflow-architect</span>
-    <span>Workflow Architect perspective · 2026-06-17</span>
-    <span>grounded in 120+ real invocations, 37 sessions</span>
-  </div>
-
-</div>
-
-</body>
+  </body>
 </html>
