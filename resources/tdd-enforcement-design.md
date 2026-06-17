@@ -4,10 +4,10 @@
 
 **Problem:** Claude Code does not consistently follow TDD during execution despite skill
 instructions and soft hook reminders. The PostToolUse Edit hook is advisory (additionalContext), not
-blocking (deny). The Write tool has no hook at all. Expand-task prescribes implementation details
-that let Claude skip test-first discovery.
+blocking (deny). The Write tool has no hook at all. The expanded-plan prose prescribed
+implementation details that let Claude skip test-first discovery.
 
-**Chosen approach:** Hard runtime enforcement via PreToolUse hooks + lighter expand-task output.
+**Chosen approach:** Hard runtime enforcement via PreToolUse hooks + lighter expanded-plan output.
 
 **Requirements:**
 
@@ -16,7 +16,7 @@ that let Claude skip test-first discovery.
 - `tdd-bypass` context flag provides explicit escape hatch (manual set/clear only)
 - PostToolUse Edit stops warning on `green` phase (valid refactoring)
 - PostToolUse Write added for tdd-state tracking on test file creation
-- Expand-task `**Changes:**` field stripped of prose descriptions (file paths only)
+- Expanded-plan `**Changes:**` field stripped of prose descriptions (file paths only)
 - Execute-plan resets tdd-state to null at the start of each expanded plan step
 - Execute-plan GREEN phase updated to reference Pattern and file targets, not descriptions
 
@@ -24,8 +24,8 @@ that let Claude skip test-first discovery.
 
 - NO auto-clear on tdd-bypass (reason: hidden coupling between context flags, surprising behavior)
 - NO transition of `green` → null on production edits (reason: breaks multi-file atomic refactoring)
-- NO structural hints or fallback descriptions in Changes (reason: expand-task must find patterns;
-  hints drift toward prescriptions)
+- NO structural hints or fallback descriptions in Changes (reason: execute-plan's inline expansion
+  must find patterns; hints drift toward prescriptions)
 - NO description of what to write in expanded plan steps (reason: lets Claude skip test-first
   discovery)
 
@@ -35,12 +35,12 @@ that let Claude skip test-first discovery.
   positive, add PostToolUse Write handler
 - `hooks/hooks.json` — register PreToolUse Edit/Write matchers, PostToolUse Write matcher
 - `cli/src/commands/hook.ts` — route new matchers to handlers
-- `skills/expand-task/SKILL.md` — strip prose from Changes format
-- `skills/execute-plan/SKILL.md` — reset tdd-state per step, update GREEN phase instructions
+- `skills/execute-plan/SKILL.md` — strip prose from Changes format, reset tdd-state per step, update
+  GREEN phase instructions
 
 **Scope:**
 
-- In: PreToolUse deny logic, tdd-bypass flag, PostToolUse fixes, expand-task format, execute-plan
+- In: PreToolUse deny logic, tdd-bypass flag, PostToolUse fixes, expanded-plan format, execute-plan
   step loop
 - Out: beads/task structure changes, new tdd-state phases, auto-clear mechanisms
 
@@ -58,17 +58,17 @@ that let Claude skip test-first discovery.
 
 | Question                            | Answer                       | Implication                                            |
 | ----------------------------------- | ---------------------------- | ------------------------------------------------------ |
-| Hooks vs structure for enforcement? | Both, hooks are the 80% fix  | PreToolUse deny is primary; expand-task is secondary   |
+| Hooks vs structure for enforcement? | Both, hooks are the 80% fix  | PreToolUse deny is primary; plan shape is secondary    |
 | Escape hatch mechanism?             | Context flag `tdd-bypass`    | Manual set/clear, no auto-clear                        |
 | `green` state handling?             | Reset per step, not per edit | Refactoring stays free; each new behavior starts clean |
-| Expand-task Changes format?         | File paths only, no prose    | Pattern field carries convention guidance              |
+| Expanded-plan Changes format?       | File paths only, no prose    | Pattern field carries convention guidance              |
 | Auto-clear bypass?                  | No                           | Simple, explicit, no hidden coupling                   |
 
 ## Approaches considered
 
 1. **Option A: Lighten** (selected) — hard hooks + strip descriptions from Changes, keep file paths
 2. **Option B: Restructure** (rejected) — remove Changes entirely, scope only. Too aggressive;
-   Claude re-discovers what expand-task already found, wastes tokens, risks wrong-file edits.
+   Claude re-discovers what inline expansion already found, wastes tokens, risks wrong-file edits.
 
 ## TDD state machine (PreToolUse deny logic)
 
@@ -87,7 +87,7 @@ State resets to null at the start of each expanded plan step.
   `postToolUseWrite`
 - `cli/src/commands/hook.ts` — route Edit/Write in PreToolUse and PostToolUse switches
 - `hooks/hooks.json` — register new matchers
-- `skills/expand-task/SKILL.md` — update Changes format (strip descriptions)
-- `skills/execute-plan/SKILL.md` — add tdd-state reset per step, update GREEN phase wording
+- `skills/execute-plan/SKILL.md` — update Changes format (strip descriptions), add tdd-state reset
+  per step, update GREEN phase wording
 - `cli/src/commands/hook.test.ts` — tests for new PreToolUse handlers
 - `cli/src/services/hook.test.ts` — if exists, tests for new service functions

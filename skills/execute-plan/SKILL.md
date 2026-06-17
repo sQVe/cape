@@ -76,6 +76,21 @@ anti-patterns are the guardrails for every decision you make during execution.
 br show <epic-id>
 ```
 
+## Step 1a: Pre-flight plan scan
+
+After loading the epic and before expanding or starting task 1, scan the epic's task list once. This
+is a lightweight SOFT check, not a hard gate: surface issues before building, but do not block
+progress unless the user decides to adjust the plan.
+
+Check that:
+
+- Each task has a concrete goal and verifiable criteria.
+- The sequence has no obvious missing dependency or circular order.
+- No task is obviously oversized for a single implementation cycle.
+
+If you find issues, report them briefly with the affected task IDs and ask whether to adjust before
+continuing. If the scan is clean, proceed without ceremony.
+
 ---
 
 ## Step 2: Execute
@@ -92,16 +107,112 @@ Signal that a workflow is active (gates internal skills for direct invocation):
 cape state set workflowActive
 ```
 
-If the task's design field does not already contain an `## Expanded plan` section, load
-`cape:expand-task` with the Skill tool to ground the task in codebase reality before writing any
-code. Expand-task dispatches `cape:codebase-investigator` in default mode (model: haiku),
-investigates actual files and patterns, then appends a step-by-step plan with exact file paths, line
-numbers, and verification commands to the task's design field. Skip this if the section already
-exists.
+If the task's design field does not already contain an `## Expanded plan` section, ground the task
+in codebase reality before writing any code. Skip this if the section already exists.
 
-After expand-task returns, re-read the task (`br show <task-id>`). If the design field contains a
+Load the task and its parent epic:
+
+```bash
+br show <task-id>
+br show <epic-id>
+```
+
+Check whether the task is already expanded:
+
+```bash
+cape br expanded-check <task-id>
+```
+
+If `hasExpandedPlan` is `true`, skip expansion. If the command fails (non-zero exit), stop and
+surface the error; do not fall back to manually parsing the design field.
+
+Extract from the task:
+
+- **Goal** — what this task delivers
+- **Implementation hints** — any file paths, patterns, or approaches mentioned
+- **Success criteria** — what "done" looks like
+
+Extract from the epic:
+
+- **Requirements** — immutable guardrails
+- **Anti-patterns** — what must not happen
+- **Architecture** — where components live
+- **Durable decisions** — settled choices that constrain implementation
+
+Dispatch `cape:codebase-investigator` in default mode (model: haiku) to verify codebase reality.
+Fall back to Grep/Glob/Read if agent dispatch is unavailable. Find:
+
+- **Where the change lands** — exact files and line ranges that need modification
+- **Patterns to follow** — 1-2 similar implementations in real files
+- **Adjacent code** — callers, importers, and tests affected by the change
+- **Reusable code** — existing helpers, utilities, types, or fixtures to use
+
+Only reference files and patterns verified during this investigation.
+
+Produce a step-by-step plan where each step is exactly one TDD cycle: one behavior, one failing
+test, one implementation pass. Calibrate granularity to task complexity:
+
+- **Simple task** (single file, clear pattern): 2-4 steps
+- **Medium task** (multiple files or a new pattern): 4-7 steps
+- **Complex task** (cross-cutting or new architecture): 7-10 steps
+
+If the task would need more than 10 steps, append a `## Split recommendation` section to the task's
+design field listing natural split points and recommended subtask titles, then stop for user review
+instead of producing an expanded plan.
+
+Each step must include:
+
+```markdown
+### Step N: [What this step delivers -- one testable behavior]
+
+**Pattern:** [file:line -- existing implementation to follow]
+
+**Changes:**
+
+- `path/to/file.ts:L23-30` -- [what to change and why]
+- `path/to/new-file.ts` (new) -- [what it contains, following pattern from X]
+
+**Verify:** `[exact shell command to run]`
+```
+
+- **Step title** names a single testable behavior. TDD designs the test; the title states the
+  behavior gap.
+- **Pattern** references a real file the step should mirror. Omit if no relevant pattern exists.
+- **Changes** reference real files at real line numbers. For new files, follow existing naming
+  conventions found during investigation.
+- **Verify** is an exact shell command. Not "run tests" — use a runnable command.
+- Do not include test descriptions in steps. Test design belongs to implementation-time TDD.
+
+Append the expanded plan to the task with the stable design-field heading:
+
+```bash
+cat <<'EOF' | cape br design <task-id> "Expanded plan (expand-task)"
+### Investigation findings
+
+**Files to modify:**
+- `path/to/file.ts` -- [role in this change]
+
+**Patterns to follow:**
+- `path/to/similar.ts:L10-45` -- [what it demonstrates]
+
+**Reusable code:**
+- `path/to/utils.ts:functionName()` -- [what it does]
+
+**Blast radius:**
+- [Callers/importers/tests affected by this change]
+
+### Steps
+
+[Steps from the expansion]
+
+### Final verification
+`cape check`
+EOF
+```
+
+After expansion, re-read the task (`br show <task-id>`). If the design field contains a
 `## Split recommendation` section instead of an expanded plan, the task is too large. Close it with
-reason "split per expand-task recommendation", create the recommended subtasks, and stop for user
+reason "split per expanded-plan recommendation", create the recommended subtasks, and stop for user
 review.
 
 Once an expanded plan exists, mark the task in-progress:
@@ -328,9 +439,9 @@ reviewer judges code against the contract, not the implementation intent. **Expe
 
 ## `cape:fact-checker` protocol (model: sonnet):
 
-Dispatch `cape:fact-checker` (model: sonnet) when verifying that assumptions from expand-task still
-hold after implementation. **Pass:** specific claims to verify (file paths, function signatures,
-import relationships). **Expect back:** per-claim verdict: Confirmed/Refuted/Partially
+Dispatch `cape:fact-checker` (model: sonnet) when verifying that assumptions from the expanded plan
+still hold after implementation. **Pass:** specific claims to verify (file paths, function
+signatures, import relationships). **Expect back:** per-claim verdict: Confirmed/Refuted/Partially
 correct/Unverifiable with file:line evidence.
 
 </agent_references>

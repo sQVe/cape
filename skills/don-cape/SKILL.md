@@ -73,7 +73,6 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 
 **Internal skills** (called by other skills, not user-routed):
 
-- `cape:expand-task` — called by `execute-plan` to ground tasks in codebase reality before coding
 - `cape:test-driven-development` — mandatory before any production code. Loaded by `execute-plan` in
   Step 2 and `fix-bug` in Step 3; user-prompt-submit hook serves as safety net for resumed sessions
 
@@ -87,13 +86,13 @@ anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                                                                  | Dispatched by                                                | Purpose                                                                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                           | Review implementation against plan and standards                                            |
-| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, expand-task, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
-| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                    | Verify claims and assumptions against codebase evidence                                     |
-| `cape:internet-researcher` (model: sonnet)                             | brainstorm, fix-bug                                          | Research external APIs, libraries, community practices                                      |
-| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                         | Run tests and hooks without polluting context                                               |
+| Agent                                                                  | Dispatched by                                                 | Purpose                                                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                            | Review implementation against plan and standards                                            |
+| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, execute-plan, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
+| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                     | Verify claims and assumptions against codebase evidence                                     |
+| `cape:internet-researcher` (model: sonnet)                             | brainstorm, fix-bug                                           | Research external APIs, libraries, community practices                                      |
+| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                          | Run tests and hooks without polluting context                                               |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.
@@ -107,7 +106,7 @@ Cape skills form workflow chains. Each link hands off to the next. Don't skip li
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm [challenge optional] → write-plan → STOP → execute-plan (expand-task → TDD → review → commit loop) → finish-epic → commit
+brainstorm [challenge optional] → write-plan → STOP → execute-plan (inline expansion → TDD → review → commit loop) → finish-epic → commit
 ```
 
 - `brainstorm` is conversational — never enters plan mode. It checkpoints after research and after
@@ -117,7 +116,7 @@ brainstorm [challenge optional] → write-plan → STOP → execute-plan (expand
 - **STOP** — present the epic and wait. The user decides when to start building.
 - `execute-plan` implements one task, challenges completed work, creates the next task, stops for
   review
-  - `expand-task` (internal, automatic) grounds the task in codebase reality before coding starts
+  - Inline expansion grounds the task in codebase reality before coding starts
   - `commit` persists each completed unit of work
 - `finish-epic` verifies all success criteria, runs final checks, closes the epic
 - `commit` persists any remaining changes
