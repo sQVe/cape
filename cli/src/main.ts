@@ -12,8 +12,9 @@ import { hook } from './commands/hook';
 import { pr } from './commands/pr';
 import { stats } from './commands/stats';
 import { validate } from './commands/validate';
+import { worktree } from './commands/worktree';
 
 export const main = Command.make('cape').pipe(
   Command.withDescription('Cape CLI — opinionated Claude Code workflow tools.'),
-  Command.withSubcommands([br, check, commit, conform, detect, epic, git, hook, pr, state, stats, validate]),
+  Command.withSubcommands([br, check, commit, conform, detect, epic, git, hook, pr, state, stats, validate, worktree]),
 );
