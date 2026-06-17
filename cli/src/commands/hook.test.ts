@@ -974,7 +974,7 @@ describe('preToolUseBash', () => {
 });
 
 describe('preToolUseSkill', () => {
-  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:branch', 'cape:brainstorm', 'cape:write-plan'])(
+  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:worktree', 'cape:brainstorm', 'cape:write-plan'])(
     'allows non-gated skill %s',
     async (skill) => {
       const layer = makeStubHookLayer({ stdin: skillStdin(skill) });

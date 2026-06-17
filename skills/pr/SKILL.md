@@ -28,7 +28,7 @@ bundled template — never invent sections. </rigidity_level>
 
 - Reviewing someone else's PR
 - Committing changes (use cape:commit)
-- Branch operations (use cape:branch)
+- Worktree setup or epic context stamping (use cape:worktree)
 
 </when_to_use>
 

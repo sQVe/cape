@@ -99,8 +99,8 @@ const gateExecutePlan = () =>
         return {
           additionalContext: [
             `You are on \`${branch}\` (the default branch).`,
-            'Ask the user whether to create a feature branch before starting work.',
-            'Use cape:branch to create one if they agree.',
+            'Ask the user whether to start or enter the epic worktree before starting work.',
+            'Use cape:worktree if they agree.',
           ].join(' '),
         };
       }

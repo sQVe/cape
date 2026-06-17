@@ -64,7 +64,7 @@ tool. **First match wins** — stop scanning after the first row whose intent ma
 | Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`         | Requires br bug to exist                                                                |
 | Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`       | Standalone                                                                              |
 | Refine a task, stress-test br-N, "is this task ready", edge cases   | `cape:task-refinement` | Opt-in between write-plan and execute-plan                                              |
-| Create a branch, start work on a branch                             | `cape:branch`          | Standalone                                                                              |
+| Start work in an epic worktree, create/enter per-epic worktree      | `cape:worktree`        | Standalone                                                                              |
 | Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`     | End of build chain                                                                      |
 | Commit, save changes, wrap this up                                  | `cape:commit`          | Standalone                                                                              |
 | Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`              | Standalone                                                                              |
