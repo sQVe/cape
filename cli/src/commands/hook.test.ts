@@ -208,12 +208,22 @@ const flowPhaseEntry = (phase: string) => ({
   timestamp: Date.now(),
 });
 
+const flowPhaseEntryForIssue = (phase: string, issueId: string) => ({
+  phase,
+  issueId,
+  timestamp: Date.now(),
+});
+
 const stateFile = (entries: Record<string, unknown>) => ({
   '/test/hooks/context/state.json': JSON.stringify(entries),
 });
 
 const flowPhaseFile = (phase: string) =>
   stateFile({ flowPhase: flowPhaseEntry(phase) });
+
+const trackerCacheFile = (cache: Record<string, unknown>) => ({
+  '/test/hooks/context/tracker.json': JSON.stringify(cache),
+});
 
 describe('sessionStart', () => {
   it('outputs SKILL.md content when present', async () => {
@@ -293,6 +303,54 @@ describe('sessionStart', () => {
     const parsed = JSON.parse(written as string);
     expect(parsed).not.toHaveProperty('tddState');
     expect(parsed).toHaveProperty('flowPhase');
+  });
+
+  it('injects an active epic banner from the tracker cache as the first context', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile({
+          version: 1,
+          timestamp: Date.now(),
+          epics: {
+            'ABU-15': {
+              id: 'ABU-15',
+              title: 'Cape V2',
+              status: 'In Progress',
+              tasks: [
+                {
+                  id: 'ABU-16',
+                  title: 'Tracker seam',
+                  status: 'Done',
+                  stateType: 'completed',
+                },
+                {
+                  id: 'ABU-17',
+                  title: 'Session banner',
+                  status: 'Todo',
+                  stateType: 'unstarted',
+                },
+              ],
+            },
+          },
+        }),
+      },
+      gitResponses: {
+        'branch --show-current': 'feat/abu-15',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toMatch(/^Render this cape session banner verbatim/);
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(result.additionalContext).toContain('| Next   ABU-17 - Session banner');
+    expect(result.additionalContext).toContain('| Branch feat/abu-15 (worktree)');
+    expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
+      result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
+    );
   });
 });
 
@@ -1307,4 +1365,3 @@ describe('event logging', () => {
     expect(logEvent).not.toHaveBeenCalled();
   });
 });
-

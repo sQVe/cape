@@ -1,6 +1,8 @@
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { TRACKER_CACHE_TTL_MS } from '../tracker';
+import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { safeParseJson } from '../../utils/json';
 import { detectBeadsSkill, detectDebugIssue, detectExecutePlan, parseCommand } from './parsing';
 
@@ -29,6 +31,7 @@ type StateValue = Record<string, unknown> & { timestamp: number };
 type StateFile = Record<string, StateValue>;
 
 const statePath = (root: string) => `${root}/hooks/context/state.json`;
+const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 export const readState = () =>
   Effect.gen(function* () {
@@ -94,6 +97,144 @@ export const readFlowPhase = () =>
     return entry.phase;
   });
 
+const readFlowPhaseContext = () =>
+  Effect.gen(function* () {
+    const entry = yield* readStateKey('flowPhase', FLOW_PHASE_TTL_MS);
+    if (entry == null || typeof entry.phase !== 'string' || typeof entry.issueId !== 'string') {
+      return null;
+    }
+    return { phase: entry.phase, issueId: entry.issueId };
+  });
+
+const isTrackerTask = (value: unknown): value is TrackerTask => {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
+    return false;
+  }
+  const task = value as {
+    readonly id?: unknown;
+    readonly title?: unknown;
+    readonly status?: unknown;
+    readonly stateType?: unknown;
+  };
+  return (
+    typeof task.id === 'string' &&
+    typeof task.title === 'string' &&
+    typeof task.status === 'string' &&
+    typeof task.stateType === 'string'
+  );
+};
+
+const isTrackerEpic = (value: unknown): value is TrackerEpic => {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
+    return false;
+  }
+  const epic = value as {
+    readonly id?: unknown;
+    readonly title?: unknown;
+    readonly status?: unknown;
+    readonly tasks?: unknown;
+  };
+  return (
+    typeof epic.id === 'string' &&
+    typeof epic.title === 'string' &&
+    typeof epic.status === 'string' &&
+    Array.isArray(epic.tasks) &&
+    epic.tasks.every(isTrackerTask)
+  );
+};
+
+const isTrackerCache = (value: unknown): value is TrackerCache => {
+  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
+    return false;
+  }
+
+  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
+  if (cache.version !== 1 || typeof cache.timestamp !== 'number') {
+    return false;
+  }
+  if (typeof cache.epics !== 'object' || cache.epics == null || Array.isArray(cache.epics)) {
+    return false;
+  }
+
+  return Object.values(cache.epics).every(isTrackerEpic);
+};
+
+const readTrackerCache = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+    const content = yield* service.readFile(trackerPath(root));
+    if (content == null) {
+      return null;
+    }
+
+    const parsed = safeParseJson(content);
+    if (!isTrackerCache(parsed)) {
+      return null;
+    }
+
+    const isStale = Date.now() - parsed.timestamp > TRACKER_CACHE_TTL_MS;
+    return isStale ? null : parsed;
+  });
+
+const isDoneTask = (task: TrackerTask) => {
+  const status = task.status.toLowerCase();
+  const stateType = task.stateType.toLowerCase();
+  return stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed';
+};
+
+const isReadyTask = (task: TrackerTask) => {
+  const status = task.status.toLowerCase();
+  const stateType = task.stateType.toLowerCase();
+  return (
+    stateType === 'unstarted' ||
+    stateType === 'backlog' ||
+    status === 'ready' ||
+    status === 'todo' ||
+    status === 'open'
+  );
+};
+
+const buildSessionBanner = (
+  epic: TrackerEpic,
+  phase: string,
+  branch: string | null,
+) => {
+  const done = epic.tasks.filter(isDoneTask).length;
+  const next = epic.tasks.find(isReadyTask);
+  const nextText = next == null ? 'None' : `${next.id} - ${next.title}`;
+  const branchText = branch ?? 'unknown';
+
+  return [
+    'Render this cape session banner verbatim as your first message, before any other text:',
+    '',
+    '+-- cape -----------------------------------+',
+    `| Epic   ${epic.id}  ${epic.title}`,
+    `| Phase  ${phase}  (${done}/${epic.tasks.length} tasks done)`,
+    `| Next   ${nextText}`,
+    `| Branch ${branchText} (worktree)`,
+    '+-- Say "Continue." to start ---------------+',
+  ].join('\n');
+};
+
+const readSessionBanner = () =>
+  Effect.gen(function* () {
+    const flowPhase = yield* readFlowPhaseContext();
+    if (flowPhase == null) {
+      return null;
+    }
+
+    const cache = yield* readTrackerCache();
+    const epic = cache?.epics[flowPhase.issueId];
+    if (epic == null) {
+      return null;
+    }
+
+    const service = yield* HookService;
+    const branch = yield* service.spawnGit(['branch', '--show-current']);
+    return buildSessionBanner(epic, flowPhase.phase, branch);
+  });
+
 export const clearLogs = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -115,11 +256,15 @@ export const sessionStart = (clearLogsFlag: boolean) =>
     yield* removeStateKey('tddState');
 
     const flowPhase = yield* readFlowPhase();
+    const sessionBanner = yield* readSessionBanner();
 
     const skillPath = `${root}/skills/don-cape/SKILL.md`;
     const skill = yield* service.readFile(skillPath);
 
     const parts: string[] = [];
+    if (sessionBanner != null) {
+      parts.push(sessionBanner);
+    }
     if (skill != null) {
       parts.push(
         `The content below is from skills/don-cape/SKILL.md — cape's workflow system:\n\n${skill}`,
