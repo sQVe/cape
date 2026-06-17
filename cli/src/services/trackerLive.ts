@@ -46,7 +46,7 @@ interface TrackerLiveDependencies {
 
 const trackerCachePath = (root: string) => `${root}/hooks/context/tracker.json`;
 
-const issueId = (issue: LinearIssue) => {
+const linearIssueId = (issue: LinearIssue) => {
   if (typeof issue.identifier === 'string') {
     return issue.identifier;
   }
@@ -65,7 +65,7 @@ const issueStateType = (issue: LinearIssue) =>
   typeof issue.state?.type === 'string' ? issue.state.type : '';
 
 const toTask = (issue: LinearIssue): TrackerTask | null => {
-  const id = issueId(issue);
+  const id = linearIssueId(issue);
   if (id == null) {
     return null;
   }
@@ -91,7 +91,7 @@ const toEpic = (value: unknown): TrackerEpic | null => {
   }
 
   const issue = value as LinearIssue;
-  const id = issueId(issue);
+  const id = linearIssueId(issue);
   if (id == null) {
     return null;
   }
@@ -156,6 +156,64 @@ const mergeTasks = (
   };
 };
 
+interface CachedIssueStatusUpdate {
+  readonly cache: TrackerCache | null;
+  readonly targetIssueId: string;
+  readonly status: string;
+  readonly stateType: string | null;
+  readonly timestamp: number;
+}
+
+const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): TrackerCache | null => {
+  const { cache, targetIssueId, status, stateType, timestamp } = update;
+  if (cache == null) {
+    return null;
+  }
+
+  let changed = false;
+  const epics: Record<string, TrackerEpic> = {};
+
+  for (const [epicId, epic] of Object.entries(cache.epics)) {
+    if (epic.id === targetIssueId) {
+      changed = true;
+      epics[epicId] = { ...epic, status };
+      continue;
+    }
+
+    let taskChanged = false;
+    const tasks = epic.tasks.map((task) => {
+      if (task.id !== targetIssueId) {
+        return task;
+      }
+
+      taskChanged = true;
+      return {
+        ...task,
+        status,
+        stateType: stateType ?? task.stateType,
+      };
+    });
+
+    if (taskChanged) {
+      changed = true;
+      epics[epicId] = { ...epic, tasks };
+      continue;
+    }
+
+    epics[epicId] = epic;
+  }
+
+  if (!changed) {
+    return null;
+  }
+
+  return {
+    version: 1,
+    timestamp,
+    epics,
+  };
+};
+
 const writeEpicToCacheBestEffort = (dependencies: TrackerLiveDependencies, epic: TrackerEpic) =>
   Effect.gen(function* () {
     const cache = yield* dependencies.readCache();
@@ -171,6 +229,26 @@ const writeCreatedTasksToCacheBestEffort = (
     const cache = yield* dependencies.readCache();
     const existingTasks = cache?.epics[epicId]?.tasks ?? [];
     yield* dependencies.writeCache(mergeTasks(cache, epicId, [...existingTasks, ...tasks], dependencies.now()));
+  }).pipe(Effect.orElseSucceed(() => undefined));
+
+const writeIssueStatusToCacheBestEffort = (
+  dependencies: TrackerLiveDependencies,
+  targetIssueId: string,
+  status: string,
+  stateType: string | null,
+) =>
+  Effect.gen(function* () {
+    const cache = yield* dependencies.readCache();
+    const updatedCache = updateCachedIssueStatus({
+      cache,
+      targetIssueId,
+      status,
+      stateType,
+      timestamp: dependencies.now(),
+    });
+    if (updatedCache != null) {
+      yield* dependencies.writeCache(updatedCache);
+    }
   }).pipe(Effect.orElseSucceed(() => undefined));
 
 const unsupportedWrite = () => Effect.fail(new Error('Tracker writes are not implemented yet'));
@@ -237,7 +315,19 @@ export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
         yield* dependencies.writeCache(mergeTasks(cache, epicId, tasks, dependencies.now()));
         return tasks;
       }),
-    updateStatus: unsupportedWrite,
+    updateStatus: (targetIssueId, status) =>
+      Effect.gen(function* () {
+        const raw = yield* dependencies.callLinear('updateStatus', { issueId: targetIssueId, status });
+        const task = toTaskFromUnknown(raw);
+        const epic = toEpic(raw);
+        let nextStatus = status;
+        if (task?.status != null && task.status !== '') {
+          nextStatus = task.status;
+        } else if (epic?.status != null && epic.status !== '') {
+          nextStatus = epic.status;
+        }
+        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, nextStatus, task?.stateType ?? null);
+      }),
     close: unsupportedWrite,
   });
 

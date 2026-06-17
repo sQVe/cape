@@ -357,6 +357,173 @@ describe('TrackerServiceLive', () => {
     });
   });
 
+  describe('updateStatus', () => {
+    it('updates Linear and rewrites a cached task status from the mapped Linear issue', async () => {
+      const now = 1_700_000_000_011;
+      const writeCache = vi.fn(() => Effect.succeed(undefined));
+      const callLinear = vi.fn(() =>
+        Effect.succeed({
+          identifier: 'ABU-16',
+          title: 'Tracker seam',
+          state: { name: 'In Progress', type: 'started' },
+        }),
+      );
+      const layer = makeTrackerServiceLive({
+        now: () => now,
+        readCache: () =>
+          Effect.succeed({
+            version: 1,
+            timestamp: now - 1,
+            epics: {
+              'ABU-15': {
+                id: 'ABU-15',
+                title: 'Cape V2',
+                status: 'In Progress',
+                tasks: [
+                  {
+                    id: 'ABU-16',
+                    title: 'Tracker seam',
+                    status: 'Todo',
+                    stateType: 'unstarted',
+                  },
+                ],
+              },
+            },
+          }),
+        writeCache,
+        callLinear,
+      });
+
+      await Effect.runPromise(
+        Effect.gen(function* () {
+          const tracker = yield* TrackerService;
+          yield* tracker.updateStatus('ABU-16', 'In Progress');
+        }).pipe(Effect.provide(layer)),
+      );
+
+      expect(callLinear).toHaveBeenCalledWith('updateStatus', {
+        issueId: 'ABU-16',
+        status: 'In Progress',
+      });
+      expect(writeCache).toHaveBeenCalledWith({
+        version: 1,
+        timestamp: now,
+        epics: {
+          'ABU-15': {
+            id: 'ABU-15',
+            title: 'Cape V2',
+            status: 'In Progress',
+            tasks: [
+              {
+                id: 'ABU-16',
+                title: 'Tracker seam',
+                status: 'In Progress',
+                stateType: 'started',
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    it('returns without changing the cache when the issue is absent locally', async () => {
+      const writeCache = vi.fn(() => Effect.succeed(undefined));
+      const callLinear = vi.fn(() =>
+        Effect.succeed({
+          identifier: 'ABU-99',
+          title: 'Outside cache',
+          state: { name: 'In Progress', type: 'started' },
+        }),
+      );
+      const layer = makeTrackerServiceLive({
+        now: () => 1_700_000_000_012,
+        readCache: () =>
+          Effect.succeed({
+            version: 1,
+            timestamp: 1_700_000_000_011,
+            epics: {},
+          }),
+        writeCache,
+        callLinear,
+      });
+
+      await Effect.runPromise(
+        Effect.gen(function* () {
+          const tracker = yield* TrackerService;
+          yield* tracker.updateStatus('ABU-99', 'In Progress');
+        }).pipe(Effect.provide(layer)),
+      );
+
+      expect(callLinear).toHaveBeenCalledWith('updateStatus', {
+        issueId: 'ABU-99',
+        status: 'In Progress',
+      });
+      expect(writeCache).not.toHaveBeenCalled();
+    });
+
+    it('propagates Linear errors without mutating the tracker cache', async () => {
+      const readCache = vi.fn(() => Effect.succeed(null));
+      const writeCache = vi.fn(() => Effect.succeed(undefined));
+      const layer = makeTrackerServiceLive({
+        now: () => 1_700_000_000_013,
+        readCache,
+        writeCache,
+        callLinear: () => Effect.fail(new Error('linear unavailable')),
+      });
+
+      await expect(
+        Effect.runPromise(
+          Effect.gen(function* () {
+            const tracker = yield* TrackerService;
+            return yield* tracker.updateStatus('ABU-16', 'In Progress');
+          }).pipe(Effect.provide(layer)),
+        ),
+      ).rejects.toThrow('linear unavailable');
+      expect(readCache).not.toHaveBeenCalled();
+      expect(writeCache).not.toHaveBeenCalled();
+    });
+
+    it('returns when writing the tracker cache fails after Linear succeeds', async () => {
+      const layer = makeTrackerServiceLive({
+        now: () => 1_700_000_000_014,
+        readCache: () =>
+          Effect.succeed({
+            version: 1,
+            timestamp: 1_700_000_000_013,
+            epics: {
+              'ABU-15': {
+                id: 'ABU-15',
+                title: 'Cape V2',
+                status: 'In Progress',
+                tasks: [
+                  {
+                    id: 'ABU-16',
+                    title: 'Tracker seam',
+                    status: 'Todo',
+                    stateType: 'unstarted',
+                  },
+                ],
+              },
+            },
+          }),
+        writeCache: () => Effect.fail(new Error('cache write failed')),
+        callLinear: () =>
+          Effect.succeed({
+            identifier: 'ABU-16',
+            title: 'Tracker seam',
+            state: { name: 'In Progress', type: 'started' },
+          }),
+      });
+
+      await Effect.runPromise(
+        Effect.gen(function* () {
+          const tracker = yield* TrackerService;
+          yield* tracker.updateStatus('ABU-16', 'In Progress');
+        }).pipe(Effect.provide(layer)),
+      );
+    });
+  });
+
   describe('getEpic', () => {
     it('reads an epic through Linear MCP and writes it to the tracker cache', async () => {
       const now = 1_700_000_000_000;
