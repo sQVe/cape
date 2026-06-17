@@ -22,11 +22,25 @@ interface LinearIssue {
   };
 }
 
+interface LinearCallArguments {
+  readonly getEpic: string;
+  readonly listReady: string;
+  readonly createEpic: { readonly title: string };
+  readonly createTask: { readonly epicId: string; readonly title: string };
+  readonly updateStatus: { readonly issueId: string; readonly status: string };
+  readonly close: { readonly issueId: string };
+}
+
+type LinearOperation = keyof LinearCallArguments;
+
 interface TrackerLiveDependencies {
   readonly now: () => number;
   readonly readCache: () => Effect.Effect<TrackerCache | null, Error>;
   readonly writeCache: (cache: TrackerCache) => Effect.Effect<void, Error>;
-  readonly callLinear: (operation: 'getEpic' | 'listReady', issueId: string) => Effect.Effect<unknown, Error>;
+  readonly callLinear: <Operation extends LinearOperation>(
+    operation: Operation,
+    argument: LinearCallArguments[Operation],
+  ) => Effect.Effect<unknown, Error>;
 }
 
 const trackerCachePath = (root: string) => `${root}/hooks/context/tracker.json`;
@@ -133,6 +147,12 @@ const mergeTasks = (
   };
 };
 
+const writeEpicToCacheBestEffort = (dependencies: TrackerLiveDependencies, epic: TrackerEpic) =>
+  Effect.gen(function* () {
+    const cache = yield* dependencies.readCache();
+    yield* dependencies.writeCache(mergeEpic(cache, epic, dependencies.now()));
+  }).pipe(Effect.orElseSucceed(() => undefined));
+
 const unsupportedWrite = () => Effect.fail(new Error('Tracker writes are not implemented yet'));
 
 const isTrackerCache = (value: unknown): value is TrackerCache => {
@@ -146,7 +166,17 @@ const isTrackerCache = (value: unknown): value is TrackerCache => {
 
 export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
   Layer.succeed(TrackerService)({
-    createEpic: unsupportedWrite,
+    createEpic: (title) =>
+      Effect.gen(function* () {
+        const raw = yield* dependencies.callLinear('createEpic', { title });
+        const epic = toEpic(raw);
+        if (epic == null) {
+          return yield* Effect.fail(new Error('Linear createEpic response did not include an issue id'));
+        }
+
+        yield* writeEpicToCacheBestEffort(dependencies, epic);
+        return epic;
+      }),
     createTasks: unsupportedWrite,
     getEpic: (epicId) =>
       Effect.gen(function* () {
@@ -196,7 +226,10 @@ const writeCacheFile = (cache: TrackerCache) =>
       error instanceof Error ? error : new Error('failed to write tracker cache', { cause: error }),
   });
 
-const callLinear = () =>
+const callLinear = <Operation extends LinearOperation>(
+  _operation: Operation,
+  _argument: LinearCallArguments[Operation],
+) =>
   Effect.fail(new Error('Linear MCP calls must be provided by the interactive session'));
 
 export const TrackerServiceLive = makeTrackerServiceLive({
