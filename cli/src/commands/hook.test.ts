@@ -5,8 +5,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logEvent } from '../eventLog';
 import { main } from '../main';
+import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
 
 import {
+  FLOW_PHASE_TTL_MS,
   HookService,
   denyTable,
   denyWith,
@@ -225,6 +227,32 @@ const trackerCacheFile = (cache: Record<string, unknown>) => ({
   '/test/hooks/context/tracker.json': JSON.stringify(cache),
 });
 
+const trackerCache = (timestamp = Date.now()) => ({
+  version: 1,
+  timestamp,
+  epics: {
+    'ABU-15': {
+      id: 'ABU-15',
+      title: 'Cape V2',
+      status: 'In Progress',
+      tasks: [
+        {
+          id: 'ABU-16',
+          title: 'Tracker seam',
+          status: 'Done',
+          stateType: 'completed',
+        },
+        {
+          id: 'ABU-17',
+          title: 'Session banner',
+          status: 'Todo',
+          stateType: 'unstarted',
+        },
+      ],
+    },
+  },
+});
+
 describe('sessionStart', () => {
   it('outputs SKILL.md content when present', async () => {
     const layer = makeStubHookLayer({
@@ -310,31 +338,7 @@ describe('sessionStart', () => {
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
         ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
-        ...trackerCacheFile({
-          version: 1,
-          timestamp: Date.now(),
-          epics: {
-            'ABU-15': {
-              id: 'ABU-15',
-              title: 'Cape V2',
-              status: 'In Progress',
-              tasks: [
-                {
-                  id: 'ABU-16',
-                  title: 'Tracker seam',
-                  status: 'Done',
-                  stateType: 'completed',
-                },
-                {
-                  id: 'ABU-17',
-                  title: 'Session banner',
-                  status: 'Todo',
-                  stateType: 'unstarted',
-                },
-              ],
-            },
-          },
-        }),
+        ...trackerCacheFile(trackerCache()),
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15',
@@ -351,6 +355,111 @@ describe('sessionStart', () => {
     expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
       result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
     );
+  });
+
+  it('omits the banner when no active epic exists in flowPhase', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: { phase: 'BUILD', timestamp: Date.now() } }),
+        ...trackerCacheFile(trackerCache()),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache is empty', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile({ version: 1, timestamp: Date.now(), epics: {} }),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache JSON is corrupt', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        '/test/hooks/context/tracker.json': 'corrupted{{{',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache is past its TTL', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(trackerCache(Date.now() - TRACKER_CACHE_TTL_MS - 1)),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('renders a no-ready-tasks banner when the active epic has no ready task', async () => {
+    const cache = trackerCache();
+    cache.epics['ABU-15'].tasks = [
+      {
+        id: 'ABU-16',
+        title: 'Tracker seam',
+        status: 'Done',
+        stateType: 'completed',
+      },
+    ];
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(cache),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Next   None');
+    expect(result.additionalContext).toContain('| Phase  BUILD  (1/1 tasks done)');
+  });
+
+  it('omits the banner when flowPhase is expired even if the tracker cache is present', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({
+          flowPhase: {
+            phase: 'BUILD',
+            issueId: 'ABU-15',
+            timestamp: Date.now() - FLOW_PHASE_TTL_MS - 1,
+          },
+        }),
+        ...trackerCacheFile(trackerCache()),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 });
 
