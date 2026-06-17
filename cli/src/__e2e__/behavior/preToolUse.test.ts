@@ -308,7 +308,6 @@ describe('skill gate: non-gated skills pass through', () => {
     'cape:branch',
     'cape:brainstorm',
     'cape:pr',
-    'cape:refactor',
     'cape:write-plan',
   ])('allows non-gated skill %s', (skill) => {
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput(skill), env);

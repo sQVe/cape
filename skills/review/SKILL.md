@@ -231,8 +231,8 @@ Use `AskUserQuestion` with context-appropriate options:
 **When reviewing own code (branch diff, unstaged, staged):**
 
 - **Track as bugs** — create br bugs for critical and important findings
-- **Refactor** — if the review flagged structural issues (duplication, tangled responsibilities,
-  coupling), offer to load `cape:refactor` to address them
+- **Track cleanup** — if the review flagged structural issues (duplication, tangled
+  responsibilities, coupling), offer to create follow-up work for them
 - **Done** — report delivered, no further action
 
 **When reviewing others' code (PR number, explicit branch):**

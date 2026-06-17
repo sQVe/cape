@@ -5,8 +5,7 @@ description: >
   design before committing, auditing completed work for scope creep, or when the user asks to
   challenge/question/audit assumptions. Triggers on: "challenge this", "check my assumptions", "what
   am I assuming", "audit this design", "did I over-engineer", reviewing a plan before execution, or
-  reflecting after implementation. Do NOT use for test gap analysis (use cape:find-test-gaps) or
-  debugging (use cape:debug-issue).
+  reflecting after implementation. Do NOT use for debugging (use cape:debug-issue).
 ---
 
 <skill_overview> Surface hidden assumptions in designs, implementations, and requirements before
@@ -32,7 +31,6 @@ for complex designs). The three steps and the interactive resolution are non-neg
 
 **Don't use for:**
 
-- Test coverage analysis (use `cape:find-test-gaps`)
 - Bug investigation (use `cape:debug-issue`)
 
 </when_to_use>

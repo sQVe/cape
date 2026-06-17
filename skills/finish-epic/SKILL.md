@@ -176,7 +176,6 @@ Present a completion report:
 
 Epic closed.
 
-Optionally load `cape:find-test-gaps` to verify test coverage before shipping.
 Load `cape:pr` when the user is ready to open a pull request.
 ```
 

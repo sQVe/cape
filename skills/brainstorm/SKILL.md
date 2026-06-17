@@ -5,11 +5,10 @@ description:
   user describes something to build, asks "how should I approach X", is unsure between approaches,
   or mentions adding/creating/building functionality. Also use when requirements are vague,
   architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
-  models, API patterns). Do NOT use for bug fixes, refactoring where the target structure is clear
-  (use cape:refactor), executing existing plans, or tasks where the implementation path is already
-  clear. This skill researches the codebase, asks Socratic questions, generates competing designs
-  under different constraints, and produces a design summary for `cape:write-plan` to formalize into
-  a br epic.
+  models, API patterns). Do NOT use for bug fixes, straightforward code cleanup, executing existing
+  plans, or tasks where the implementation path is already clear. This skill researches the
+  codebase, asks Socratic questions, generates competing designs under different constraints, and
+  produces a design summary for `cape:write-plan` to formalize into a br epic.
 ---
 
 <skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
@@ -40,7 +39,7 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 
 - Executing existing plans with an epic already created
 - Fixing bugs
-- Refactoring with a clear target structure (use `cape:refactor`)
+- Straightforward code cleanup with a clear target structure
 - Requirements already crystal clear and epic exists </when_to_use>
 
 <critical_rules>
@@ -149,10 +148,6 @@ Do NOT proceed to Step 2 until the user responds.
 
 Assess whether the idea warrants divergent exploration or has an obvious path:
 
-- **Interface mode** — the core design question is about an interface, API surface, module boundary,
-  or type contract. Load `cape:design-an-interface` with the Skill tool instead of running divergent
-  mode inline. Its comparison and recommendation feed back as the chosen approach and approaches
-  considered.
 - **Divergent mode** — the idea touches multiple components, has competing viable approaches, or
   involves architectural decisions beyond interface shape. Dispatch 3 parallel design agents.
 - **Inline mode** — single-file change, one obvious pattern to follow, trivial scope. Propose 1-2
@@ -316,14 +311,6 @@ the verdicts.
 </agent_references>
 
 <skill_references>
-
-## Load `cape:design-an-interface` with the Skill tool when (interface mode):
-
-- The core design question is about an interface, API surface, or module boundary
-- Multiple viable interface shapes exist and the choice drives the architecture
-- The user's idea is fundamentally about what callers should see
-
-Its recommendation feeds into the design summary as the chosen approach.
 
 ## Load `cape:challenge` with the Skill tool when (opt-in):
 

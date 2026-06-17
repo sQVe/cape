@@ -5,8 +5,8 @@ description: >
   user wants to address a diagnosed br bug, applying a fix after debug-issue, "the fix for br-N",
   fixing a regression, patching broken behavior. Also use when the user has a br bug issue and wants
   to resolve it, or when they report a bug and want it fixed (not just investigated). Do NOT use for
-  investigation-only (use debug-issue), feature work (use execute-plan), or refactoring without a
-  specific defect (use cape:refactor).
+  investigation-only (use debug-issue), feature work (use execute-plan), or cleanup without a
+  specific defect.
 ---
 
 <skill_overview> Fix bugs end-to-end: adopt or create the br bug, reproduce, fix via
@@ -32,7 +32,7 @@ test strategy, and fix approach adapt to context. </rigidity_level>
 
 - Investigation only, no intent to fix (use debug-issue)
 - Feature work or enhancements (use execute-plan)
-- Refactoring without a specific defect (use `cape:refactor`)
+- Cleanup without a specific defect
 
 </when_to_use>
 
@@ -167,8 +167,6 @@ cape state clear workflowActive
 If `close-check` fails, stop and report which checks failed — do not close.
 
 After closing, load `cape:commit` with the Skill tool to commit the fix.
-
-Optionally load `cape:find-test-gaps` to verify test coverage around the fixed area.
 
 </the_process>
 

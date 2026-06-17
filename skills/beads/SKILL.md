@@ -299,12 +299,12 @@ makes findings trackable, prioritizable, and closeable.
 
 ### Mapping skill outputs to br types
 
-| Skill            | br type         | Example title                                 |
-| ---------------- | --------------- | --------------------------------------------- |
-| `find-test-gaps` | `task`          | "Add missing edge-case tests for parseConfig" |
-| `review`         | `bug` or `task` | "Bug: XSS in user input rendering"            |
-| `debug-issue`    | `bug`           | "Bug: Race condition in session cleanup"      |
-| `fix-bug`        | `bug`           | "Bug: Off-by-one in pagination offset"        |
+| Skill         | br type         | Example title                            |
+| ------------- | --------------- | ---------------------------------------- |
+| `challenge`   | `task`          | "Clarify risky assumption in auth flow"  |
+| `review`      | `bug` or `task` | "Bug: XSS in user input rendering"       |
+| `debug-issue` | `bug`           | "Bug: Race condition in session cleanup" |
+| `fix-bug`     | `bug`           | "Bug: Off-by-one in pagination offset"   |
 
 ### Conventions for skill-created issues
 
@@ -351,7 +351,7 @@ EOF
 
 ### Batch output
 
-Skills that produce multiple findings (e.g., `find-test-gaps` finding 5 gaps) should:
+Skills that produce multiple findings should:
 
 1. Create one issue per finding — not a single issue with a checklist.
 2. Use `br q` for lightweight batch creation when descriptions are short.

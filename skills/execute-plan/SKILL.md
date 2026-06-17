@@ -143,8 +143,8 @@ is self-contained: checkpoint gate, scope, failing test, minimal change, optiona
 record.
 
 If the code you need to modify is tangled — hard to add the new behavior without restructuring first
-— load `cape:refactor` with the Skill tool. Refactor commits the structural change separately, then
-returns here. This keeps structural and behavioral changes in distinct commits.
+— separate that structural cleanup from the behavior change. Commit the structural change
+separately, then return here. This keeps structural and behavioral changes in distinct commits.
 
 When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
 documents what was already rejected and why. Those reasons usually still apply when things get hard.

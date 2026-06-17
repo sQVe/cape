@@ -27,7 +27,7 @@ Don't use for:
 - Manual verification ("run the app and check")
 - Documentation-only changes
 - Configuration or environment changes
-- Pure refactoring with no behavioral change (use `cape:refactor`)
+- Pure behavior-preserving restructuring with no behavioral change
 
 </when_to_use>
 

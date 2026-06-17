@@ -46,8 +46,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Skills: brainstorm, write-plan, execute-plan, expand-task, finish-epic, commit, pr, review,
-  branch, beads, test-driven-development, fix-bug, debug-issue, find-test-gaps, analyze-tests,
-  challenge, task-refinement, design-an-interface, don-cape (meta-skill).
+  branch, beads, test-driven-development, fix-bug, debug-issue, challenge, task-refinement, don-cape
+  (meta-skill).
 - Agents: bug-tracer, codebase-investigator, internet-researcher, notebox-researcher, code-reviewer,
   fact-checker, test-auditor, test-runner.
 - Commands: 14 slash commands as thin wrappers for user-invocable skills.
