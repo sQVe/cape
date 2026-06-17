@@ -60,11 +60,11 @@ Determine what's being challenged. Sources:
 - **br state** — if within a brainstorm or execute-plan flow, read the epic and current task
 - **User-provided artifact** — the user may point at a specific design doc, PR, or plan
 
-**Research before presenting.** Dispatch `cape:codebase-investigator` to explore the codebase and
-self-answer questions before surfacing them. If agents aren't available, investigate manually with
-Glob/Grep/Read. Only present assumptions that require human judgment — priorities, preferences,
-business constraints. If you can resolve an assumption by reading code, resolve it silently and move
-on.
+**Research before presenting.** Dispatch `cape:codebase-investigator` in default mode (model: haiku)
+to explore the codebase and self-answer questions before surfacing them. If agents aren't available,
+investigate manually with Glob/Grep/Read. Only present assumptions that require human judgment —
+priorities, preferences, business constraints. If you can resolve an assumption by reading code,
+resolve it silently and move on.
 
 Read the `flowPhase` key from `hooks/context/state.json` to determine the current phase. If the file
 is absent, unreadable, or the key is missing, default to `"design"`. Use the phase value to set the

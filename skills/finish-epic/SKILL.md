@@ -59,6 +59,9 @@ cape epic verify <epic-id>
 - **openTasks not empty** — report which tasks are still open and stop
 - **checksPassed: false** — report failures and stop
 
+When helpful, dispatch `cape:test-runner` (model: haiku) to run verification commands or capture
+failure output without polluting context.
+
 ---
 
 ## Step 2: Audit
@@ -118,10 +121,10 @@ and write it back.
 current HEAD, skip this pass and report: "Code review already passed at HEAD <short-sha> —
 skipping."
 
-Otherwise, dispatch `cape:code-reviewer` with the epic ID and the full branch diff. Pass only the
-contract (requirements, anti-patterns, success criteria) — not task implementation notes. The
-reviewer judges what was built against what was required, not what was intended. Address any
-critical findings before proceeding.
+Otherwise, dispatch `cape:code-reviewer` (model: sonnet) with the epic ID and the full branch diff.
+Pass only the contract (requirements, anti-patterns, success criteria) — not task implementation
+notes. The reviewer judges what was built against what was required, not what was intended. Address
+any critical findings before proceeding.
 
 After the review passes, record the SHA (same pattern as 2a, using key `code-review`).
 

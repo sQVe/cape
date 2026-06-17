@@ -82,7 +82,8 @@ refinement must serve the epic's goals, not add scope.
 
 ## Step 2: Verify against reality
 
-Dispatch `cape:codebase-investigator` to verify the task's claims against the actual codebase:
+Dispatch `cape:codebase-investigator` in default mode (model: haiku) to verify the task's claims
+against the actual codebase:
 
 - Do the file paths and function names in the task exist?
 - Do the "study existing code" references point to real implementations?
@@ -204,10 +205,11 @@ is a valid refinement outcome -- not every task needs changes.
 
 ## Optional agents:
 
-- `cape:fact-checker` — dispatch when the task has many specific claims to verify (file paths,
-  function signatures, API behavior). Returns structured Confirmed/Refuted/Partially correct
-  verdicts.
-- `cape:notebox-researcher` — dispatch when past design decisions or research notes may be relevant.
+- `cape:fact-checker` (model: sonnet) — dispatch when the task has many specific claims to verify
+  (file paths, function signatures, API behavior). Returns structured Confirmed/Refuted/Partially
+  correct verdicts.
+- `cape:codebase-investigator` in notebox-researcher mode (model: haiku) — dispatch when past design
+  decisions or research notes may be relevant.
 
 </agent_references>
 

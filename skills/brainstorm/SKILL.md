@@ -83,9 +83,10 @@ Skip this step only if `br ready` returns no tasks.
 **Gather context:**
 
 - Run `cape git context` for recent commits and codebase state; check existing docs and structure
-- Dispatch `cape:codebase-investigator` to find existing patterns relevant to the idea
-- Dispatch `cape:internet-researcher` if the idea involves external APIs, libraries, or unfamiliar
-  tech
+- Dispatch `cape:codebase-investigator` in default mode (model: haiku) to find existing patterns
+  relevant to the idea
+- Dispatch `cape:internet-researcher` (model: sonnet) if the idea involves external APIs, libraries,
+  or unfamiliar tech
 - If agents aren't available, investigate manually with Glob/Grep/Read and WebSearch/WebFetch
 
 **Answer your own questions first:**
@@ -264,9 +265,9 @@ Compose the design summary internally (do not present yet). This summary must be
 
 **Fact-check before presenting:**
 
-Dispatch `cape:fact-checker` on the composed design summary. Pass all factual claims from the
-Requirements, Architecture, and Research findings sections. The fact-checker verifies each claim
-against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
+Dispatch `cape:fact-checker` (model: sonnet) on the composed design summary. Pass all factual claims
+from the Requirements, Architecture, and Research findings sections. The fact-checker verifies each
+claim against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
 
 - **Confirmed** claims — keep as-is
 - **Refuted** claims — remove or correct with the fact-checker's evidence
@@ -295,12 +296,12 @@ Each sub-agent receives the same research context and designs under its assigned
 
 If sub-agents aren't available, simulate constraints sequentially.
 
-## `cape:fact-checker` protocol (Step 4):
+## `cape:fact-checker` protocol (model: sonnet, Step 4):
 
-Dispatch after composing the design summary, before presenting to the user. Pass all factual claims
-from the Requirements, Architecture, and Research findings sections. Expect back per-claim verdicts
-(Confirmed/Refuted/Partially correct/Unverifiable) with evidence. Remove or correct claims based on
-the verdicts.
+Dispatch `cape:fact-checker` (model: sonnet) after composing the design summary, before presenting
+to the user. Pass all factual claims from the Requirements, Architecture, and Research findings
+sections. Expect back per-claim verdicts (Confirmed/Refuted/Partially correct/Unverifiable) with
+evidence. Remove or correct claims based on the verdicts.
 
 ## Research protocol:
 
@@ -356,8 +357,9 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 
 **Right:**
 
-1. Dispatch codebase-investigator: finds passport.js at auth/passport-config.ts
-2. Dispatch internet-researcher: finds passport-google-oauth20 strategy
+1. Dispatch `cape:codebase-investigator` in default mode (model: haiku): finds passport.js at
+   auth/passport-config.ts
+2. Dispatch `cape:internet-researcher` (model: sonnet): finds passport-google-oauth20 strategy
 3. CHECKPOINT: present research summary — existing passport setup, available strategies
 4. User discusses, confirms OAuth provider choice
 5. Propose extending existing passport setup vs Auth0 vs custom JWT

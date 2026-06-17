@@ -87,14 +87,13 @@ anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                        | Dispatched by                                            | Purpose                                                       |
-| ---------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
-| `cape:bug-tracer`            | debug-issue, fix-bug                                     | Trace execution backward from errors to root cause            |
-| `cape:code-reviewer`         | execute-plan, finish-epic, fix-bug                       | Review implementation against plan and standards              |
-| `cape:codebase-investigator` | brainstorm, debug-issue, fix-bug, expand-task, challenge | Explore codebase structure, find patterns, verify assumptions |
-| `cape:fact-checker`          | brainstorm, execute-plan                                 | Verify claims and assumptions against codebase evidence       |
-| `cape:internet-researcher`   | brainstorm, debug-issue, fix-bug                         | Research external APIs, libraries, community practices        |
-| `cape:test-runner`           | test-driven-development, finish-epic                     | Run tests and hooks without polluting context                 |
+| Agent                                                                  | Dispatched by                                                             | Purpose                                                                                     |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                                        | Review implementation against plan and standards                                            |
+| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, debug-issue, expand-task, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
+| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                                 | Verify claims and assumptions against codebase evidence                                     |
+| `cape:internet-researcher` (model: sonnet)                             | brainstorm, debug-issue, fix-bug                                          | Research external APIs, libraries, community practices                                      |
+| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                                      | Run tests and hooks without polluting context                                               |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.

@@ -113,17 +113,18 @@ Clean up only if it clearly improves the result.
 - Don't add features
 - Don't clean up unrelated tests
 
-Dispatch `cape:bug-tracer` if the root cause from the br bug proves incomplete or a new failure path
-is discovered during the fix. Dispatch `cape:codebase-investigator` if you need to understand
-broader impact of the fix on other modules. Dispatch `cape:internet-researcher` if the fix involves
+Dispatch `cape:codebase-investigator` in bug-tracer mode (model: sonnet) if the root cause from the
+br bug proves incomplete or a new failure path is discovered during the fix. Dispatch
+`cape:codebase-investigator` in default mode (model: haiku) if you need to understand broader impact
+of the fix on other modules. Dispatch `cape:internet-researcher` (model: sonnet) if the fix involves
 external library behavior or undocumented API semantics.
 
 After the bug-fix pass is complete and tests are green, record the SHA in
 `.beads/<bug-id>/verify.json` under key `fix` (same pattern as reproduction).
 
-Dispatch `cape:code-reviewer` with model `sonnet` after the fix is green. Pass the br bug (root
-cause and success criteria) and the fix diff — the reviewer judges the fix against the diagnosed
-root cause and verifies no regressions were introduced. Do not pass implementation notes.
+Dispatch `cape:code-reviewer` (model: sonnet) after the fix is green. Pass the br bug (root cause
+and success criteria) and the fix diff — the reviewer judges the fix against the diagnosed root
+cause and verifies no regressions were introduced. Do not pass implementation notes.
 
 ---
 
@@ -172,10 +173,11 @@ After closing, load `cape:commit` with the Skill tool to commit the fix.
 
 <agent_references>
 
-## `cape:bug-tracer` re-dispatch:
+## `cape:codebase-investigator` bug-tracer mode re-dispatch (model: sonnet):
 
-Dispatch only when the root cause from the br bug proves incomplete during the fix — a new failure
-path is discovered or the fix reveals deeper issues than the initial diagnosis found.
+Dispatch `cape:codebase-investigator` in bug-tracer mode (model: sonnet) only when the root cause
+from the br bug proves incomplete during the fix — a new failure path is discovered or the fix
+reveals deeper issues than the initial diagnosis found.
 
 </agent_references>
 

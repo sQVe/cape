@@ -94,9 +94,10 @@ cape state set workflowActive
 
 If the task's design field does not already contain an `## Expanded plan` section, load
 `cape:expand-task` with the Skill tool to ground the task in codebase reality before writing any
-code. Expand-task investigates actual files and patterns, then appends a step-by-step plan with
-exact file paths, line numbers, and verification commands to the task's design field. Skip this if
-the section already exists.
+code. Expand-task dispatches `cape:codebase-investigator` in default mode (model: haiku),
+investigates actual files and patterns, then appends a step-by-step plan with exact file paths, line
+numbers, and verification commands to the task's design field. Skip this if the section already
+exists.
 
 After expand-task returns, re-read the task (`br show <task-id>`). If the design field contains a
 `## Split recommendation` section instead of an expanded plan, the task is too large. Close it with
@@ -179,16 +180,18 @@ br ready --parent <epic-id>
 
 After closing the task, review and optionally challenge before planning the next step.
 
-**Review implementation:** Dispatch `cape:code-reviewer` to review the completed task against the
-epic's requirements and anti-patterns. Address any critical findings before creating the next task.
+**Review implementation:** Dispatch `cape:code-reviewer` (model: sonnet) to review the completed
+task against the epic's requirements and anti-patterns. Address any critical findings before
+creating the next task.
 
 **Challenge completed work (opt-in):** Ask: "Want me to load `cape:challenge` to check for scope
 creep or over-engineering, or proceed to the next task?" If the user accepts, load `cape:challenge`
 with the Skill tool, focusing on scope creep, unrequested features, and over-engineering. Skip for
 straightforward single-file changes.
 
-**Verify claims:** Optionally dispatch `cape:fact-checker` if the task made specific claims about
-codebase structure, API behavior, or dependencies that should be confirmed before proceeding.
+**Verify claims:** Optionally dispatch `cape:fact-checker` (model: sonnet) if the task made specific
+claims about codebase structure, API behavior, or dependencies that should be confirmed before
+proceeding.
 
 Then step back and think about what happened.
 
@@ -316,18 +319,19 @@ with two tasks' worth of state, and the user hasn't reviewed br-3.
 
 <agent_references>
 
-## `cape:code-reviewer` protocol:
+## `cape:code-reviewer` protocol (model: sonnet):
 
 **Pass:** epic ID (`br show <epic-id>` for requirements, anti-patterns, success criteria) and git
 diff for this task's changes. Do NOT pass the task's expanded plan or implementation notes — the
 reviewer judges code against the contract, not the implementation intent. **Expect back:** verdict
 (pass/fail) with categorized findings (Critical/Important/Suggestion).
 
-## `cape:fact-checker` protocol:
+## `cape:fact-checker` protocol (model: sonnet):
 
-Dispatch when verifying that assumptions from expand-task still hold after implementation. **Pass:**
-specific claims to verify (file paths, function signatures, import relationships). **Expect back:**
-per-claim verdict: Confirmed/Refuted/Partially correct/Unverifiable with file:line evidence.
+Dispatch `cape:fact-checker` (model: sonnet) when verifying that assumptions from expand-task still
+hold after implementation. **Pass:** specific claims to verify (file paths, function signatures,
+import relationships). **Expect back:** per-claim verdict: Confirmed/Refuted/Partially
+correct/Unverifiable with file:line evidence.
 
 </agent_references>
 

@@ -3,7 +3,7 @@ name: code-reviewer
 description:
   Use this agent when a major implementation step has been completed and needs to be reviewed
   against the epic contract (requirements, anti-patterns, success criteria) and coding standards.
-model: opus
+model: sonnet
 ---
 
 You are a Code Reviewer. Your role is to review completed implementation steps against epic

@@ -64,7 +64,8 @@ Run the relevant test. The failure should show that the behavior is missing or i
 the test file is broken. If the failure comes from syntax, import, setup, or other pre-assertion
 problems, fix the test first.
 
-When helpful, dispatch `cape:test-runner` to run the focused test or capture failure output.
+When helpful, dispatch `cape:test-runner` (model: haiku) to run the focused test or capture failure
+output.
 
 ---
 
@@ -81,10 +82,10 @@ tests. If not, move on to the next behavior.
 
 <agent_references>
 
-## `cape:test-runner` protocol:
+## `cape:test-runner` protocol (model: haiku):
 
 **Use when helpful:** focused test runs, broader suite confirmation, or capturing detailed failure
-output without polluting context.
+output without polluting context. Dispatch `cape:test-runner` (model: haiku).
 
 **Pass:** test command and working directory. **Expect back:** pass/fail status with counts and
 complete failure output for any failing tests.

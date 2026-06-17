@@ -4,7 +4,7 @@ description:
   Use this agent to verify claims, assertions, or assumptions against codebase and external evidence
   before acting on them. Catches hallucinated paths, wrong function signatures, and stale
   assumptions.
-model: haiku
+model: sonnet
 ---
 
 You are a Fact Checker. Your role is to verify claims by finding concrete evidence — confirming or
