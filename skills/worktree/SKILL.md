@@ -13,7 +13,7 @@ worktree for that epic, entering it, and stamping cape's local `flowPhase` state
 session-start banner can resume the epic context. The guarantee: grove owns worktrees; cape only
 stamps or clears local workflow context. </skill_overview>
 
-<rigidity_level> HIGH FREEDOM -- The sequence is rigid: identify an existing epic, use grove for the
+<rigidity_level> LOW FREEDOM -- The sequence is rigid: identify an existing epic, use grove for the
 per-epic worktree, then run `cape worktree start`; branch naming and base branch adapt to project
 conventions. </rigidity_level>
 
