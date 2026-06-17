@@ -6,8 +6,6 @@ const beadsPatterns = [
   /track.*(bug|issue|finding|gap|these|them)/i,
   /what.*(task|work).*next/i,
   /batch.*(create|issue)/i,
-  /--design.*create/i,
-  /--description.*--design/i,
   /\bgaps?\b.*\btrack/i,
 ];
 

@@ -143,6 +143,90 @@ describe('cape tracker cache-epic', () => {
 });
 
 describe('cape tracker cache-tasks', () => {
+  it('treats a missing cache as empty before writing tasks under the epic', async () => {
+    const root = makeRoot();
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-tasks',
+        'ABU-15',
+        JSON.stringify([
+          {
+            identifier: 'ABU-57',
+            title: 'Rewire chains',
+            state: { name: 'Todo', type: 'unstarted' },
+          },
+        ]),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    const output = JSON.parse(console_.output());
+    const cache = readCache(root);
+    expect(output).toEqual({ cached: true, epicId: 'ABU-15', taskCount: 1 });
+    expect(cache.version).toBe(1);
+    expect(cache.timestamp).toBeTypeOf('number');
+    expect(cache.epics).toEqual({
+      'ABU-15': {
+        id: 'ABU-15',
+        title: '',
+        status: '',
+        tasks: [
+          {
+            id: 'ABU-57',
+            title: 'Rewire chains',
+            status: 'Todo',
+            stateType: 'unstarted',
+          },
+        ],
+      },
+    });
+    console_.restore();
+  });
+
+  it('treats a corrupt cache as empty before writing tasks under the epic', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(trackerPath(root), 'not json');
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-tasks',
+        'ABU-15',
+        JSON.stringify([
+          {
+            identifier: 'ABU-58',
+            title: 'Refresh routing',
+            state: { name: 'Todo', type: 'unstarted' },
+          },
+        ]),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    const output = JSON.parse(console_.output());
+    const cache = readCache(root);
+    expect(output).toEqual({ cached: true, epicId: 'ABU-15', taskCount: 1 });
+    expect(cache.epics).toEqual({
+      'ABU-15': {
+        id: 'ABU-15',
+        title: '',
+        status: '',
+        tasks: [
+          {
+            id: 'ABU-58',
+            title: 'Refresh routing',
+            status: 'Todo',
+            stateType: 'unstarted',
+          },
+        ],
+      },
+    });
+    console_.restore();
+  });
+
   it('writes Linear task issues under the target epic', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });
@@ -194,6 +278,81 @@ describe('cape tracker cache-tasks', () => {
         },
       ],
     });
+    console_.restore();
+  });
+
+  it('rejects invalid JSON without overwriting the existing cache', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({
+      version: 1,
+      timestamp: 1,
+      epics: {
+        'ABU-15': {
+          id: 'ABU-15',
+          title: 'Cape V2',
+          status: 'In Progress',
+          tasks: [],
+        },
+      },
+    });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run(['tracker', 'cache-tasks', 'ABU-15', '{']).pipe(
+          Effect.provide(makeTestCommandLayers()),
+        ),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('invalid Linear tasks JSON');
+    console_.restore();
+  });
+
+  it('rejects any task issue without an id without overwriting the existing cache', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({
+      version: 1,
+      timestamp: 1,
+      epics: {
+        'ABU-15': {
+          id: 'ABU-15',
+          title: 'Cape V2',
+          status: 'In Progress',
+          tasks: [],
+        },
+      },
+    });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-tasks',
+          'ABU-15',
+          JSON.stringify([
+            {
+              identifier: 'ABU-57',
+              title: 'Rewire chains',
+              state: { name: 'Todo', type: 'unstarted' },
+            },
+            {
+              title: 'Missing id',
+              state: { name: 'Todo', type: 'unstarted' },
+            },
+          ]),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('Linear task JSON must include issue ids');
     console_.restore();
   });
 });
@@ -256,6 +415,23 @@ describe('cape tracker cache-status', () => {
 
     expect(console_.output()).toBe(JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }));
     expect(() => readFileSync(trackerPath(root), 'utf-8')).toThrow();
+    console_.restore();
+  });
+
+  it('leaves a corrupt cache untouched when the target issue is absent locally', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(trackerPath(root), 'not json');
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run(['tracker', 'cache-status', 'ABU-99', 'Done', 'completed']).pipe(
+        Effect.provide(makeTestCommandLayers()),
+      ),
+    );
+
+    expect(console_.output()).toBe(JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }));
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe('not json');
     console_.restore();
   });
 });

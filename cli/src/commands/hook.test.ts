@@ -77,6 +77,11 @@ describe('detectBeadsSkill', () => {
   it('returns false for unrelated prompts', () => {
     expect(detectBeadsSkill('hello world')).toBe(false);
   });
+
+  it('does not detect stale br create flag syntax as issue-tracking intent', () => {
+    expect(detectBeadsSkill('why does --design fail on create commands?')).toBe(false);
+    expect(detectBeadsSkill('compare --description with --design in this API')).toBe(false);
+  });
 });
 
 describe('detectBugReport', () => {
