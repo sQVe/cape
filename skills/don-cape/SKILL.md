@@ -53,23 +53,21 @@ those judgments are unreliable.
 If neither signal fires, scan the routing table below. If a skill matches, load it with the Skill
 tool. **First match wins** — stop scanning after the first row whose intent matches.
 
-| User intent                                                         | Skill                  | Notes                                                                                   |
-| ------------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------- |
-| Build, add, create, implement something new                         | `cape:brainstorm`      | Starts the build chain                                                                  |
-| "How should I approach X", unclear requirements                     | `cape:brainstorm`      | Design before code                                                                      |
-| Large restructuring requiring design decisions                      | `cape:brainstorm`      | When target design is unclear                                                           |
-| Formalize a design into an epic                                     | `cape:write-plan`      | Requires brainstorm output                                                              |
-| "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan`    | Run `br ready` first; if empty + open epic exists, suggest finish-epic (see note below) |
-| Something broken, error, stack trace, "doesn't work"                | `cape:fix-bug`         | Diagnose-then-patch                                                                     |
-| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`         | Diagnose-then-patch                                                                     |
-| Challenge, audit, check assumptions, "what am I assuming"           | `cape:challenge`       | Standalone                                                                              |
-| Refine a task, stress-test br-N, "is this task ready", edge cases   | `cape:task-refinement` | Opt-in between write-plan and execute-plan                                              |
-| Start work in an epic worktree, create/enter per-epic worktree      | `cape:worktree`        | Standalone                                                                              |
-| Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`     | End of build chain                                                                      |
-| Commit, save changes, wrap this up                                  | `cape:commit`          | Standalone                                                                              |
-| Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`              | Standalone                                                                              |
-| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`          | Standalone; covers bugs/logic plus conventions under reviewer contract                  |
-| br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`           | Reference skill                                                                         |
+| User intent                                                         | Skill               | Notes                                                                                   |
+| ------------------------------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
+| Build, add, create, implement something new                         | `cape:brainstorm`   | Starts the build chain                                                                  |
+| "How should I approach X", unclear requirements                     | `cape:brainstorm`   | Design before code                                                                      |
+| Large restructuring requiring design decisions                      | `cape:brainstorm`   | When target design is unclear                                                           |
+| Formalize a design into an epic                                     | `cape:write-plan`   | Requires brainstorm output                                                              |
+| "Continue", "next task", "let's go", "work on the plan", bare br ID | `cape:execute-plan` | Run `br ready` first; if empty + open epic exists, suggest finish-epic (see note below) |
+| Something broken, error, stack trace, "doesn't work"                | `cape:fix-bug`      | Diagnose-then-patch                                                                     |
+| Fix a diagnosed bug, "fix br-N"                                     | `cape:fix-bug`      | Diagnose-then-patch                                                                     |
+| Start work in an epic worktree, create/enter per-epic worktree      | `cape:worktree`     | Standalone                                                                              |
+| Finish or close a br epic, all epic tasks done                      | `cape:finish-epic`  | End of build chain                                                                      |
+| Commit, save changes, wrap this up                                  | `cape:commit`       | Standalone                                                                              |
+| Create PR, open pull request, "ship it", "ready for review"         | `cape:pr`           | Standalone                                                                              |
+| Review code, "check my code", "look this over", "anything wrong?"   | `cape:review`       | Standalone; covers bugs/logic plus conventions under reviewer contract                  |
+| br/beads operations, issue tracking, bead ID in conversation        | `cape:beads`        | Reference skill                                                                         |
 
 **Internal skills** (called by other skills, not user-routed):
 
@@ -86,13 +84,13 @@ anyway.
 
 **Agents** (dispatched internally by skills, not user-routed):
 
-| Agent                                                                  | Dispatched by                                                 | Purpose                                                                                     |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug                            | Review implementation against plan and standards                                            |
-| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, challenge, execute-plan, fix-bug, task-refinement | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
-| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan, task-refinement                     | Verify claims and assumptions against codebase evidence                                     |
-| `cape:internet-researcher` (model: sonnet)                             | brainstorm, fix-bug                                           | Research external APIs, libraries, community practices                                      |
-| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic                          | Run tests and hooks without polluting context                                               |
+| Agent                                                                  | Dispatched by                                 | Purpose                                                                                     |
+| ---------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `cape:code-reviewer` (model: sonnet)                                   | execute-plan, finish-epic, fix-bug            | Review implementation against plan and standards                                            |
+| `cape:codebase-investigator` (model: haiku default, sonnet bug-tracer) | brainstorm, write-plan, execute-plan, fix-bug | Explore codebase structure; modes: default / bug-tracer / test-auditor / notebox-researcher |
+| `cape:fact-checker` (model: sonnet)                                    | brainstorm, execute-plan                      | Verify claims and assumptions against codebase evidence                                     |
+| `cape:internet-researcher` (model: sonnet)                             | brainstorm, fix-bug                           | Research external APIs, libraries, community practices                                      |
+| `cape:test-runner` (model: haiku)                                      | test-driven-development, finish-epic          | Run tests and hooks without polluting context                                               |
 
 Skills dispatch agents when deep investigation is needed. If agent dispatch fails, the skill
 continues manually with Glob/Grep/Read/WebSearch.
@@ -106,15 +104,15 @@ Cape skills form workflow chains. Each link hands off to the next. Don't skip li
 **Build chain** — for new features, integrations, system changes:
 
 ```
-brainstorm [challenge optional] → write-plan → STOP → execute-plan (inline expansion → TDD → review → commit loop) → finish-epic → commit
+brainstorm (inline assumption audit) → write-plan (first-task stress test) → STOP → execute-plan (inline expansion → TDD → review → commit loop) → finish-epic → commit
 ```
 
 - `brainstorm` is conversational — never enters plan mode. It checkpoints after research and after
   proposing approaches, waiting for user input each time. Produces a design summary.
-- `challenge` is offered by brainstorm (opt-in) to surface hidden assumptions before locking
-- `write-plan` formalizes it into a br epic with one first task
+- `brainstorm` offers an inline assumption audit to surface hidden assumptions before locking
+- `write-plan` formalizes it into a br epic with one codebase-verified, stress-tested first task
 - **STOP** — present the epic and wait. The user decides when to start building.
-- `execute-plan` implements one task, challenges completed work, creates the next task, stops for
+- `execute-plan` implements one task, self-checks completed work, creates the next task, stops for
   review
   - Inline expansion grounds the task in codebase reality before coding starts
   - `commit` persists each completed unit of work
