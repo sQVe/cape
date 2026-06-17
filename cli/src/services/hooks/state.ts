@@ -302,7 +302,7 @@ export const userPromptSubmit = () =>
     const contexts: string[] = [];
 
     if (detectBeadsSkill(prompt)) {
-      skills.push('cape:beads');
+      skills.push('cape:tracker');
     }
     if (detectBugReport(prompt)) {
       skills.push('cape:fix-bug');

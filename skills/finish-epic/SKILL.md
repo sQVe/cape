@@ -1,231 +1,194 @@
 ---
 name: finish-epic
 description: >
-  Verify and close a br epic after all tasks are complete. Use when the user says "finish the epic",
-  "we're done", "close out the epic", all tasks are done and the user wants to close it, or
-  execute-plan detects all success criteria appear met. Runs final verification (tests, linting,
-  hooks), checks every success criterion with evidence, executes manual verification steps from the
-  epic, appends an Outcome to the epic, and closes it. Also triggers on epic IDs combined with
-  closure intent. Do NOT use for implementing tasks (use execute-plan), creating plans (use
-  write-plan), or git operations (merge/PR/push — user handles those).
+  Verify and close a Linear tracker epic after all tasks are complete. Use when the user says
+  "finish the epic", "we're done", "close out the epic", all tasks are done and the user wants to
+  close it, or execute-plan detects all success criteria appear met. Runs final verification, checks
+  success criteria with evidence, optionally writes a minimal outcome summary to Linear, and closes
+  the epic.
 ---
 
-<skill_overview> The final step in the build chain. After execute-plan has completed all tasks, this
-skill runs a comprehensive verification pass, confirms every success criterion has evidence of
-completion, closes the epic, and reports what was accomplished.
+<skill_overview> The final step in the build chain. Verify every success criterion, run project
+checks, close the Linear epic through MCP, refresh the local tracker cache, and report what shipped.
 
 Core contract: the epic only closes when every success criterion has evidence. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — The verification gate and evidence-based success criteria checks
-are non-negotiable. How you run verification and what you include in the summary adapts to context.
-</rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- The evidence gate, automated checks, Linear close, and cache
+refresh are fixed. Verification details adapt to the repository. </rigidity_level>
 
 <when_to_use>
 
-- All tasks in a br epic are closed
+- All tasks in a tracker epic are completed
 - User says "finish the epic", "we're done", "close it out", "wrap this up"
-- execute-plan step 4 detects all success criteria appear met
-- User references an epic ID and wants to close it out
+- execute-plan detects no ready tasks remain and success criteria appear met
+- User references an epic ID and wants closure
 
 **Don't use for:**
 
 - Tasks still need implementation (use execute-plan)
-- Epic doesn't exist yet (use brainstorm then write-plan)
-- Git operations — merge, PR, push (user handles these)
+- Epic does not exist yet (use brainstorm then write-plan)
+- Git operations like PRs or pushes
 
 </when_to_use>
 
 <critical_rules>
 
-1. **All tasks must be closed** — don't close open tasks to force epic closure
-2. **All automated checks must pass** — tests, linting, hooks
-3. **All success criteria need evidence** — verify and cite, don't self-certify
-4. **Stop on failure** — report what's missing, don't close a failing epic
-5. **No git operations** — no merge, no PR, no push; user handles integration
+1. **All tasks must be complete** -- do not close open tasks just to close the epic
+2. **All automated checks must pass** -- run the repository's required verification
+3. **All success criteria need evidence** -- cite tests, files, or behavior
+4. **Stop on failure** -- report missing evidence or failing checks instead of closing
+5. **Close through Linear MCP** -- then refresh `hooks/context/tracker.json` with `cape tracker`
+6. **Keep outcome minimal** -- detailed outcome stays in session; Linear gets only a concise durable
+   summary when useful
 
 </critical_rules>
 
 <the_process>
 
-## Step 1: Verify
+## Step 1: Confirm Completion From Cache
 
-Run `cape epic verify <epic-id>` to check all tasks are closed and automated checks pass:
+Read `hooks/context/tracker.json` and locate the epic. Confirm every child task has a completed
+state type or a done-like status.
 
-```bash
-cape epic verify <epic-id>
-```
+If any task remains open, report the open task IDs and stop. Do not close them.
 
-- **verified: true** — proceed to step 1b
-- **openTasks not empty** — report which tasks are still open and stop
-- **checksPassed: false** — report failures and stop
-
-When helpful, dispatch `cape:test-runner` (model: haiku) to run verification commands or capture
-failure output without polluting context.
+If the cache is missing or stale for the current session, use `cape:tracker` to refresh it from the
+latest MCP result already available in session. Do not depend on the CLI for network reads.
 
 ---
 
-## Step 2: Audit
+## Step 2: Audit Success Criteria
 
-Run three additional verification passes. All must pass before closing.
+Read the epic contract from session context. For each success criterion, find concrete evidence:
 
-### Checkpoint state
-
-Before running sub-passes, load checkpoint state to skip work that already passed at the current
-commit.
-
-1. Get the current HEAD SHA: `git rev-parse HEAD`
-2. If the epic's design field contains a previous `## Outcome` section (epic was reopened), delete
-   the state file to force a full re-run:
-   ```bash
-   rm -f ".beads/<epic-id>/verify.json"
-   ```
-3. Read `.beads/<epic-id>/verify.json` if it exists. The file maps pass names to SHAs:
-   ```json
-   { "criteria-audit": "<sha>", "code-review": "<sha>", "manual-verification": "<sha>" }
-   ```
-   If the file is missing or malformed, proceed with all passes — never error on bad state.
-4. Create the directory if needed: `mkdir -p ".beads/<epic-id>"`
-
-After each sub-pass succeeds, write the current HEAD SHA for that pass to the state file. Use `jq`
-or equivalent to update a single key without clobbering others.
-
-### 2a: Success criteria audit
-
-Always run this pass — never skip it, even if the SHA matches. It is cheap and catches regressions
-in non-code outputs like missing files.
-
-Read the epic's success criteria. For each criterion, find concrete evidence that it's met — test
-output, file existence, behavior you can demonstrate.
+- Passing test output
+- File or diff evidence
+- Demonstrated behavior
+- Manual verification result
 
 Present a checklist:
 
+```text
+Success criteria audit - <epic-id>
+
+[x] Criterion 1 - Evidence: <proof>
+[x] Criterion 2 - Evidence: <proof>
+[ ] Criterion 3 - NOT MET: <gap>
 ```
-## Success criteria audit — <epic-id>
 
-- [x] Criterion 1 — Evidence: [what proves it]
-- [x] Criterion 2 — Evidence: [what proves it]
-- [ ] Criterion 3 — NOT MET: [what's missing]
-```
-
-If any criterion is not met, report what's missing and stop. The user can create a new task with
-`br create` and load `cape:execute-plan` with the Skill tool to address the gap before retrying
-finish-epic.
-
-After the audit passes, record the SHA in `.beads/<epic-id>/verify.json` under the key
-`criteria-audit`. Read the existing file (or start from `{}`), set the key to the current HEAD SHA,
-and write it back.
-
-### 2b: Code review
-
-**Checkpoint gate:** If `.beads/<epic-id>/verify.json` records a `code-review` SHA that matches the
-current HEAD, skip this pass and report: "Code review already passed at HEAD <short-sha> —
-skipping."
-
-Otherwise, dispatch `cape:code-reviewer` (model: sonnet) with the epic ID and the full branch diff.
-Pass only the contract (requirements, anti-patterns, success criteria) — not task implementation
-notes. The reviewer judges what was built against what was required, not what was intended. Address
-any critical findings before proceeding.
-
-After the review passes, record the SHA (same pattern as 2a, using key `code-review`).
-
-### 2c: Manual verification
-
-**Checkpoint gate:** If `.beads/<epic-id>/verify.json` records a `manual-verification` SHA that
-matches the current HEAD, skip this pass and report: "Manual verification already passed at HEAD
-<short-sha> — skipping."
-
-Otherwise, if the epic specifies manual verification steps (e.g., "run the app and confirm X works",
-"verify the CLI outputs Y"), execute them and record the results.
-
-Skip this pass if the epic has no manual verification steps.
-
-After manual verification passes (or is skipped because no steps exist), record the SHA (same
-pattern as 2a, using key `manual-verification`).
+If any criterion is not met, stop and recommend the next task to create through `cape:execute-plan`.
 
 ---
 
-## Step 3: Summarize
+## Step 3: Run Final Verification
 
-Append an Outcome section to the epic:
+Run the required project verification for this repository. At minimum, run the checks the epic or
+project expects. When helpful, dispatch `cape:test-runner` (model: haiku) to run commands and
+capture output without filling the main context.
+
+If checks fail, report the failing command and stop. Do not close the epic.
+
+Dispatch `cape:code-reviewer` for non-trivial epics. Pass the epic contract and branch diff; the
+reviewer judges the delivered code against requirements and anti-patterns.
+
+---
+
+## Step 4: Close Epic
+
+Load `cape:commit` with the Skill tool to commit remaining changes before closing when there are
+uncommitted implementation changes.
+
+Optionally write a minimal outcome summary to the Linear epic description through MCP Linear
+`save_issue`:
+
+```text
+Outcome: <2-3 sentence summary>
+Verification: <commands passed>
+Tasks completed: <N>
+```
+
+Keep detailed reflections in the conversation. Do not write validation transcripts or expanded
+implementation notes to Linear.
+
+Close the epic through MCP Linear, then refresh the cache:
 
 ```bash
-cat <<'EOF' | cape br design <epic-id> "Outcome"
-**Completed:** YYYY-MM-DD
-**Tasks:** [N tasks completed]
-**Summary:** [2-3 sentences: what was built, key decisions, divergences from original design]
-**Verification:** All tests passing, all success criteria met[, manual verification passed]
-EOF
+cape tracker cache-status <epic-id> Done completed
+```
+
+If the close response includes the full epic with children, prefer:
+
+```bash
+cape tracker cache-epic '<linear-epic-json-with-children>'
 ```
 
 ---
 
-## Step 4: Commit, close, and report
+## Step 5: Report
 
-Load `cape:commit` with the Skill tool to commit any remaining changes before closing.
+Present:
 
-```bash
-cape br close <epic-id>
-```
+```text
+Epic complete - <epic-id>: <title>
 
-Present a completion report:
+Summary: <what shipped>
+Tasks completed: <N>
+Success criteria: all <N> met
+Verification: <commands passed>
 
-```
-## Epic complete — <epic-id>: <title>
-
-**Summary:** [What was built]
-**Tasks completed:** [N]
-**Success criteria:** [All N met]
-**Verification:** Tests passing, linter clean[, manual checks passed]
-
-Epic closed.
-
-Load `cape:pr` when the user is ready to open a pull request.
+Epic closed in Linear and tracker cache refreshed.
 ```
 
 </the_process>
 
+<agent_references>
+
+## Dispatch `cape:test-runner` when:
+
+- Final verification commands are long-running or noisy
+
+## Dispatch `cape:code-reviewer` when:
+
+- The epic changes shared behavior, public APIs, or cross-module contracts
+
+</agent_references>
+
+<skill_references>
+
+## Load `cape:tracker` with the Skill tool when:
+
+- Closing the epic or refreshing cache state
+
+## Load `cape:commit` with the Skill tool when:
+
+- Verified implementation changes remain uncommitted before closure
+
+</skill_references>
+
 <examples>
 
 <example>
-<scenario>All tasks done, everything passes</scenario>
+<scenario>All tasks done and checks pass</scenario>
 
-Epic cape-abc has 4 tasks, all closed. Success criteria: "CLI validates input", "tests pass",
-"README updated."
+**Wrong:** Close the epic based only on task count.
 
-1. `br list --status open --parent cape-abc` — no open tasks
-2. Run tests — all pass. Run linter — clean.
-3. Audit: CLI validates input (test at cli_test.go:42 confirms), tests pass (just ran), README
-   updated (diff shows new section). All criteria met.
-4. Append Outcome to epic, close, present report. </example>
+**Right:** Audit each success criterion with evidence, run final checks, close the Linear epic, run
+`cape tracker cache-status <epic-id> Done completed`, and report the outcome. </example>
 
 <example>
-<scenario>Tasks done but a success criterion isn't met</scenario>
+<scenario>A success criterion is not met</scenario>
 
-Epic has 3 tasks, all closed. Success criteria include "integration tests cover all endpoints."
-Audit reveals two endpoints have no integration tests.
+**Wrong:** Close the epic because all known tasks are done.
 
-**Wrong:** Close the epic — "the tasks are done so the epic must be done." Success criteria exist to
-catch exactly this gap.
-
-**Right:** Report: "Success criterion not met: integration tests cover all endpoints. Missing
-coverage for POST /users and DELETE /users/:id. Epic stays open." </example>
-
-<example>
-<scenario>Open tasks remain</scenario>
-
-User says "let's wrap up the epic" but br-7 is still open.
-
-**Wrong:** Close br-7 to unblock epic closure. The task isn't done — closing it loses the work
-signal.
-
-**Right:** "br-7 (Add rate limiting) is still open. Finish or close it before wrapping up the epic."
-</example>
+**Right:** Report the missing criterion, keep the epic open, and recommend creating the next task
+through execute-plan. </example>
 
 </examples>
 
 <key_principles>
 
-- **The outcome is the record** — future sessions read it to understand what shipped
-- **Completeness over speed** — rushing closure creates debt in the next epic
+- **Evidence beats optimism** -- success criteria need proof
+- **Completeness over speed** -- rushing closure creates follow-up debt
+- **The board stays clean** -- Linear gets status and minimal durable summary, not transcripts
 
 </key_principles>

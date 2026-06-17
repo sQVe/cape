@@ -304,7 +304,7 @@ describe('skill gate: non-gated skills pass through', () => {
   it.each([
     'cape:commit',
     'cape:review',
-    'cape:beads',
+    'cape:tracker',
     'cape:worktree',
     'cape:brainstorm',
     'cape:pr',

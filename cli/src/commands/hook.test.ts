@@ -482,13 +482,13 @@ describe('userPromptSubmit', () => {
     expect(result).toEqual({ decision: 'approve' });
   });
 
-  it('injects beads skill for br mention', async () => {
+  it('injects tracker skill for issue-tracker mention', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'show br issues' }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(result.decision).toBe('approve');
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
   });
 
   it('injects flow context when flowPhase exists in state', async () => {
@@ -548,7 +548,7 @@ describe('userPromptSubmit', () => {
       files: flowPhaseFile('planning'),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
     expect(result.additionalContext).toContain('<flow-context>');
     expect(result.additionalContext).toContain('planning');
   });
@@ -612,7 +612,7 @@ describe('hook command wiring', () => {
     console_.restore();
   });
 
-  it('handles user-prompt-submit with beads detection', async () => {
+  it('handles user-prompt-submit with tracker detection', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'show br issues' }),
     });
@@ -623,7 +623,7 @@ describe('hook command wiring', () => {
     const output = console_.output();
     const result = JSON.parse(output);
     expect(result.decision).toBe('approve');
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
     console_.restore();
   });
 
@@ -977,7 +977,7 @@ describe('preToolUseSkill', () => {
   it.each([
     'cape:commit',
     'cape:review',
-    'cape:beads',
+    'cape:tracker',
     'cape:worktree',
     'cape:brainstorm',
     'cape:write-plan',
@@ -1441,7 +1441,7 @@ describe('event logging', () => {
     await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.UserPromptSubmit',
-      expect.stringContaining('cape:beads'),
+      expect.stringContaining('cape:tracker'),
     );
   });
 

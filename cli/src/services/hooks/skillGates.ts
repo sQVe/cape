@@ -87,7 +87,7 @@ const gateExecutePlan = () =>
     }
     if (!ready) {
       return denyWith(
-        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion now runs inside cape:execute-plan; create a new task with cape:beads if more work remains.',
+        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
       );
     }
     const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
@@ -140,7 +140,7 @@ const gateFinishEpic = (targetEpicId: string | null) =>
       }
       if (openCount > 0 && epicId != null) {
         return denyWith(
-          `Epic ${epicId} still has ${openCount} open task(s). Close each task with \`cape br close <task-id>\` (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
+          `Epic ${epicId} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
         );
       }
     }
@@ -157,7 +157,7 @@ const gateFixBug = () =>
     if (!bugs) {
       return {
         additionalContext:
-          'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a bug with cape:beads.',
+          'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
       };
     }
     return null;

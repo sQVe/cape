@@ -1,28 +1,26 @@
 ---
 name: write-plan
 description: >
-  Formalize a brainstorm design into a br epic with immutable requirements and a first task. Use
-  after cape:brainstorm has produced a design summary. Triggers on: user runs /cape:write-plan,
-  "create the epic", "formalize this design", "write the plan", transitioning from brainstorm to
+  Formalize a brainstorm design into a Linear tracker epic with one first sub-issue task. Use after
+  cape:brainstorm has produced a design summary. Triggers on: user runs /cape:write-plan, "create
+  the epic", "formalize this design", "write the plan", transitioning from brainstorm to
   implementation. Do NOT use for initial exploration (use cape:brainstorm), executing existing plans
   (use cape:execute-plan), or bug diagnosis and fixes (use cape:fix-bug).
 ---
 
-<skill_overview> Formalize a validated design into a `br` epic with immutable requirements,
-anti-patterns, global constraints, and a first task. The bridge between exploration (brainstorm) and
-implementation (execute-plan).
+<skill_overview> Formalize a validated design into a Linear epic issue and exactly one first
+sub-issue task. The bridge between exploration and implementation.
 
-Core contract: no epic without a design summary in conversation context. No task without an epic.
-</skill_overview>
+Core contract: no epic without design context; no task without a parent epic; every Linear write is
+followed by a local `cape tracker` cache refresh. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM -- The epic structure (from the template) and first-task creation
-are non-negotiable. Validation depth and detail-filling adapt to the design's complexity.
-</rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- The epic contract, first-task stress test, tracker write, and
+STOP after creation are fixed. Validation depth adapts to the design's complexity. </rigidity_level>
 
 <when_to_use>
 
 - Design summary exists in conversation from brainstorm
-- User wants to formalize a design into a tracked epic
+- User wants to formalize a design into tracked work
 - Transitioning from brainstorm to implementation
 
 **Don't use for:**
@@ -36,220 +34,143 @@ are non-negotiable. Validation depth and detail-filling adapt to the design's co
 <critical_rules>
 
 1. **Require design context** -- do not create an epic without a brainstorm design summary
-2. **Use epic template** -- every section from the injected template above is required
-3. **Create ONLY first task** -- subsequent tasks created iteratively
-4. **Stop after creation** -- present summary and wait for user to run execute-plan
-5. **Anti-patterns MUST include reasoning** -- "NO X (reason: Y)", not just "NO X"
-6. **Stress-test the first task before creation** -- verify against the codebase and close vague
-   criteria, missing edge cases, failure modes, implicit assumptions, stale references, and test
-   gaps
+2. **Use Linear through tracker protocol** -- create issues via MCP Linear, then refresh cache with
+   `cape tracker`
+3. **Create only the first task** -- subsequent tasks are created iteratively by execute-plan
+4. **Keep breakdown in session** -- do not write expanded plans, validation transcripts, or
+   divergence logs to Linear
+5. **Stop after creation** -- present the epic and first task, then wait for execute-plan
+6. **Stress-test first task before creation** -- verify paths, patterns, edge cases, and test gaps
+   against the codebase
 
 </critical_rules>
 
 <the_process>
 
-## Step 1: Verify design context
+## Step 1: Verify Design Context
 
-Verify that a design summary exists in conversation context. If not, offer `cape:brainstorm` as an
-option to explore and lock a design — but acknowledge that an organic design developed in
-conversation is equally valid. If no design of any kind exists, stop and ask the user to share one.
+Verify that a design summary exists in conversation context. If not, stop and ask for one or route
+to `cape:brainstorm`.
 
-Review the design summary. Identify any gaps that would prevent creating a complete epic:
+Review the summary for blockers:
 
 - Missing or vague requirements
 - Anti-patterns without reasoning
-- Unresolved open questions that block implementation
-- Architecture lacking concrete file paths or components
+- Open questions that affect implementation
+- Architecture claims without concrete codebase evidence
+
+Resolve blocking questions before creating Linear issues.
 
 ---
 
-## Step 2: Validate and flesh out
+## Step 2: Refine Into Epic Contract
 
-Present the design in sections for chunk-by-chunk validation (200-300 word chunks). This is where
-the brainstorm's high-level design gets refined into epic-grade specifics:
+Turn the design into a durable epic description:
 
-- **Requirements:** convert design summary bullets into specific, testable statements
-- **Durable decisions:** extract decisions that survive refactors (routes, schema shapes, auth
-  patterns, external service boundaries) into their own section
-- **Anti-patterns:** ensure every entry has reasoning ("NO X (reason: Y)")
-- **Global constraints:** for multi-task epics, extract shared rules every task inherits from the
-  epic requirements, anti-patterns, architecture, and user decisions. Keep this proportional:
-  single-task epics skip the ceremony.
-- **Architecture:** flesh out with concrete files, components, data flow
-- **Success criteria:** derive from requirements, make objectively measurable
-- **First task interface:** for multi-task epics, define the first task's expected inputs, outputs,
-  and side effects so future tasks can compose with it. For single-task epics, keep the interface
-  inline with the task goal.
+- Requirements: specific, testable statements
+- Global constraints: shared rules for all tasks, or "N/A - single task"
+- Durable decisions: routes, schemas, service boundaries, auth/storage patterns
+- Anti-patterns: every entry uses "NO X (reason: Y)"
+- Success criteria: objective checks, including tests and project checks
+- Approach and architecture: concrete files, components, data flow, and known risks
 
-Before formalizing the first task, stress-test the draft through six lenses with codebase
-verification:
+Before formalizing the first task, dispatch `cape:codebase-investigator` in default mode (model:
+haiku), or verify manually with search and file reads. Confirm file paths, APIs, test setup, helper
+reuse, and similar implementation patterns.
 
-1. Dispatch `cape:codebase-investigator` in default mode (model: haiku) to verify that file paths,
-   function names, implementation references, module patterns, test setup, API shapes, dependencies,
-   utilities, and helper reuse assumptions match the actual codebase. If agents are unavailable,
-   verify manually with Glob/Grep/Read.
-2. Review what is already strong: specific criteria, covered edge cases, and well-chosen references.
-3. Tighten vague criteria into observable outcomes a reviewer can verify without extra context.
-4. Add missing edge cases as implementation checklist/test items when they are in scope.
-5. Specify failure modes for external interactions, user input, file I/O, database calls, network
-   calls, and partial failures.
-6. Make implicit assumptions explicit as preconditions, requirements, or tests.
-7. Correct stale references using the investigation results.
-8. Ensure every success criterion and edge case has corresponding test coverage.
+The first task must be a vertical slice with:
 
-If the investigation reveals a blocker -- nonexistent core dependency, wrong repository, invalid
-architecture premise -- lead with it and re-scope before creating the epic or task. Refinement
-tightens the chosen design; it must not add unrelated features.
-
-Confirm each chunk: "Does this look right so far?"
-
-If the design summary has open questions that block epic creation, resolve them with the user now.
-Don't defer questions that would make requirements ambiguous.
+- Goal
+- Interface: inputs, outputs, side effects
+- Execution mode: HITL or AFK
+- Behaviors small enough for TDD cycles
+- References to verified files or patterns
+- Success criteria
 
 ---
 
-## Step 3: Create epic and first task
+## Step 3: Create Linear Epic And First Task
 
-Ensure a beads workspace exists:
+Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear description. Keep it
+concise enough to be readable, but include the durable requirements, constraints, anti-patterns,
+success criteria, and architecture.
 
-```bash
-br where 2>/dev/null || br init
-```
+Use MCP Linear `save_issue` again to create exactly one child/sub-issue under the epic for the first
+task. Put only task-level details in the task description.
 
-Create the `br` epic using this template (every section is required):
+After the writes, refresh the local cache. Preferred path:
 
-!`cat "${CLAUDE_SKILL_DIR}/resources/epic-template.md"`
-
-```bash
-br create "Epic: [Feature Name]" \
-  --type epic \
-  --priority [0-4] \
-  --labels "[skill-name]" \
-  --description "$(cat <<'EOF'
-## Requirements
-[Specific, testable statements derived from the design summary]
-- Requirement 1
-- Requirement 2
-
-## Global constraints
-[For multi-task epics only: shared rules every task inherits from requirements, anti-patterns, architecture, and user decisions. Single-task epics may say "N/A — single task."]
-- Constraint 1
-- Constraint 2
-
-## Durable decisions
-[Choices that survive refactors — routes, schemas, auth patterns, external boundaries]
-- Decision 1
-- Decision 2
-
-## Anti-patterns
-[What NOT to do, with reasoning]
-- NO X (reason: Y)
-
-## Success criteria
-[Objectively measurable outcomes]
-- [ ] Criterion 1
-- [ ] Criterion 2
-- [ ] Tests passing
-- [ ] Pre-commit hooks passing
-EOF
-)"
-cape br validate <epic-id>
-```
-
-Create exactly one task as a child of the epic. The task should be a **vertical slice** — a thin
-end-to-end path through all layers (schema, API, UI, tests), not a horizontal layer. A completed
-slice is independently demonstrable.
+1. Use MCP Linear `get_issue` on the epic with child/sub-issues included.
+2. Pipe the returned epic issue JSON to:
 
 ```bash
-br create "Task 1: [Specific deliverable]" \
-  --type task \
-  --priority [match epic] \
-  --parent [epic-id] \
-  --labels "[hitl or afk]" \
-  --description "$(cat <<'EOF'
-## Goal
-[What this task delivers — one clear outcome]
-
-## Interface
-[For multi-task epics: expected inputs, outputs, and side effects this task exposes to later tasks. For single-task epics: keep this brief or mark N/A.]
-- Inputs: [what the task consumes]
-- Outputs: [what the task produces]
-- Side effects: [state, files, APIs, data, or user-visible behavior changed]
-
-## Execution mode
-[HITL (needs human decisions during implementation) or AFK (can be executed autonomously)]
-
-## Behaviors
-[Sequential — each should be small enough to drive with one test-first behavior slice. Never bundle multiple behaviors into one task.]
-1. [Behavior 1: "returns error when input is empty"]
-2. [Behavior 2: "parses valid input into sections"]
-...
-
-## References
-[Point to 1-3 similar implementations or patterns: file:line]
-
-## Success criteria
-- [ ] [Specific, measurable outcome]
-- [ ] Tests passing
-- [ ] Pre-commit hooks passing
-EOF
-)"
-cape br validate <task-id>
+cape tracker cache-epic '<linear-epic-json>'
 ```
 
-**Why only one task?** Subsequent tasks should be created iteratively during execution. Each task
-reflects learnings from the previous one. Upfront task trees become brittle when assumptions change.
+If the MCP result is easier to pass through stdin:
 
-**Why vertical slices?** Horizontal tasks ("write all models", "write all tests") hide integration
-risk. Vertical slices prove the system works end-to-end sooner and are independently demoable.
-
-**Present completion summary and stop:**
-
+```bash
+printf '%s' '<linear-epic-json>' | cape tracker cache-epic
 ```
-Epic [id] created with immutable requirements and success criteria.
-First task [id] is ready to execute.
 
-The epic has [N] requirements, [N] global constraints, [N] anti-patterns, and [N] success criteria.
-The first task has been codebase-verified and stress-tested through the six validation lenses.
+Do not run any tracker network reads from the CLI. `cape tracker` only writes the local cache.
 
-Continue with `cape:execute-plan` to start building.
+---
+
+## Step 4: Present And Stop
+
+Present:
+
+```text
+Epic <epic-id> created: <title>
+First task <task-id> created: <title>
+
+The epic has <N> requirements, <N> anti-patterns, and <N> success criteria.
+The first task was codebase-verified and stress-tested.
+
+Continue with cape:execute-plan to start building.
 ```
+
+Then stop. Do not start implementation in the same invocation.
 
 </the_process>
+
+<skill_references>
+
+## Load `cape:tracker` with the Skill tool when:
+
+- You need the exact MCP Linear plus cache-write protocol
+- A cache refresh fails and you need to inspect the expected cache shape
+
+</skill_references>
 
 <examples>
 
 <example>
-<scenario>Skipping validation, copying design summary verbatim into epic</scenario>
+<scenario>Design summary says "tokens stored securely"</scenario>
 
-User ran brainstorm, design summary says "tokens stored securely" as a requirement.
+**Wrong:** Create a vague requirement that allows localStorage, sessionStorage, or cookies.
 
-**Wrong:** Copy "tokens stored securely" directly into the epic. During implementation, this vague
-requirement allows localStorage, sessionStorage, or cookies — no clear standard to hold against.
-
-**Right:** During validation, tighten to "Tokens stored in httpOnly cookies (NOT localStorage)." Add
-anti-pattern: "NO localStorage tokens (reason: httpOnly prevents XSS token theft)." The epic is more
-precise than the design summary. </example>
+**Right:** Tighten it before creation: "Tokens stored in httpOnly cookies; NO localStorage tokens
+(reason: XSS token theft)." Then create the Linear epic and first task and refresh the cache with
+`cape tracker cache-epic`. </example>
 
 <example>
-<scenario>No design summary exists in conversation</scenario>
+<scenario>No design summary exists</scenario>
 
-User runs `/cape:write-plan` in a fresh conversation without brainstorming first.
+**Wrong:** Invent requirements and create tracker issues from a blank slate.
 
-**Wrong:** Start asking the user about requirements and architecture from scratch. This duplicates
-brainstorm and produces a weaker design without the research and assumption-challenge phases.
-
-**Right:** Tell the user: "No design summary found in conversation. Load `cape:brainstorm` first to
-explore the idea, then come back to formalize it." Stop. </example>
+**Right:** Stop and route to `cape:brainstorm`, or ask the user for the existing design summary.
+</example>
 
 </examples>
 
 <key_principles>
 
-- **Formalize, don't explore** -- brainstorm explores, write-plan formalizes
-- **Epic is contract** -- requirements immutable, tasks adapt
-- **Anti-patterns prevent shortcuts** -- every entry uses "NO X (reason: Y)" format
-- **One task only** -- subsequent tasks created iteratively as you learn
-- **Tighten, don't loosen** -- validation makes requirements more specific, not less
+- **Formalize, don't explore** -- brainstorm explores; write-plan creates the durable contract
+- **Linear is the board** -- MCP creates issues; `cape tracker` only refreshes local cache
+- **One task only** -- later tasks should reflect what execution actually teaches
+- **Session detail stays session-local** -- expanded breakdowns and validation notes do not belong
+  on the board
 
 </key_principles>

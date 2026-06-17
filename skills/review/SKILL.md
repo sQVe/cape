@@ -3,399 +3,234 @@ name: review
 description: >
   Review code changes for bugs, logic errors, security issues, design problems, and documented
   convention violations using structural analysis from the code-review-graph plus cape conform. Use
-  whenever the user wants a code review — explicit requests ("review my changes", "review this",
-  "check my code", "/cape:review") and implicit ones ("anything wrong here?", "is this ready?",
-  "look this over"). Also use when reviewing someone else's PR or branch. Covers self-review before
-  committing, pre-PR review, and reviewing others' work. Do NOT use for writing review (prose, docs)
-  or for committing (use cape:commit).
+  whenever the user wants a code review: "review my changes", "review this", "check my code",
+  "/cape:review", "anything wrong here?", "is this ready?", or reviewing another PR or branch. Do
+  NOT use for writing prose or committing.
 ---
 
-<skill_overview> Review code changes using code-review-graph for structural intelligence — blast
-radius, dependency chains, test coverage gaps — and `cape conform` for documented convention
-violations. Produces a verdict-first report grouped by file. Optionally tracks critical findings as
-br bugs for later resolution.
+<skill_overview> Review code changes using structural graph context, documented conventions, and
+diff evidence. Produces a verdict-first report. Optionally tracks critical and important findings as
+Linear issues through `cape:tracker`.
 
-The graph gives this skill something raw diffs can't: who calls what you changed, what breaks if
-this behaves differently, and which functions have no tests. One structurally-aware reviewer finds
-more than three blind ones. </skill_overview>
+Core contract: review is read-only unless the user explicitly opts into tracking findings.
+</skill_overview>
 
 <reviewer_contract>
 
 - **Read-only:** cite findings and stop. Do not apply fixes during review.
-- **File-line evidence:** every finding, including convention violations, cites `file:line`.
-- **Claims are unverified:** implementer rationales and code comments are hypotheses, not facts.
-- **Impact-derived severity:** severity comes from observed behavior, reach, and risk; never
-  pre-judge by category. Convention violations are binary rule hits, not severity-ranked correctness
-  findings.
+- **File-line evidence:** every finding cites `file:line`.
+- **Claims are unverified:** implementer rationales and comments are hypotheses.
+- **Impact-derived severity:** severity comes from observed behavior, reach, and risk.
 
 </reviewer_contract>
 
-<rigidity_level> LOW FREEDOM — The process order (scope → graph → conventions → review → report →
-follow-up) is fixed. The report format (verdict first, grouped by file, severity-tagged correctness
-findings plus sourced convention violations) is non-negotiable. Depth adapts to change size.
-</rigidity_level>
+<rigidity_level> LOW FREEDOM -- Scope, graph, conventions, review, report, and optional follow-up
+order is fixed. Depth adapts to change size. </rigidity_level>
 
 <when_to_use>
 
 - User says "review", "check my code", "look this over", "anything wrong?"
-- Before committing or creating a PR — self-review
+- Before committing or creating a PR
 - Reviewing someone else's PR, branch, or specific files
-- After finishing implementation, as a quality gate
+- After finishing implementation as a quality gate
 
 **Don't use for:**
 
-- Writing or prose review (docs, markdown, READMEs)
-- Committing changes (use cape:commit)
-- Creating PRs (use cape:pr)
-- Diagnosing or fixing a specific bug (use cape:fix-bug)
+- Writing or prose review
+- Committing changes (use `cape:commit`)
+- Creating PRs (use `cape:pr`)
+- Diagnosing or fixing a specific bug (use `cape:fix-bug`)
 
 </when_to_use>
 
 <critical_rules>
 
-1. **Always update the graph first** — stale graph = stale review. Run `build_or_update_graph_tool`
-   before `get_review_context_tool`.
-2. **Lead with the verdict** — never bury the conclusion in a wall of findings
-3. **NEVER invent report sections** — use the exact report format from step 4 (verdict, risk, scope,
-   findings grouped by file, test coverage gaps, summary)
-4. **Never offer to fix** — review and fix are separate concerns. Present findings, stop.
-5. **Check test coverage selectively** — use review context guidance for coverage gaps, query
-   `tests_for` only on high-impact changed functions. Untested + callers = highest risk.
-6. **Offer br tracking only for own code** — when reviewing others' PRs, just deliver the report
-7. **Always attempt the graph** — even for small changes, blast radius is cheap. Fall back to
-   diff-only when the graph returns 0 nodes (non-code repo) or is genuinely unavailable.
-8. **Check dependents of deleted files** — a deletion that breaks importers is a critical finding
-9. **Run conventions through cape conform** — use the CLI output for rule discovery, changed files,
-   and rule sources. Do not infer undocumented conventions.
+1. **Always update the graph first** -- stale graph means stale review
+2. **Lead with the verdict** -- never bury the conclusion
+3. **Use the report format** -- verdict, risk, scope, findings, coverage gaps, summary
+4. **Never offer to fix** -- review and fix are separate concerns
+5. **Run conventions through cape conform** -- documented rules are the source of truth
+6. **Offer Linear tracking only for own code** -- for others' PRs, deliver the report only
+7. **Track findings through tracker** -- user-approved findings become Linear issues and cache
+   refreshes, not local issue CLI calls
 
 </critical_rules>
 
 <the_process>
 
-## Step 1: Determine scope
+## Step 1: Determine Scope
 
-Parse the argument to determine what to review:
+Parse the argument:
 
-| Argument          | Scope                                      |
-| ----------------- | ------------------------------------------ |
-| (none)            | `cape git diff pr` + untracked files       |
-| `unstaged`        | `cape git diff unstaged` + untracked files |
-| `staged`          | `cape git diff staged`                     |
-| file path or glob | Specific files                             |
-| branch name       | Diff of that branch vs main                |
-| PR number         | Diff of PR branch vs its base              |
+| Argument          | Scope                              |
+| ----------------- | ---------------------------------- |
+| none              | branch diff plus untracked files   |
+| `unstaged`        | unstaged diff plus untracked files |
+| `staged`          | staged diff                        |
+| file path or glob | specific files                     |
+| branch name       | branch diff vs main                |
+| PR number         | PR diff vs base                    |
 
-Run `cape check` as a baseline signal. On non-zero exit, read `checkResults` from JSON output and
-surface entries where `passed: false` as warnings, then continue reviewing — pre-existing failures
-are context for the review, not a blocker. Only halt if the review author explicitly asks for a
-clean baseline first.
-
-**Detect main branch and changed files:**
+Run:
 
 ```bash
+cape check
 cape git context
-cape git diff [scope]
+cape git diff <scope>
 ```
 
-Extract changed file names from the diff output. Use `status` from context for untracked file
-detection.
-
-Use `mainBranch` from context output. Use `status` for untracked file detection.
-
-If no changed files found: "No changes found for scope: {scope}." Stop.
-
-Report: "Reviewing N files..."
+If no changed files are found, report that and stop.
 
 ---
 
-## Step 2: Build structural context
+## Step 2: Build Structural Context
 
-Update the graph and gather structural intelligence. See `resources/graph-tools-instructions.md` for
-the full tool catalog and fallback behavior. Run sequentially:
+Use the code-review-graph tools in order:
 
-1. `build_or_update_graph_tool()` — incremental update to reflect current state
-2. `get_review_context_tool()` — returns changed files, impacted nodes, source snippets, and review
-   guidance. For branch/PR scope, pass `base="main"` (or detected main branch).
-3. `get_impact_radius_tool()` — returns blast radius: files and functions that depend on what
-   changed, with dependency counts.
+1. `build_or_update_graph_tool()`
+2. `get_review_context_tool()`
+3. `get_impact_radius_tool()`
 
-If the graph has 0 nodes (non-code repo or unsupported languages), fall back to reading full file
-content + diff hunks directly. Note the absence of structural context in the report header:
-
-```
-**Graph:** No parseable code — structural analysis unavailable
-```
-
-If only some changed files are code (mixed content), use the graph for code files and diff-based
-review for the rest. Don't refuse to review config or markup files — just acknowledge the structural
-context doesn't apply to them.
+For branch or PR scope, pass the detected main branch as the base. If the graph has no parseable
+nodes, fall back to diff and file reads and say structural analysis is unavailable.
 
 ---
 
-## Step 3: Check documented conventions
+## Step 3: Check Documented Conventions
 
-Run `cape conform [scope]` for the same review scope before judging convention adherence:
-
-| Review scope      | Conform scope                                                      |
-| ----------------- | ------------------------------------------------------------------ |
-| (none)            | `cape conform branch`                                              |
-| `unstaged`        | `cape conform unstaged`                                            |
-| `staged`          | `cape conform staged`                                              |
-| branch name or PR | `cape conform branch` after the target diff is available locally   |
-| file path or glob | `cape conform branch`, then limit convention findings to the files |
-
-Use the JSON output as the source of truth for rule files and changed file contents. For each
-changed file, apply only rules whose globs match that path. Check each applicable rule mechanically:
-violated or not violated. Report violations alongside correctness findings, attributed to their rule
-source (`CLAUDE.md`, `typescript.md`, etc.). Do not assign critical/important/suggestion severity to
-convention violations unless the same observation also creates a correctness finding.
-
-If `cape conform` finds no applicable rules, say so in the summary. If it fails because the target
-is not available as a local diff, report that the conventions check was unavailable and continue
-with the code review.
+Run `cape conform <scope>` for the same review scope. Use its JSON output as the source of truth for
+applicable rules and rule sources. Report convention violations separately from correctness findings
+unless the same observation also creates a correctness bug.
 
 ---
 
-## Step 4: Review
+## Step 4: Review The Changes
 
-Work through each changed file using the graph context. For each file:
+Review each changed file using graph context and diff evidence:
 
-**Deleted files:** Check `impacted_nodes` for anything that depended on deleted code. Use
-`query_graph_tool(pattern="importers_of", target=<deleted_file>)` to find broken imports. Deleted
-functions with callers are critical findings.
+- Deleted files: check importers and dependents
+- New files: review full content for correctness, security, and local patterns
+- Changed files: inspect behavior changes, callers, blast radius, nullability, race conditions,
+  resource handling, and security risks
+- Tests: flag high-impact changed functions without tests
 
-**New files:** Review the full content for correctness, security, and design. No blast radius exists
-yet — focus on whether the new code follows existing patterns.
+Calibrate depth:
 
-**Changed files:**
-
-**Correctness:** Read the source snippet and diff. Look for bugs, logic errors, off-by-one,
-null/undefined hazards, race conditions, resource leaks.
-
-**Impact awareness:** Check `impacted_nodes` from the review context. If a changed function has
-callers, verify the change is compatible. If it has dependents in other files, check for breaking
-changes. Use `query_graph_tool(pattern="callers_of", target=<function>)` only for high-risk
-functions flagged by the review context (many dependents). Don't query per-function — the review
-context already surfaces the important relationships.
-
-**Test coverage:** Check the review context's guidance for coverage gaps. Use
-`query_graph_tool(pattern="tests_for", target=<function>)` selectively — only for changed functions
-the review context flagged as high-impact or untested. Flag untested functions with callers as the
-highest-risk combination.
-
-**Security:** SQL injection, XSS, command injection, hardcoded secrets, insecure deserialization,
-path traversal. Weight these as critical.
-
-**Design:** Pattern violations, unnecessary complexity, naming, separation of concerns. Weight these
-as suggestions unless they create maintenance risk.
-
-**Calibrate depth to scope:**
-
-| Scope      | Depth                                                        |
-| ---------- | ------------------------------------------------------------ |
-| 1-3 files  | Deep: every line, all callers, all tests                     |
-| 4-10 files | Focused: entry points, public API, key paths                 |
-| 10+ files  | Surgical: impact radius, representative samples, regressions |
+- 1-3 files: deep review
+- 4-10 files: focused review
+- 10+ files: surgical review around impact radius and risky paths
 
 ---
 
-## STOP — Step 5: Present the report (OUTPUT GATE)
+## Step 5: Present Report
 
-Structure the report as follows. Lead with the verdict — the reader should know the outcome before
-reading details.
+Use this format:
 
-```
-## Review: {scope_description}
+```text
+Review: <scope>
 
-**Verdict:** Passes review | Needs changes
-**Risk:** Low | Medium | High
-**Scope:** {N} files changed, {M} files in blast radius
+Verdict: Passes review | Needs changes
+Risk: Low | Medium | High
+Scope: <N> files changed, <M> files in blast radius
 
-### Findings
+Findings
 
-#### {file_path}
+<file>
 
-**[Critical]** L{line}: {description}
-Suggestion: {how to fix}
-Impact: {N callers, M dependents | isolated}
+[Critical] L<line>: <description>
+Suggestion: <how to fix>
+Impact: <callers/dependents>
 
-**[Important]** L{line}: {description}
-Suggestion: {how to fix}
+[Important] L<line>: <description>
+Suggestion: <how to fix>
 
-**[Suggestion]** L{line}: {description}
+[Suggestion] L<line>: <description>
 
-**[Convention: {rule_source}]** L{line}: {description}
-Rule: {short rule or heading from the rule source}
+[Convention: <rule_source>] L<line>: <description>
+Rule: <short rule>
 
-#### {next_file_path}
-...
+Test coverage gaps
 
-### Test coverage gaps
+- <function> in <file> - no tests, <N> callers
 
-- {function_name} in {file} — no tests, {N} callers
-- {function_name} in {file} — no tests, isolated
+Summary
 
-### Summary
-
-{critical_count} critical, {important_count} important, {suggestion_count} suggestions,
-{convention_count} convention violations
+<counts>
 ```
 
-**Verdict criteria:**
+If no issues are found:
 
-- **Passes review** — no critical findings, no important findings, or only suggestions
-- **Needs changes** — any critical or important finding
-
-Convention violations are binary rule findings. They do not change severity counts, but a review
-with any convention violation should still call them out in the verdict line or summary.
-
-**Risk assessment:**
-
-- **High** — changes to functions with 5+ callers, or public API surface, or security findings
-- **Medium** — changes with 2-4 callers, or untested functions with dependents
-- **Low** — isolated changes with test coverage
-
-If no issues found:
-
-```
-## Review: {scope_description}
+```text
+Review: <scope>
 
 Passes review. No issues found.
 
-{N} files reviewed, {M} in blast radius. All changed functions have test coverage. No documented
+<N> files reviewed, <M> in blast radius. All changed functions have test coverage. No documented
 convention violations found.
 ```
 
-End output with `---` separator. After the separator, immediately proceed to step 6. Do not announce
-intent or say "Let me..." after the separator.
+End with `---`, then proceed to follow-up actions without announcing another review phase.
 
 ---
 
-## Step 6: Follow-up actions
+## Step 6: Optional Tracking
 
-Use `AskUserQuestion` with context-appropriate options:
+For own-code reviews, ask whether to track critical and important findings. If the user opts in,
+create one Linear issue per finding through MCP Linear `save_issue`.
 
-**When reviewing own code (branch diff, unstaged, staged):**
+Issue description should include:
 
-- **Track as bugs** — create br bugs for critical and important findings
-- **Track cleanup** — if the review flagged structural issues (duplication, tangled
-  responsibilities, coupling), offer to create follow-up work for them
-- **Done** — report delivered, no further action
+- Finding severity
+- File and line
+- Impact
+- Suggested fix
+- Review scope
 
-**When reviewing others' code (PR number, explicit branch):**
-
-- **Done** — report delivered
-
-When "Track as bugs" is selected, create a br bug for each critical and important finding:
+After each Linear issue creation, refresh the local cache through `cape tracker`. If the finding is
+under an existing epic, create it as a sub-issue and refresh the parent epic:
 
 ```bash
-br create --type bug --priority {severity} --title "{file}: {short_description}"
-cape br validate <bug-id>
+cape tracker cache-epic '<linear-epic-json-with-children>'
 ```
 
-Map severity: critical → 1, important → 2. Include the file path, line numbers, and suggestion in
-the bug description. Skip suggestions — they don't warrant tracking.
+If the finding is standalone, create or identify the appropriate parent issue first so cache reads
+can list it. Skip suggestions unless the user explicitly asks to track cleanup.
+
+For others' PRs, do not track findings; deliver the report and stop.
 
 </the_process>
+
+<skill_references>
+
+## Load `cape:tracker` with the Skill tool when:
+
+- The user opts into tracking review findings as Linear issues
+
+</skill_references>
 
 <examples>
 
 <example>
-<scenario>Self-review before committing, graph finds blast radius</scenario>
+<scenario>Self-review finds a breaking behavior change</scenario>
 
-User: "review my changes"
+**Wrong:** Fix the bug during review and blur review with implementation.
 
-1. Scope: branch diff — 3 files changed
-2. Graph update, review context shows `parseConfig()` in `config.ts` has 8 callers
-3. Diff shows `parseConfig()` now throws on invalid input (previously returned null)
-4. Review flags: callers expect null return, not exceptions → critical
-
-```
-## Review: branch diff (3 files, 12 in blast radius)
-
-**Verdict:** Needs changes
-**Risk:** High
-
-### Findings
-
-#### src/config.ts
-
-**[Critical]** L42-48: parseConfig() now throws on invalid input
-Suggestion: Return a Result type or keep null return — 8 callers expect null
-Impact: 8 callers across 5 files, 2 tests
-
-### Test coverage gaps
-
-- validateSchema in src/config.ts — no tests, 3 callers
-
-### Summary
-
-1 critical, 0 important, 0 suggestions
-```
-
-User chooses "Track as bugs" → br bug created for the breaking change. </example>
+**Right:** Report the critical finding with file-line evidence. If the user chooses tracking, create
+a Linear issue for that finding and refresh the tracker cache. </example>
 
 <example>
-<scenario>Reviewing someone's PR with clean code</scenario>
+<scenario>Reviewing someone else's PR</scenario>
 
-User: "review PR #47"
+**Wrong:** Create local follow-up issues without owning that workflow.
 
-1. Scope: PR diff — 2 files, adding a utility function and its test
-2. Graph shows new function, no callers yet (new code), test exists
-3. No issues found
-
-```
-## Review: PR #47 (2 files, 0 in blast radius)
-
-Passes review. No issues found.
-
-2 files reviewed, 0 in blast radius. All changed functions have test coverage.
-```
-
-User gets "Done" as the only follow-up option. </example>
-
-<example>
-<scenario>Non-code repo, graceful degradation</scenario>
-
-User: "review my changes" in a markdown/config-only repo
-
-1. Scope: branch diff — 5 files (3 markdown, 2 JSON)
-2. Graph update returns 0 nodes — no parseable code
-3. Fall back to diff-based review without structural context
-
-```
-## Review: branch diff (5 files)
-
-**Verdict:** Passes review
-**Risk:** Low
-**Graph:** No parseable code — structural analysis unavailable
-
-### Findings
-
-#### config/settings.json
-
-**[Suggestion]** L12: `timeout` set to 0 — effectively disables timeouts
-```
-
-Graph absence doesn't block the review — it just limits the analysis to what's visible in the diff.
-</example>
-
-<example>
-<scenario>Large change set, surgical review depth</scenario>
-
-User: "review staged" — 14 files across a refactor.
-
-Graph shows 3 high-impact files (many dependents), rest are leaf changes. Deep review on high-impact
-files, spot checks on the rest. Output uses multiple `#### file_path` sections under Findings, each
-with its own severity-tagged items. Same format as example 1, repeated per file. </example>
+**Right:** Deliver the verdict-first report and stop. </example>
 
 </examples>
 
 <key_principles>
 
-- **Impact-weighted severity** — a bug in an isolated helper is less critical than the same bug in a
-  function with 10 callers
-- **Graceful degradation** — if the graph is unavailable, fall back to diff-based review. The skill
-  still works, it just loses structural context.
+- **Review is evidence, not edits** -- findings need file-line proof
+- **Severity follows impact** -- callers, public APIs, and security determine urgency
+- **Tracking is opt-in** -- only user-approved findings become Linear issues
 
 </key_principles>

@@ -1,31 +1,28 @@
 ---
 name: execute-plan
 description: >
-  Builds code from a br epic, one task at a time. The counterpart to cape:write-plan -- write-plan
-  creates the epic, this skill implements it. TRIGGER: any user intent to make forward progress on
-  planned work. Common signals: "continue", "next task", "resume", "let's go", "work on the plan", a
-  bare "Continue.", br task IDs like br-7.3, or transitioning after planning is complete. Picks up
-  from br state automatically -- never asks where you left off. Implements one task, reflects on
-  learnings, creates the informed next task, then stops for user review. NOT for: initial planning
-  (cape:brainstorm, cape:write-plan), bug investigation, status queries, or git operations.
+  Build from a Linear tracker epic, one task at a time. The counterpart to cape:write-plan:
+  write-plan creates the epic and first sub-issue, execute-plan implements it. Triggers on:
+  "continue", "next task", "resume", "let's go", "work on the plan", a Linear issue ID, or
+  transitioning after planning is complete. Uses the local tracker cache for orientation and
+  refreshes that cache after every Linear write.
 ---
 
-<skill_overview> The companion to `cape:write-plan`. Write-plan creates an epic with one first task.
-This skill picks up that task, completes it, figures out what comes next based on what was learned,
-then hands control back to the user before continuing.
+<skill_overview> Implement one tracker task, verify it, close it in Linear, create or identify the
+next task, refresh the cache, and stop for review.
 
-The rhythm: load epic context, do one task, reflect on what changed, create the next task, stop.
-</skill_overview>
+Core contract: one task per invocation in HITL mode; all fine-grained plans and reflections stay in
+session, not on the Linear board. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM -- The rhythm (one task, reflect, stop) is non-negotiable.
-Everything else -- how you implement, what tools you reach for, how you structure the next task --
-adapts to context. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM -- The one-task loop, TDD requirement, verification before close,
+and cache refresh after writes are fixed. Implementation tactics adapt to the task.
+</rigidity_level>
 
 <when_to_use>
 
-- A br epic exists with ready or in-progress tasks
+- A tracker epic exists with ready or in-progress tasks
 - User wants to implement the next task in a plan
-- Resuming work after clearing context
+- Resuming planned work after context was cleared
 
 **Don't use for:**
 
@@ -37,420 +34,210 @@ adapts to context. </rigidity_level>
 
 <critical_rules>
 
-1. **STOP after each task** — present the checkpoint and wait for the user to continue. Do not start
-   the next task without user input (unless AFK mode). This is the most important rule.
-2. **Epic requirements are immutable** — when blocked, research or ask; never weaken
-3. **Re-read the epic before changing course** — rejected approaches were rejected for reasons
-4. **Complete all substeps before closing a task** — partially done is not done
-5. **Orient from br state** — never ask "where did we leave off"
-6. **Test before code** — load `cape:test-driven-development` before writing any production code
-7. **Task close exits in exactly one state** — (a) ready task exists → checkpoint to it; (b) no
-   ready task → create next task → checkpoint; (c) no more work → finish-epic. No other exit is
-   valid.
+1. **Orient from cache** -- use `hooks/context/tracker.json` and active worktree state for ready
+   tasks; do not use network reads for orientation
+2. **Mark status through Linear MCP** -- update status in Linear first, then run `cape tracker`
+3. **Test before code** -- load `cape:test-driven-development` before production edits
+4. **Keep expansion in session** -- no expanded-plan, divergence, close-check, or outcome ceremony
+   is written to Linear
+5. **Close only after verification** -- tests and task success criteria must pass first
+6. **Stop after each task in HITL mode** -- present checkpoint and wait for user input
 
 </critical_rules>
 
 <the_process>
 
-## Step 1: Orient
+## Step 1: Orient From Tracker Cache
 
-Check br state to figure out where you are. Never ask the user.
+Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`:
 
-```bash
-br list --type epic --status open
-br list --status in_progress
-br ready
+```json
+{
+  "version": 1,
+  "timestamp": 0,
+  "epics": {
+    "ABU-15": {
+      "id": "ABU-15",
+      "title": "Cape V2",
+      "status": "In Progress",
+      "tasks": [{ "id": "ABU-56", "title": "Task", "status": "Todo", "stateType": "unstarted" }]
+    }
+  }
+}
 ```
 
-- **Multiple open epics** -- ask the user which epic to work on, then use
-  `br ready --parent <epic-id>`
-- **In-progress task found** -- pick up where it left off (step 2)
-- **Ready tasks available** -- load epic context, then execute the next one (step 2)
-- **All tasks closed, epic open** -- check if success criteria are met (step 4)
-- **No open epic** -- nothing to execute; suggest `cape:brainstorm` then `cape:write-plan`
+Pick work in this order:
 
-Load the epic once at the start of each invocation. Its requirements, success criteria, and
-anti-patterns are the guardrails for every decision you make during execution.
+- In-progress task under the active epic
+- Ready task with `stateType` of `unstarted` or a status such as `Todo`
+- If no ready tasks remain and success criteria appear met, route to `cape:finish-epic`
+- If multiple epics are active, ask the user which one to continue
 
-```bash
-br show <epic-id>
-```
-
-## Step 1a: Pre-flight plan scan
-
-After loading the epic and before expanding or starting task 1, scan the epic's task list once. This
-is a lightweight SOFT check, not a hard gate: surface issues before building, but do not block
-progress unless the user decides to adjust the plan.
-
-Check that:
-
-- Each task has a concrete goal and verifiable criteria.
-- The sequence has no obvious missing dependency or circular order.
-- No task is obviously oversized for a single implementation cycle.
-
-If you find issues, report them briefly with the affected task IDs and ask whether to adjust before
-continuing. If the scan is clean, proceed without ceremony.
+If the cache is missing, corrupt, or stale for the work the user requested, use `cape:tracker` to
+refresh it from the current MCP result available in the session. Do not invent task state.
 
 ---
 
-## Step 2: Execute
+## Step 2: Expand In Session
 
-Read the task's details:
+Load the epic contract and task details from the active session context. If the detailed Linear
+description is not present in the session, use the cache to identify the task and ask the user to
+provide the current task description or re-run the chain step that created it.
+
+Before coding, build an in-session implementation breakdown:
+
+- Task goal and success criteria
+- Relevant epic requirements and anti-patterns
+- Files and patterns verified by `cape:codebase-investigator` or manual search
+- TDD slices, each with one behavior and one verification command
+- Risks, assumptions, and explicit out-of-scope items
+
+Do not persist this expanded breakdown to Linear. If the task is too large, stop and recommend a
+split; create split tasks only after the user agrees.
+
+Then update Linear status to in-progress using MCP Linear `save_issue` or the available state-update
+operation. Immediately refresh the local cache:
 
 ```bash
-br show <task-id>
+cape tracker cache-status <task-id> "In Progress" started
 ```
 
-Signal that a workflow is active (gates internal skills for direct invocation):
+Signal workflow state:
 
 ```bash
 cape state set workflowActive
 ```
 
-If the task's design field does not already contain an `## Expanded plan` section, ground the task
-in codebase reality before writing any code. Skip this if the section already exists.
+Load `cape:test-driven-development` with the Skill tool before production edits.
 
-Load the task and its parent epic:
+---
 
-```bash
-br show <task-id>
-br show <epic-id>
-```
+## Step 3: Implement And Verify
 
-Check whether the task is already expanded:
+Execute the in-session breakdown one slice at a time:
 
-```bash
-cape br expanded-check <task-id>
-```
+1. Write the smallest failing test for the current behavior.
+2. Confirm the failure is for the expected reason.
+3. Implement the minimum production change.
+4. Re-run the focused test and affected broader suite.
+5. Clean up only when it clearly improves the result.
+6. Run the slice verification command before moving on.
 
-If `hasExpandedPlan` is `true`, skip expansion. If the command fails (non-zero exit), stop and
-surface the error; do not fall back to manually parsing the design field.
+When obstacles appear, re-read the epic contract from the session. If a requirement or anti-pattern
+forces a change of approach, explain the divergence in the conversation and continue only when the
+new approach still satisfies the contract. Keep the divergence in session.
 
-Extract from the task:
+Before closing, run the chain's own verification:
 
-- **Goal** — what this task delivers
-- **Implementation hints** — any file paths, patterns, or approaches mentioned
-- **Success criteria** — what "done" looks like
+- All task success criteria satisfied with evidence
+- Relevant tests pass
+- `cape check` or the repository's expected verification command passes
+- Critical code-review findings are addressed
 
-Extract from the epic:
+Dispatch `cape:code-reviewer` for non-trivial changes. Dispatch `cape:fact-checker` when the
+implementation depends on claims about codebase structure or APIs.
 
-- **Requirements** — immutable guardrails
-- **Anti-patterns** — what must not happen
-- **Architecture** — where components live
-- **Durable decisions** — settled choices that constrain implementation
+---
 
-Dispatch `cape:codebase-investigator` in default mode (model: haiku) to verify codebase reality.
-Fall back to Grep/Glob/Read if agent dispatch is unavailable. Find:
+## Step 4: Close Task And Plan Next
 
-- **Where the change lands** — exact files and line ranges that need modification
-- **Patterns to follow** — 1-2 similar implementations in real files
-- **Adjacent code** — callers, importers, and tests affected by the change
-- **Reusable code** — existing helpers, utilities, types, or fixtures to use
-
-Only reference files and patterns verified during this investigation.
-
-Produce a step-by-step plan where each step is exactly one TDD cycle: one behavior, one failing
-test, one implementation pass. Calibrate granularity to task complexity:
-
-- **Simple task** (single file, clear pattern): 2-4 steps
-- **Medium task** (multiple files or a new pattern): 4-7 steps
-- **Complex task** (cross-cutting or new architecture): 7-10 steps
-
-If the task would need more than 10 steps, append a `## Split recommendation` section to the task's
-design field listing natural split points and recommended subtask titles, then stop for user review
-instead of producing an expanded plan.
-
-Each step must include:
-
-```markdown
-### Step N: [What this step delivers -- one testable behavior]
-
-**Pattern:** [file:line -- existing implementation to follow]
-
-**Changes:**
-
-- `path/to/file.ts:L23-30` -- [what to change and why]
-- `path/to/new-file.ts` (new) -- [what it contains, following pattern from X]
-
-**Verify:** `[exact shell command to run]`
-```
-
-- **Step title** names a single testable behavior. TDD designs the test; the title states the
-  behavior gap.
-- **Pattern** references a real file the step should mirror. Omit if no relevant pattern exists.
-- **Changes** reference real files at real line numbers. For new files, follow existing naming
-  conventions found during investigation.
-- **Verify** is an exact shell command. Not "run tests" — use a runnable command.
-- Do not include test descriptions in steps. Test design belongs to implementation-time TDD.
-
-Append the expanded plan to the task with the stable design-field heading:
+Close the task in Linear through MCP. Then update the local cache:
 
 ```bash
-cat <<'EOF' | cape br design <task-id> "Expanded plan (expand-task)"
-### Investigation findings
-
-**Files to modify:**
-- `path/to/file.ts` -- [role in this change]
-
-**Patterns to follow:**
-- `path/to/similar.ts:L10-45` -- [what it demonstrates]
-
-**Reusable code:**
-- `path/to/utils.ts:functionName()` -- [what it does]
-
-**Blast radius:**
-- [Callers/importers/tests affected by this change]
-
-### Steps
-
-[Steps from the expansion]
-
-### Final verification
-`cape check`
-EOF
-```
-
-After expansion, re-read the task (`br show <task-id>`). If the design field contains a
-`## Split recommendation` section instead of an expanded plan, the task is too large. Close it with
-reason "split per expanded-plan recommendation", create the recommended subtasks, and stop for user
-review.
-
-Once an expanded plan exists, mark the task in-progress:
-
-```bash
-cape br update <task-id> --status in_progress
-```
-
-Load `cape:test-driven-development` with the Skill tool before writing any production code.
-
-Execute the expanded plan's steps as a sequential loop. Process one step at a time — do not read
-ahead to later steps.
-
-**For each step in the expanded plan:**
-
-**Checkpoint gate:** Before starting a step, read `.beads/<epic-id>/verify.json`. If the key
-`step-N` (e.g., `step-1`, `step-2`) records a SHA that matches `git rev-parse HEAD`, skip the entire
-cycle and report: "Step N already passed at HEAD <short-sha> — skipping." If the file is missing or
-malformed, proceed normally.
-
-1. **Scope** — Read only the current step's title and **Changes** field. These define the single
-   behavior for this iteration. Ignore all subsequent steps.
-2. **Write the next failing test** — Add the smallest test that captures the behavior described in
-   the current step's title. Run it. Confirm it fails for the right reason (behavior missing or
-   wrong, not import/syntax problems).
-3. **Make it pass with the minimum change** — Implement only what the current test needs from the
-   files described in the step's **Changes**. Re-run the test, then the broader affected suite as
-   needed.
-4. **Clean up if it clearly helps** — Improve names, structure, or duplication only when the code is
-   clearer for it. Re-run tests after any cleanup.
-5. **Gate** — Run the current step's **Verify** command. It must pass before you move to the next
-   step. If it fails, fix within this step — do not move on.
-6. **Record checkpoint** — After the gate passes, write the current HEAD SHA to
-   `.beads/<epic-id>/verify.json` under key `step-N`. Read the existing file (or start from `{}`),
-   set the key, and write it back. Create the directory with `mkdir -p ".beads/<epic-id>"` if
-   needed.
-
-Do not pre-read upcoming steps. Do not write tests for step N+1 during step N. Each loop iteration
-is self-contained: checkpoint gate, scope, failing test, minimal change, optional cleanup, gate,
-record.
-
-If the code you need to modify is tangled — hard to add the new behavior without restructuring first
-— separate that structural cleanup from the behavior change. Commit the structural change
-separately, then return here. This keeps structural and behavioral changes in distinct commits.
-
-When you hit obstacles, re-read the epic before changing course. The "Approaches considered" section
-documents what was already rejected and why. Those reasons usually still apply when things get hard.
-If you genuinely need to switch approaches, explain why the original reasoning no longer holds and
-get user confirmation. Then append a divergence log entry to the task's design field via
-`cape br design <task-id> "Divergence"`.
-
-Before closing, append an Outcome section to the task's design field via
-`cape br design <task-id> "Outcome"`.
-
-Close the task only when all substeps are done. Run `cape br close-check <task-id>` first to verify
-substasks are complete and checks pass, then close:
-
-```bash
-cape br close-check <task-id>
-cape br close <task-id>
+cape tracker cache-status <task-id> Done completed
 cape state clear workflowActive
 ```
 
----
+Reflect in session:
 
-## Step 3: Reflect and plan
+- What was built
+- What changed from the original assumption
+- Whether the epic approach still holds
+- What the next smallest vertical slice should be
 
-First, check if a ready task already exists:
-
-```bash
-br ready --parent <epic-id>
-```
-
-- **Ready task exists** — skip task creation; go to Step 4 and checkpoint to that task
-- **No ready tasks** — run reflection below and decide: create a task or initiate finish-epic
-
-After closing the task, review and run a brief inline self-check before planning the next step.
-
-**Review implementation:** Dispatch `cape:code-reviewer` (model: sonnet) to review the completed
-task against the epic's requirements and anti-patterns. Address any critical findings before
-creating the next task.
-
-**Inline scope/assumption self-check:** For non-trivial tasks, audit what was completed against the
-task goal and epic contract. Check for scope creep, unrequested behavior, over-engineering,
-unverified assumptions, and deviations from anti-patterns. Resolve concrete issues before creating
-the next task; record unresolved questions in the reflection. Keep this brief for straightforward
-single-file changes.
-
-**Verify claims:** Optionally dispatch `cape:fact-checker` (model: sonnet) if the task made specific
-claims about codebase structure, API behavior, or dependencies that should be confirmed before
-proceeding.
-
-Then step back and think about what happened.
-
-- What did this task reveal about the problem?
-- Did you discover existing code, new constraints, or dead ends?
-- Is the epic's approach still sound?
-- What's the natural next step?
-
-Re-read the epic to stay anchored:
+If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
+a Linear sub-issue through MCP, then refresh the epic cache from an MCP `get_issue` result:
 
 ```bash
-br show <epic-id>
+cape tracker cache-epic '<linear-epic-json-with-children>'
 ```
 
-If a planned task is now redundant, close it with a reason. If a new task is needed, create one that
-reflects what you actually learned -- not what you assumed at the start:
-
-```bash
-cape br create "Task N: [Informed next step]" \
-  --type task \
-  --parent <epic-id> \
-  --priority <match-epic> \
-  --description "$(cat <<'EOF'
-## Goal
-[What this task delivers, informed by previous task]
-
-## Context
-[Key discoveries from the completed task]
-
-## Implementation
-[Steps based on current reality]
-
-## Success criteria
-- [ ] [Measurable outcomes]
-- [ ] Tests passing
-EOF
-)"
-cape br validate <task-id>
-```
+If no more work remains, load `cape:finish-epic`.
 
 ---
 
-## STOP — Step 4: Checkpoint
+## Step 5: Checkpoint And Stop
 
-**You MUST stop here and wait for user input before continuing (HITL mode).**
+Present:
 
-Present a summary and stop. The user needs the chance to review your work, adjust the next task, and
-clear context before continuing.
+```text
+Checkpoint - <task-id> complete
 
-```
-## Checkpoint -- <task-id> complete
-
-**Done:** [What was implemented and learned]
-**Next:** <next-id>: [Title and brief description]
-**Progress:** [X/Y epic success criteria met]
-
-Clear context with `/clear` before picking up the next task — br state has everything needed to
-orient. Then continue with `cape:execute-plan`.
+Done: <what changed and what was verified>
+Next: <next-id or finish-epic>
+Verification: <commands and results>
 ```
 
-Context resets with structured handoffs (br state, expanded plans) produce better results than
-growing context. The next invocation orients from br state alone — no conversation history needed.
-
-Check the task's `## Execution mode` field (set by write-plan). **HITL (human-in-the-loop):**
-present checkpoint and stop as normal. **AFK (autonomous):** skip the stop — load `cape:commit`,
-create the next task, and continue into it without waiting for user input. If no execution mode is
-set, default to HITL.
-
-Load `cape:commit` with the Skill tool to commit the completed task, then stop (HITL) or continue
-(AFK).
-
-When all tasks are closed and `br ready --parent <epic-id>` returns empty:
-
-```
-## Checkpoint -- all tasks complete
-
-**Done:** [What was implemented across all tasks]
-**Progress:** All [N] success criteria appear met.
-
-Committing and running finish-epic to verify and close.
-```
-
-Then load `cape:commit` with the Skill tool, followed by `cape:finish-epic` with the Skill tool. Do
-not tell the user to run these — execute them yourself.
+In HITL mode, stop and wait for user input. In AFK mode, load `cape:commit`, then continue only if
+the next task is already clear and within the same approved scope.
 
 </the_process>
+
+<agent_references>
+
+## Dispatch `cape:codebase-investigator` when:
+
+- The task references files, APIs, or patterns that need verification
+- A failure suggests the original plan misunderstood the codebase
+
+## Dispatch `cape:code-reviewer` when:
+
+- A task changes behavior across modules or public interfaces
+- You need an implementation review against the epic contract
+
+## Dispatch `cape:fact-checker` when:
+
+- The plan or outcome depends on claims about codebase structure, API behavior, or dependencies
+
+</agent_references>
+
+<skill_references>
+
+## Load `cape:test-driven-development` with the Skill tool when:
+
+- Step 2 completes and before any production code is written
+
+## Load `cape:tracker` with the Skill tool when:
+
+- You need to create, update, close, list ready work, or refresh the cache
+
+</skill_references>
 
 <examples>
 
 <example>
-<scenario>First task reveals the second task is unnecessary</scenario>
+<scenario>First task reveals the next planned slice is unnecessary</scenario>
 
-Epic has two planned tasks: br-3 "add config parser" and br-4 "add config validation." While
-implementing br-3, you discover the parsing library already validates schemas.
+**Wrong:** Create and implement the next task anyway because it sounded plausible during planning.
 
-**Wrong:** Implement br-4 anyway because it's in the plan. Duplicates built-in validation.
-
-**Right:** Close br-4 with reason "library handles validation natively," then create a task for
-integration testing instead. Plans adapt to reality. </example>
+**Right:** Explain the discovery in session, close the completed task in Linear, refresh the cache,
+and create the next sub-issue that reflects current reality. </example>
 
 <example>
-<scenario>Obstacle tempts a shortcut the epic forbids</scenario>
+<scenario>Expanded plan would take more than one implementation cycle</scenario>
 
-Epic anti-pattern says "NO mocking the database in integration tests." Setting up a test database
-turns out to be harder than expected.
+**Wrong:** Write a huge expanded plan into the issue description and try to complete it all.
 
-**Wrong:** Mock the database "just for now" with a TODO to fix later. The TODO never gets addressed,
-and the tests don't actually test integration.
-
-**Right:** Research how the project sets up test databases. Check for existing test fixtures or
-Docker configs. If truly stuck, ask the user -- don't silently violate the anti-pattern. </example>
-
-<example>
-<scenario>Skipping the checkpoint to maintain momentum</scenario>
-
-Completed br-3, context is fresh, br-4 looks straightforward.
-
-**Wrong:** Continue into br-4 without stopping. If br-4 hits complexity, context is now exhausted
-with two tasks' worth of state, and the user hasn't reviewed br-3.
-
-**Right:** Present the checkpoint. Context reloads are cheap. Mistakes from skipped review are not.
-</example>
+**Right:** Keep the breakdown in session, recommend a split, and wait for user approval before
+creating smaller Linear sub-issues. </example>
 
 </examples>
 
-<agent_references>
-
-## `cape:code-reviewer` protocol (model: sonnet):
-
-**Pass:** epic ID (`br show <epic-id>` for requirements, anti-patterns, success criteria) and git
-diff for this task's changes. Do NOT pass the task's expanded plan or implementation notes — the
-reviewer judges code against the contract, not the implementation intent. **Expect back:** verdict
-(pass/fail) with categorized findings (Critical/Important/Suggestion).
-
-## `cape:fact-checker` protocol (model: sonnet):
-
-Dispatch `cape:fact-checker` (model: sonnet) when verifying that assumptions from the expanded plan
-still hold after implementation. **Pass:** specific claims to verify (file paths, function
-signatures, import relationships). **Expect back:** per-claim verdict: Confirmed/Refuted/Partially
-correct/Unverifiable with file:line evidence.
-
-</agent_references>
-
 <key_principles>
 
-- **Learn forward** -- each task's next step is created from what was learned, not what was assumed
-- **Obstacles don't justify shortcuts** -- re-read the epic when blocked, research the problem, ask
-  the user
+- **Learn forward** -- each next task is based on what execution revealed
+- **Cache follows writes** -- Linear is written first; local cache is refreshed immediately after
+- **Session detail stays session-local** -- the board tracks issues, not implementation transcripts
+- **Verification replaces ceremony** -- tests and success criteria decide closure
 
 </key_principles>

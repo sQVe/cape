@@ -331,14 +331,14 @@ describe('post-tool-use AskUserQuestion with non-array questions', () => {
   });
 });
 
-describe('user-prompt-submit beads detection', () => {
-  it('detects beads keyword and includes cape:beads in additionalContext', () => {
+describe('user-prompt-submit tracker detection', () => {
+  it('detects issue-tracker wording and includes cape:tracker in additionalContext', () => {
     const stdin = JSON.stringify({ prompt: 'show me br list' });
     const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:beads');
+    expect(parsed.additionalContext).toContain('cape:tracker');
   });
 });
 
@@ -371,7 +371,7 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:beads');
+    expect(parsed.additionalContext).toContain('cape:tracker');
     expect(parsed.additionalContext).toContain('cape:fix-bug');
   });
 

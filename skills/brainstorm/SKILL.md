@@ -8,12 +8,12 @@ description:
   models, API patterns). Do NOT use for bug fixes, straightforward code cleanup, executing existing
   plans, or tasks where the implementation path is already clear. This skill researches the
   codebase, asks Socratic questions, generates competing designs under different constraints, and
-  produces a design summary for `cape:write-plan` to formalize into a br epic.
+  produces a design summary for `cape:write-plan` to formalize into a Linear tracker epic.
 ---
 
 <skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
-into a `br` epic. Research the codebase, ask Socratic questions, generate competing designs under
-different constraints, and produce a self-contained design summary.
+into a Linear tracker epic. Research the codebase, ask Socratic questions, generate competing
+designs under different constraints, and produce a self-contained design summary.
 
 Core contract: no design gets locked without research, constraint-driven design exploration, and
 iterative user discussion at every stage. </skill_overview>
@@ -24,8 +24,8 @@ research before proposing, checkpoint after each step, never advance without use
 
 <mode> CONVERSATIONAL — Brainstorm is a discussion, not a plan artifact. Never enter plan mode. If
 plan mode is active when brainstorm is invoked, exit it immediately and proceed conversationally.
-The design summary lives in conversation context; `write-plan` formalizes it into a br epic later.
-</mode>
+The design summary lives in conversation context; `write-plan` formalizes it into a Linear tracker
+epic later. </mode>
 
 <when_to_use>
 
@@ -70,7 +70,7 @@ the next step until the user responds. The user may discuss, redirect, ask follo
 
 **Check for ready work first:**
 
-Run `br ready` before doing anything else. If it returns tasks:
+Read `hooks/context/tracker.json` before doing anything else. If it contains ready tasks:
 
 1. Present the list: "You have N ready task(s): [list]. Did you mean to continue with execute-plan
    instead of starting a new brainstorm?"
@@ -78,7 +78,8 @@ Run `br ready` before doing anything else. If it returns tasks:
    - If they redirect to execute-plan: load `cape:execute-plan` with the Skill tool and stop
    - If they confirm brainstorm intent: proceed with research below
 
-Skip this step only if `br ready` returns no tasks.
+Skip this step only if the tracker cache contains no ready tasks. If the cache is missing or
+corrupt, treat it as empty and continue brainstorming.
 
 **Gather context:**
 
@@ -304,7 +305,8 @@ Present the final design summary only after fact-checking is complete.
 **Stop and hand off:**
 
 ```
-Design summary complete (fact-checked). Next step: formalize into a br epic with `cape:write-plan`.
+Design summary complete (fact-checked). Next step: formalize into a Linear tracker epic with
+`cape:write-plan`.
 ```
 
 </the_process>

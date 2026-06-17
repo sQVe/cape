@@ -7,6 +7,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- CLI: added `cape tracker` cache-write commands for Linear MCP results.
+- Skills and commands: added tracker reference skill and slash command wrapper.
+
 ### Changed
 
 - Agents: consolidated to 5; merged bug-tracer, test-auditor, and notebox-researcher into
@@ -18,11 +23,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   removed the dead standalone expansion gate.
 - Skills: folded challenge into brainstorm and task-refinement into write-plan.
 - Write-plan: added proportional Global Constraints and per-task Interfaces for multi-task epics.
+- Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
+  tracker protocol instead of local issue-tracking commands.
 
 ### Removed
 
 - Skills and commands: analyze-tests, design-an-interface, explain, find-test-gaps, refactor.
 - Skills and commands: challenge and task-refinement.
+- Skills and commands: replaced beads with tracker.
 
 ## [1.3.0] - 2026-03-26
 

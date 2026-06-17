@@ -1,7 +1,8 @@
 # Epic template
 
-Use this template when creating `br` epics during plan writing. Every section is required. Populate
-from research findings, user decisions, and design validation captured during the brainstorm.
+Use this template when creating Linear tracker epics during plan writing. Every section is required.
+Populate from research findings, user decisions, and design validation captured during the
+brainstorm.
 
 ## Template
 
@@ -103,11 +104,11 @@ from research findings, user decisions, and design validation captured during th
 
 ## Worked example
 
-```bash
-br create "Epic: OAuth authentication" \
-  --type epic \
-  --priority 2 \
-  --description "## Requirements (IMMUTABLE)
+```text
+Linear epic title: Epic: OAuth authentication
+Linear epic description:
+
+## Requirements (IMMUTABLE)
 - Users authenticate via Google OAuth2
 - Tokens stored in httpOnly cookies (NOT localStorage)
 - Session expires after 24h inactivity
@@ -209,5 +210,5 @@ Users must create accounts manually. Manual signup has 40% abandonment. Google O
 ### Open concerns raised
 - Google OAuth down? -> Graceful error message, no fallback auth
 - Account linking later? -> Deferred to future epic
-- Token refresh behavior? -> Default silent, configurable"
+- Token refresh behavior? -> Default silent, configurable
 ```
