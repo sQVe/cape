@@ -25,12 +25,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Write-plan: added proportional Global Constraints and per-task Interfaces for multi-task epics.
 - Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
   tracker protocol instead of local issue-tracking commands.
+- Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
+  cache.
 
 ### Removed
 
 - Skills and commands: analyze-tests, design-an-interface, explain, find-test-gaps, refactor.
 - Skills and commands: challenge and task-refinement.
 - Skills and commands: replaced beads with tracker.
+- CLI and services: removed the br/beads command surface and validation service.
+- Hooks: removed br-show-log capture/cleanup and raw br-to-cape-br deny redirects.
 
 ## [1.3.0] - 2026-03-26
 
