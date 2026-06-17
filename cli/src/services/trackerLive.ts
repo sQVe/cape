@@ -87,6 +87,21 @@ const toEpic = (value: unknown): TrackerEpic | null => {
   };
 };
 
+const toTasks = (value: unknown): readonly TrackerTask[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((issue: unknown) => {
+    if (typeof issue !== 'object' || issue == null || Array.isArray(issue)) {
+      return [];
+    }
+
+    const task = toTask(issue);
+    return task == null ? [] : [task];
+  });
+};
+
 const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: number): TrackerCache => ({
   version: 1,
   timestamp,
@@ -95,6 +110,28 @@ const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: num
     [epic.id]: epic,
   },
 });
+
+const mergeTasks = (
+  cache: TrackerCache | null,
+  epicId: string,
+  tasks: readonly TrackerTask[],
+  timestamp: number,
+): TrackerCache => {
+  const existing = cache?.epics[epicId];
+  return {
+    version: 1,
+    timestamp,
+    epics: {
+      ...cache?.epics,
+      [epicId]: {
+        id: epicId,
+        title: existing?.title ?? '',
+        status: existing?.status ?? '',
+        tasks,
+      },
+    },
+  };
+};
 
 const unsupportedWrite = () => Effect.fail(new Error('Tracker writes are not implemented yet'));
 
@@ -123,7 +160,14 @@ export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
         yield* dependencies.writeCache(mergeEpic(cache, epic, dependencies.now()));
         return epic;
       }),
-    listReady: () => Effect.succeed([]),
+    listReady: (epicId) =>
+      Effect.gen(function* () {
+        const raw = yield* dependencies.callLinear('listReady', epicId);
+        const tasks = toTasks(raw);
+        const cache = yield* dependencies.readCache();
+        yield* dependencies.writeCache(mergeTasks(cache, epicId, tasks, dependencies.now()));
+        return tasks;
+      }),
     updateStatus: unsupportedWrite,
     close: unsupportedWrite,
   });
