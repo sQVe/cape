@@ -139,6 +139,9 @@ Verification: <commands passed>
 Epic closed in Linear and tracker cache refreshed.
 ```
 
+Then load `cape:review` for the review-before-pr gate. Do not load `cape:pr` until review completes
+and the user explicitly asks to create the PR.
+
 </the_process>
 
 <agent_references>
@@ -162,6 +165,10 @@ Epic closed in Linear and tracker cache refreshed.
 ## Load `cape:commit` with the Skill tool when:
 
 - Verified implementation changes remain uncommitted before closure
+
+## Load `cape:review` with the Skill tool when:
+
+- The epic is closed and the branch is ready for the review-before-pr gate
 
 </skill_references>
 

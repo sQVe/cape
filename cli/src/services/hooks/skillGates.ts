@@ -22,6 +22,11 @@ export const denyWith = (reason: string) => ({
   },
 });
 
+const contextWith = (additionalContext: string) => ({ additionalContext });
+
+const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
+const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
+
 export const preToolUseBash = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -67,6 +72,7 @@ const gatedSkills = new Set([
   'execute-plan',
   'finish-epic',
   'fix-bug',
+  'pr',
   'test-driven-development',
 ]);
 
@@ -83,7 +89,7 @@ const gateExecutePlan = () =>
       return null;
     }
     if (Object.keys(cache.epics).length === 0) {
-      return denyWith(
+      return contextWith(
         'No open epic exists. Load cape:brainstorm to explore the problem, then cape:write-plan to create an epic.',
       );
     }
@@ -91,7 +97,7 @@ const gateExecutePlan = () =>
     const activeEpic = flowPhase == null ? null : cache.epics[flowPhase.issueId];
     const readyTask = activeEpic?.tasks.find(isReadyTask);
     if (readyTask == null) {
-      return denyWith(
+      return contextWith(
         'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
       );
     }
@@ -124,7 +130,7 @@ const gateFinishEpic = (targetEpicId: string | null) =>
       }
       const openCount = epic.tasks.filter((task) => !isDoneTask(task)).length;
       if (openCount > 0) {
-        return denyWith(
+        return contextWith(
           `Epic ${epic.id} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
         );
       }
@@ -133,20 +139,52 @@ const gateFinishEpic = (targetEpicId: string | null) =>
   });
 
 const gateFixBug = () =>
-  Effect.succeed({
-    additionalContext:
+  Effect.succeed(
+    contextWith(
       'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
-  });
+    ),
+  );
 
 const gateInternalSkill = () =>
   Effect.gen(function* () {
     const state = yield* readState();
     if (!state.workflowActive) {
-      return denyWith(
+      return contextWith(
         'This skill is internal to cape:execute-plan / cape:fix-bug and cannot be invoked directly. Load cape:execute-plan or cape:fix-bug to drive it.',
       );
     }
     return null;
+  });
+
+const hasReviewBeforePrOverride = (args: string | null) =>
+  args?.includes(HARD_GATE_OVERRIDE) ?? false;
+
+const gatePr = (args: string | null) =>
+  Effect.gen(function* () {
+    const state = yield* readState();
+    const reviewedAt = state.reviewedAt;
+    const missingOrStale = (() => {
+      if (reviewedAt == null || typeof reviewedAt.timestamp !== 'number') {
+        return 'missing';
+      }
+      return Date.now() - reviewedAt.timestamp > REVIEW_BEFORE_PR_TTL_MS ? 'stale' : null;
+    })();
+
+    if (missingOrStale == null) {
+      return null;
+    }
+
+    const baseMessage = missingOrStale === 'stale'
+      ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
+      : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
+    const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
+    const message = `${baseMessage} ${overrideHint}`;
+
+    if (hasReviewBeforePrOverride(args)) {
+      return contextWith(`review-before-pr override accepted: ${message}`);
+    }
+
+    return denyWith(message);
   });
 
 const skillGates: Record<
@@ -156,6 +194,7 @@ const skillGates: Record<
   'execute-plan': () => gateExecutePlan(),
   'finish-epic': (args) => gateFinishEpic(args),
   'fix-bug': () => gateFixBug(),
+  pr: (args) => gatePr(args),
   'test-driven-development': () => gateInternalSkill(),
 };
 

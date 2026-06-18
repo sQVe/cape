@@ -12,8 +12,8 @@ description: >
 missing behavior, make it pass with the simplest change, then decide whether small cleanup would
 improve clarity. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — Test-first and behavior-focused are rigid; test shape, scope, and
-whether cleanup is worthwhile adapt to context. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — Red-before-green and behavior-focused are hard; test shape, scope,
+and whether cleanup is worthwhile adapt to context. </rigidity_level>
 
 <when_to_use>
 
@@ -33,12 +33,16 @@ Don't use for:
 
 <critical_rules>
 
-1. **Test before production code.** For the next behavior or bug, write or update the test first and
-   watch it fail for the behavior you intend to add or fix.
+1. **HARD: red before green.** For the next behavior or bug, write or update the test first and
+   watch it fail for the behavior you intend to add or fix before editing production code. Do not
+   substitute reasoning, snapshots, type errors, or after-the-fact tests for the failing test.
 2. **Keep each change behavior-sized.** Drive one behavior at a time, add only the code needed for
    the current test, and avoid batching future behaviors into the same pass.
 3. **Cleanup is optional, not ceremonial.** Once the behavior passes, improve names or structure
    only when it clearly helps; skip cleanup when no useful simplification is apparent.
+4. **Override is explicit only.** The hard-gate escape phrase is `CAPE_HARD_GATE_OVERRIDE`; use it
+   only when the user explicitly accepts skipping red-before-green for a stated reason, and report
+   that the TDD contract was overridden.
 
 </critical_rules>
 

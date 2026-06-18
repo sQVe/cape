@@ -213,6 +213,11 @@ const stateFile = (entries: Record<string, unknown>) => ({
   '/test/hooks/context/state.json': JSON.stringify(entries),
 });
 
+const reviewedAtEntry = (timestamp = Date.now()) => ({
+  scope: 'branch',
+  timestamp,
+});
+
 const flowPhaseFile = (phase: string) =>
   stateFile({ flowPhase: flowPhaseEntry(phase) });
 
@@ -987,6 +992,44 @@ describe('preToolUseSkill', () => {
     },
   );
 
+  it('denies pr when review has not stamped state', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'review-before-pr');
+    expectDeny(result, 'CAPE_HARD_GATE_OVERRIDE');
+  });
+
+  it('denies pr when review stamp is stale', async () => {
+    const staleTimestamp = Date.now() - 2 * 60 * 60 * 1000;
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+      files: stateFile({ reviewedAt: reviewedAtEntry(staleTimestamp) }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'stale');
+  });
+
+  it('allows pr when review stamp is fresh', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+      files: stateFile({ reviewedAt: reviewedAtEntry() }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('downgrades pr review gate to warning when explicit override is present', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr', 'CAPE_HARD_GATE_OVERRIDE'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('review-before-pr override accepted'),
+    });
+  });
+
   it('passes through on invalid JSON', async () => {
     const layer = makeStubHookLayer({ stdin: 'not json' });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
@@ -1009,16 +1052,18 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('denies execute-plan when no open epic exists', async () => {
+  it('adds context for execute-plan when no open epic exists', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
       files: trackerGateFiles({}),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'brainstorm');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('brainstorm'),
+    });
   });
 
-  it('denies execute-plan when epic exists but no ready tasks', async () => {
+  it('adds context for execute-plan when epic exists but no ready tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
       files: trackerGateFiles({
@@ -1026,7 +1071,9 @@ describe('preToolUseSkill', () => {
       }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'ready');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('ready'),
+    });
   });
 
   it('allows execute-plan when epic and ready tasks exist', async () => {
@@ -1040,7 +1087,7 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('denies finish-epic when open tasks remain', async () => {
+  it('adds context for finish-epic when open tasks remain', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic'),
       files: trackerGateFiles({
@@ -1052,7 +1099,9 @@ describe('preToolUseSkill', () => {
       }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'open task');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('open task'),
+    });
   });
 
   it('allows finish-epic when all tasks closed', async () => {
@@ -1088,7 +1137,7 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('denies finish-epic for target epic when it has open tasks', async () => {
+  it('adds context for target epic when it has open tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic', 'cape-target'),
       files: trackerGateFiles(
@@ -1103,7 +1152,9 @@ describe('preToolUseSkill', () => {
       ),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'cape-target');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('cape-target'),
+    });
   });
 
   it('adds diagnosis gate context for fix-bug', async () => {
@@ -1161,12 +1212,14 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('denies test-driven-development when no workflow is active', async () => {
+  it('adds context for test-driven-development when no workflow is active', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:test-driven-development'),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'internal');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('internal'),
+    });
   });
 
   it('allows test-driven-development when workflow is active', async () => {
@@ -1209,7 +1262,7 @@ describe('hook command - PreToolUse wiring', () => {
     );
     const output = console_.output();
     const result = JSON.parse(output);
-    expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
+    expect(result.additionalContext).toContain('brainstorm');
     console_.restore();
   });
 
@@ -1390,13 +1443,12 @@ describe('event logging', () => {
 
   it('logs deny event for preToolUseSkill gate denial', async () => {
     const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({}),
+      stdin: skillStdin('cape:pr'),
     });
     await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.PreToolUse.Skill',
-      expect.stringContaining('brainstorm'),
+      expect.stringContaining('review-before-pr'),
     );
   });
 

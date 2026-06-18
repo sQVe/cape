@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
+- Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
 - Skills and commands: added tracker reference skill and slash command wrapper.
 
@@ -27,6 +29,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   tracker protocol instead of local issue-tracking commands.
 - Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
   cache.
+- Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
+  warnings.
 
 ### Removed
 

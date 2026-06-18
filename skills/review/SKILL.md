@@ -9,15 +9,17 @@ description: >
 ---
 
 <skill_overview> Review code changes using structural graph context, documented conventions, and
-diff evidence. Produces a verdict-first report. Optionally tracks critical and important findings as
-Linear issues through `cape:tracker`.
+diff evidence. Produces a verdict-first report, then stamps hook state so `cape:pr` can pass the
+review-before-pr gate. Optionally tracks critical and important findings as Linear issues through
+`cape:tracker`.
 
-Core contract: review is read-only unless the user explicitly opts into tracking findings.
-</skill_overview>
+Core contract: review is read-only for source changes unless the user explicitly opts into tracking
+findings. The `reviewedAt` stamp is hook bookkeeping, not a source edit. </skill_overview>
 
 <reviewer_contract>
 
 - **Read-only:** cite findings and stop. Do not apply fixes during review.
+- **Stamp on completion:** after the report is delivered, write the `reviewedAt` hook state key.
 - **File-line evidence:** every finding cites `file:line`.
 - **Claims are unverified:** implementer rationales and comments are hypotheses.
 - **Impact-derived severity:** severity comes from observed behavior, reach, and risk.
@@ -53,6 +55,9 @@ order is fixed. Depth adapts to change size. </rigidity_level>
 6. **Offer Linear tracking only for own code** -- for others' PRs, deliver the report only
 7. **Track findings through tracker** -- user-approved findings become Linear issues and cache
    refreshes, not local issue CLI calls
+8. **Stamp completed reviews** -- after the report, run
+   `cape state set reviewedAt '{"scope":"<scope>"}'` so `cape:pr` has a fresh review-before-pr
+   signal
 
 </critical_rules>
 
@@ -169,7 +174,14 @@ Passes review. No issues found.
 convention violations found.
 ```
 
-End with `---`, then proceed to follow-up actions without announcing another review phase.
+End with `---`, then stamp the completed review:
+
+```bash
+cape state set reviewedAt '{"scope":"<scope>"}'
+```
+
+Use the same scope label from Step 1, such as `branch`, `staged`, `unstaged`, a file path, branch
+name, or PR number. Then proceed to follow-up actions without announcing another review phase.
 
 ---
 
