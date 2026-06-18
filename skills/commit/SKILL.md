@@ -131,6 +131,9 @@ it doesn't, omit.
 When writing the body, explain **why** the change was made, not what it does. The diff already shows
 the what.
 
+Before presenting or committing a generated commit message body, load the global `stop-slop` skill
+and run the prose through it; skip this for pure code or mechanical output.
+
 **Staging rules:**
 
 - Stage specific files by name — never `git add .` or `git add -A`

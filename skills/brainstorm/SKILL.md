@@ -300,6 +300,9 @@ claim against codebase evidence (`file:line`) and external sources (`URL — Tie
 - **Partially correct** claims — update to reflect what was actually found
 - **Unverifiable** claims — remove from the design summary; note them under "Open questions" instead
 
+Before presenting, load the global `stop-slop` skill and run the user-facing prose through it; skip
+this for pure code or mechanical output.
+
 Present the final design summary only after fact-checking is complete.
 
 **Stop and hand off:**

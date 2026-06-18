@@ -84,6 +84,9 @@ epic-to-task membership. It does not store expanded plans or implementation tran
 Create an epic with MCP Linear `save_issue`. Put the durable epic contract in the Linear issue
 description. Then create child task issues with MCP Linear `save_issue` using the epic as parent.
 
+Before creating user-facing issue descriptions, load the global `stop-slop` skill and run the prose
+through it; skip this for pure code or mechanical output.
+
 After creation, refresh cache from the MCP epic result. Preferred:
 
 1. Use MCP Linear `get_issue` for the epic with children included.

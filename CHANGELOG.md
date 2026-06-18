@@ -27,6 +27,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Write-plan: added proportional Global Constraints and per-task Interfaces for multi-task epics.
 - Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
   tracker protocol instead of local issue-tracking commands.
+- Skills: added stop-slop prose gates before finalizing prose-emitting skill output.
 - Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual

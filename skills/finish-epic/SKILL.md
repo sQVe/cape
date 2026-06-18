@@ -98,6 +98,9 @@ reviewer judges the delivered code against requirements and anti-patterns.
 Load `cape:commit` with the Skill tool to commit remaining changes before closing when there are
 uncommitted implementation changes.
 
+Before posting an outcome summary, load the global `stop-slop` skill and run the prose through it;
+skip this for pure code or mechanical output.
+
 Optionally write a minimal outcome summary to the Linear epic description through MCP Linear
 `save_issue`:
 

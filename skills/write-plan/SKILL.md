@@ -91,6 +91,9 @@ The first task must be a vertical slice with:
 
 ## Step 3: Create Linear Epic And First Task
 
+Before creating issues, load the global `stop-slop` skill and run the epic contract and first-task
+prose through it; skip this for pure code or mechanical output.
+
 Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear description. Keep it
 concise enough to be readable, but include the durable requirements, constraints, anti-patterns,
 success criteria, and architecture.
