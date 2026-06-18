@@ -334,7 +334,6 @@ export class DetectService extends ServiceMap.Service<
     readonly mapDirectory: (
       directory: string,
     ) => Effect.Effect<Record<string, string | null>, Error>;
-    readonly packageManager: () => Effect.Effect<PackageManager | null>;
   }
 >()('DetectService') {}
 
@@ -342,9 +341,4 @@ export const getDetectResult = Effect.gen(function* () {
   const service = yield* DetectService;
 
   return yield* service.detect();
-});
-
-export const getPackageManager = Effect.gen(function* () {
-  const service = yield* DetectService;
-  return yield* service.packageManager();
 });

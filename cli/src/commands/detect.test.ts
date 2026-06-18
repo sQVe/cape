@@ -46,14 +46,12 @@ const makeTestDetectLayer = (results: DetectResult[] = []) =>
             ],
       ),
     mapDirectory: () => Effect.succeed({ 'src/foo.ts': 'src/foo.test.ts' }),
-    packageManager: () => Effect.succeed(null),
   });
 
 const makeErrorDetectLayer = () =>
   Layer.succeed(DetectService)({
     detect: () => Effect.fail(new Error('no ecosystem detected')),
     mapDirectory: () => Effect.fail(new Error('no ecosystem detected')),
-    packageManager: () => Effect.succeed(null),
   });
 
 const makeProbe = (

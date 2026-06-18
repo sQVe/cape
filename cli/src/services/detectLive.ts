@@ -10,7 +10,6 @@ import {
   DetectService,
   buildSourceTestMap,
   detectEcosystems,
-  detectPackageManager,
   isRecord,
 } from './detect';
 
@@ -104,13 +103,4 @@ const mapDirectory = (directory: string) =>
 export const DetectServiceLive = Layer.succeed(DetectService)({
   detect,
   mapDirectory,
-  packageManager: () =>
-    Effect.succeed(
-      (() => {
-        const cwd = process.cwd();
-        const workspaceRoot = findWorkspaceRoot(cwd);
-        const fallback = workspaceRoot != null ? createProbe(workspaceRoot) : undefined;
-        return detectPackageManager(createProbe(cwd), fallback);
-      })(),
-    ),
 });
