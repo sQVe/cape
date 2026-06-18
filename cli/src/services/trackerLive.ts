@@ -15,6 +15,8 @@ interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
+  readonly project?: unknown;
+  readonly labels?: readonly ({ readonly name?: unknown } | string)[];
   readonly state?: LinearState;
   readonly children?: {
     readonly nodes?: readonly LinearIssue[];
@@ -41,14 +43,47 @@ const issueStatus = (issue: LinearIssue) =>
 const issueStateType = (issue: LinearIssue) =>
   typeof issue.state?.type === 'string' ? issue.state.type : '';
 
+const issueProject = (issue: LinearIssue) => {
+  if (typeof issue.project === 'string') {
+    return issue.project;
+  }
+  if (
+    typeof issue.project === 'object' &&
+    issue.project != null &&
+    !Array.isArray(issue.project) &&
+    'name' in issue.project &&
+    typeof issue.project.name === 'string'
+  ) {
+    return issue.project.name;
+  }
+  return undefined;
+};
+
+const labelName = (label: { readonly name?: unknown } | string) => {
+  if (typeof label === 'string') {
+    return label;
+  }
+  return typeof label.name === 'string' ? label.name : null;
+};
+
+const issueType = (issue: LinearIssue) => {
+  const label = issue.labels?.map(labelName).find((name) => name?.startsWith('type:') === true);
+  const type = label?.slice('type:'.length);
+  return type == null || type.length === 0 ? undefined : type;
+};
+
 const toTask = (issue: LinearIssue): TrackerTask | null => {
   const id = linearIssueId(issue);
   if (id == null) {
     return null;
   }
+  const project = issueProject(issue);
+  const type = issueType(issue);
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     stateType: issueStateType(issue),
   };
@@ -70,10 +105,14 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     const task = toTask(node);
     return task == null ? [] : [task];
   });
+  const project = issueProject(issue);
+  const type = issueType(issue);
 
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     tasks,
   };
@@ -118,6 +157,8 @@ export const mergeTasks = (
       [epicId]: {
         id: epicId,
         title: existing?.title ?? '',
+        ...(existing?.project == null ? {} : { project: existing.project }),
+        ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
         tasks,
       },

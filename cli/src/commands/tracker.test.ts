@@ -1,11 +1,12 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { main } from '../main';
+import { HookService, readTrackerCache } from '../services/hooks/state';
 import { makeTestCommandLayers, spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -21,6 +22,18 @@ const makeRoot = () => {
 const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 const readCache = (root: string) => JSON.parse(readFileSync(trackerPath(root), 'utf-8'));
+
+const makeHookLayer = (files: Record<string, string>) =>
+  Layer.succeed(HookService)({
+    pluginRoot: () => '/test',
+    readFile: (path) => Effect.succeed(files[path] ?? null),
+    writeFile: () => Effect.succeed(undefined),
+    removeFile: () => Effect.succeed(undefined),
+    ensureDir: () => Effect.succeed(undefined),
+    readStdin: () => Effect.succeed(''),
+    spawnGit: () => Effect.succeed(null),
+    fileExists: () => Effect.succeed(false),
+  });
 
 afterEach(() => {
   if (activeRoot != null) {
@@ -42,12 +55,16 @@ describe('cape tracker cache-epic', () => {
         JSON.stringify({
           identifier: 'ABU-15',
           title: 'Cape V2',
+          project: { name: 'Cape' },
+          labels: [{ name: 'type:feature' }, { name: 'area:tracker' }],
           state: { name: 'In Progress', type: 'started' },
           children: {
             nodes: [
               {
                 identifier: 'ABU-56',
                 title: 'Tracker cache CLI',
+                project: 'Cape CLI',
+                labels: ['type:chore', { name: 'priority:medium' }],
                 state: { name: 'Todo', type: 'unstarted' },
               },
             ],
@@ -64,11 +81,15 @@ describe('cape tracker cache-epic', () => {
     expect(cache.epics['ABU-15']).toEqual({
       id: 'ABU-15',
       title: 'Cape V2',
+      project: 'Cape',
+      type: 'feature',
       status: 'In Progress',
       tasks: [
         {
           id: 'ABU-56',
           title: 'Tracker cache CLI',
+          project: 'Cape CLI',
+          type: 'chore',
           status: 'Todo',
           stateType: 'unstarted',
         },
@@ -239,6 +260,7 @@ describe('cape tracker cache-tasks', () => {
           'ABU-15': {
             id: 'ABU-15',
             title: 'Cape V2',
+            project: 'Cape',
             status: 'In Progress',
             tasks: [],
           },
@@ -256,6 +278,8 @@ describe('cape tracker cache-tasks', () => {
           {
             identifier: 'ABU-57',
             title: 'Rewire chains',
+            project: { name: 'Cape CLI' },
+            labels: [{ name: 'type:bug' }, 'area:cache'],
             state: { name: 'Todo', type: 'unstarted' },
           },
         ]),
@@ -268,11 +292,14 @@ describe('cape tracker cache-tasks', () => {
     expect(cache.epics['ABU-15']).toEqual({
       id: 'ABU-15',
       title: 'Cape V2',
+      project: 'Cape',
       status: 'In Progress',
       tasks: [
         {
           id: 'ABU-57',
           title: 'Rewire chains',
+          project: 'Cape CLI',
+          type: 'bug',
           status: 'Todo',
           stateType: 'unstarted',
         },
@@ -433,5 +460,71 @@ describe('cape tracker cache-status', () => {
     expect(console_.output()).toBe(JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }));
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe('not json');
     console_.restore();
+  });
+});
+
+describe('tracker cache validation', () => {
+  it('accepts and round-trips a cache that omits optional project and type fields', async () => {
+    const cache = {
+      version: 1,
+      timestamp: Date.now(),
+      epics: {
+        'ABU-15': {
+          id: 'ABU-15',
+          title: 'Cape V2',
+          status: 'In Progress',
+          tasks: [
+            {
+              id: 'ABU-56',
+              title: 'Tracker cache CLI',
+              status: 'Todo',
+              stateType: 'unstarted',
+            },
+          ],
+        },
+      },
+    };
+
+    const result = await Effect.runPromise(
+      readTrackerCache().pipe(
+        Effect.provide(makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) })),
+      ),
+    );
+
+    expect(result).toEqual(cache);
+  });
+
+  it('rejects optional project and type fields when present but not strings', async () => {
+    const cache = {
+      version: 1,
+      timestamp: Date.now(),
+      epics: {
+        'ABU-15': {
+          id: 'ABU-15',
+          title: 'Cape V2',
+          project: { name: 'Cape' },
+          type: 7,
+          status: 'In Progress',
+          tasks: [
+            {
+              id: 'ABU-56',
+              title: 'Tracker cache CLI',
+              project: ['Cape CLI'],
+              type: false,
+              status: 'Todo',
+              stateType: 'unstarted',
+            },
+          ],
+        },
+      },
+    };
+
+    const result = await Effect.runPromise(
+      readTrackerCache().pipe(
+        Effect.provide(makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) })),
+      ),
+    );
+
+    expect(result).toBeNull();
   });
 });

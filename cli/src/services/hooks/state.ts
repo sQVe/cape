@@ -112,12 +112,16 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
   const task = value as {
     readonly id?: unknown;
     readonly title?: unknown;
+    readonly project?: unknown;
+    readonly type?: unknown;
     readonly status?: unknown;
     readonly stateType?: unknown;
   };
   return (
     typeof task.id === 'string' &&
     typeof task.title === 'string' &&
+    (task.project == null || typeof task.project === 'string') &&
+    (task.type == null || typeof task.type === 'string') &&
     typeof task.status === 'string' &&
     typeof task.stateType === 'string'
   );
@@ -130,12 +134,16 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
   const epic = value as {
     readonly id?: unknown;
     readonly title?: unknown;
+    readonly project?: unknown;
+    readonly type?: unknown;
     readonly status?: unknown;
     readonly tasks?: unknown;
   };
   return (
     typeof epic.id === 'string' &&
     typeof epic.title === 'string' &&
+    (epic.project == null || typeof epic.project === 'string') &&
+    (epic.type == null || typeof epic.type === 'string') &&
     typeof epic.status === 'string' &&
     Array.isArray(epic.tasks) &&
     epic.tasks.every(isTrackerTask)
