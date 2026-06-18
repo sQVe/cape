@@ -99,7 +99,9 @@ Apply this agent contract before every issue create:
   flow, state, or architecture description longer than about three steps.
 
 The `type:*` and `src:*` label groups are created by the workspace bootstrap in a separate task.
-Until then, apply labels best-effort.
+Until then, apply labels best-effort. See
+[resources/workspace-setup.md](resources/workspace-setup.md) for the one-time workspace bootstrap
+checklist.
 
 Create an epic with MCP Linear `save_issue`. Put the durable epic contract in the Linear issue
 description. Then create child task issues with MCP Linear `save_issue` using the epic as parent.
