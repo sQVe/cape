@@ -293,6 +293,44 @@ describe('skill gate: non-gated skills pass through', () => {
   });
 });
 
+describe('bash gate: conform-before-review', () => {
+  const stampInput = bashInput(`cape state set reviewedAt '{"scope":"branch"}'`);
+
+  it('denies stamping reviewedAt when no conform run is stamped', () => {
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stampInput, env);
+    expectDeny(result, 'conform-before-review');
+  });
+
+  it('denies stamping reviewedAt when the conform stamp is stale', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({
+        conformedAt: { scope: 'branch', timestamp: Date.now() - 2 * 60 * 60 * 1000 },
+      }),
+    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stampInput, env);
+    expectDeny(result, 'conform-before-review');
+  });
+
+  it('allows stamping reviewedAt when the conform stamp is fresh', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({ conformedAt: { scope: 'branch', timestamp: Date.now() } }),
+    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stampInput, env);
+    expectPassThrough(result);
+  });
+
+  it('downgrades the conform gate to a warning with explicit override', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
+      bashInput(`cape state set reviewedAt '{"scope":"branch"}' CAPE_HARD_GATE_OVERRIDE`),
+      env,
+    );
+    expectWarn(result, 'conform-before-review override accepted');
+  });
+});
+
 describe('skill gate: review-before-pr', () => {
   it('denies pr when review has not stamped state', () => {
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput('cape:pr'), env);
