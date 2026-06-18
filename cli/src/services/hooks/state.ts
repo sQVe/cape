@@ -1,8 +1,8 @@
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
-import { TRACKER_CACHE_TTL_MS } from '../tracker';
-import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
+import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
+import type { TrackerEpic, TrackerTask } from '../tracker';
 import { safeParseJson } from '../../utils/json';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
@@ -105,86 +105,7 @@ export const readFlowPhaseContext = () =>
     return { phase: entry.phase, issueId: entry.issueId };
   });
 
-const isTrackerTask = (value: unknown): value is TrackerTask => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-  const task = value as {
-    readonly id?: unknown;
-    readonly title?: unknown;
-    readonly project?: unknown;
-    readonly type?: unknown;
-    readonly status?: unknown;
-    readonly stateType?: unknown;
-  };
-  return (
-    typeof task.id === 'string' &&
-    typeof task.title === 'string' &&
-    (task.project == null || typeof task.project === 'string') &&
-    (task.type == null || typeof task.type === 'string') &&
-    typeof task.status === 'string' &&
-    typeof task.stateType === 'string'
-  );
-};
-
-const isTrackerEpic = (value: unknown): value is TrackerEpic => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-  const epic = value as {
-    readonly id?: unknown;
-    readonly title?: unknown;
-    readonly project?: unknown;
-    readonly type?: unknown;
-    readonly status?: unknown;
-    readonly tasks?: unknown;
-  };
-  return (
-    typeof epic.id === 'string' &&
-    typeof epic.title === 'string' &&
-    (epic.project == null || typeof epic.project === 'string') &&
-    (epic.type == null || typeof epic.type === 'string') &&
-    typeof epic.status === 'string' &&
-    Array.isArray(epic.tasks) &&
-    epic.tasks.every(isTrackerTask)
-  );
-};
-
-const isTrackerCache = (value: unknown): value is TrackerCache => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
-  if (cache.version !== 1 || typeof cache.timestamp !== 'number') {
-    return false;
-  }
-  if (typeof cache.epics !== 'object' || cache.epics == null || Array.isArray(cache.epics)) {
-    return false;
-  }
-
-  return Object.values(cache.epics).every(isTrackerEpic);
-};
-
-export const readTrackerCache = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const root = service.pluginRoot();
-    const content = yield* service.readFile(trackerPath(root));
-    if (content == null) {
-      return null;
-    }
-
-    const parsed = safeParseJson(content);
-    if (!isTrackerCache(parsed)) {
-      return null;
-    }
-
-    const isStale = Date.now() - parsed.timestamp > TRACKER_CACHE_TTL_MS;
-    return isStale ? null : parsed;
-  });
-
-const readSessionTrackerCache = () =>
+const readRawTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
@@ -195,6 +116,16 @@ const readSessionTrackerCache = () =>
 
     const parsed = safeParseJson(content);
     return isTrackerCache(parsed) ? parsed : null;
+  });
+
+export const readTrackerCache = () =>
+  Effect.gen(function* () {
+    const cache = yield* readRawTrackerCache();
+    if (cache == null) {
+      return null;
+    }
+    const isStale = Date.now() - cache.timestamp > TRACKER_CACHE_TTL_MS;
+    return isStale ? null : cache;
   });
 
 export const isDoneTask = (task: TrackerTask) => {
@@ -256,8 +187,11 @@ const readSessionBanner = () =>
       return null;
     }
 
-    const cache = yield* readSessionTrackerCache();
-    const epic = cache?.epics[flowPhase.issueId];
+    const cache = yield* readRawTrackerCache();
+    if (cache == null) {
+      return null;
+    }
+    const epic = cache.epics[flowPhase.issueId];
     if (epic == null) {
       return null;
     }
@@ -272,16 +206,10 @@ const readSessionBanner = () =>
     return buildSessionBanner(epic, flowPhase.phase, { branch, isWorktree }, staleAge);
   });
 
-export const clearLogs = () => Effect.succeed(undefined);
-
-export const sessionStart = (clearLogsFlag: boolean) =>
+export const sessionStart = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
-
-    if (clearLogsFlag) {
-      yield* clearLogs();
-    }
 
     // One-time migration: prune legacy tddState key from user state files.
     yield* removeStateKey('tddState');
@@ -367,8 +295,6 @@ export const userPromptSubmit = () =>
       additionalContext: parts.join('\n\n'),
     };
   });
-
-export const postToolUseBash = () => Effect.succeed(null);
 
 export const postToolUseLinearWrite = () =>
   Effect.succeed({

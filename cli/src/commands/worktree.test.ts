@@ -227,7 +227,7 @@ describe('cape worktree start', () => {
     );
     console_.restore();
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(hookLayer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(hookLayer)));
 
     expect(files[statePath]).toContain('ABU-50');
     expect(result.additionalContext).toContain('| Epic   ABU-50  Worktree skill');

@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
 import { safeParseJson } from '../utils/json';
+import { isTrackerCache } from './tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
 
 interface LinearState {
@@ -221,15 +222,6 @@ export const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): Tracke
     timestamp,
     epics,
   };
-};
-
-export const isTrackerCache = (value: unknown): value is TrackerCache => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
-  return cache.version === 1 && typeof cache.timestamp === 'number' && typeof cache.epics === 'object' && cache.epics != null && !Array.isArray(cache.epics);
 };
 
 export const readCacheFile = () =>
