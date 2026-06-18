@@ -115,6 +115,8 @@ implementation notes to Linear.
 
 Close the epic through MCP Linear, then refresh the cache:
 
+This moves the same epic from `In Review` to `Done` at close time.
+
 ```bash
 cape tracker cache-status <epic-id> Done completed
 ```

@@ -185,9 +185,18 @@ EOF
 
 After successful creation:
 
-1. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
-2. Add reviewers if the user mentioned any or the project has conventions
-3. Report:
+1. Identify the active epic from tracker cache or flow context.
+2. Set the epic, not any child task, to `In Review` through MCP Linear `save_issue` with state
+   `"In Review"`.
+3. Refresh the cache:
+
+```bash
+cape tracker cache-status <epic-id> "In Review" started
+```
+
+4. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
+5. Add reviewers if the user mentioned any or the project has conventions
+6. Report:
 
 ```
 PR created: <url>
