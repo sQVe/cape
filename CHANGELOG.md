@@ -11,6 +11,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
 - Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
+- Hooks: added conform-before-review hard gate; `cape conform` stamps a marker that `cape:review`
+  requires before it can stamp completion.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
 - Skills and commands: added tracker reference skill and slash command wrapper.
 
