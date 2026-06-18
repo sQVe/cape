@@ -81,6 +81,26 @@ epic-to-task membership. It does not store expanded plans or implementation tran
 
 ## Step 2: Create Work
 
+### Agent contract
+
+Apply this agent contract before every issue create:
+
+- Dedupe first: search open issues in the target project by title keywords. Comment on a match
+  instead of creating a duplicate.
+- Project: route work to a matching named project. Use `Inbox` when no project matches. Never create
+  project-less issues. Confirm a new project with the user before creating it.
+- Labels: apply exactly one `type:*` label: `type:bug`, `type:feature`, or `type:chore`. Epics are
+  untyped parents. Apply `src:cape` to everything cape creates.
+- Priority: create issues at `Medium`. Never use `High`. Use `Urgent` only for detected production
+  breakage.
+- Titles: use an imperative verb-object title in sentence case with no prefix, about 70 characters
+  or less. Bug titles start with `Fix <symptom>`.
+- Bodies: include a load-bearing `Done when:` line. Use a Mermaid block instead of prose for any
+  flow, state, or architecture description longer than about three steps.
+
+The `type:*` and `src:*` label groups are created by the workspace bootstrap in a separate task.
+Until then, apply labels best-effort.
+
 Create an epic with MCP Linear `save_issue`. Put the durable epic contract in the Linear issue
 description. Then create child task issues with MCP Linear `save_issue` using the epic as parent.
 

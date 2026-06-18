@@ -94,12 +94,16 @@ The first task must be a vertical slice with:
 Before creating issues, load the global `stop-slop` skill and run the epic contract and first-task
 prose through it; skip this for pure code or mechanical output.
 
-Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear description. Keep it
-concise enough to be readable, but include the durable requirements, constraints, anti-patterns,
-success criteria, and architecture.
+Load `cape:tracker` and apply its Agent contract for create-time rules, including dedupe, project
+routing, `src:cape`, `Medium`, naming, and `Done when:`. Confirm with the user before creating a new
+Linear project. Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear
+description. Keep it concise enough to be readable, but include the durable requirements,
+constraints, anti-patterns, success criteria, and architecture. The epic itself stays an untyped
+parent.
 
 Use MCP Linear `save_issue` again to create exactly one child/sub-issue under the epic for the first
-task. Put only task-level details in the task description.
+task. Apply exactly one task `type:*` label from the tracker contract. Put only task-level details
+in the task description.
 
 After the writes, refresh the local cache. Preferred path:
 
