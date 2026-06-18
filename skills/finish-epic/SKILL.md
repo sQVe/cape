@@ -113,9 +113,8 @@ Tasks completed: <N>
 Keep detailed reflections in the conversation. Do not write validation transcripts or expanded
 implementation notes to Linear.
 
-Close the epic through MCP Linear, then refresh the cache:
-
-This moves the same epic from `In Review` to `Done` at close time.
+Close the epic through MCP Linear, which moves it from `In Review` to `Done`, then refresh the
+cache:
 
 ```bash
 cape tracker cache-status <epic-id> Done completed
