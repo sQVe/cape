@@ -369,3 +369,12 @@ export const userPromptSubmit = () =>
   });
 
 export const postToolUseBash = () => Effect.succeed(null);
+
+export const postToolUseLinearWrite = () =>
+  Effect.succeed({
+    hookSpecificOutput: {
+      hookEventName: 'PostToolUse',
+      additionalContext:
+        'Linear was updated. Refresh the local tracker cache soon with `cape tracker cache-epic`, `cape tracker cache-tasks`, or `cape tracker cache-status`.',
+    },
+  });

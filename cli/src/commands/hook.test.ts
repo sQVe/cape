@@ -1433,6 +1433,22 @@ describe('hook command - PostToolUse wiring', () => {
     console_.restore();
   });
 
+  it('routes post-tool-use --matcher linear-write with tracker refresh context', async () => {
+    const hookLayer = makeStubHookLayer();
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['hook', 'post-tool-use', '--matcher', 'linear-write']).pipe(
+        Effect.provide(makeCommandLayers(hookLayer)),
+      ),
+    );
+    const output = console_.output();
+    const result = JSON.parse(output);
+    expect(result.hookSpecificOutput.additionalContext).toContain('cape tracker');
+    expect(result.hookSpecificOutput).not.toHaveProperty('permissionDecision');
+    expect(result).not.toHaveProperty('decision');
+    console_.restore();
+  });
+
   it('warns on stderr for unknown PostToolUse matcher', async () => {
     const hookLayer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
     const console_ = spyConsole();
