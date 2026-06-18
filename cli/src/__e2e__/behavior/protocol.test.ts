@@ -333,7 +333,7 @@ describe('post-tool-use AskUserQuestion with non-array questions', () => {
 
 describe('user-prompt-submit tracker detection', () => {
   it('detects issue-tracker wording and includes cape:tracker in additionalContext', () => {
-    const stdin = JSON.stringify({ prompt: 'show me br list' });
+    const stdin = JSON.stringify({ prompt: 'show me the issue tracker' });
     const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);

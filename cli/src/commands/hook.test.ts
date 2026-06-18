@@ -12,9 +12,9 @@ import {
   HookService,
   denyTable,
   denyWith,
-  detectBeadsSkill,
   detectBugReport,
   detectExecutePlan,
+  detectTrackerSkill,
   normalizeEventName,
   postToolUseBash,
   preToolUseBash,
@@ -52,34 +52,34 @@ describe('normalizeEventName', () => {
   });
 });
 
-describe('detectBeadsSkill', () => {
-  it('detects br keyword', () => {
-    expect(detectBeadsSkill('show br issues')).toBe(true);
+describe('detectTrackerSkill', () => {
+  it('detects issue tracker wording', () => {
+    expect(detectTrackerSkill('show the issue tracker')).toBe(true);
   });
 
-  it('detects beads keyword', () => {
-    expect(detectBeadsSkill('create a bead')).toBe(true);
+  it('does not detect retired local-store wording', () => {
+    expect(detectTrackerSkill('open the legacy local issue store')).toBe(false);
   });
 
   it('detects issue tracking phrases', () => {
-    expect(detectBeadsSkill('track this bug')).toBe(true);
+    expect(detectTrackerSkill('track this bug')).toBe(true);
   });
 
   it('detects what task next', () => {
-    expect(detectBeadsSkill('what task should I work on next')).toBe(true);
+    expect(detectTrackerSkill('what task should I work on next')).toBe(true);
   });
 
-  it('skips split/merge/archive br operations', () => {
-    expect(detectBeadsSkill('split br-123 into subtasks')).toBe(false);
+  it('skips split/merge/archive issue-id operations', () => {
+    expect(detectTrackerSkill('split ABU-123 into subtasks')).toBe(false);
   });
 
   it('returns false for unrelated prompts', () => {
-    expect(detectBeadsSkill('hello world')).toBe(false);
+    expect(detectTrackerSkill('hello world')).toBe(false);
   });
 
-  it('does not detect stale br create flag syntax as issue-tracking intent', () => {
-    expect(detectBeadsSkill('why does --design fail on create commands?')).toBe(false);
-    expect(detectBeadsSkill('compare --description with --design in this API')).toBe(false);
+  it('does not detect stale create flag syntax as issue-tracking intent', () => {
+    expect(detectTrackerSkill('why does --design fail on create commands?')).toBe(false);
+    expect(detectTrackerSkill('compare --description with --design in this API')).toBe(false);
   });
 });
 
@@ -508,7 +508,7 @@ describe('userPromptSubmit', () => {
 
   it('injects tracker skill for issue-tracker mention', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(result.decision).toBe('approve');
@@ -568,7 +568,7 @@ describe('userPromptSubmit', () => {
 
   it('combines skills and flow context', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
       files: flowPhaseFile('planning'),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
@@ -637,7 +637,7 @@ describe('hook command wiring', () => {
 
   it('handles user-prompt-submit with tracker detection', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -1408,7 +1408,7 @@ describe('event logging', () => {
 
   it('logs inject event for userPromptSubmit skill detection', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(

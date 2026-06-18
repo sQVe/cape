@@ -1,7 +1,4 @@
-const beadsPatterns = [
-  /\bbr\b/i,
-  /\bbeads?\b/i,
-  /\.beads/i,
+const trackerPatterns = [
   /issue.*(track|create|log)/i,
   /track.*(bug|issue|finding|gap|these|them)/i,
   /what.*(task|work).*next/i,
@@ -9,14 +6,8 @@ const beadsPatterns = [
   /\bgaps?\b.*\btrack/i,
 ];
 
-const managingPattern = /(?:split|merge|archiv).*\bbr-/i;
-
-export const detectBeadsSkill = (prompt: string) => {
-  if (managingPattern.test(prompt)) {
-    return false;
-  }
-  return beadsPatterns.some((pattern) => pattern.test(prompt));
-};
+export const detectTrackerSkill = (prompt: string) =>
+  trackerPatterns.some((pattern) => pattern.test(prompt));
 
 const errorPatterns = [
   /(?:^|\n)\s*at\s+\S+\s+\(.*:\d+:\d+\)/,

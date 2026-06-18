@@ -4,7 +4,7 @@ import { logEvent } from '../../eventLog';
 import { TRACKER_CACHE_TTL_MS } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { safeParseJson } from '../../utils/json';
-import { detectBeadsSkill, detectBugReport, detectExecutePlan } from './parsing';
+import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
@@ -294,7 +294,7 @@ export const userPromptSubmit = () =>
     const skills: string[] = [];
     const contexts: string[] = [];
 
-    if (detectBeadsSkill(prompt)) {
+    if (detectTrackerSkill(prompt)) {
       skills.push('cape:tracker');
     }
     if (detectBugReport(prompt)) {
