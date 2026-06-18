@@ -1,6 +1,6 @@
 # Epic template
 
-Every `br create --type epic` description must include these sections.
+Every Linear epic issue description must include these sections.
 
 ```
 ## Requirements

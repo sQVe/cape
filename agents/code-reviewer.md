@@ -37,11 +37,11 @@ will break retry classification. Suggestion: `return \`failed: ${e.message}\``"
 
 ## Investigation approach
 
-1. **Check contract alignment**: Read the parent epic (`br show <epic-id>`) for requirements,
-   success criteria, and anti-patterns. Judge the code against what it _should_ do per the contract
-   — not what it _intended_ to do. Do not read the task's expanded plan or implementation notes;
-   reviewing against the implementation intent makes you lenient toward the implementation's
-   approach.
+1. **Check contract alignment**: Read the parent epic (MCP Linear `get_issue <epic-id>`) for
+   requirements, success criteria, and anti-patterns. Judge the code against what it _should_ do per
+   the contract — not what it _intended_ to do. Do not read the task's expanded plan or
+   implementation notes; reviewing against the implementation intent makes you lenient toward the
+   implementation's approach.
 
 2. **Analyze structural impact**: Use code-review-graph MCP tools to understand blast radius:
    - `get_review_context_tool` for token-efficient review context
@@ -63,7 +63,7 @@ will break retry classification. Suggestion: `return \`failed: ${e.message}\``"
    - **Suggestion** — nice to have (style preference, minor optimization)
 
 5. **Answer questions directly**:
-   - "Does this match the plan?" → Compare against br task success criteria
+   - "Does this match the plan?" → Compare against the Linear task success criteria
    - "What did this break?" → Use impact radius to find affected callers and tests
    - "Is this production-ready?" → Check quality, tests, error handling, edge cases
 
