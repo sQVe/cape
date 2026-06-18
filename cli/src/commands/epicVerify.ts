@@ -2,16 +2,27 @@ import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-
-import { runCloseReadinessCheck } from './br';
+import { getCheckResults } from '../services/check';
+import { isDoneTask, readTrackerCache } from '../services/hook';
 
 export const epicVerify = Command.make(
   'verify',
   {
-    id: Argument.string('id').pipe(Argument.withDescription('Epic bead ID to verify')),
+    id: Argument.string('id').pipe(Argument.withDescription('Epic issue ID to verify')),
   },
   Effect.fn(function* ({ id }) {
-    const { ready, openItems, checksPassed, checkResults } = yield* runCloseReadinessCheck(id);
+    const cache = yield* readTrackerCache();
+    const epic = cache?.epics[id];
+    if (epic == null) {
+      return yield* dieWithError(`epic ${id} is not present in the tracker cache`);
+    }
+
+    const openItems = epic.tasks
+      .filter((task) => !isDoneTask(task))
+      .map((task) => ({ id: task.id, title: task.title, status: task.status }));
+    const checkResults = yield* getCheckResults([]);
+    const checksPassed = checkResults.every((result) => result.passed);
+    const ready = openItems.length === 0 && checksPassed;
 
     const result = { verified: ready, openTasks: openItems, checksPassed, checkResults };
     yield* Console.log(JSON.stringify(result, null, 2));

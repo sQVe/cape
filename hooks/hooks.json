@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cape hook session-start --clear-logs"
+            "command": "cape hook session-start"
           }
         ]
       },
@@ -47,17 +47,6 @@
           {
             "type": "command",
             "command": "cape hook pre-tool-use --matcher Skill"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook post-tool-use --matcher Bash"
           }
         ]
       }

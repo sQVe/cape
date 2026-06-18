@@ -10,9 +10,9 @@ description: >
 ---
 
 <skill_overview> Create a pull request with conventional title, structured description, and verified
-test plan. Detects repo PR templates, validates the branch, runs automatable test plan items, then
-creates the PR via `gh`. The test plan acts as a gate — all checkboxes must pass before the PR is
-created. </skill_overview>
+test plan. Detects repo PR templates, validates the branch, confirms a fresh `cape:review` stamp,
+runs automatable test plan items, then creates the PR via `gh`. The review-before-pr hook and test
+plan act as gates before the PR is created. </skill_overview>
 
 <rigidity_level> MEDIUM FREEDOM — Follow the process exactly as written. Every step must execute in
 order. Gates are non-negotiable. The description format comes from the detected template or the
@@ -28,7 +28,7 @@ bundled template — never invent sections. </rigidity_level>
 
 - Reviewing someone else's PR
 - Committing changes (use cape:commit)
-- Branch operations (use cape:branch)
+- Worktree setup or epic context stamping (use cape:worktree)
 
 </when_to_use>
 
@@ -37,10 +37,13 @@ bundled template — never invent sections. </rigidity_level>
 1. **NEVER call `cape pr create` without user confirmation** — present the full description to the
    user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
-3. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
+3. **NEVER skip review-before-pr** — a fresh `reviewedAt` stamp from `cape:review` is required. The
+   hard-gate escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` to downgrade
+   the hook deny to a warning.
+4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
-4. **Use `cape pr create`** — not the GitHub API directly
-5. **Stop on failure** — report what failed, don't push through
+5. **Use `cape pr create`** — not the GitHub API directly
+6. **Stop on failure** — report what failed, don't push through
 
 </critical_rules>
 
@@ -63,6 +66,7 @@ the description. If "default", use the bundled template in step 5.
 ```bash
 cape git context
 git diff <default-branch>...HEAD --stat
+cape state list
 ```
 
 Use `mainBranch` from the context output as `<default-branch>` throughout.
@@ -71,6 +75,8 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 - Current branch is not the default branch
 - All changes are committed
+- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Only
+  proceed without review when the user explicitly invokes `cape:pr` with `CAPE_HARD_GATE_OVERRIDE`.
 
 ---
 
@@ -132,6 +138,9 @@ Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
 If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
 gaps found, add missing test plan items.
+
+Before presenting or creating the PR, load the global `stop-slop` skill and run the description
+prose through it; skip this for pure code or mechanical output.
 
 ---
 

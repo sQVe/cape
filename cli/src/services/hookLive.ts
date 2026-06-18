@@ -37,18 +37,6 @@ const ensureDir = (path: string) =>
     catch: () => new Error(`failed to mkdir: ${path}`),
   }).pipe(Effect.orElseSucceed(() => undefined));
 
-const brQuery = (args: readonly string[]) =>
-  Effect.try({
-    try: () => {
-      const result = execFileSync('br', [...args], {
-        encoding: 'utf-8',
-        timeout: 3000,
-      });
-      return result.trim();
-    },
-    catch: () => new Error('br query failed'),
-  }).pipe(Effect.orElseSucceed(() => null));
-
 const readStdin = () =>
   Effect.try({
     try: () => readFileSync(0, 'utf-8').trim(),
@@ -75,7 +63,6 @@ export const HookServiceLive = Layer.succeed(HookService)({
   writeFile,
   removeFile,
   ensureDir,
-  brQuery,
   readStdin,
   spawnGit,
   fileExists,

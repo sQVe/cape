@@ -12,8 +12,8 @@ description: >
 missing behavior, make it pass with the simplest change, then decide whether small cleanup would
 improve clarity. </skill_overview>
 
-<rigidity_level> MEDIUM FREEDOM — Test-first and behavior-focused are rigid; test shape, scope, and
-whether cleanup is worthwhile adapt to context. </rigidity_level>
+<rigidity_level> MEDIUM FREEDOM — Red-before-green and behavior-focused are hard; test shape, scope,
+and whether cleanup is worthwhile adapt to context. </rigidity_level>
 
 <when_to_use>
 
@@ -27,18 +27,22 @@ Don't use for:
 - Manual verification ("run the app and check")
 - Documentation-only changes
 - Configuration or environment changes
-- Pure refactoring with no behavioral change (use `cape:refactor`)
+- Pure behavior-preserving restructuring with no behavioral change
 
 </when_to_use>
 
 <critical_rules>
 
-1. **Test before production code.** For the next behavior or bug, write or update the test first and
-   watch it fail for the behavior you intend to add or fix.
+1. **HARD: red before green.** For the next behavior or bug, write or update the test first and
+   watch it fail for the behavior you intend to add or fix before editing production code. Do not
+   substitute reasoning, snapshots, type errors, or after-the-fact tests for the failing test.
 2. **Keep each change behavior-sized.** Drive one behavior at a time, add only the code needed for
    the current test, and avoid batching future behaviors into the same pass.
 3. **Cleanup is optional, not ceremonial.** Once the behavior passes, improve names or structure
    only when it clearly helps; skip cleanup when no useful simplification is apparent.
+4. **Override is explicit only.** The hard-gate escape phrase is `CAPE_HARD_GATE_OVERRIDE`; use it
+   only when the user explicitly accepts skipping red-before-green for a stated reason, and report
+   that the TDD contract was overridden.
 
 </critical_rules>
 
@@ -64,7 +68,8 @@ Run the relevant test. The failure should show that the behavior is missing or i
 the test file is broken. If the failure comes from syntax, import, setup, or other pre-assertion
 problems, fix the test first.
 
-When helpful, dispatch `cape:test-runner` to run the focused test or capture failure output.
+When helpful, dispatch `cape:test-runner` (model: haiku) to run the focused test or capture failure
+output.
 
 ---
 
@@ -81,10 +86,10 @@ tests. If not, move on to the next behavior.
 
 <agent_references>
 
-## `cape:test-runner` protocol:
+## `cape:test-runner` protocol (model: haiku):
 
 **Use when helpful:** focused test runs, broader suite confirmation, or capturing detailed failure
-output without polluting context.
+output without polluting context. Dispatch `cape:test-runner` (model: haiku).
 
 **Pass:** test command and working directory. **Expect back:** pass/fail status with counts and
 complete failure output for any failing tests.

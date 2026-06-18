@@ -5,7 +5,6 @@ import { Command } from 'effect/unstable/cli';
 import type { UserError } from './dieWithError';
 import { logEvent } from './eventLog';
 import { main } from './main';
-import { BrValidateServiceLive } from './services/brValidateLive';
 import { CheckServiceLive } from './services/checkLive';
 import { ConformServiceLive } from './services/conformLive';
 import { CommitServiceLive } from './services/commitLive';
@@ -16,7 +15,6 @@ import { PrServiceLive } from './services/prLive';
 import { ValidateServiceLive } from './services/validateLive';
 
 const AppLayer = Layer.mergeAll(
-  BrValidateServiceLive,
   CheckServiceLive,
   ConformServiceLive,
   CommitServiceLive,

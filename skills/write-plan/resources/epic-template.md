@@ -1,7 +1,8 @@
 # Epic template
 
-Use this template when creating `br` epics during plan writing. Every section is required. Populate
-from research findings, user decisions, and design validation captured during the brainstorm.
+Use this template when creating Linear tracker epics during plan writing. Every section is required.
+Populate from research findings, user decisions, and design validation captured during the
+brainstorm.
 
 ## Template
 
@@ -9,6 +10,11 @@ from research findings, user decisions, and design validation captured during th
 ## Requirements (IMMUTABLE)
 - [Specific, testable statement]
 - [Specific, testable statement]
+
+## Global constraints
+[For multi-task epics: shared rules every task inherits from requirements, anti-patterns, architecture, and user decisions. For single-task epics: "N/A — single task."]
+- [Shared rule]
+- [Shared rule]
 
 ## Success criteria
 - [ ] [Objective, testable criterion]
@@ -98,15 +104,20 @@ from research findings, user decisions, and design validation captured during th
 
 ## Worked example
 
-```bash
-br create "Epic: OAuth authentication" \
-  --type epic \
-  --priority 2 \
-  --description "## Requirements (IMMUTABLE)
+```text
+Linear epic title: Epic: OAuth authentication
+Linear epic description:
+
+## Requirements (IMMUTABLE)
 - Users authenticate via Google OAuth2
 - Tokens stored in httpOnly cookies (NOT localStorage)
 - Session expires after 24h inactivity
 - Integrates with existing User model at db/models/user.ts
+
+## Global constraints
+- Every task must preserve existing session-based auth behavior
+- Every task must use existing User model and passport.js extension points
+- OAuth tokens must never be exposed to browser JavaScript
 
 ## Success criteria
 - [ ] Login redirects to Google and back
@@ -199,5 +210,5 @@ Users must create accounts manually. Manual signup has 40% abandonment. Google O
 ### Open concerns raised
 - Google OAuth down? -> Graceful error message, no fallback auth
 - Account linking later? -> Deferred to future epic
-- Token refresh behavior? -> Default silent, configurable"
+- Token refresh behavior? -> Default silent, configurable
 ```

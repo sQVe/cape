@@ -5,16 +5,15 @@ description:
   user describes something to build, asks "how should I approach X", is unsure between approaches,
   or mentions adding/creating/building functionality. Also use when requirements are vague,
   architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
-  models, API patterns). Do NOT use for bug fixes, refactoring where the target structure is clear
-  (use cape:refactor), executing existing plans, or tasks where the implementation path is already
-  clear. This skill researches the codebase, asks Socratic questions, generates competing designs
-  under different constraints, and produces a design summary for `cape:write-plan` to formalize into
-  a br epic.
+  models, API patterns). Do NOT use for bug fixes, straightforward code cleanup, executing existing
+  plans, or tasks where the implementation path is already clear. This skill researches the
+  codebase, asks Socratic questions, generates competing designs under different constraints, and
+  produces a design summary for `cape:write-plan` to formalize into a Linear tracker epic.
 ---
 
 <skill_overview> Turn rough ideas into validated designs ready for `cape:write-plan` to formalize
-into a `br` epic. Research the codebase, ask Socratic questions, generate competing designs under
-different constraints, and produce a self-contained design summary.
+into a Linear tracker epic. Research the codebase, ask Socratic questions, generate competing
+designs under different constraints, and produce a self-contained design summary.
 
 Core contract: no design gets locked without research, constraint-driven design exploration, and
 iterative user discussion at every stage. </skill_overview>
@@ -25,8 +24,8 @@ research before proposing, checkpoint after each step, never advance without use
 
 <mode> CONVERSATIONAL — Brainstorm is a discussion, not a plan artifact. Never enter plan mode. If
 plan mode is active when brainstorm is invoked, exit it immediately and proceed conversationally.
-The design summary lives in conversation context; `write-plan` formalizes it into a br epic later.
-</mode>
+The design summary lives in conversation context; `write-plan` formalizes it into a Linear tracker
+epic later. </mode>
 
 <when_to_use>
 
@@ -40,7 +39,7 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 
 - Executing existing plans with an epic already created
 - Fixing bugs
-- Refactoring with a clear target structure (use `cape:refactor`)
+- Straightforward code cleanup with a clear target structure
 - Requirements already crystal clear and epic exists </when_to_use>
 
 <critical_rules>
@@ -51,8 +50,8 @@ The design summary lives in conversation context; `write-plan` formalizes it int
 3. **Never enter plan mode** — brainstorm is a conversation. If plan mode is active, exit it first.
 4. **Divergent mode for complex ideas** — dispatch 3 constraint-driven design agents; inline for
    simple ideas with obvious paths
-5. **Challenge is opt-in** — offer `cape:challenge` after approach selection, don't load
-   automatically
+5. **Assumption audit is inline** — after approach selection, offer a focused audit and resolve
+   assumptions one at a time when accepted
 6. **Include anti-patterns with reasoning** — "NO X (reason: Y)", not just "NO X"
 7. **Stop after design summary** — present summary and wait for user to run write-plan
 8. **Design summary must be self-contained** — write-plan should not need to re-ask questions
@@ -71,7 +70,7 @@ the next step until the user responds. The user may discuss, redirect, ask follo
 
 **Check for ready work first:**
 
-Run `br ready` before doing anything else. If it returns tasks:
+Read `hooks/context/tracker.json` before doing anything else. If it contains ready tasks:
 
 1. Present the list: "You have N ready task(s): [list]. Did you mean to continue with execute-plan
    instead of starting a new brainstorm?"
@@ -79,14 +78,16 @@ Run `br ready` before doing anything else. If it returns tasks:
    - If they redirect to execute-plan: load `cape:execute-plan` with the Skill tool and stop
    - If they confirm brainstorm intent: proceed with research below
 
-Skip this step only if `br ready` returns no tasks.
+Skip this step only if the tracker cache contains no ready tasks. If the cache is missing or
+corrupt, treat it as empty and continue brainstorming.
 
 **Gather context:**
 
 - Run `cape git context` for recent commits and codebase state; check existing docs and structure
-- Dispatch `cape:codebase-investigator` to find existing patterns relevant to the idea
-- Dispatch `cape:internet-researcher` if the idea involves external APIs, libraries, or unfamiliar
-  tech
+- Dispatch `cape:codebase-investigator` in default mode (model: haiku) to find existing patterns
+  relevant to the idea
+- Dispatch `cape:internet-researcher` (model: sonnet) if the idea involves external APIs, libraries,
+  or unfamiliar tech
 - If agents aren't available, investigate manually with Glob/Grep/Read and WebSearch/WebFetch
 
 **Answer your own questions first:**
@@ -149,10 +150,6 @@ Do NOT proceed to Step 2 until the user responds.
 
 Assess whether the idea warrants divergent exploration or has an obvious path:
 
-- **Interface mode** — the core design question is about an interface, API surface, module boundary,
-  or type contract. Load `cape:design-an-interface` with the Skill tool instead of running divergent
-  mode inline. Its comparison and recommendation feed back as the chosen approach and approaches
-  considered.
 - **Divergent mode** — the idea touches multiple components, has competing viable approaches, or
   involves architectural decisions beyond interface shape. Dispatch 3 parallel design agents.
 - **Inline mode** — single-file change, one obvious pattern to follow, trivial scope. Propose 1-2
@@ -213,19 +210,44 @@ Iterate until the user signals satisfaction with a direction. Only then proceed 
 
 ---
 
-## Step 3: Challenge assumptions (opt-in)
+## Step 3: Audit assumptions
 
-After the approach is selected, offer challenge:
+After the approach is selected, offer an inline assumption audit:
 
-"Want me to load `cape:challenge` to stress-test this design for hidden assumptions, or skip
-straight to the design summary?"
+"Want me to stress-test this design for hidden assumptions, one at a time, or skip straight to the
+design summary?"
 
-If the user wants challenge:
+If the user accepts, run the three-step audit inline:
 
-- Load `cape:challenge` with the Skill tool to surface hidden assumptions
-- Challenge walks each assumption interactively — one per turn — with researched recommendations
-- Confirmed assumptions become requirements or anti-patterns in the design summary
-- Rejected ones trigger scope reductions or requirement changes
+1. **Gather context:** review the selected approach, prior decisions, and codebase findings.
+   Research before presenting; dispatch `cape:codebase-investigator` in default mode (model: haiku)
+   when codebase evidence could resolve a question. Resolve assumptions silently when evidence
+   answers them; only surface items that need human judgment.
+2. **Extract and assess:** scan for scope creep, implicit constraints, unstated requirements, hidden
+   dependencies, over-engineering, and under-specification. Risk-rank by impact and reversibility:
+   high first, then medium, then low. Skip low-risk items when the design is simple, but never skip
+   high-risk assumptions.
+3. **Resolve interactively:** walk assumptions one per turn. For each, explain the context, give a
+   researched recommendation, and present options with trade-offs. Confirmed assumptions become
+   explicit requirements or anti-patterns in the design summary. Rejected assumptions trigger scope
+   reductions, requirement changes, or revised architecture before Step 4.
+
+Use this format for each turn:
+
+```
+**Assumption [N/total]: [Topic]** [Risk]
+
+[Context — why this matters and what research/codebase evidence showed]
+
+Recommended: [Recommendation and reasoning]
+
+a) [Recommendation] — [trade-off]
+b) [Alternative] — [trade-off]
+c) [Different direction] — [trade-off]
+```
+
+The user can say "lock it" to end early. Summarize confirmed constraints, rejected assumptions, and
+remaining open questions before proceeding.
 
 If the user skips, proceed directly to Step 4.
 
@@ -269,21 +291,25 @@ Compose the design summary internally (do not present yet). This summary must be
 
 **Fact-check before presenting:**
 
-Dispatch `cape:fact-checker` on the composed design summary. Pass all factual claims from the
-Requirements, Architecture, and Research findings sections. The fact-checker verifies each claim
-against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
+Dispatch `cape:fact-checker` (model: sonnet) on the composed design summary. Pass all factual claims
+from the Requirements, Architecture, and Research findings sections. The fact-checker verifies each
+claim against codebase evidence (`file:line`) and external sources (`URL — Tier N`).
 
 - **Confirmed** claims — keep as-is
 - **Refuted** claims — remove or correct with the fact-checker's evidence
 - **Partially correct** claims — update to reflect what was actually found
 - **Unverifiable** claims — remove from the design summary; note them under "Open questions" instead
 
+Before presenting, load the global `stop-slop` skill and run the user-facing prose through it; skip
+this for pure code or mechanical output.
+
 Present the final design summary only after fact-checking is complete.
 
 **Stop and hand off:**
 
 ```
-Design summary complete (fact-checked). Next step: formalize into a br epic with `cape:write-plan`.
+Design summary complete (fact-checked). Next step: formalize into a Linear tracker epic with
+`cape:write-plan`.
 ```
 
 </the_process>
@@ -300,12 +326,12 @@ Each sub-agent receives the same research context and designs under its assigned
 
 If sub-agents aren't available, simulate constraints sequentially.
 
-## `cape:fact-checker` protocol (Step 4):
+## `cape:fact-checker` protocol (model: sonnet, Step 4):
 
-Dispatch after composing the design summary, before presenting to the user. Pass all factual claims
-from the Requirements, Architecture, and Research findings sections. Expect back per-claim verdicts
-(Confirmed/Refuted/Partially correct/Unverifiable) with evidence. Remove or correct claims based on
-the verdicts.
+Dispatch `cape:fact-checker` (model: sonnet) after composing the design summary, before presenting
+to the user. Pass all factual claims from the Requirements, Architecture, and Research findings
+sections. Expect back per-claim verdicts (Confirmed/Refuted/Partially correct/Unverifiable) with
+evidence. Remove or correct claims based on the verdicts.
 
 ## Research protocol:
 
@@ -314,26 +340,6 @@ the verdicts.
 3. Research yields nothing → ask user for direction
 
 </agent_references>
-
-<skill_references>
-
-## Load `cape:design-an-interface` with the Skill tool when (interface mode):
-
-- The core design question is about an interface, API surface, or module boundary
-- Multiple viable interface shapes exist and the choice drives the architecture
-- The user's idea is fundamentally about what callers should see
-
-Its recommendation feeds into the design summary as the chosen approach.
-
-## Load `cape:challenge` with the Skill tool when (opt-in):
-
-- User accepts the challenge offer from Step 3
-- The selected approach has assumptions worth stress-testing
-
-Challenge walks each assumption interactively — confirmed assumptions become requirements or
-anti-patterns in the design summary. Rejected ones trigger scope reductions.
-
-</skill_references>
 
 <examples>
 
@@ -369,8 +375,9 @@ passport.js already exists in the codebase. Creates inconsistent architecture.
 
 **Right:**
 
-1. Dispatch codebase-investigator: finds passport.js at auth/passport-config.ts
-2. Dispatch internet-researcher: finds passport-google-oauth20 strategy
+1. Dispatch `cape:codebase-investigator` in default mode (model: haiku): finds passport.js at
+   auth/passport-config.ts
+2. Dispatch `cape:internet-researcher` (model: sonnet): finds passport-google-oauth20 strategy
 3. CHECKPOINT: present research summary — existing passport setup, available strategies
 4. User discusses, confirms OAuth provider choice
 5. Propose extending existing passport setup vs Auth0 vs custom JWT

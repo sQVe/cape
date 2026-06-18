@@ -1,24 +1,13 @@
-const beadsPatterns = [
-  /\bbr\b/i,
-  /\bbeads?\b/i,
-  /\.beads/i,
+const trackerPatterns = [
   /issue.*(track|create|log)/i,
   /track.*(bug|issue|finding|gap|these|them)/i,
   /what.*(task|work).*next/i,
   /batch.*(create|issue)/i,
-  /--design.*create/i,
-  /--description.*--design/i,
   /\bgaps?\b.*\btrack/i,
 ];
 
-const managingPattern = /(?:split|merge|archiv).*\bbr-/i;
-
-export const detectBeadsSkill = (prompt: string) => {
-  if (managingPattern.test(prompt)) {
-    return false;
-  }
-  return beadsPatterns.some((pattern) => pattern.test(prompt));
-};
+export const detectTrackerSkill = (prompt: string) =>
+  trackerPatterns.some((pattern) => pattern.test(prompt));
 
 const errorPatterns = [
   /(?:^|\n)\s*at\s+\S+\s+\(.*:\d+:\d+\)/,
@@ -30,7 +19,7 @@ const errorPatterns = [
   /(?:this|it)\s+(?:is\s+)?(?:broken|crashing|failing)(?!\s+(?:into|down|up|to)\b)/i,
 ];
 
-export const detectDebugIssue = (prompt: string) =>
+export const detectBugReport = (prompt: string) =>
   errorPatterns.some((pattern) => pattern.test(prompt));
 
 const continuePatterns = [
@@ -86,4 +75,3 @@ export const parseSkillInput = (input: string): SkillInput | null => {
     return null;
   }
 };
-

@@ -12,7 +12,6 @@ import {
   validatePrBody,
 } from '../services/pr';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubDetectLayer,
@@ -59,7 +58,6 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     stubHookLayer,
     stubValidateLayer,
     stubConformLayer,
@@ -348,7 +346,6 @@ const makeCreateHookLayer = (overrides: {
     writeFile: () => Effect.succeed(undefined),
     removeFile: () => Effect.succeed(undefined),
     ensureDir: () => Effect.succeed(undefined),
-    brQuery: () => Effect.succeed(null),
     readStdin: () => Effect.succeed(''),
     spawnGit: (args) => {
       const cmd = args.join(' ');
@@ -388,7 +385,6 @@ const makeCreateLayers = (
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     hookLayer,
     prLayer,
     stubValidateLayer,
@@ -462,7 +458,6 @@ describe('pr create command', () => {
       writeFile: () => Effect.succeed(undefined),
       removeFile: () => Effect.succeed(undefined),
       ensureDir: () => Effect.succeed(undefined),
-      brQuery: () => Effect.succeed(null),
       readStdin: () => Effect.succeed(''),
       spawnGit: (args) => {
         const cmd = args.join(' ');
@@ -544,7 +539,6 @@ describe('pr create command', () => {
       writeFile: () => Effect.succeed(undefined),
       removeFile: () => Effect.succeed(undefined),
       ensureDir: () => Effect.succeed(undefined),
-      brQuery: () => Effect.succeed(null),
       readStdin: () => Effect.succeed(''),
       spawnGit: (args) => {
         const cmd = args.join(' ');
@@ -582,7 +576,6 @@ describe('pr create command', () => {
       writeFile: () => Effect.succeed(undefined),
       removeFile: () => Effect.succeed(undefined),
       ensureDir: () => Effect.succeed(undefined),
-      brQuery: () => Effect.succeed(null),
       readStdin: () => Effect.succeed(''),
       spawnGit: (args) => {
         const cmd = args.join(' ');

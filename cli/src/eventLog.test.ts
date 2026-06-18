@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logEvent } from './eventLog';
 
+const parseJsonLine = (line: string | undefined) => {
+  expect(line).toBeDefined();
+  return JSON.parse(line ?? '{}') as Record<string, unknown>;
+};
+
 describe('logEvent', () => {
   let tempDir: string;
 
@@ -23,7 +28,7 @@ describe('logEvent', () => {
     const content = readFileSync(join(tempDir, 'hooks/context/events.jsonl'), 'utf-8');
     const lines = content.trim().split('\n');
     expect(lines).toHaveLength(1);
-    const entry = JSON.parse(lines[0]);
+    const entry = parseJsonLine(lines[0]);
     expect(entry.cmd).toBe('commit');
     expect(entry.ts).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
@@ -49,9 +54,9 @@ describe('logEvent', () => {
     const content = readFileSync(join(tempDir, 'hooks/context/events.jsonl'), 'utf-8');
     const lines = content.trim().split('\n');
     expect(lines).toHaveLength(3);
-    expect(JSON.parse(lines[0]).cmd).toBe('commit');
-    expect(JSON.parse(lines[1]).cmd).toBe('check');
-    expect(JSON.parse(lines[2]).cmd).toBe('conform');
+    expect(parseJsonLine(lines[0]).cmd).toBe('commit');
+    expect(parseJsonLine(lines[1]).cmd).toBe('check');
+    expect(parseJsonLine(lines[2]).cmd).toBe('conform');
   });
 
   it('creates hooks/context directory if missing', () => {
@@ -63,6 +68,8 @@ describe('logEvent', () => {
 
   it('does not throw when path is unwritable', () => {
     vi.stubEnv('CLAUDE_PLUGIN_ROOT', '/nonexistent/readonly/path');
-    expect(() =>{  logEvent('commit'); }).not.toThrow();
+    expect(() => {
+      logEvent('commit');
+    }).not.toThrow();
   });
 });

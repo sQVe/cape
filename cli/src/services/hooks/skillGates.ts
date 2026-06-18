@@ -1,10 +1,16 @@
 import { Effect } from 'effect';
 
 import { logEvent } from '../../eventLog';
-import { safeParseJson } from '../../utils/json';
 import { denyTable } from './denyTable';
 import { parseCommand, parseSkillInput, stripQuotedContent } from './parsing';
-import { HookService, readState } from './state';
+import {
+  HookService,
+  isDoneTask,
+  isReadyTask,
+  readFlowPhaseContext,
+  readState,
+  readTrackerCache,
+} from './state';
 
 export { denyTable } from './denyTable';
 
@@ -15,6 +21,11 @@ export const denyWith = (reason: string) => ({
     permissionDecisionReason: reason,
   },
 });
+
+const contextWith = (additionalContext: string) => ({ additionalContext });
+
+const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
+const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
@@ -59,9 +70,9 @@ export const preToolUseBash = () =>
 
 const gatedSkills = new Set([
   'execute-plan',
-  'expand-task',
   'finish-epic',
   'fix-bug',
+  'pr',
   'test-driven-development',
 ]);
 
@@ -73,22 +84,21 @@ type GateResult = ReturnType<typeof denyWith> | ContextResult | null;
 const gateExecutePlan = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const epics = yield* service.brQuery(['list', '--type', 'epic', '--status', 'open']);
-    if (epics === null) {
+    const cache = yield* readTrackerCache();
+    if (cache === null) {
       return null;
     }
-    if (!epics) {
-      return denyWith(
+    if (Object.keys(cache.epics).length === 0) {
+      return contextWith(
         'No open epic exists. Load cape:brainstorm to explore the problem, then cape:write-plan to create an epic.',
       );
     }
-    const ready = yield* service.brQuery(['ready']);
-    if (ready === null) {
-      return null;
-    }
-    if (!ready) {
-      return denyWith(
-        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Use cape:expand-task or create a new task with cape:beads.',
+    const flowPhase = yield* readFlowPhaseContext();
+    const activeEpic = flowPhase == null ? null : cache.epics[flowPhase.issueId];
+    const readyTask = activeEpic?.tasks.find(isReadyTask);
+    if (readyTask == null) {
+      return contextWith(
+        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
       );
     }
     const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
@@ -99,8 +109,8 @@ const gateExecutePlan = () =>
         return {
           additionalContext: [
             `You are on \`${branch}\` (the default branch).`,
-            'Ask the user whether to create a feature branch before starting work.',
-            'Use cape:branch to create one if they agree.',
+            'Ask the user whether to start or enter the epic worktree before starting work.',
+            'Use cape:worktree if they agree.',
           ].join(' '),
         };
       }
@@ -108,40 +118,20 @@ const gateExecutePlan = () =>
     return null;
   });
 
-const parseEpicStatusEntry = (raw: unknown): { epicId: string | null; openCount: number } => {
-  if (typeof raw !== 'object' || raw == null) {
-    return { epicId: null, openCount: 0 };
-  }
-  const total =
-    'total_children' in raw && typeof raw.total_children === 'number' ? raw.total_children : 0;
-  const closed =
-    'closed_children' in raw && typeof raw.closed_children === 'number' ? raw.closed_children : 0;
-  let epicId: string | null = null;
-  if ('epic' in raw && typeof raw.epic === 'object' && raw.epic != null && 'id' in raw.epic) {
-    epicId = String(raw.epic.id);
-  }
-  return { epicId, openCount: total - closed };
-};
-
 const gateFinishEpic = (targetEpicId: string | null) =>
   Effect.gen(function* () {
-    const service = yield* HookService;
-    const output = yield* service.brQuery(['epic', 'status', '--json']);
-    if (output === null) {
+    const cache = yield* readTrackerCache();
+    if (cache === null) {
       return null;
     }
-    const epics = safeParseJson(output);
-    if (!Array.isArray(epics)) {
-      return null;
-    }
-    for (const raw of epics) {
-      const { epicId, openCount } = parseEpicStatusEntry(raw);
-      if (targetEpicId != null && epicId !== targetEpicId) {
+    for (const epic of Object.values(cache.epics)) {
+      if (targetEpicId != null && epic.id !== targetEpicId) {
         continue;
       }
-      if (openCount > 0 && epicId != null) {
-        return denyWith(
-          `Epic ${epicId} still has ${openCount} open task(s). Close each task with \`cape br close <task-id>\` (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
+      const openCount = epic.tasks.filter((task) => !isDoneTask(task)).length;
+      if (openCount > 0) {
+        return contextWith(
+          `Epic ${epic.id} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
         );
       }
     }
@@ -149,29 +139,52 @@ const gateFinishEpic = (targetEpicId: string | null) =>
   });
 
 const gateFixBug = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const bugs = yield* service.brQuery(['list', '--type', 'bug', '--status', 'open']);
-    if (bugs === null) {
-      return null;
-    }
-    if (!bugs) {
-      return denyWith(
-        'No open bug exists. Load cape:debug-issue to investigate the problem first, then create a bug with cape:beads.',
-      );
-    }
-    return null;
-  });
+  Effect.succeed(
+    contextWith(
+      'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
+    ),
+  );
 
 const gateInternalSkill = () =>
   Effect.gen(function* () {
     const state = yield* readState();
     if (!state.workflowActive) {
-      return denyWith(
+      return contextWith(
         'This skill is internal to cape:execute-plan / cape:fix-bug and cannot be invoked directly. Load cape:execute-plan or cape:fix-bug to drive it.',
       );
     }
     return null;
+  });
+
+const hasReviewBeforePrOverride = (args: string | null) =>
+  args?.includes(HARD_GATE_OVERRIDE) ?? false;
+
+const gatePr = (args: string | null) =>
+  Effect.gen(function* () {
+    const state = yield* readState();
+    const reviewedAt = state.reviewedAt;
+    const missingOrStale = (() => {
+      if (reviewedAt == null || typeof reviewedAt.timestamp !== 'number') {
+        return 'missing';
+      }
+      return Date.now() - reviewedAt.timestamp > REVIEW_BEFORE_PR_TTL_MS ? 'stale' : null;
+    })();
+
+    if (missingOrStale == null) {
+      return null;
+    }
+
+    const baseMessage = missingOrStale === 'stale'
+      ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
+      : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
+    const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
+    const message = `${baseMessage} ${overrideHint}`;
+
+    if (hasReviewBeforePrOverride(args)) {
+      return contextWith(`review-before-pr override accepted: ${message}`);
+    }
+
+    return denyWith(message);
   });
 
 const skillGates: Record<
@@ -179,9 +192,9 @@ const skillGates: Record<
   (args: string | null) => Effect.Effect<GateResult, never, HookService>
 > = {
   'execute-plan': () => gateExecutePlan(),
-  'expand-task': () => gateInternalSkill(),
   'finish-epic': (args) => gateFinishEpic(args),
   'fix-bug': () => gateFixBug(),
+  pr: (args) => gatePr(args),
   'test-driven-development': () => gateInternalSkill(),
 };
 

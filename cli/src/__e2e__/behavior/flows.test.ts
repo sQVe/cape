@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -24,52 +24,68 @@ afterEach(() => {
   spawnSync('rm', ['-rf', tmpDir]);
 });
 
-describe('flow 1: br show then br update with design', () => {
-  it('allows br update after br show writes log', () => {
-    const showStdin = JSON.stringify({
-      tool_input: { command: 'br show cape-abc' },
-    });
-    const showResult = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], showStdin, env);
-    expect(showResult.status).toBe(0);
-
-    const log = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    expect(log).toContain('cape-abc');
-
-    const updateStdin = JSON.stringify({
-      tool_input: { command: 'br update cape-abc --design "## New section"' },
-    });
-    const updateResult = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], updateStdin, env);
-    expect(updateResult.status).toBe(0);
-    expect(updateResult.stdout).toBe('');
-  });
-
-  it('passes through br update --design without prior br show', () => {
-    const updateStdin = JSON.stringify({
-      tool_input: { command: 'br update cape-abc --design "## New section"' },
-    });
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], updateStdin, env);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toBe('');
-  });
-});
-
-describe('flow 3: session-start clears logs', () => {
-  it('clears br-show log with --clear-logs', () => {
-    writeFileSync(join(contextDir, 'br-show-log.txt'), 'cape-old\n');
-
-    const result = cape(['hook', 'session-start', '--clear-logs'], '', env);
-    expect(result.status).toBe(0);
-
-    const brLog = readFileSync(join(contextDir, 'br-show-log.txt'), 'utf-8');
-    expect(brLog).toBe('');
-  });
-
+describe('flow 3: session-start', () => {
   it('produces additionalContext output', () => {
     const result = cape(['hook', 'session-start'], '', env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.additionalContext).toEqual(expect.any(String));
     expect(parsed.additionalContext.length).toBeGreaterThan(0);
+  });
+
+  it('renders the ABU-15 banner from a seeded tracker cache with network disabled', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({
+        flowPhase: {
+          phase: 'BUILD',
+          issueId: 'ABU-15',
+          timestamp: Date.now(),
+        },
+      }),
+    );
+    writeFileSync(
+      join(contextDir, 'tracker.json'),
+      JSON.stringify({
+        version: 1,
+        timestamp: Date.now(),
+        epics: {
+          'ABU-15': {
+            id: 'ABU-15',
+            title: 'Cape V2',
+            status: 'In Progress',
+            tasks: [
+              {
+                id: 'ABU-16',
+                title: 'Tracker seam',
+                status: 'Done',
+                stateType: 'completed',
+              },
+              {
+                id: 'ABU-17',
+                title: 'Session banner',
+                status: 'Todo',
+                stateType: 'unstarted',
+              },
+            ],
+          },
+        },
+      }),
+    );
+
+    const result = cape(['hook', 'session-start'], '', {
+      ...env,
+      HTTP_PROXY: 'http://127.0.0.1:9',
+      HTTPS_PROXY: 'http://127.0.0.1:9',
+      LINEAR_API_KEY: '',
+    });
+
+    expect(result.status).toBe(0);
+    const parsed = JSON.parse(result.stdout);
+    expect(parsed.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(parsed.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(parsed.additionalContext).toContain('| Next   ABU-17 - Session banner');
+    expect(parsed.additionalContext).toContain('| Branch ');
   });
 });
 

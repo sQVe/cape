@@ -9,7 +9,6 @@ import { CheckService, getCheckResults, resolveCheckCommands } from '../services
 import type { DetectResult } from '../services/detect';
 import { DetectService } from '../services/detect';
 import {
-  stubBrLayer,
   stubCommitLayer,
   stubGitLayer,
   stubHookLayer,
@@ -35,7 +34,6 @@ const makeTestDetectLayer = (results: DetectResult[] = []) =>
             ],
       ),
     mapDirectory: () => Effect.succeed({ 'src/foo.ts': 'src/foo.test.ts' }),
-    packageManager: () => Effect.succeed(null),
   });
 
 const makeTestCheckLayer = (results: CheckResult[] = []) =>
@@ -64,7 +62,6 @@ const commandLayers = Layer.mergeAll(
   makeTestCheckLayer(),
   stubGitLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -87,7 +84,6 @@ describe('check command wiring', () => {
       makeFailingCheckLayer([{ check: 'vitest', passed: false, output: 'FAIL' }]),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
@@ -104,7 +100,6 @@ describe('check command wiring', () => {
     const errorDetectLayer = Layer.succeed(DetectService)({
       detect: () => Effect.fail(new Error('no ecosystem detected')),
       mapDirectory: () => Effect.fail(new Error('no ecosystem detected')),
-      packageManager: () => Effect.succeed(null),
     });
     const layers = Layer.mergeAll(
       NodeServices.layer,
@@ -112,7 +107,6 @@ describe('check command wiring', () => {
       makeTestCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,
@@ -130,7 +124,6 @@ describe('check command wiring', () => {
       makeErrorCheckLayer(),
       stubGitLayer,
       stubCommitLayer,
-      stubBrLayer,
       stubHookLayer,
       stubPrLayer,
       stubValidateLayer,

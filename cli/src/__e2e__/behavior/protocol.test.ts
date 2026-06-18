@@ -172,7 +172,7 @@ describe('unknown matchers', () => {
 
 describe('event name normalization', () => {
   it('PascalCase PreToolUse works the same as kebab-case', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'br create --type task' } });
+    const stdin = JSON.stringify({ tool_input: { command: 'git commit -m "feat: test"' } });
 
     const kebab = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     const pascal = cape(['hook', 'PreToolUse', '--matcher', 'Bash'], stdin, env);
@@ -228,7 +228,7 @@ describe('event name normalization', () => {
 
 describe('encoding edge cases', () => {
   it('denies unicode command containing denial trigger', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && br create --type task' } });
+    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git commit -m "feat"' } });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
@@ -254,7 +254,7 @@ describe('encoding edge cases', () => {
   it('denies very long command containing a denial trigger', () => {
     const longArg = 'a'.repeat(50_000);
     const stdin = JSON.stringify({
-      tool_input: { command: `echo ${longArg} && br create --type bug` },
+      tool_input: { command: `echo ${longArg} && git commit -m "feat"` },
     });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
@@ -331,19 +331,19 @@ describe('post-tool-use AskUserQuestion with non-array questions', () => {
   });
 });
 
-describe('user-prompt-submit beads detection', () => {
-  it('detects beads keyword and includes cape:beads in additionalContext', () => {
-    const stdin = JSON.stringify({ prompt: 'show me br list' });
+describe('user-prompt-submit tracker detection', () => {
+  it('detects issue-tracker wording and includes cape:tracker in additionalContext', () => {
+    const stdin = JSON.stringify({ prompt: 'show me the issue tracker' });
     const result = cape(['hook', 'user-prompt-submit'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:beads');
+    expect(parsed.additionalContext).toContain('cape:tracker');
   });
 });
 
 describe('user-prompt-submit intent routing', () => {
-  it('detects stack trace and includes cape:debug-issue', () => {
+  it('detects stack trace and includes cape:fix-bug', () => {
     const stdin = JSON.stringify({
       prompt: 'I got this:\n  at Object.<anonymous> (/src/index.ts:42:10)',
     });
@@ -351,7 +351,7 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:debug-issue');
+    expect(parsed.additionalContext).toContain('cape:fix-bug');
   });
 
   it('detects continue intent and includes cape:execute-plan', () => {
@@ -371,8 +371,8 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext).toContain('cape:beads');
-    expect(parsed.additionalContext).toContain('cape:debug-issue');
+    expect(parsed.additionalContext).toContain('cape:tracker');
+    expect(parsed.additionalContext).toContain('cape:fix-bug');
   });
 
   it('passes through ambiguous input without routing', () => {
@@ -381,7 +381,7 @@ describe('user-prompt-submit intent routing', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.decision).toBe('approve');
-    expect(parsed.additionalContext ?? '').not.toContain('cape:debug-issue');
+    expect(parsed.additionalContext ?? '').not.toContain('cape:fix-bug');
     expect(parsed.additionalContext ?? '').not.toContain('cape:execute-plan');
   });
 });

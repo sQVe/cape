@@ -15,10 +15,18 @@ const STATE_KEY_CATALOG = [
   },
   {
     key: 'workflowActive',
-    description: 'Gates internal skills (expand-task, test-driven-development) for direct invocation',
+    description:
+      'Nudges internal test-driven-development direct invocation; task expansion runs inside execute-plan',
     validValues: 'true (boolean, set or absent)',
     valueShape: '{ value: true }',
     ttlMs: null,
+  },
+  {
+    key: 'reviewedAt',
+    description: 'Fresh cape:review completion stamp required by the review-before-pr hard gate',
+    validValues: 'set by cape:review after a completed review',
+    valueShape: '{ scope }',
+    ttlMs: 60 * 60 * 1000,
   },
 ] as const;
 

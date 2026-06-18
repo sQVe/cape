@@ -5,14 +5,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logEvent } from '../eventLog';
 import { main } from '../main';
+import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
 
 import {
+  FLOW_PHASE_TTL_MS,
   HookService,
   denyTable,
   denyWith,
-  detectBeadsSkill,
-  detectDebugIssue,
+  detectBugReport,
   detectExecutePlan,
+  detectTrackerSkill,
   normalizeEventName,
   postToolUseBash,
   preToolUseBash,
@@ -22,7 +24,6 @@ import {
   userPromptSubmit,
 } from '../services/hook';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubDetectLayer,
@@ -51,69 +52,74 @@ describe('normalizeEventName', () => {
   });
 });
 
-describe('detectBeadsSkill', () => {
-  it('detects br keyword', () => {
-    expect(detectBeadsSkill('show br issues')).toBe(true);
+describe('detectTrackerSkill', () => {
+  it('detects issue tracker wording', () => {
+    expect(detectTrackerSkill('show the issue tracker')).toBe(true);
   });
 
-  it('detects beads keyword', () => {
-    expect(detectBeadsSkill('create a bead')).toBe(true);
+  it('does not detect retired local-store wording', () => {
+    expect(detectTrackerSkill('open the legacy local issue store')).toBe(false);
   });
 
   it('detects issue tracking phrases', () => {
-    expect(detectBeadsSkill('track this bug')).toBe(true);
+    expect(detectTrackerSkill('track this bug')).toBe(true);
   });
 
   it('detects what task next', () => {
-    expect(detectBeadsSkill('what task should I work on next')).toBe(true);
+    expect(detectTrackerSkill('what task should I work on next')).toBe(true);
   });
 
-  it('skips split/merge/archive br operations', () => {
-    expect(detectBeadsSkill('split br-123 into subtasks')).toBe(false);
+  it('skips split/merge/archive issue-id operations', () => {
+    expect(detectTrackerSkill('split ABU-123 into subtasks')).toBe(false);
   });
 
   it('returns false for unrelated prompts', () => {
-    expect(detectBeadsSkill('hello world')).toBe(false);
+    expect(detectTrackerSkill('hello world')).toBe(false);
+  });
+
+  it('does not detect stale create flag syntax as issue-tracking intent', () => {
+    expect(detectTrackerSkill('why does --design fail on create commands?')).toBe(false);
+    expect(detectTrackerSkill('compare --description with --design in this API')).toBe(false);
   });
 });
 
-describe('detectDebugIssue', () => {
+describe('detectBugReport', () => {
   it('detects JS stack trace', () => {
     const prompt = 'I got this error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
-    expect(detectDebugIssue(prompt)).toBe(true);
+    expect(detectBugReport(prompt)).toBe(true);
   });
 
   it('detects Python traceback', () => {
     const prompt = 'Traceback (most recent call last)\n  File "app.py", line 10';
-    expect(detectDebugIssue(prompt)).toBe(true);
+    expect(detectBugReport(prompt)).toBe(true);
   });
 
   it('detects Go panic', () => {
-    expect(detectDebugIssue('panic: runtime error: index out of range')).toBe(true);
+    expect(detectBugReport('panic: runtime error: index out of range')).toBe(true);
   });
 
   it('detects JS error names', () => {
-    expect(detectDebugIssue('TypeError: Cannot read properties of undefined')).toBe(true);
+    expect(detectBugReport('TypeError: Cannot read properties of undefined')).toBe(true);
   });
 
   it('detects explicit error report', () => {
-    expect(detectDebugIssue("I'm getting an error when I run the build")).toBe(true);
+    expect(detectBugReport("I'm getting an error when I run the build")).toBe(true);
   });
 
   it('detects broken/crashing language', () => {
-    expect(detectDebugIssue('this is broken after the last deploy')).toBe(true);
+    expect(detectBugReport('this is broken after the last deploy')).toBe(true);
   });
 
   it('does not detect error discussion', () => {
-    expect(detectDebugIssue('how does error handling work in this codebase')).toBe(false);
+    expect(detectBugReport('how does error handling work in this codebase')).toBe(false);
   });
 
   it('does not detect figurative broken', () => {
-    expect(detectDebugIssue('this is broken into smaller pieces')).toBe(false);
+    expect(detectBugReport('this is broken into smaller pieces')).toBe(false);
   });
 
   it('does not detect unrelated prompts', () => {
-    expect(detectDebugIssue('add a new user endpoint')).toBe(false);
+    expect(detectBugReport('add a new user endpoint')).toBe(false);
   });
 });
 
@@ -148,7 +154,6 @@ const makeStubHookLayer = (
   overrides: Partial<{
     pluginRoot: string;
     files: Record<string, string>;
-    brResponses: Record<string, string>;
     gitResponses: Record<string, string | null>;
     stdin: string;
     writtenFiles: Record<string, string>;
@@ -158,7 +163,6 @@ const makeStubHookLayer = (
   const {
     pluginRoot = '/test',
     files = {},
-    brResponses = {},
     gitResponses = {},
     stdin = '',
     writtenFiles = {},
@@ -177,15 +181,6 @@ const makeStubHookLayer = (
       return Effect.succeed(undefined);
     },
     ensureDir: () => Effect.succeed(undefined),
-    brQuery: (args) => {
-      const key = args.join(' ');
-      for (const [pattern, response] of Object.entries(brResponses)) {
-        if (key.includes(pattern)) {
-          return Effect.succeed(response);
-        }
-      }
-      return Effect.succeed(null);
-    },
     readStdin: () => Effect.succeed(stdin),
     spawnGit: (args) => {
       const key = args.join(' ');
@@ -208,12 +203,84 @@ const flowPhaseEntry = (phase: string) => ({
   timestamp: Date.now(),
 });
 
+const flowPhaseEntryForIssue = (phase: string, issueId: string) => ({
+  phase,
+  issueId,
+  timestamp: Date.now(),
+});
+
 const stateFile = (entries: Record<string, unknown>) => ({
   '/test/hooks/context/state.json': JSON.stringify(entries),
 });
 
+const reviewedAtEntry = (timestamp = Date.now()) => ({
+  scope: 'branch',
+  timestamp,
+});
+
 const flowPhaseFile = (phase: string) =>
   stateFile({ flowPhase: flowPhaseEntry(phase) });
+
+const trackerCacheFile = (cache: Record<string, unknown>) => ({
+  '/test/hooks/context/tracker.json': JSON.stringify(cache),
+});
+
+const trackerCache = (timestamp = Date.now()) => ({
+  version: 1,
+  timestamp,
+  epics: {
+    'ABU-15': {
+      id: 'ABU-15',
+      title: 'Cape V2',
+      status: 'In Progress',
+      tasks: [
+        {
+          id: 'ABU-16',
+          title: 'Tracker seam',
+          status: 'Done',
+          stateType: 'completed',
+        },
+        {
+          id: 'ABU-17',
+          title: 'Session banner',
+          status: 'Todo',
+          stateType: 'unstarted',
+        },
+      ],
+    },
+  },
+});
+
+const task = (
+  id: string,
+  status: string,
+  stateType: string,
+  title = 'Task',
+) => ({
+  id,
+  title,
+  status,
+  stateType,
+});
+
+const epic = (
+  id: string,
+  tasks: readonly ReturnType<typeof task>[],
+  title = 'My Epic',
+) => ({
+  id,
+  title,
+  status: 'In Progress',
+  tasks,
+});
+
+const trackerGateFiles = (
+  epics: Record<string, ReturnType<typeof epic>>,
+  activeEpicId = 'cape-1',
+) => ({
+  ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', activeEpicId) }),
+  ...trackerCacheFile({ version: 1, timestamp: Date.now(), epics }),
+});
 
 describe('sessionStart', () => {
   it('outputs SKILL.md content when present', async () => {
@@ -252,7 +319,7 @@ describe('sessionStart', () => {
       files: stateFile({}),
     });
     await Effect.runPromise(sessionStart(true).pipe(Effect.provide(layer)));
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
+    expect(writtenFiles).toEqual({});
   });
 
   it('does not clear logs when flag is false', async () => {
@@ -294,6 +361,135 @@ describe('sessionStart', () => {
     expect(parsed).not.toHaveProperty('tddState');
     expect(parsed).toHaveProperty('flowPhase');
   });
+
+  it('injects an active epic banner from the tracker cache as the first context', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(trackerCache()),
+      },
+      gitResponses: {
+        'branch --show-current': 'feat/abu-15',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toMatch(/^Render this cape session banner verbatim/);
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(result.additionalContext).toContain('| Next   ABU-17 - Session banner');
+    expect(result.additionalContext).toContain('| Branch feat/abu-15 (worktree)');
+    expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
+      result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
+    );
+  });
+
+  it('omits the banner when no active epic exists in flowPhase', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: { phase: 'BUILD', timestamp: Date.now() } }),
+        ...trackerCacheFile(trackerCache()),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache is empty', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile({ version: 1, timestamp: Date.now(), epics: {} }),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache JSON is corrupt', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        '/test/hooks/context/tracker.json': 'corrupted{{{',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('omits the banner when the tracker cache is past its TTL', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(trackerCache(Date.now() - TRACKER_CACHE_TTL_MS - 1)),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
+
+  it('renders a no-ready-tasks banner when the active epic has no ready task', async () => {
+    const cache = trackerCache();
+    cache.epics['ABU-15'].tasks = [
+      {
+        id: 'ABU-16',
+        title: 'Tracker seam',
+        status: 'Done',
+        stateType: 'completed',
+      },
+    ];
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(cache),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Next   None');
+    expect(result.additionalContext).toContain('| Phase  BUILD  (1/1 tasks done)');
+  });
+
+  it('omits the banner when flowPhase is expired even if the tracker cache is present', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({
+          flowPhase: {
+            phase: 'BUILD',
+            issueId: 'ABU-15',
+            timestamp: Date.now() - FLOW_PHASE_TTL_MS - 1,
+          },
+        }),
+        ...trackerCacheFile(trackerCache()),
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
+  });
 });
 
 describe('userPromptSubmit', () => {
@@ -315,13 +511,13 @@ describe('userPromptSubmit', () => {
     expect(result).toEqual({ decision: 'approve' });
   });
 
-  it('injects beads skill for br mention', async () => {
+  it('injects tracker skill for issue-tracker mention', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(result.decision).toBe('approve');
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
   });
 
   it('injects flow context when flowPhase exists in state', async () => {
@@ -342,13 +538,13 @@ describe('userPromptSubmit', () => {
     expect(result).toEqual({ decision: 'approve' });
   });
 
-  it('injects debug-issue for stack trace', async () => {
+  it('injects fix-bug for stack trace', async () => {
     const prompt = 'Error:\n  at Object.<anonymous> (/src/index.ts:42:10)';
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt }),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('cape:debug-issue');
+    expect(result.additionalContext).toContain('cape:fix-bug');
   });
 
   it('injects execute-plan for continue', async () => {
@@ -359,7 +555,7 @@ describe('userPromptSubmit', () => {
     expect(result.additionalContext).toContain('cape:execute-plan');
   });
 
-  it('does not inject debug-issue for error discussion', async () => {
+  it('does not inject fix-bug for error discussion', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'how does error handling work' }),
     });
@@ -377,11 +573,11 @@ describe('userPromptSubmit', () => {
 
   it('combines skills and flow context', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
       files: flowPhaseFile('planning'),
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
     expect(result.additionalContext).toContain('<flow-context>');
     expect(result.additionalContext).toContain('planning');
   });
@@ -396,7 +592,6 @@ const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
-    stubBrLayer,
     stubPrLayer,
     stubValidateLayer,
     stubConformLayer,
@@ -440,14 +635,14 @@ describe('hook command wiring', () => {
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('');
+    expect(writtenFiles).toEqual({});
     expect(removedFiles).toHaveLength(0);
     console_.restore();
   });
 
-  it('handles user-prompt-submit with beads detection', async () => {
+  it('handles user-prompt-submit with tracker detection', async () => {
     const hookLayer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -456,7 +651,7 @@ describe('hook command wiring', () => {
     const output = console_.output();
     const result = JSON.parse(output);
     expect(result.decision).toBe('approve');
-    expect(result.additionalContext).toContain('cape:beads');
+    expect(result.additionalContext).toContain('cape:tracker');
     console_.restore();
   });
 
@@ -591,32 +786,6 @@ describe('preToolUseBash', () => {
       expectDeny(result, 'cape commit');
     });
 
-    // Re-enable as each cape command is implemented:
-    // it('denies raw br create', ...)
-    // it('denies raw br q', ...)
-    it('denies raw br update --status', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('br update bd-test --status in_progress') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br update');
-    });
-
-    it('passes through cape br update', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('cape br update bd-test --status in_progress') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    });
-
-    it('denies raw br close', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('br close cape-2v2.3') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'cape br close');
-    });
-
-    it('passes through cape br close', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('cape br close cape-2v2.3') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    });
     it('denies raw gh pr create', async () => {
       const layer = makeStubHookLayer({ stdin: bashStdin('gh pr create --title "feat"') });
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
@@ -807,7 +976,14 @@ describe('preToolUseBash', () => {
 });
 
 describe('preToolUseSkill', () => {
-  it.each(['cape:commit', 'cape:review', 'cape:beads', 'cape:branch', 'cape:brainstorm', 'cape:write-plan'])(
+  it.each([
+    'cape:commit',
+    'cape:review',
+    'cape:tracker',
+    'cape:worktree',
+    'cape:brainstorm',
+    'cape:write-plan',
+  ])(
     'allows non-gated skill %s',
     async (skill) => {
       const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
@@ -815,6 +991,44 @@ describe('preToolUseSkill', () => {
       expect(result).toBeNull();
     },
   );
+
+  it('denies pr when review has not stamped state', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'review-before-pr');
+    expectDeny(result, 'CAPE_HARD_GATE_OVERRIDE');
+  });
+
+  it('denies pr when review stamp is stale', async () => {
+    const staleTimestamp = Date.now() - 2 * 60 * 60 * 1000;
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+      files: stateFile({ reviewedAt: reviewedAtEntry(staleTimestamp) }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expectDeny(result, 'stale');
+  });
+
+  it('allows pr when review stamp is fresh', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr'),
+      files: stateFile({ reviewedAt: reviewedAtEntry() }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('downgrades pr review gate to warning when explicit override is present', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr', 'CAPE_HARD_GATE_OVERRIDE'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('review-before-pr override accepted'),
+    });
+  });
 
   it('passes through on invalid JSON', async () => {
     const layer = makeStubHookLayer({ stdin: 'not json' });
@@ -838,114 +1052,127 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('denies execute-plan when no open epic exists', async () => {
+  it('adds context for execute-plan when no open epic exists', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: { '--type epic': '' },
+      files: trackerGateFiles({}),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'brainstorm');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('brainstorm'),
+    });
   });
 
-  it('denies execute-plan when epic exists but no ready tasks', async () => {
+  it('adds context for execute-plan when epic exists but no ready tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: {
-        '--type epic': 'cape-1 epic open My Epic',
-        ready: '',
-      },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [task('cape-1.1', 'In Progress', 'started')]),
+      }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'ready');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('ready'),
+    });
   });
 
   it('allows execute-plan when epic and ready tasks exist', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: {
-        '--type epic': 'cape-1 epic open My Epic',
-        ready: 'cape-1.1 task Do something',
-      },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
+      }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
 
-  it('denies finish-epic when open tasks remain', async () => {
-    const epicStatus = JSON.stringify([
-      { epic: { id: 'cape-1' }, total_children: 3, closed_children: 1 },
-    ]);
+  it('adds context for finish-epic when open tasks remain', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic'),
-      brResponses: { 'epic status': epicStatus },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [
+          task('cape-1.1', 'Done', 'completed'),
+          task('cape-1.2', 'Todo', 'unstarted'),
+          task('cape-1.3', 'In Progress', 'started'),
+        ]),
+      }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'open task');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('open task'),
+    });
   });
 
   it('allows finish-epic when all tasks closed', async () => {
-    const epicStatus = JSON.stringify([
-      { epic: { id: 'cape-1' }, total_children: 3, closed_children: 3 },
-    ]);
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic'),
-      brResponses: { 'epic status': epicStatus },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [
+          task('cape-1.1', 'Done', 'completed'),
+          task('cape-1.2', 'Closed', 'completed'),
+          task('cape-1.3', 'Completed', 'completed'),
+        ]),
+      }),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
 
   it('allows finish-epic for target epic when other epics have open tasks', async () => {
-    const epicStatus = JSON.stringify([
-      { epic: { id: 'cape-other' }, total_children: 10, closed_children: 6 },
-      { epic: { id: 'cape-target' }, total_children: 5, closed_children: 5 },
-    ]);
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic', 'cape-target'),
-      brResponses: { 'epic status': epicStatus },
+      files: trackerGateFiles(
+        {
+          'cape-other': epic('cape-other', [
+            task('cape-other.1', 'Todo', 'unstarted'),
+            task('cape-other.2', 'Done', 'completed'),
+          ]),
+          'cape-target': epic('cape-target', [task('cape-target.1', 'Done', 'completed')]),
+        },
+        'cape-target',
+      ),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
 
-  it('denies finish-epic for target epic when it has open tasks', async () => {
-    const epicStatus = JSON.stringify([
-      { epic: { id: 'cape-other' }, total_children: 5, closed_children: 5 },
-      { epic: { id: 'cape-target' }, total_children: 5, closed_children: 3 },
-    ]);
+  it('adds context for target epic when it has open tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic', 'cape-target'),
-      brResponses: { 'epic status': epicStatus },
+      files: trackerGateFiles(
+        {
+          'cape-other': epic('cape-other', [task('cape-other.1', 'Done', 'completed')]),
+          'cape-target': epic('cape-target', [
+            task('cape-target.1', 'Done', 'completed'),
+            task('cape-target.2', 'Todo', 'unstarted'),
+          ]),
+        },
+        'cape-target',
+      ),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'cape-target');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('cape-target'),
+    });
   });
 
-  it('denies fix-bug when no open bug exists', async () => {
+  it('adds diagnosis gate context for fix-bug', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:fix-bug'),
-      brResponses: { '--type bug': '' },
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'debug-issue');
-  });
-
-  it('allows fix-bug when open bug exists', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:fix-bug'),
-      brResponses: { '--type bug': 'cape-5 Bug crash' },
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('diagnosis gate'),
     });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
   });
 
   it('returns additionalContext when on default branch with open epic and ready tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: {
-        '--type epic': 'cape-1 epic open My Epic',
-        ready: 'cape-1.1 task Do something',
-      },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
+      }),
       gitResponses: {
         'rev-parse': 'main',
         'symbolic-ref': 'refs/remotes/origin/main',
@@ -961,10 +1188,9 @@ describe('preToolUseSkill', () => {
   it('allows execute-plan on a feature branch with open epic and ready tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: {
-        '--type epic': 'cape-1 epic open My Epic',
-        ready: 'cape-1.1 task Do something',
-      },
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
+      }),
       gitResponses: {
         'rev-parse': 'feat/my-feature',
         'symbolic-ref': 'refs/remotes/origin/main',
@@ -974,47 +1200,26 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
-  it('allows execute-plan when br fails', async () => {
+  it('allows execute-plan when tracker cache is unreadable', async () => {
     const layer = makeStubHookLayer({ stdin: skillStdin('cape:execute-plan') });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
 
-  it('allows finish-epic when br fails', async () => {
+  it('allows finish-epic when tracker cache is unreadable', async () => {
     const layer = makeStubHookLayer({ stdin: skillStdin('cape:finish-epic') });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
   });
 
-  it('allows fix-bug when br fails', async () => {
-    const layer = makeStubHookLayer({ stdin: skillStdin('cape:fix-bug') });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('denies expand-task when no workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:expand-task'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'internal');
-  });
-
-  it('allows expand-task when workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:expand-task'),
-      files: stateFile({ workflowActive: { value: true, timestamp: Date.now() } }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('denies test-driven-development when no workflow is active', async () => {
+  it('adds context for test-driven-development when no workflow is active', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:test-driven-development'),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'internal');
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('internal'),
+    });
   });
 
   it('allows test-driven-development when workflow is active', async () => {
@@ -1047,7 +1252,7 @@ describe('hook command - PreToolUse wiring', () => {
   it('routes pre-tool-use --matcher Skill to flow-gate', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: skillStdin('cape:execute-plan'),
-      brResponses: { '--type epic': '' },
+      files: trackerGateFiles({}),
     });
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -1057,7 +1262,7 @@ describe('hook command - PreToolUse wiring', () => {
     );
     const output = console_.output();
     const result = JSON.parse(output);
-    expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
+    expect(result.additionalContext).toContain('brainstorm');
     console_.restore();
   });
 
@@ -1140,27 +1345,6 @@ describe('readFlowPhase', () => {
 
 
 describe('postToolUseBash', () => {
-  it('tracks br show command by writing bead ID to br-show-log.txt', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({
-      stdin: bashStdin('br show cape-abc'),
-      writtenFiles,
-    });
-    await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toContain('cape-abc');
-  });
-
-  it('appends to existing br-show-log.txt', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({
-      stdin: bashStdin('br show cape-def'),
-      files: { '/test/hooks/context/br-show-log.txt': 'cape-abc\n' },
-      writtenFiles,
-    });
-    await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toBe('cape-abc\ncape-def\n');
-  });
-
   it('returns null for non-matching commands', async () => {
     const writtenFiles: Record<string, string> = {};
     const layer = makeStubHookLayer({ stdin: bashStdin('echo hello'), writtenFiles });
@@ -1186,7 +1370,7 @@ describe('hook command - PostToolUse wiring', () => {
   it('routes post-tool-use --matcher Bash without output', async () => {
     const writtenFiles: Record<string, string> = {};
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br show cape-abc'),
+      stdin: bashStdin('echo hello'),
       writtenFiles,
     });
     const console_ = spyConsole();
@@ -1196,14 +1380,14 @@ describe('hook command - PostToolUse wiring', () => {
       ),
     );
     expect(console_.output()).toHaveLength(0);
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toContain('cape-abc');
+    expect(writtenFiles).toEqual({});
     console_.restore();
   });
 
   it('accepts PascalCase PostToolUse event name', async () => {
     const writtenFiles: Record<string, string> = {};
     const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('br show cape-xyz'),
+      stdin: bashStdin('echo hello'),
       writtenFiles,
     });
     const console_ = spyConsole();
@@ -1212,7 +1396,7 @@ describe('hook command - PostToolUse wiring', () => {
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(writtenFiles['/test/hooks/context/br-show-log.txt']).toContain('cape-xyz');
+    expect(writtenFiles).toEqual({});
     console_.restore();
   });
 
@@ -1259,13 +1443,12 @@ describe('event logging', () => {
 
   it('logs deny event for preToolUseSkill gate denial', async () => {
     const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      brResponses: { '--type epic': '' },
+      stdin: skillStdin('cape:pr'),
     });
     await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.PreToolUse.Skill',
-      expect.stringContaining('brainstorm'),
+      expect.stringContaining('review-before-pr'),
     );
   });
 
@@ -1277,12 +1460,12 @@ describe('event logging', () => {
 
   it('logs inject event for userPromptSubmit skill detection', async () => {
     const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show br issues' }),
+      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
     });
     await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(logEvent).toHaveBeenCalledWith(
       'hook.UserPromptSubmit',
-      expect.stringContaining('cape:beads'),
+      expect.stringContaining('cape:tracker'),
     );
   });
 
@@ -1307,4 +1490,3 @@ describe('event logging', () => {
     expect(logEvent).not.toHaveBeenCalled();
   });
 });
-

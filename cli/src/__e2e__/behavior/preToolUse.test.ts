@@ -9,7 +9,8 @@ import { cape, cleanupTestRepo, initTestRepo } from '../helpers';
 
 const bashInput = (command: string) => JSON.stringify({ tool_input: { command } });
 
-const skillInput = (skill: string) => JSON.stringify({ tool_input: { skill } });
+const skillInput = (skill: string, args?: string) =>
+  JSON.stringify({ tool_input: { skill, ...(args == null ? {} : { args }) } });
 
 const expectDeny = (result: { stdout: string; status: number }, reasonSubstring: string) => {
   expect(result.status).toBe(0);
@@ -58,28 +59,6 @@ describe('redirect tier', () => {
     expectDeny(result, 'cape commit');
   });
 
-  // Re-enable as each cape command is implemented:
-  // it('denies raw br create', ...)
-  // it('denies raw br q', ...)
-  // it('denies raw br update --status', ...)
-  // it('allows br update without --status', ...)
-  it('denies raw br close', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br close cape-2v2.3'),
-      env,
-    );
-    expectDeny(result, 'cape br close');
-  });
-
-  it('passes through cape br close', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('cape br close cape-2v2.3'),
-      env,
-    );
-    expectPassThrough(result);
-  });
   // it('denies raw gh pr create', ...)
   // it('denies raw git checkout -b', ...)
   // it('denies raw git switch -c', ...)
@@ -304,11 +283,9 @@ describe('skill gate: non-gated skills pass through', () => {
   it.each([
     'cape:commit',
     'cape:review',
-    'cape:beads',
-    'cape:branch',
+    'cape:tracker',
+    'cape:worktree',
     'cape:brainstorm',
-    'cape:pr',
-    'cape:refactor',
     'cape:write-plan',
   ])('allows non-gated skill %s', (skill) => {
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput(skill), env);
@@ -316,36 +293,51 @@ describe('skill gate: non-gated skills pass through', () => {
   });
 });
 
-describe('skill gate: internal skills require active workflow', () => {
-  it('denies expand-task when workflowActive is absent from state.json', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
-      skillInput('cape:expand-task'),
-      env,
-    );
-    expectDeny(result, 'internal');
+describe('skill gate: review-before-pr', () => {
+  it('denies pr when review has not stamped state', () => {
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput('cape:pr'), env);
+    expectDeny(result, 'review-before-pr');
+    expectDeny(result, 'CAPE_HARD_GATE_OVERRIDE');
   });
 
-  it('allows expand-task when workflowActive exists in state.json', () => {
+  it('denies pr when review stamp is stale', () => {
     writeFileSync(
       join(contextDir, 'state.json'),
-      JSON.stringify({ workflowActive: { value: true, timestamp: Date.now() } }),
+      JSON.stringify({
+        reviewedAt: { scope: 'branch', timestamp: Date.now() - 2 * 60 * 60 * 1000 },
+      }),
     );
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
-      skillInput('cape:expand-task'),
-      env,
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput('cape:pr'), env);
+    expectDeny(result, 'stale');
+  });
+
+  it('allows pr when review stamp is fresh', () => {
+    writeFileSync(
+      join(contextDir, 'state.json'),
+      JSON.stringify({ reviewedAt: { scope: 'branch', timestamp: Date.now() } }),
     );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput('cape:pr'), env);
     expectPassThrough(result);
   });
 
-  it('denies test-driven-development when workflowActive is absent from state.json', () => {
+  it('downgrades pr review gate to warning with explicit override', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:pr', 'CAPE_HARD_GATE_OVERRIDE'),
+      env,
+    );
+    expectWarn(result, 'review-before-pr override accepted');
+  });
+});
+
+describe('skill gate: internal skills nudge direct invocation', () => {
+  it('warns test-driven-development when workflowActive is absent from state.json', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Skill'],
       skillInput('cape:test-driven-development'),
       env,
     );
-    expectDeny(result, 'internal');
+    expectWarn(result, 'internal');
   });
 
   it('allows test-driven-development when workflowActive exists in state.json', () => {

@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
+- Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
+- CLI: added `cape tracker` cache-write commands for Linear MCP results.
+- Skills and commands: added tracker reference skill and slash command wrapper.
+
+### Changed
+
+- Agents: consolidated to 5; merged bug-tracer, test-auditor, and notebox-researcher into
+  codebase-investigator modes.
+- Skills: folded standalone bug diagnosis into fix-bug as a loop-first diagnosis gate.
+- Skills: folded conform into review for bugs/logic plus conventions, and added the reviewer
+  contract.
+- Skills: inlined expand-task into execute-plan, added a lightweight pre-flight plan scan, and
+  removed the dead standalone expansion gate.
+- Skills: folded challenge into brainstorm and task-refinement into write-plan.
+- Write-plan: added proportional Global Constraints and per-task Interfaces for multi-task epics.
+- Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
+  tracker protocol instead of local issue-tracking commands.
+- Skills: added stop-slop prose gates before finalizing prose-emitting skill output.
+- Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
+  cache.
+- Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
+  warnings.
+
+### Removed
+
+- Skills and commands: analyze-tests, design-an-interface, explain, find-test-gaps, refactor.
+- Skills and commands: challenge and task-refinement.
+- Skills and commands: replaced beads with tracker.
+- CLI and services: removed the br/beads command surface and validation service.
+- Hooks: removed br-show-log capture/cleanup and raw br-to-cape-br deny redirects.
+
 ## [1.3.0] - 2026-03-26
 
 ### Added

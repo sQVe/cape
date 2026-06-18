@@ -281,7 +281,7 @@ describe('inferFileType', () => {
   });
 
   it('identifies agent files', () => {
-    expect(inferFileType('agents/bug-tracer.md')).toBe('agent');
+    expect(inferFileType('agents/codebase-investigator.md')).toBe('agent');
   });
 
   it('identifies command files', () => {

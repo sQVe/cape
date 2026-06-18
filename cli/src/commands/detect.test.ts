@@ -21,7 +21,6 @@ import {
 } from '../services/detect';
 import { findWorkspaceRoot } from '../services/detectLive';
 import {
-  stubBrLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubGitLayer,
@@ -47,14 +46,12 @@ const makeTestDetectLayer = (results: DetectResult[] = []) =>
             ],
       ),
     mapDirectory: () => Effect.succeed({ 'src/foo.ts': 'src/foo.test.ts' }),
-    packageManager: () => Effect.succeed(null),
   });
 
 const makeErrorDetectLayer = () =>
   Layer.succeed(DetectService)({
     detect: () => Effect.fail(new Error('no ecosystem detected')),
     mapDirectory: () => Effect.fail(new Error('no ecosystem detected')),
-    packageManager: () => Effect.succeed(null),
   });
 
 const makeProbe = (
@@ -78,7 +75,6 @@ const commandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -91,7 +87,6 @@ const errorCommandLayers = Layer.mergeAll(
   stubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
-  stubBrLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,

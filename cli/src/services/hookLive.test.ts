@@ -150,36 +150,6 @@ describe('HookServiceLive', () => {
     });
   });
 
-  describe('brQuery', () => {
-    it('returns trimmed output', async () => {
-      mockExecFileSync.mockReturnValue('  result  ');
-
-      const result = await run(
-        Effect.gen(function* () {
-          const service = yield* HookService;
-          return yield* service.brQuery(['list']);
-        }),
-      );
-
-      expect(result).toBe('result');
-    });
-
-    it('returns null on error via orElseSucceed', async () => {
-      mockExecFileSync.mockImplementation(() => {
-        throw new Error('br failed');
-      });
-
-      const result = await run(
-        Effect.gen(function* () {
-          const service = yield* HookService;
-          return yield* service.brQuery(['list']);
-        }),
-      );
-
-      expect(result).toBeNull();
-    });
-  });
-
   describe('spawnGit', () => {
     it('returns trimmed output', async () => {
       mockExecFileSync.mockReturnValue('  sha123  ');
