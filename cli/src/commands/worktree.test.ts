@@ -214,7 +214,11 @@ describe('cape worktree start', () => {
         [skillPath]: 'don cape',
         [trackerPath]: JSON.stringify(trackerCache()),
       },
-      { 'branch --show-current': 'feat/abu-50' },
+      {
+        'branch --show-current': 'feat/abu-50',
+        'rev-parse --git-dir': '/repo/.git/worktrees/abu-50',
+        'rev-parse --git-common-dir': '/repo/.git',
+      },
     );
     const console_ = spyConsole();
 

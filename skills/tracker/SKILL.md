@@ -114,9 +114,8 @@ cape tracker cache-tasks <epic-id> '<linear-task-array-json>'
 
 Read `hooks/context/tracker.json`; do not call Linear for ready-work reads.
 
-Ready tasks are tasks under the selected epic whose `stateType` is `unstarted` or whose status is a
-todo-like state. In-progress tasks have `stateType` of `started`. Completed tasks have `stateType`
-of `completed`.
+Ready-task behavior is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that
+definition instead of restating statuses here.
 
 If cache is missing or corrupt, treat it as empty. If the user expects work that is not in cache,
 refresh cache from an MCP result already obtained in the session before continuing.

@@ -176,6 +176,19 @@ export const readTrackerCache = () =>
     return isStale ? null : parsed;
   });
 
+const readSessionTrackerCache = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const root = service.pluginRoot();
+    const content = yield* service.readFile(trackerPath(root));
+    if (content == null) {
+      return null;
+    }
+
+    const parsed = safeParseJson(content);
+    return isTrackerCache(parsed) ? parsed : null;
+  });
+
 export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
@@ -194,15 +207,26 @@ export const isReadyTask = (task: TrackerTask) => {
   );
 };
 
+const formatRelativeAge = (timestamp: number) => {
+  const ageMs = Math.max(0, Date.now() - timestamp);
+  const ageMinutes = Math.max(1, Math.floor(ageMs / (60 * 1000)));
+  if (ageMinutes < 60) {
+    return `${ageMinutes}m ago`;
+  }
+  return `${Math.floor(ageMinutes / 60)}h ago`;
+};
+
 const buildSessionBanner = (
   epic: TrackerEpic,
   phase: string,
-  branch: string | null,
+  git: { readonly branch: string | null; readonly isWorktree: boolean },
+  staleAge: string | null,
 ) => {
   const done = epic.tasks.filter(isDoneTask).length;
   const next = epic.tasks.find(isReadyTask);
   const nextText = next == null ? 'None' : `${next.id} - ${next.title}`;
-  const branchText = branch ?? 'unknown';
+  const branchText = `${git.branch ?? 'unknown'}${git.isWorktree ? ' (worktree)' : ''}`;
+  const staleLine = staleAge == null ? [] : [`| Cache  stale, updated ${staleAge}`];
 
   return [
     'Render this cape session banner verbatim as your first message, before any other text:',
@@ -211,7 +235,8 @@ const buildSessionBanner = (
     `| Epic   ${epic.id}  ${epic.title}`,
     `| Phase  ${phase}  (${done}/${epic.tasks.length} tasks done)`,
     `| Next   ${nextText}`,
-    `| Branch ${branchText} (worktree)`,
+    `| Branch ${branchText}`,
+    ...staleLine,
     '+-- Say "Continue." to start ---------------+',
   ].join('\n');
 };
@@ -223,7 +248,7 @@ const readSessionBanner = () =>
       return null;
     }
 
-    const cache = yield* readTrackerCache();
+    const cache = yield* readSessionTrackerCache();
     const epic = cache?.epics[flowPhase.issueId];
     if (epic == null) {
       return null;
@@ -231,7 +256,12 @@ const readSessionBanner = () =>
 
     const service = yield* HookService;
     const branch = yield* service.spawnGit(['branch', '--show-current']);
-    return buildSessionBanner(epic, flowPhase.phase, branch);
+    const gitDir = yield* service.spawnGit(['rev-parse', '--git-dir']);
+    const gitCommonDir = yield* service.spawnGit(['rev-parse', '--git-common-dir']);
+    const isWorktree = gitDir != null && gitCommonDir != null && gitDir !== gitCommonDir;
+    const isStale = Date.now() - cache.timestamp > TRACKER_CACHE_TTL_MS;
+    const staleAge = isStale ? formatRelativeAge(cache.timestamp) : null;
+    return buildSessionBanner(epic, flowPhase.phase, { branch, isWorktree }, staleAge);
   });
 
 export const clearLogs = () => Effect.succeed(undefined);

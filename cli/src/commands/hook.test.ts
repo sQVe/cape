@@ -158,6 +158,7 @@ const makeStubHookLayer = (
     stdin: string;
     writtenFiles: Record<string, string>;
     removedFiles: string[];
+    gitCalls: string[];
   }> = {},
 ) => {
   const {
@@ -167,6 +168,7 @@ const makeStubHookLayer = (
     stdin = '',
     writtenFiles = {},
     removedFiles = [],
+    gitCalls = [],
   } = overrides;
 
   const hookLayer = Layer.succeed(HookService)({
@@ -184,6 +186,7 @@ const makeStubHookLayer = (
     readStdin: () => Effect.succeed(stdin),
     spawnGit: (args) => {
       const key = args.join(' ');
+      gitCalls.push(key);
       for (const [pattern, response] of Object.entries(gitResponses)) {
         if (key.includes(pattern)) {
           return Effect.succeed(response);
@@ -363,6 +366,7 @@ describe('sessionStart', () => {
   });
 
   it('injects an active epic banner from the tracker cache as the first context', async () => {
+    const gitCalls: string[] = [];
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
@@ -371,7 +375,10 @@ describe('sessionStart', () => {
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15',
+        'rev-parse --git-dir': '/repo/.git/worktrees/abu-15',
+        'rev-parse --git-common-dir': '/repo/.git',
       },
+      gitCalls,
     });
 
     const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
@@ -381,9 +388,32 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
     expect(result.additionalContext).toContain('| Next   ABU-17 - Session banner');
     expect(result.additionalContext).toContain('| Branch feat/abu-15 (worktree)');
+    expect(result.additionalContext).not.toContain('stale');
+    expect(gitCalls).toContain('rev-parse --git-dir');
+    expect(gitCalls).toContain('rev-parse --git-common-dir');
     expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
       result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
     );
+  });
+
+  it('does not label the main git tree as a worktree', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(trackerCache()),
+      },
+      gitResponses: {
+        'branch --show-current': 'feat/abu-15',
+        'rev-parse --git-dir': '/repo/.git',
+        'rev-parse --git-common-dir': '/repo/.git',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Branch feat/abu-15');
+    expect(result.additionalContext).not.toContain('| Branch feat/abu-15 (worktree)');
   });
 
   it('omits the banner when no active epic exists in flowPhase', async () => {
@@ -431,7 +461,7 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
-  it('omits the banner when the tracker cache is past its TTL', async () => {
+  it('renders the banner with a stale marker when the tracker cache is past its TTL', async () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
@@ -442,7 +472,10 @@ describe('sessionStart', () => {
 
     const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
 
-    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('+-- cape');
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(result.additionalContext).toContain('stale');
+    expect(result.additionalContext).toContain('updated 30m ago');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
