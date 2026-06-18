@@ -8,8 +8,8 @@ description: >
 ---
 
 <skill_overview> Route every task to the right cape skill and enforce the order skills run in. Cape
-skills form build (brainstorm -> write-plan -> execute-plan) and fix (fix-bug -> TDD -> commit)
-chains.
+skills form PLAN (brainstorm -> write-plan), BUILD (execute-plan -> TDD -> commit loop), SHIP
+(finish-epic -> review -> pr), and BUG (fix-bug -> TDD -> commit) chains.
 
 Core contract: before acting on any user request, check the routing table. If a cape skill matches,
 load it with the Skill tool and follow it. </skill_overview>
@@ -27,8 +27,8 @@ Always active. Injected at session start via hook. Applies to every user message
 
 1. **Check the routing table before every task** -- if a cape skill matches, use it
 2. **Use the Skill tool to load skills** -- never work from memory
-3. **Follow workflow chains in order** -- brainstorm before write-plan before execute-plan
-4. **Stop after brainstorm and write-plan** -- wait for user to explicitly continue
+3. **Follow workflow chains in order** -- PLAN before BUILD before SHIP
+4. **Stop after write-plan and each execute-plan task** -- wait for user to explicitly continue
 5. **Use tracker for issue state** -- Linear writes through MCP, local reads from tracker cache
 
 </critical_rules>
@@ -37,9 +37,11 @@ Always active. Injected at session start via hook. Applies to every user message
 
 ## Step 1: Route The Request
 
-Short-circuit first when the user has already committed to a specific skill:
+Short-circuit first when the user has already committed to a phase entry or specific skill:
 
 - Direct `/cape:<name>` command: load that skill directly.
+- Phase-entry command: `/plan` loads `cape:brainstorm`, `/build` loads `cape:execute-plan`, and
+  `/ship` loads `cape:finish-epic`.
 - Pre-existing tracker task: when the user references a Linear issue ID or the tracker cache shows a
   ready task for the active epic, load `cape:execute-plan`.
 
@@ -67,6 +69,15 @@ Internal skills:
 
 - `cape:test-driven-development` -- mandatory before production code. Loaded by execute-plan and
   fix-bug; hook safety nets cover resumed sessions.
+- `cape:review` -- model-invoked quality gate before `cape:pr`, and directly loaded only when the
+  user asks for a review.
+
+Invocation split:
+
+- Phase entries (`plan`, `build`, `ship`) are user-invoked commands with no new skills.
+- Chain steps and disciplines (`brainstorm`, `write-plan`, `execute-plan`, `finish-epic`,
+  `test-driven-development`, `review`, `pr`, `commit`) remain model-invoked through routing and keep
+  their trigger prose.
 
 If nothing matches, proceed without a cape skill.
 
@@ -79,10 +90,13 @@ that tracker cache needs a refresh from the latest Linear MCP result.
 
 ## Step 2: Follow The Chain
 
-Build chain:
+Phase chains:
 
 ```text
-brainstorm -> write-plan -> STOP -> execute-plan -> finish-epic -> commit
+PLAN   brainstorm -> write-plan -> STOP for epic approval
+BUILD  execute-plan -> test-driven-development -> commit, then STOP after each task
+SHIP   finish-epic -> review -> STOP for PR approval -> pr
+BUG    fix-bug -> test-driven-development -> commit, then rejoin BUILD tail
 ```
 
 - `brainstorm` researches, asks questions, compares approaches, and produces a design summary.
@@ -90,16 +104,11 @@ brainstorm -> write-plan -> STOP -> execute-plan -> finish-epic -> commit
 - `execute-plan` implements one task, verifies it, closes it in Linear, creates or identifies the
   next task, refreshes cache, and stops for review.
 - `finish-epic` verifies all success criteria, closes the Linear epic, refreshes cache, and reports.
-- `commit` persists completed work.
-
-Fix chain:
-
-```text
-fix-bug -> test-driven-development -> commit
-```
-
+- `review` stamps `reviewedAt` after a completed review so `pr` can proceed.
+- `pr` requires explicit user approval before creating the pull request.
 - `fix-bug` diagnoses to root cause, adopts or creates a Linear bug issue, writes a failing
   regression test, implements the fix, verifies, closes in Linear, and refreshes cache.
+- `commit` persists completed work.
 
 Vague feature requests go through the build chain. Direct skill invocation or a ready tracker task
 is the user's explicit choice to skip earlier links.
@@ -145,7 +154,8 @@ Linear, fix with a failing regression test, close, and refresh cache. </example>
 
 - **Skills are mandatory** -- finding a matching skill means using it
 - **Chains have order** -- each link feeds the next
-- **STOP means STOP** -- after brainstorm and write-plan, present results and wait
+- **STOP means STOP** -- after the brainstorm summary, write-plan, and each execute-plan task,
+  present results and wait
 - **Tracker is the state seam** -- Linear handles writes; cache powers local reads
 
 </key_principles>
