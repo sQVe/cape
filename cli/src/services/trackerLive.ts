@@ -12,12 +12,18 @@ interface LinearState {
   readonly type?: unknown;
 }
 
+type LinearLabel = { readonly name?: unknown } | string;
+
 interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
   readonly project?: unknown;
-  readonly labels?: readonly ({ readonly name?: unknown } | string)[];
+  readonly labels?:
+    | readonly LinearLabel[]
+    | {
+        readonly nodes?: readonly LinearLabel[];
+      };
   readonly state?: LinearState;
   readonly children?: {
     readonly nodes?: readonly LinearIssue[];
@@ -60,7 +66,15 @@ const issueProject = (issue: LinearIssue) => {
   return undefined;
 };
 
-const labelName = (label: { readonly name?: unknown } | string) => {
+const issueLabels = (issue: LinearIssue): readonly LinearLabel[] => {
+  const labels = issue.labels;
+  if (Array.isArray(labels)) {
+    return labels;
+  }
+  return Array.isArray(labels?.nodes) ? labels.nodes : [];
+};
+
+const labelName = (label: LinearLabel) => {
   if (typeof label === 'string') {
     return label;
   }
@@ -68,7 +82,7 @@ const labelName = (label: { readonly name?: unknown } | string) => {
 };
 
 const issueType = (issue: LinearIssue) => {
-  const label = issue.labels?.map(labelName).find((name) => name?.startsWith('type:') === true);
+  const label = issueLabels(issue).map(labelName).find((name) => name?.startsWith('type:') === true);
   const type = label?.slice('type:'.length);
   return type == null || type.length === 0 ? undefined : type;
 };

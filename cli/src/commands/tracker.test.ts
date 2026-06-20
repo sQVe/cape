@@ -56,7 +56,7 @@ describe('cape tracker cache-epic', () => {
           identifier: 'ABU-15',
           title: 'Cape V2',
           project: { name: 'Cape' },
-          labels: [{ name: 'type:feature' }, { name: 'area:tracker' }],
+          labels: { nodes: [{ name: 'type:feature' }, { name: 'area:tracker' }] },
           state: { name: 'In Progress', type: 'started' },
           children: {
             nodes: [
@@ -279,7 +279,7 @@ describe('cape tracker cache-tasks', () => {
             identifier: 'ABU-57',
             title: 'Rewire chains',
             project: { name: 'Cape CLI' },
-            labels: [{ name: 'type:bug' }, 'area:cache'],
+            labels: { nodes: [{ name: 'type:bug' }, 'area:cache'] },
             state: { name: 'Todo', type: 'unstarted' },
           },
         ]),
