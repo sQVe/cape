@@ -133,7 +133,8 @@ Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
   none
 - **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
   backend changes
-- **Issues:** link related issues with "Fixes #" or "Related to #"
+- **Issues:** reference the epic with a closing keyword and Linear identifier (`Fixes ABU-XX`) so
+  Linear's GitHub integration links and closes it; use `Related to ABU-XX` for non-closing links
 
 If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
@@ -186,17 +187,13 @@ EOF
 After successful creation:
 
 1. Identify the active epic from tracker cache or flow context.
-2. Set the epic, not any child task, to `In Review` through MCP Linear `save_issue` with state
-   `"In Review"`.
-3. Refresh the cache:
-
-```bash
-cape tracker cache-status <epic-id> "In Review" started
-```
-
-4. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
-5. Add reviewers if the user mentioned any or the project has conventions
-6. Report:
+2. Ensure the PR description references the epic with a closing keyword (`Fixes ABU-XX`). Linear's
+   GitHub integration then moves the epic to `In Review` on open and `Done` on merge — cape does not
+   set status manually. This requires the GitHub↔Linear integration to be configured (see tracker
+   workspace-setup).
+3. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
+4. Add reviewers if the user mentioned any or the project has conventions
+5. Report:
 
 ```
 PR created: <url>

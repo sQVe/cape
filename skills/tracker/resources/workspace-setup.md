@@ -16,6 +16,16 @@
 - [ ] Migrate the existing flat `pr-watcher` label into the `src` group as `src:pr-watcher`, then
       retag its about 19 issues.
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
+- [ ] Configure the GitHub-Linear integration with PR automation: PR opened sets status to In
+      Review; PR merged to the default branch sets status to Done. cape relies on this; it no longer
+      sets status itself.
+- [x] Create epic, task, and bug team-level issue templates from
+      [linear-templates.md](linear-templates.md), each defaulting to `src:human` and Medium
+      priority. The Bug template prefills the title `Fix `.
+- [ ] Once `type:bug` and `type:feature` exist, edit the Task and Bug templates to default to
+      `type:feature` and `type:bug` respectively (the Epic template stays untyped).
+- [ ] Optionally set the `Task` template as the team default issue template (Settings → team →
+      Templates → Default issue template).
 - [ ] Create the saved view `Orphans` with filter `project = none`; it must read 0 before normal
       tracker use.
 - [ ] Create the saved view `Next` with filter `priority = Urgent or High` and status excluding

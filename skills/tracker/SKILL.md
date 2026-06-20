@@ -79,32 +79,34 @@ epic-to-task membership. It does not store expanded plans or implementation tran
 
 ---
 
-## Step 2: Create Work
+## Agent contract
 
-### Agent contract
+Apply this agent contract before every issue create or update:
 
-Apply this agent contract before every issue create:
-
-- Dedupe first: search open issues in the target project by title keywords. Comment on a match
-  instead of creating a duplicate.
+- Dedupe first: search open issues in the target project by title keywords. On a match, comment
+  instead of creating a duplicate; the comment states what cape would have created and links the
+  match.
 - Project: route work to a matching named project. Use `Inbox` when no project matches. Never create
   project-less issues. Confirm a new project with the user before creating it.
-- Labels: apply exactly one `type:*` label: `type:bug`, `type:feature`, or `type:chore`. Epics are
-  untyped parents. Apply `src:cape` to everything cape creates.
-- Priority: create issues at `Medium`. Never use `High`. Use `Urgent` only for detected production
-  breakage.
+- Labels: apply `src:cape` to everything cape creates, plus exactly one `type:*` label on tasks and
+  bugs (`type:bug`, `type:feature`, `type:chore`); epics stay untyped parents. These label groups
+  are created by the workspace bootstrap — until a given label exists, apply it best-effort and skip
+  what is missing. See [resources/workspace-setup.md](resources/workspace-setup.md).
+- Priority: create issues at `Medium`; use `Urgent` only for detected production breakage. Never use
+  `High` — it is reserved for the human-curated `Next` view, and cape-created `High` issues inflate
+  it.
 - Titles: use an imperative verb-object title in sentence case with no prefix, about 70 characters
   or less. Bug titles start with `Fix <symptom>`.
 - Bodies: include a load-bearing `Done when:` line. Use a Mermaid block instead of prose for any
   flow, state, or architecture description longer than about three steps.
 
-The `type:*` and `src:*` label groups are created by the workspace bootstrap in a separate task.
-Until then, apply labels best-effort. See
-[resources/workspace-setup.md](resources/workspace-setup.md) for the one-time workspace bootstrap
-checklist.
+---
 
-Create an epic with MCP Linear `save_issue`. Put the durable epic contract in the Linear issue
-description. Then create child task issues with MCP Linear `save_issue` using the epic as parent.
+## Step 2: Create Work
+
+Apply the Agent contract above, then create an epic with MCP Linear `save_issue`. Put the durable
+epic contract in the Linear issue description. Then create child task issues with MCP Linear
+`save_issue` using the epic as parent.
 
 Before creating user-facing issue descriptions, load the global `stop-slop` skill and run the prose
 through it; skip this for pure code or mechanical output.
@@ -160,14 +162,16 @@ membership stays current.
 
 ## Step 5: Close Work
 
-Close the task, bug, or epic in Linear through MCP. Then update the cache:
+Close a task or bug in Linear through MCP. Then update the cache:
 
 ```bash
 cape tracker cache-status <issue-id> Done completed
 ```
 
-For epic closure, use `cache-epic` if you have the full close response with children; otherwise
-`cache-status` is enough to update the epic status already in cache.
+Never close the epic yourself: Linear's GitHub integration moves it to `Done` when the PR
+(referencing it with `Fixes ABU-XX`) merges. To mirror that status into the cache after a merge, use
+`cache-status <epic-id> Done completed`, or `cache-epic` if you have the full epic response with
+children.
 
 </the_process>
 

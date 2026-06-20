@@ -40,7 +40,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   warnings.
 - Hooks: the session banner now renders a stale cache with a freshness marker instead of vanishing,
   and detects a real worktree instead of always labeling the branch as one.
-- Skills: pr sets the epic to In Review when the PR opens; finish-epic closes In Review to Done.
+- Skills: cape no longer sets Linear status; the PR references the epic with `Fixes ABU-XX` so
+  Linear's GitHub integration moves it to In Review on open and Done on merge. finish-epic verifies
+  and hands off instead of closing.
 
 ### Removed
 
