@@ -165,7 +165,7 @@ const buildSessionBanner = (
   const next = epic.tasks.find(isReadyTask);
   const nextText = next == null ? 'None' : `${next.id} - ${next.title}`;
   const branchText = `${git.branch ?? 'unknown'}${git.isWorktree ? ' (worktree)' : ''}`;
-  const staleLine = staleAge == null ? [] : [`| Cache  stale, updated ${staleAge}`];
+  const staleLine = staleAge == null ? [] : [`| Cache stale, updated ${staleAge}`];
 
   return [
     'Render this cape session banner verbatim as your first message, before any other text:',
