@@ -117,8 +117,6 @@ found, use this bundled template — match the sections and heading levels exact
 
 !`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
 
-Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
-
 **Title:** conventional commit format — `type(scope): subject`
 
 **Section guidelines:**
