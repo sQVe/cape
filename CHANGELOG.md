@@ -15,6 +15,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   requires before it can stamp completion.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
 - Skills and commands: added tracker reference skill and slash command wrapper.
+- Cache: added `project` and `type` fields on cached epics and tasks, populated from Linear.
+- Hooks: added a PostToolUse nudge to refresh the tracker cache after Linear writes.
+- Skills: added the Linear agent contract to the tracker skill (dedupe, project-or-Inbox routing,
+  one `type:*` label, `src:cape`, Medium priority, naming, `Done when:`, Mermaid for multi-step
+  flows), referenced by write-plan, execute-plan, and fix-bug.
+- Tracker: added a workspace-setup checklist for the one-time Linear bootstrap.
 
 ### Changed
 
@@ -34,6 +40,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
   warnings.
+- Hooks: the session banner now renders a stale cache with a freshness marker instead of vanishing,
+  and detects a real worktree instead of always labeling the branch as one.
+- Skills: cape no longer sets Linear status; the PR references the epic with `Fixes ABU-XX` so
+  Linear's GitHub integration moves it to In Review on open and Done on merge. finish-epic verifies
+  and hands off instead of closing.
 
 ### Removed
 
@@ -42,6 +53,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills and commands: replaced beads with tracker.
 - CLI and services: removed the br/beads command surface and validation service.
 - Hooks: removed br-show-log capture/cleanup and raw br-to-cape-br deny redirects.
+- Services: removed the dead `TrackerService` Effect layer (interface, live implementation, and the
+  throwing `callLinear` stub) and its test; cache writes use the pure transform functions directly.
 
 ## [1.3.0] - 2026-03-26
 

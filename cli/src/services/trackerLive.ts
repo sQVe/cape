@@ -1,47 +1,33 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-import { Effect, Layer } from 'effect';
+import { Effect } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
 import { safeParseJson } from '../utils/json';
+import { isTrackerCache } from './tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
-import { TrackerService } from './tracker';
 
 interface LinearState {
   readonly name?: unknown;
   readonly type?: unknown;
 }
 
+type LinearLabel = { readonly name?: unknown } | string;
+
 interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
+  readonly project?: unknown;
+  readonly labels?:
+    | readonly LinearLabel[]
+    | {
+        readonly nodes?: readonly LinearLabel[];
+      };
   readonly state?: LinearState;
   readonly children?: {
     readonly nodes?: readonly LinearIssue[];
   };
-}
-
-interface LinearCallArguments {
-  readonly getEpic: string;
-  readonly listReady: string;
-  readonly createEpic: { readonly title: string };
-  readonly createTask: { readonly epicId: string; readonly title: string };
-  readonly updateStatus: { readonly issueId: string; readonly status: string };
-  readonly close: { readonly issueId: string };
-}
-
-type LinearOperation = keyof LinearCallArguments;
-
-interface TrackerLiveDependencies {
-  readonly now: () => number;
-  readonly readCache: () => Effect.Effect<TrackerCache | null, Error>;
-  readonly writeCache: (cache: TrackerCache) => Effect.Effect<void, Error>;
-  // Keep read operations on their existing string issue-id argument; writes use typed payloads.
-  readonly callLinear: <Operation extends LinearOperation>(
-    operation: Operation,
-    argument: LinearCallArguments[Operation],
-  ) => Effect.Effect<unknown, Error>;
 }
 
 const trackerCachePath = (root: string) => `${root}/hooks/context/tracker.json`;
@@ -64,25 +50,58 @@ const issueStatus = (issue: LinearIssue) =>
 const issueStateType = (issue: LinearIssue) =>
   typeof issue.state?.type === 'string' ? issue.state.type : '';
 
+const issueProject = (issue: LinearIssue) => {
+  if (typeof issue.project === 'string') {
+    return issue.project;
+  }
+  if (
+    typeof issue.project === 'object' &&
+    issue.project != null &&
+    !Array.isArray(issue.project) &&
+    'name' in issue.project &&
+    typeof issue.project.name === 'string'
+  ) {
+    return issue.project.name;
+  }
+  return undefined;
+};
+
+const issueLabels = (issue: LinearIssue): readonly LinearLabel[] => {
+  const labels = issue.labels;
+  if (Array.isArray(labels)) {
+    return labels;
+  }
+  return Array.isArray(labels?.nodes) ? labels.nodes : [];
+};
+
+const labelName = (label: LinearLabel) => {
+  if (typeof label === 'string') {
+    return label;
+  }
+  return typeof label.name === 'string' ? label.name : null;
+};
+
+const issueType = (issue: LinearIssue) => {
+  const label = issueLabels(issue).map(labelName).find((name) => name?.startsWith('type:') === true);
+  const type = label?.slice('type:'.length);
+  return type == null || type.length === 0 ? undefined : type;
+};
+
 const toTask = (issue: LinearIssue): TrackerTask | null => {
   const id = linearIssueId(issue);
   if (id == null) {
     return null;
   }
+  const project = issueProject(issue);
+  const type = issueType(issue);
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     stateType: issueStateType(issue),
   };
-};
-
-export const toTaskFromUnknown = (value: unknown): TrackerTask | null => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return null;
-  }
-
-  return toTask(value as LinearIssue);
 };
 
 export const toEpic = (value: unknown): TrackerEpic | null => {
@@ -101,10 +120,14 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     const task = toTask(node);
     return task == null ? [] : [task];
   });
+  const project = issueProject(issue);
+  const type = issueType(issue);
 
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     tasks,
   };
@@ -149,6 +172,8 @@ export const mergeTasks = (
       [epicId]: {
         id: epicId,
         title: existing?.title ?? '',
+        ...(existing?.project == null ? {} : { project: existing.project }),
+        ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
         tasks,
       },
@@ -213,136 +238,6 @@ export const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): Tracke
   };
 };
 
-const statusFromLinearResponse = (value: unknown, fallbackStatus: string) => {
-  const task = toTaskFromUnknown(value);
-  const epic = toEpic(value);
-  let status = fallbackStatus;
-  if (task?.status != null && task.status !== '') {
-    status = task.status;
-  } else if (epic?.status != null && epic.status !== '') {
-    status = epic.status;
-  }
-
-  return {
-    status,
-    stateType: task?.stateType ?? null,
-  };
-};
-
-const writeEpicToCacheBestEffort = (dependencies: TrackerLiveDependencies, epic: TrackerEpic) =>
-  Effect.gen(function* () {
-    const cache = yield* dependencies.readCache();
-    yield* dependencies.writeCache(mergeEpic(cache, epic, dependencies.now()));
-  }).pipe(Effect.orElseSucceed(() => undefined));
-
-const writeCreatedTasksToCacheBestEffort = (
-  dependencies: TrackerLiveDependencies,
-  epicId: string,
-  tasks: readonly TrackerTask[],
-) =>
-  Effect.gen(function* () {
-    const cache = yield* dependencies.readCache();
-    const existingTasks = cache?.epics[epicId]?.tasks ?? [];
-    yield* dependencies.writeCache(mergeTasks(cache, epicId, [...existingTasks, ...tasks], dependencies.now()));
-  }).pipe(Effect.orElseSucceed(() => undefined));
-
-const writeIssueStatusToCacheBestEffort = (
-  dependencies: TrackerLiveDependencies,
-  targetIssueId: string,
-  status: string,
-  stateType: string | null,
-) =>
-  Effect.gen(function* () {
-    const cache = yield* dependencies.readCache();
-    const updatedCache = updateCachedIssueStatus({
-      cache,
-      targetIssueId,
-      status,
-      stateType,
-      timestamp: dependencies.now(),
-    });
-    if (updatedCache != null) {
-      yield* dependencies.writeCache(updatedCache);
-    }
-  }).pipe(Effect.orElseSucceed(() => undefined));
-
-export const isTrackerCache = (value: unknown): value is TrackerCache => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
-  return cache.version === 1 && typeof cache.timestamp === 'number' && typeof cache.epics === 'object' && cache.epics != null && !Array.isArray(cache.epics);
-};
-
-export const makeTrackerServiceLive = (dependencies: TrackerLiveDependencies) =>
-  Layer.succeed(TrackerService)({
-    createEpic: (title) =>
-      Effect.gen(function* () {
-        const raw = yield* dependencies.callLinear('createEpic', { title });
-        const epic = toEpic(raw);
-        if (epic == null) {
-          return yield* Effect.fail(new Error('Linear createEpic response did not include an issue id'));
-        }
-
-        yield* writeEpicToCacheBestEffort(dependencies, epic);
-        return epic;
-      }),
-    createTasks: (epicId, tasks) =>
-      Effect.gen(function* () {
-        if (tasks.length === 0) {
-          return [];
-        }
-
-        const createdTasks: TrackerTask[] = [];
-        // Linear save_issue creates a single issue, so createTasks fans out one call per task.
-        for (const task of tasks) {
-          const raw = yield* dependencies.callLinear('createTask', { epicId, title: task.title });
-          const createdTask = toTaskFromUnknown(raw);
-          if (createdTask == null) {
-            return yield* Effect.fail(new Error('Linear createTask response did not include an issue id'));
-          }
-          createdTasks.push(createdTask);
-        }
-
-        yield* writeCreatedTasksToCacheBestEffort(dependencies, epicId, createdTasks);
-        return createdTasks;
-      }),
-    getEpic: (epicId) =>
-      Effect.gen(function* () {
-        const raw = yield* dependencies.callLinear('getEpic', epicId);
-        const epic = toEpic(raw);
-        if (epic == null) {
-          return null;
-        }
-
-        const cache = yield* dependencies.readCache();
-        yield* dependencies.writeCache(mergeEpic(cache, epic, dependencies.now()));
-        return epic;
-      }),
-    listReady: (epicId) =>
-      Effect.gen(function* () {
-        const raw = yield* dependencies.callLinear('listReady', epicId);
-        const tasks = toTasks(raw);
-        const cache = yield* dependencies.readCache();
-        yield* dependencies.writeCache(mergeTasks(cache, epicId, tasks, dependencies.now()));
-        return tasks;
-      }),
-    updateStatus: (targetIssueId, status) =>
-      Effect.gen(function* () {
-        const raw = yield* dependencies.callLinear('updateStatus', { issueId: targetIssueId, status });
-        const next = statusFromLinearResponse(raw, status);
-        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, next.status, next.stateType);
-      }),
-    close: (targetIssueId) =>
-      Effect.gen(function* () {
-        const raw = yield* dependencies.callLinear('close', { issueId: targetIssueId });
-        const next = statusFromLinearResponse(raw, 'Done');
-        const stateType = next.stateType != null && next.stateType !== '' ? next.stateType : 'completed';
-        yield* writeIssueStatusToCacheBestEffort(dependencies, targetIssueId, next.status, stateType);
-      }),
-  });
-
 export const readCacheFile = () =>
   Effect.try({
     try: () => {
@@ -366,16 +261,3 @@ export const writeCacheFile = (cache: TrackerCache) =>
     catch: (error) =>
       error instanceof Error ? error : new Error('failed to write tracker cache', { cause: error }),
   });
-
-const callLinear = <Operation extends LinearOperation>(
-  _operation: Operation,
-  _argument: LinearCallArguments[Operation],
-) =>
-  Effect.fail(new Error('Linear MCP calls must be provided by the interactive session'));
-
-export const TrackerServiceLive = makeTrackerServiceLive({
-  now: () => Date.now(),
-  readCache: readCacheFile,
-  writeCache: writeCacheFile,
-  callLinear,
-});
