@@ -32,10 +32,7 @@ const repoTemplate = [
   '- [ ] tests pass',
 ].join('\n');
 
-const makeStubPrLayer = (
-  files: Record<string, string> = {},
-  ghResult: string | null = null,
-) =>
+const makeStubPrLayer = (files: Record<string, string> = {}, ghResult: string | null = null) =>
   Layer.succeed(PrService)({
     fileExists: (path) => Effect.succeed(path in files),
     readFile: (path) => {
@@ -46,7 +43,8 @@ const makeStubPrLayer = (
     },
     readStdin: () => Effect.succeed(''),
     gitRoot: () => Effect.succeed('/repo'),
-    spawnGh: () => (ghResult != null ? Effect.succeed(ghResult) : Effect.fail(new Error('gh failed'))),
+    spawnGh: () =>
+      ghResult != null ? Effect.succeed(ghResult) : Effect.fail(new Error('gh failed')),
   });
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -334,12 +332,14 @@ describe('pr validate command', () => {
 
 const validBody = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
 
-const makeCreateHookLayer = (overrides: {
-  branch?: string;
-  defaultRef?: string;
-  status?: string | null;
-  pushResult?: string | null;
-} = {}) =>
+const makeCreateHookLayer = (
+  overrides: {
+    branch?: string;
+    defaultRef?: string;
+    status?: string | null;
+    pushResult?: string | null;
+  } = {},
+) =>
   Layer.succeed(HookService)({
     pluginRoot: () => '/test',
     readFile: () => Effect.succeed(null),
@@ -375,10 +375,7 @@ const makeCreatePrLayer = (ghResult: string | Error = 'https://github.com/owner/
     spawnGh: () => (ghResult instanceof Error ? Effect.fail(ghResult) : Effect.succeed(ghResult)),
   });
 
-const makeCreateLayers = (
-  hookLayer = makeCreateHookLayer(),
-  prLayer = makeCreatePrLayer(),
-) =>
+const makeCreateLayers = (hookLayer = makeCreateHookLayer(), prLayer = makeCreatePrLayer()) =>
   Layer.mergeAll(
     NodeServices.layer,
     stubGitLayer,
@@ -522,9 +519,16 @@ describe('pr create command', () => {
       },
     });
     await Effect.runPromise(
-      run(['pr', 'create', '--title', 'Labeled PR', '--body', validBody, '--label', 'enhancement']).pipe(
-        Effect.provide(makeCreateLayers(undefined, prLayer)),
-      ),
+      run([
+        'pr',
+        'create',
+        '--title',
+        'Labeled PR',
+        '--body',
+        validBody,
+        '--label',
+        'enhancement',
+      ]).pipe(Effect.provide(makeCreateLayers(undefined, prLayer))),
     );
     expect(capturedGhArgs).toContain('--label');
     expect(capturedGhArgs).toContain('enhancement');

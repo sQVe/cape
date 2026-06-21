@@ -12,7 +12,13 @@ const isDiffScope = (value: string): value is DiffScope =>
 
 export const conform = Command.make(
   'conform',
-  { scope: Argument.optional(Argument.string('scope').pipe(Argument.withDescription('Diff scope: unstaged | staged | branch (default: branch)'))) },
+  {
+    scope: Argument.optional(
+      Argument.string('scope').pipe(
+        Argument.withDescription('Diff scope: unstaged | staged | branch (default: branch)'),
+      ),
+    ),
+  },
   Effect.fn(function* ({ scope }) {
     const resolvedScope: DiffScope =
       Option.isSome(scope) && isDiffScope(scope.value) ? scope.value : 'branch';

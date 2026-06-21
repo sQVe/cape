@@ -517,4 +517,3 @@ describe('cape git create-branch', () => {
     expect(result.status).not.toBe(0);
   });
 });
-

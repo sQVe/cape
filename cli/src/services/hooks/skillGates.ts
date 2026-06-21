@@ -174,9 +174,10 @@ const gatePr = (args: string | null) =>
       return null;
     }
 
-    const baseMessage = missingOrStale === 'stale'
-      ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
-      : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
+    const baseMessage =
+      missingOrStale === 'stale'
+        ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
+        : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
     const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
     const message = `${baseMessage} ${overrideHint}`;
 

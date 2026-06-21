@@ -6,12 +6,7 @@ import { parse as parseToml } from 'smol-toml';
 
 import { readFileUtf8 } from '../utils/fs';
 import type { DirectoryProbe } from './detect';
-import {
-  DetectService,
-  buildSourceTestMap,
-  detectEcosystems,
-  isRecord,
-} from './detect';
+import { DetectService, buildSourceTestMap, detectEcosystems, isRecord } from './detect';
 
 const lockfiles = ['pnpm-lock.yaml', 'yarn.lock', 'package-lock.json', 'bun.lockb'];
 

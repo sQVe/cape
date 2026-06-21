@@ -189,9 +189,7 @@ describe('conform command wiring', () => {
     });
 
     await Effect.runPromise(
-      run(['conform']).pipe(
-        Effect.provide(makeTestCommandLayers(gitLayer, conformLayer)),
-      ),
+      run(['conform']).pipe(Effect.provide(makeTestCommandLayers(gitLayer, conformLayer))),
     );
 
     const output = JSON.parse(console_.output());

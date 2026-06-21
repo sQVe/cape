@@ -137,7 +137,9 @@ describe('cape tracker cache-epic', () => {
     ).rejects.toThrow();
 
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
-    expect(JSON.parse(console_.errorOutput()).error).toContain('Linear epic JSON must include an issue id');
+    expect(JSON.parse(console_.errorOutput()).error).toContain(
+      'Linear epic JSON must include an issue id',
+    );
     console_.restore();
   });
 });
@@ -352,7 +354,9 @@ describe('cape tracker cache-tasks', () => {
     ).rejects.toThrow();
 
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
-    expect(JSON.parse(console_.errorOutput()).error).toContain('Linear task JSON must include issue ids');
+    expect(JSON.parse(console_.errorOutput()).error).toContain(
+      'Linear task JSON must include issue ids',
+    );
     console_.restore();
   });
 });
@@ -413,7 +417,9 @@ describe('cape tracker cache-status', () => {
       ),
     );
 
-    expect(console_.output()).toBe(JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }));
+    expect(console_.output()).toBe(
+      JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }),
+    );
     expect(() => readFileSync(trackerPath(root), 'utf-8')).toThrow();
     console_.restore();
   });
@@ -430,7 +436,9 @@ describe('cape tracker cache-status', () => {
       ),
     );
 
-    expect(console_.output()).toBe(JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }));
+    expect(console_.output()).toBe(
+      JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }),
+    );
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe('not json');
     console_.restore();
   });

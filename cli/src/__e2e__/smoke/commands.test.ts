@@ -1,6 +1,6 @@
-import { capeCmd } from '../helpers';
-
 import { describe, expect, it } from 'vitest';
+
+import { capeCmd } from '../helpers';
 
 describe('smoke', () => {
   it('--help boots and exits 0', () => {

@@ -58,10 +58,7 @@ const makeCheckLayer = (results: CheckResult[] = []) =>
     runChecks: () => Effect.succeed(results),
   });
 
-const testLayers = (
-  hookLayer: Layer.Layer<HookService>,
-  checkLayer: Layer.Layer<CheckService>,
-) =>
+const testLayers = (hookLayer: Layer.Layer<HookService>, checkLayer: Layer.Layer<CheckService>) =>
   Layer.mergeAll(
     NodeServices.layer,
     stubGitLayer,
@@ -128,7 +125,9 @@ describe('epic verify command', () => {
     await expect(
       Effect.runPromise(
         run(['epic', 'verify', 'test-epic']).pipe(
-          Effect.provide(testLayers(makeHookLayer(makeTrackerCache(tasks)), makeCheckLayer(checks))),
+          Effect.provide(
+            testLayers(makeHookLayer(makeTrackerCache(tasks)), makeCheckLayer(checks)),
+          ),
         ),
       ),
     ).rejects.toThrow('epic verification failed for test-epic: 0 open task(s), checks failed');

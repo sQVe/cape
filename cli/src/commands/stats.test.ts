@@ -131,7 +131,10 @@ describe('stats', () => {
   });
 
   it('skips malformed JSONL lines gracefully', async () => {
-    const events = ['not json', JSON.stringify({ ts: '2026-03-30T10:00:00.000Z', cmd: 'commit' })].join('\n');
+    const events = [
+      'not json',
+      JSON.stringify({ ts: '2026-03-30T10:00:00.000Z', cmd: 'commit' }),
+    ].join('\n');
 
     const console_ = spyConsole();
     await Effect.runPromise(run(['stats']).pipe(Effect.provide(makeTestLayers(events))));

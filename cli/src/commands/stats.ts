@@ -85,4 +85,8 @@ export const stats = Command.make(
 
     yield* Console.log(formatSummary(events));
   }),
-).pipe(Command.withDescription('Display a summary of cape event history: totals, per-command counts, and recent entries. Use to review hook activity.'));
+).pipe(
+  Command.withDescription(
+    'Display a summary of cape event history: totals, per-command counts, and recent entries. Use to review hook activity.',
+  ),
+);

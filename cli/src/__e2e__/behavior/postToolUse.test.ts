@@ -152,4 +152,3 @@ describe('PostToolUse/Edit', () => {
     expect(result.stdout).toBe('');
   });
 });
-

@@ -2,7 +2,6 @@ import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-
 import { HookService } from '../services/hook';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
 import { catchAndDie } from '../utils/catchAndDie';
@@ -34,8 +33,14 @@ const prTemplate = Command.make(
 const prValidate = Command.make(
   'validate',
   {
-    file: Argument.string('file').pipe(Argument.withDescription('Path to PR body file to validate'), Argument.optional),
-    stdin: Flag.boolean('stdin').pipe(Flag.withDescription('Read PR body from stdin instead of file'), Flag.withDefault(false)),
+    file: Argument.string('file').pipe(
+      Argument.withDescription('Path to PR body file to validate'),
+      Argument.optional,
+    ),
+    stdin: Flag.boolean('stdin').pipe(
+      Flag.withDescription('Read PR body from stdin instead of file'),
+      Flag.withDefault(false),
+    ),
   },
   Effect.fn(function* ({ file, stdin }) {
     const template = yield* findTemplate();
@@ -67,10 +72,21 @@ const prCreate = Command.make(
   'create',
   {
     title: Flag.string('title').pipe(Flag.withDescription('PR title')),
-    body: Flag.string('body').pipe(Flag.withDescription('PR body content with required template sections')),
-    draft: Flag.boolean('draft').pipe(Flag.withDescription('Create as draft PR'), Flag.withDefault(false)),
-    label: Flag.string('label').pipe(Flag.withDescription('GitHub label to apply to the PR'), Flag.optional),
-    noPush: Flag.boolean('no-push').pipe(Flag.withDescription('Skip git push; assume branch is already pushed'), Flag.withDefault(false)),
+    body: Flag.string('body').pipe(
+      Flag.withDescription('PR body content with required template sections'),
+    ),
+    draft: Flag.boolean('draft').pipe(
+      Flag.withDescription('Create as draft PR'),
+      Flag.withDefault(false),
+    ),
+    label: Flag.string('label').pipe(
+      Flag.withDescription('GitHub label to apply to the PR'),
+      Flag.optional,
+    ),
+    noPush: Flag.boolean('no-push').pipe(
+      Flag.withDescription('Skip git push; assume branch is already pushed'),
+      Flag.withDefault(false),
+    ),
   },
   Effect.fn(function* ({ title, body, draft, label, noPush }) {
     const hookService = yield* HookService;
@@ -84,18 +100,24 @@ const prCreate = Command.make(
     const defaultRef = yield* hookService.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
     const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
     if (branch === defaultBranch) {
-      return yield* dieWithError(`Cannot create PR from default branch "${branch}". Create a feature branch first.`);
+      return yield* dieWithError(
+        `Cannot create PR from default branch "${branch}". Create a feature branch first.`,
+      );
     }
 
     const status = yield* hookService.spawnGit(['status', '--porcelain']);
     if (status != null && status.length > 0) {
-      return yield* dieWithError('Uncommitted changes detected. Commit or stash before creating a PR.');
+      return yield* dieWithError(
+        'Uncommitted changes detected. Commit or stash before creating a PR.',
+      );
     }
 
     const template = yield* findTemplate();
     const validation = validatePrBody(template.sections, body);
     if (!validation.valid) {
-      return yield* dieWithError(`PR body validation failed: ${formatValidationErrors(validation)}`);
+      return yield* dieWithError(
+        `PR body validation failed: ${formatValidationErrors(validation)}`,
+      );
     }
 
     if (!noPush) {
@@ -127,6 +149,8 @@ const prCreate = Command.make(
 );
 
 export const pr = Command.make('pr').pipe(
-  Command.withDescription('PR template discovery, body validation, and creation. Use for all PR lifecycle operations.'),
+  Command.withDescription(
+    'PR template discovery, body validation, and creation. Use for all PR lifecycle operations.',
+  ),
   Command.withSubcommands([prTemplate, prValidate, prCreate]),
 );

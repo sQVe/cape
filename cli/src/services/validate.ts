@@ -35,7 +35,12 @@ const skillRequiredTags = [
   'key_principles',
 ];
 
-const skillAllKnownTags = [...skillRequiredTags, 'agent_references', 'skill_references', 'anti_batching'];
+const skillAllKnownTags = [
+  ...skillRequiredTags,
+  'agent_references',
+  'skill_references',
+  'anti_batching',
+];
 
 const checkTagOrdering = (content: string, errors: string[]) => {
   const criticalRulesPos = content.indexOf('<critical_rules>');

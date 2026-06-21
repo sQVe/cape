@@ -1,9 +1,9 @@
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { safeParseJson } from '../../utils/json';
 import { TRACKER_CACHE_TTL_MS } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
-import { safeParseJson } from '../../utils/json';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
@@ -147,7 +147,11 @@ const isTrackerCache = (value: unknown): value is TrackerCache => {
     return false;
   }
 
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
+  const cache = value as {
+    readonly version?: unknown;
+    readonly timestamp?: unknown;
+    readonly epics?: unknown;
+  };
   if (cache.version !== 1 || typeof cache.timestamp !== 'number') {
     return false;
   }
@@ -179,7 +183,9 @@ export const readTrackerCache = () =>
 export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
-  return stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed';
+  return (
+    stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed'
+  );
 };
 
 export const isReadyTask = (task: TrackerTask) => {
@@ -194,11 +200,7 @@ export const isReadyTask = (task: TrackerTask) => {
   );
 };
 
-const buildSessionBanner = (
-  epic: TrackerEpic,
-  phase: string,
-  branch: string | null,
-) => {
+const buildSessionBanner = (epic: TrackerEpic, phase: string, branch: string | null) => {
   const done = epic.tasks.filter(isDoneTask).length;
   const next = epic.tasks.find(isReadyTask);
   const nextText = next == null ? 'None' : `${next.id} - ${next.title}`;
@@ -313,10 +315,7 @@ export const userPromptSubmit = () =>
       return { decision: 'approve' as const };
     }
 
-    logEvent(
-      'hook.UserPromptSubmit',
-      skills.length > 0 ? skills.join(', ') : 'flow-context',
-    );
+    logEvent('hook.UserPromptSubmit', skills.length > 0 ? skills.join(', ') : 'flow-context');
 
     const parts: string[] = [];
     if (skills.length > 0) {

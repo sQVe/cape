@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 
 import { Effect, Layer } from 'effect';
 
-import { tryReadFileUtf8 } from '../utils/fs';
 import { pluginRoot } from '../pluginRoot';
+import { tryReadFileUtf8 } from '../utils/fs';
 import { HookService } from './hook';
 
 const readFile = (path: string) =>

@@ -6,7 +6,13 @@ import { catchAndDie } from '../utils/catchAndDie';
 
 export const detect = Command.make(
   'detect',
-  { map: Flag.optional(Flag.directory('map').pipe(Flag.withDescription('Directory to map as a file tree instead of detecting ecosystems'))) },
+  {
+    map: Flag.optional(
+      Flag.directory('map').pipe(
+        Flag.withDescription('Directory to map as a file tree instead of detecting ecosystems'),
+      ),
+    ),
+  },
   Effect.fn(function* ({ map }) {
     if (Option.isSome(map)) {
       const service = yield* DetectService;

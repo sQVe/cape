@@ -1,6 +1,4 @@
-export const splitFrontmatter = (
-  raw: string,
-): { frontmatter: string | null; body: string } => {
+export const splitFrontmatter = (raw: string): { frontmatter: string | null; body: string } => {
   if (!raw.startsWith('---\n')) {
     return { frontmatter: null, body: raw };
   }

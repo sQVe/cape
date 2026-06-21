@@ -228,7 +228,9 @@ describe('event name normalization', () => {
 
 describe('encoding edge cases', () => {
   it('denies unicode command containing denial trigger', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git commit -m "feat"' } });
+    const stdin = JSON.stringify({
+      tool_input: { command: 'echo 日本語 && git commit -m "feat"' },
+    });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);

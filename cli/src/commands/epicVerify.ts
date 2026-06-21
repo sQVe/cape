@@ -28,7 +28,9 @@ export const epicVerify = Command.make(
     yield* Console.log(JSON.stringify(result, null, 2));
 
     if (!ready) {
-      yield* dieWithError(`epic verification failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`);
+      yield* dieWithError(
+        `epic verification failed for ${id}: ${openItems.length} open task(s), checks ${checksPassed ? 'passed' : 'failed'}`,
+      );
     }
   }),
 ).pipe(

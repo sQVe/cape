@@ -1,4 +1,4 @@
-import type { Effect} from 'effect';
+import type { Effect } from 'effect';
 import { ServiceMap } from 'effect';
 
 export const TRACKER_CACHE_TTL_MS = 30 * 60 * 1000;

@@ -281,7 +281,9 @@ describe('resolveCheckCommands', () => {
       [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
       'pnpm',
     );
-    expect(commands).toEqual([{ label: 'vitest', command: 'pnpm', args: ['exec', 'vitest', 'run'] }]);
+    expect(commands).toEqual([
+      { label: 'vitest', command: 'pnpm', args: ['exec', 'vitest', 'run'] },
+    ]);
   });
 
   it('resolves ruff format with correct args', () => {

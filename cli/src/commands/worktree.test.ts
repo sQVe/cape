@@ -243,9 +243,7 @@ describe('cape worktree stop', () => {
     });
     const console_ = spyConsole();
 
-    await Effect.runPromise(
-      run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))),
-    );
+    await Effect.runPromise(run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))));
 
     const output = JSON.parse(console_.output());
     const state = JSON.parse(files[statePath] as string);
@@ -259,9 +257,7 @@ describe('cape worktree stop', () => {
     const { hookLayer, files, removedFiles } = makeHookLayer();
     const console_ = spyConsole();
 
-    await Effect.runPromise(
-      run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))),
-    );
+    await Effect.runPromise(run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))));
 
     expect(JSON.parse(console_.output())).toEqual({ cleared: true });
     expect(files[statePath]).toBeUndefined();
@@ -277,9 +273,7 @@ describe('cape worktree stop', () => {
     });
     const console_ = spyConsole();
 
-    await Effect.runPromise(
-      run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))),
-    );
+    await Effect.runPromise(run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))));
 
     expect(JSON.parse(console_.output())).toEqual({ cleared: true });
     expect(files[statePath]).toBeUndefined();
