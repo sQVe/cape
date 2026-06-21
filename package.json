@@ -6,8 +6,8 @@
     "build": "pnpm --filter @cape/cli build",
     "check": "vp check",
     "typecheck": "tsc -p cli/tsconfig.json",
-    "format": "vp fmt && prettier --write .",
-    "format:check": "vp fmt --check && prettier --check .",
+    "format": "vp fmt",
+    "format:check": "vp fmt --check",
     "lint": "vp lint",
     "prepare": "vp config",
     "test": "vp test",
@@ -15,11 +15,12 @@
     "test:e2e": "vp test --project e2e"
   },
   "devDependencies": {
-    "@types/node": "22.15.29",
-    "oxfmt": "0.42.0",
-    "oxlint": "1.57.0",
-    "prettier": "3.8.1",
-    "vite-plus": "0.1.14",
+    "@types/node": "25.9.2",
+    "oxfmt": "0.55.0",
+    "oxlint": "1.69.0",
+    "tsx": "4.22.4",
+    "typescript": "6.0.3",
+    "vite-plus": "0.1.24",
     "vitest": "4.1.1"
   },
   "engines": {
