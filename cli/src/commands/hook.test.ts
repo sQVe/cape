@@ -1030,6 +1030,16 @@ describe('preToolUseSkill', () => {
     });
   });
 
+  it('downgrades pr review gate to warning when orchestrate marker is present', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:pr', 'CAPE_ORCHESTRATE'),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('review-before-pr override accepted (orchestrate)'),
+    });
+  });
+
   it('passes through on invalid JSON', async () => {
     const layer = makeStubHookLayer({ stdin: 'not json' });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));

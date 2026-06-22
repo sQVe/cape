@@ -328,6 +328,15 @@ describe('skill gate: review-before-pr', () => {
     );
     expectWarn(result, 'review-before-pr override accepted');
   });
+
+  it('downgrades pr review gate to warning with orchestrate marker', () => {
+    const result = cape(
+      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
+      skillInput('cape:pr', 'CAPE_ORCHESTRATE'),
+      env,
+    );
+    expectWarn(result, 'review-before-pr override accepted (orchestrate)');
+  });
 });
 
 describe('skill gate: internal skills nudge direct invocation', () => {

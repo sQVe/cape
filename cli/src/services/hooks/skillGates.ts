@@ -26,6 +26,7 @@ const contextWith = (additionalContext: string) => ({ additionalContext });
 
 const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
 const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
+const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
@@ -159,6 +160,9 @@ const gateInternalSkill = () =>
 const hasReviewBeforePrOverride = (args: string | null) =>
   args?.includes(HARD_GATE_OVERRIDE) ?? false;
 
+const hasOrchestrateOverride = (args: string | null) =>
+  args?.includes(ORCHESTRATE_OVERRIDE) ?? false;
+
 const gatePr = (args: string | null) =>
   Effect.gen(function* () {
     const state = yield* readState();
@@ -179,6 +183,10 @@ const gatePr = (args: string | null) =>
       : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
     const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
     const message = `${baseMessage} ${overrideHint}`;
+
+    if (hasOrchestrateOverride(args)) {
+      return contextWith(`review-before-pr override accepted (orchestrate): ${baseMessage}`);
+    }
 
     if (hasReviewBeforePrOverride(args)) {
       return contextWith(`review-before-pr override accepted: ${message}`);
