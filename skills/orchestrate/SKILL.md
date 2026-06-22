@@ -56,7 +56,9 @@ reviewer prompt wording adapts to the task. </rigidity_level>
 
 ## Step 1: Orient from the tracker cache
 
-Read the tracker cache and pick the next task under the active epic, using the same orient logic as
+Determine the target epic: if the invocation named one (for example `/cape:orchestrate ABU-123`),
+use that epic; otherwise use the active epic from the cache, and if several are active, ask which.
+Then read the tracker cache and pick the next task under that epic, using the same orient logic as
 `cape:execute-plan` (in-progress task first, then the next ready `unstarted` / `Todo` task). Do not
 network-read for orientation.
 
