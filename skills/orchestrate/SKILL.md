@@ -63,6 +63,9 @@ network-read for orientation.
 If no ready tasks remain, BUILD is done: go to the SHIP phase below. The BUILD loop itself never
 emits the completion sentinel.
 
+The run is bounded: the `/goal` session caps at 60 turns (roughly one task cycle per turn) and also
+stops if a task parks. Set the `/goal` condition accordingly when launching.
+
 ---
 
 ## Step 2: Spawn a worker tab
@@ -97,7 +100,9 @@ Spawn a separate `codex` reviewer tab (codex has no cape skills) and hand it a s
 the task diff, the epic anti-patterns, the task success criteria, and a required `VERDICT: PASS` or
 `VERDICT: FAIL` line. Read the verdict and **summarize it** -- do not paste the pane.
 
-On `VERDICT: FAIL`, halt and summarize the findings for the user.
+On `VERDICT: FAIL`, spawn a fix-worker with the findings (same worker contract as Step 2; recover
+stalls per the Recovery policy), verify its commit, and re-review -- up to 2 review cycles. If the
+2nd cycle still fails, park: halt and summarize the findings for the user.
 
 ---
 
@@ -123,12 +128,10 @@ a worker or the codex reviewer. Each step reuses an existing cape skill by refer
 3. **`cape:pr` with the `CAPE_ORCHESTRATE` marker** -- the AFK branch: print the full description to
    the transcript, skip `AskUserQuestion`, and open the PR. Human review of the opened PR still
    happens; AFK waives only the pre-create confirmation.
-4. **Bounded PR-watch** -- poll CI with `gh`. On green, poll PR review comments for a bounded window
-   (lean default: re-check a few times over a short window, not indefinitely). For each valid
-   comment, spawn a fix-worker tab (same worker contract as Step 2; recover stalls per the Recovery
-   policy below), verify its commit, re-run `cape:review`, and push. Skip invalid or out-of-scope
-   comments with a one-line reason. Exact poll interval, window, and retry counts are a separate
-   bounds-tuning slice.
+4. **Bounded PR-watch** -- poll CI with `gh` every 30s for up to 30 min. On green, poll PR review
+   comments every 3 min for 15 min. For each valid comment, spawn a fix-worker tab (same worker
+   contract as Step 2; recover stalls per the Recovery policy below), verify its commit, re-run
+   `cape:review`, and push. Skip invalid or out-of-scope comments with a one-line reason.
 5. **Emit the sentinel** -- only now, at the very end, print
    `CAPE_ORCHESTRATE_COMPLETE epic=<id> pr=<url>`. This is the single line that satisfies the
    `/goal` completion check, so it appears nowhere else in the run.
@@ -147,9 +150,8 @@ stall; real runs recover by retrying or respawning.
   spec: re-prompt the existing worker, or respawn a fresh worker tab if the pane is wedged.
 - **Death** -- the worker tab is gone or crashed (check `herdr pane list`). Respawn a fresh tab with
   the same spec.
-- **Bounded** -- retry/respawn up to a small budget (lean default: 2 attempts; the exact count is
-  the bounds-tuning slice). A retry counts as success only when a real commit lands -- status alone
-  never counts (critical rule 1).
+- **Bounded** -- retry/respawn up to 3 attempts. A retry counts as success only when a real commit
+  lands -- status alone never counts (critical rule 1).
 - **Park** -- only after the budget is spent: halt the run, leave the task as it is in Linear, and
   summarize what was tried and the last failure for the user.
 
