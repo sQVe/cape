@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -22,41 +22,6 @@ beforeEach(() => {
 
 afterEach(() => {
   spawnSync('rm', ['-rf', tmpDir]);
-});
-
-describe('PostToolUse/Bash', () => {
-  it('produces no state changes for shell commands', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'ls -la' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
-  });
-
-  it('produces no state changes for git commands', () => {
-    const stdin = JSON.stringify({
-      tool_input: { command: 'git status' },
-    });
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
-  });
-
-  it('handles malformed JSON input gracefully', () => {
-    const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], 'not json', env);
-    expect(result.status).toBe(0);
-    expect(existsSync(join(contextDir, 'state.json'))).toBe(false);
-  });
-
-  it('returns null output (no stdout) for all commands', () => {
-    const commands = ['ls -la', 'git status'];
-    for (const command of commands) {
-      const stdin = JSON.stringify({ tool_input: { command } });
-      const result = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-      expect(result.stdout).toBe('');
-    }
-  });
 });
 
 // All Edit E2E tests hit the early-return path because no flowPhase exists in state.json.

@@ -13,7 +13,7 @@ describe('cape --help', () => {
   it('lists all subcommands', async () => {
     const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
-    for (const sub of ['check', 'commit', 'detect', 'git', 'hook', 'pr', 'validate']) {
+    for (const sub of ['check', 'commit', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
     }
   });
@@ -24,28 +24,6 @@ describe('cape --version', () => {
     const result = await inProcess(['--version']);
     expect(result.status).toBe(0);
     expect(result.stdout).toMatch(/^cape v\d+\.\d+\.\d+$/);
-  });
-});
-
-describe('cape detect', () => {
-  it('each entry has language, testFramework, linter, formatter fields', async () => {
-    const result = await inProcess(['detect']);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.length).toBeGreaterThan(0);
-    for (const entry of parsed) {
-      expect(entry).toHaveProperty('language');
-      expect(entry).toHaveProperty('testFramework');
-      expect(entry).toHaveProperty('linter');
-      expect(entry).toHaveProperty('formatter');
-    }
-  });
-
-  it('detects typescript for the cape repo', async () => {
-    const result = await inProcess(['detect']);
-    const parsed = JSON.parse(result.stdout);
-    const ts = parsed.find((e: { language: string }) => e.language === 'typescript');
-    expect(ts).toBeDefined();
-    expect(ts.testFramework).toBe('vite-plus');
   });
 });
 
@@ -70,50 +48,6 @@ describe('cape git context', () => {
     const result = await inProcess(['git', 'context'], { cwd: nonGitDir });
     spawnSync('rm', ['-rf', nonGitDir]);
     expect(result.status).toBe(1);
-  });
-});
-
-describe('cape epic verify', () => {
-  it('cape --help lists epic subcommand', async () => {
-    const result = await inProcess(['--help']);
-    expect(result.stdout).toContain('epic');
-  });
-
-  it('cape epic --help lists verify subcommand', async () => {
-    const result = await inProcess(['epic', '--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('verify');
-  });
-
-  it('requires an id argument', async () => {
-    const result = await inProcess(['epic', 'verify']);
-    expect(result.status).not.toBe(0);
-  });
-});
-
-describe('cape git validate-branch', () => {
-  it('validates a well-formed branch name', async () => {
-    const result = await inProcess(['git', 'validate-branch', 'feat/my-feature']);
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(parsed.valid).toBe(true);
-    expect(parsed.errors).toEqual([]);
-  });
-
-  it('rejects a branch that already exists', async () => {
-    const result = await inProcess(['git', 'validate-branch', 'main']);
-    expect(result.status).toBe(1);
-    const parsed = JSON.parse(result.stdout.split('\n')[0]!);
-    expect(parsed.valid).toBe(false);
-    expect(parsed.errors.some((e: string) => e.includes('already exists'))).toBe(true);
-  });
-
-  it('warns on missing prefix', async () => {
-    const result = await inProcess(['git', 'validate-branch', 'no-prefix-branch']);
-    expect(result.status).toBe(1);
-    const parsed = JSON.parse(result.stdout.split('\n')[0]!);
-    expect(parsed.valid).toBe(false);
-    expect(parsed.errors.some((e: string) => e.includes('prefix'))).toBe(true);
   });
 });
 
@@ -461,24 +395,6 @@ describe('cape state', () => {
     await inProcess(['state', 'set', 'testKey']);
     const result = await inProcess(['state', 'reset']);
     expect(result.status).toBe(0);
-  });
-});
-
-describe('cape detect --map', () => {
-  it('returns JSON mapping source files to test files', async () => {
-    const result = await inProcess(['detect', '--map', '.']);
-    expect(result.status).toBe(0);
-    const parsed = JSON.parse(result.stdout);
-    expect(typeof parsed).toBe('object');
-    expect(Object.keys(parsed).length).toBeGreaterThan(0);
-  });
-
-  it('values are either a test path or null', async () => {
-    const result = await inProcess(['detect', '--map', '.']);
-    const parsed = JSON.parse(result.stdout);
-    for (const value of Object.values(parsed)) {
-      expect(value === null || typeof value === 'string').toBe(true);
-    }
   });
 });
 

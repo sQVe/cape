@@ -5,6 +5,7 @@ import type { ConformInput } from '../services/conform';
 import { ConformService, extractChangedPaths } from '../services/conform';
 import { DIFF_SCOPES, GitService } from '../services/git';
 import type { DiffScope } from '../services/git';
+import { writeStateKey } from '../services/hook';
 import { catchAndDie } from '../utils/catchAndDie';
 
 const isDiffScope = (value: string): value is DiffScope =>
@@ -35,6 +36,9 @@ export const conform = Command.make(
 
     const output: ConformInput = { rules, changedFiles, scope: resolvedScope };
     yield* Console.log(JSON.stringify(output, null, 2));
+
+    // Stamp the conform-before-review gate so cape:review can stamp reviewedAt.
+    yield* writeStateKey('conformedAt', { scope: resolvedScope });
   }),
 ).pipe(
   Command.withDescription(

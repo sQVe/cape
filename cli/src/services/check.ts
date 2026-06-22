@@ -66,25 +66,6 @@ const formatCommands: Record<string, CheckCommand> = {
   rustfmt: { label: 'rustfmt', command: 'cargo', args: ['fmt', '--check'] },
 };
 
-export const resolveTestCommand = (
-  ecosystems: DetectResult[],
-  pm: string | null = null,
-): CheckCommand | undefined => {
-  for (const eco of ecosystems) {
-    if (eco.testFramework == null) continue;
-    if (
-      eco.testFramework === 'vitest' ||
-      eco.testFramework === 'jest' ||
-      eco.testFramework === 'vite-plus'
-    ) {
-      return nodeTestCommand(eco.testFramework, pm);
-    }
-    const cmd = testCommands[eco.testFramework];
-    if (cmd != null) return cmd;
-  }
-  return undefined;
-};
-
 export const resolveCheckCommands = (ecosystems: DetectResult[], pm: string | null = null) => {
   const commands: CheckCommand[] = [];
 

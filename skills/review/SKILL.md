@@ -107,6 +107,9 @@ Run `cape conform <scope>` for the same review scope. Use its JSON output as the
 applicable rules and rule sources. Report convention violations separately from correctness findings
 unless the same observation also creates a correctness bug.
 
+This step is enforced: `cape conform` stamps a `conformedAt` marker, and the Step 5 `reviewedAt`
+stamp is hard-gated on it. Skipping conform blocks review completion.
+
 ---
 
 ## Step 4: Review The Changes

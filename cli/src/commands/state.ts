@@ -29,6 +29,13 @@ const STATE_KEY_CATALOG = [
     valueShape: '{ scope }',
     ttlMs: 60 * 60 * 1000,
   },
+  {
+    key: 'conformedAt',
+    description: 'Fresh cape conform run required by the conform-before-review hard gate',
+    validValues: 'set by cape conform; gates the reviewedAt stamp',
+    valueShape: '{ scope }',
+    ttlMs: 60 * 60 * 1000,
+  },
 ] as const;
 
 const catalogByKey = Object.fromEntries(STATE_KEY_CATALOG.map((entry) => [entry.key, entry]));
