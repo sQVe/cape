@@ -5,6 +5,8 @@ import { gitCreateBranch } from './gitCreateBranch';
 import { gitDiff } from './gitDiff';
 
 export const git = Command.make('git').pipe(
-  Command.withDescription('Git utilities for context, diffs, and branch management. Use for branch, diff, and context operations.'),
+  Command.withDescription(
+    'Git utilities for context, diffs, and branch management. Use for branch, diff, and context operations.',
+  ),
   Command.withSubcommands([gitContext, gitCreateBranch, gitDiff]),
 );

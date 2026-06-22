@@ -1,7 +1,0 @@
-*.js
-*.jsx
-*.mjs
-*.mts
-*.ts
-*.tsx
-pnpm-lock.yaml

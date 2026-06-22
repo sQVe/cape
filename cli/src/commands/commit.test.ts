@@ -184,9 +184,14 @@ describe('commit command wiring', () => {
   it('joins multiple -m flags with blank line', async () => {
     const console_ = spyConsole();
     await Effect.runPromise(
-      run(['commit', 'src/foo.ts', '-m', 'feat: add thing', '-m', 'Add the thing to the project.']).pipe(
-        Effect.provide(commandLayers),
-      ),
+      run([
+        'commit',
+        'src/foo.ts',
+        '-m',
+        'feat: add thing',
+        '-m',
+        'Add the thing to the project.',
+      ]).pipe(Effect.provide(commandLayers)),
     );
     const result = JSON.parse(console_.output());
     expect(result).toEqual({
@@ -225,9 +230,7 @@ describe('commit command wiring', () => {
   it('warns on sensitive files to stderr but still commits', async () => {
     const console_ = spyConsole();
     const msg = 'feat: add config\n\nAdd environment configuration.';
-    await Effect.runPromise(
-      run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)),
-    );
+    await Effect.runPromise(run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)));
     expect(console_.errorOutput()).toContain('warning: sensitive files');
     expect(console_.errorOutput()).toContain('.env');
     const result = JSON.parse(console_.output());
@@ -237,9 +240,7 @@ describe('commit command wiring', () => {
 
   it('commits with --no-edit for merge commits', async () => {
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['commit', '--no-edit']).pipe(Effect.provide(commandLayers)),
-    );
+    await Effect.runPromise(run(['commit', '--no-edit']).pipe(Effect.provide(commandLayers)));
     const result = JSON.parse(console_.output());
     expect(result).toEqual({ noEdit: true });
     console_.restore();
@@ -257,9 +258,7 @@ describe('commit command wiring', () => {
 
   it('rejects when no message and no --no-edit', async () => {
     await expect(
-      Effect.runPromise(
-        run(['commit', 'file.ts']).pipe(Effect.provide(commandLayers)),
-      ),
+      Effect.runPromise(run(['commit', 'file.ts']).pipe(Effect.provide(commandLayers))),
     ).rejects.toThrow('--message is required');
   });
 
@@ -267,9 +266,7 @@ describe('commit command wiring', () => {
     const msg = 'feat: thing\n\nAdd the thing to the project.';
     const layers = makeTestCommandLayers(makeErrorCommitLayer('commit failed'));
     await expect(
-      Effect.runPromise(
-        run(['commit', 'file.ts', '-m', msg]).pipe(Effect.provide(layers)),
-      ),
+      Effect.runPromise(run(['commit', 'file.ts', '-m', msg]).pipe(Effect.provide(layers))),
     ).rejects.toThrow('commit failed');
   });
 });

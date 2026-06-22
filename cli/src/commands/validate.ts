@@ -32,11 +32,7 @@ const validateByType = (type: string, root: string) =>
 
     const knownSkills =
       type === 'all' || type === 'commands'
-        ? yield* collectDefinitionNames(
-            service,
-            join(root, 'skills/*/SKILL.md'),
-            skillNameFromPath,
-          )
+        ? yield* collectDefinitionNames(service, join(root, 'skills/*/SKILL.md'), skillNameFromPath)
         : new Set<string>();
 
     const knownAgents =
@@ -45,11 +41,8 @@ const validateByType = (type: string, root: string) =>
         : new Set<string>();
 
     if (type === 'all' || type === 'skills') {
-      const r = yield* loadDefinitions(
-        service,
-        join(root, 'skills/*/SKILL.md'),
-        (file, content) =>
-          validateSkillContent(relative(root, file), content, { knownAgents }),
+      const r = yield* loadDefinitions(service, join(root, 'skills/*/SKILL.md'), (file, content) =>
+        validateSkillContent(relative(root, file), content, { knownAgents }),
       );
       results.push(...r);
     }
@@ -60,11 +53,8 @@ const validateByType = (type: string, root: string) =>
       results.push(...r);
     }
     if (type === 'all' || type === 'commands') {
-      const r = yield* loadDefinitions(
-        service,
-        join(root, 'commands/*.md'),
-        (file, content) =>
-          validateCommandContent(relative(root, file), content, { knownSkills }),
+      const r = yield* loadDefinitions(service, join(root, 'commands/*.md'), (file, content) =>
+        validateCommandContent(relative(root, file), content, { knownSkills }),
       );
       results.push(...r);
     }
@@ -76,7 +66,15 @@ const validTypes = new Set(['skills', 'agents', 'commands']);
 
 export const validate = Command.make(
   'validate',
-  { target: Argument.optional(Argument.string('target').pipe(Argument.withDescription('File path or type to validate: skills | agents | commands (default: all)'))) },
+  {
+    target: Argument.optional(
+      Argument.string('target').pipe(
+        Argument.withDescription(
+          'File path or type to validate: skills | agents | commands (default: all)',
+        ),
+      ),
+    ),
+  },
   Effect.fn(function* ({ target }) {
     const service = yield* ValidateService;
     const root = yield* service.gitRoot().pipe(catchAndDie);

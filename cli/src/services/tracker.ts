@@ -73,7 +73,11 @@ export const isTrackerCache = (value: unknown): value is TrackerCache => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
     return false;
   }
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
+  const cache = value as {
+    readonly version?: unknown;
+    readonly timestamp?: unknown;
+    readonly epics?: unknown;
+  };
   if (cache.version !== 1 || typeof cache.timestamp !== 'number') {
     return false;
   }

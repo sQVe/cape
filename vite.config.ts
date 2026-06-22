@@ -1,9 +1,33 @@
 import { defineConfig } from 'vite-plus';
 
 export default defineConfig({
+  fmt: {
+    printWidth: 100,
+    singleQuote: true,
+    trailingComma: 'all',
+    semi: true,
+    tabWidth: 2,
+    useTabs: false,
+    endOfLine: 'lf',
+    bracketSpacing: true,
+    arrowParens: 'always',
+    ignorePatterns: [
+      'dist/**',
+      'coverage/**',
+      'pnpm-lock.yaml',
+      'hooks/**',
+      'scripts/**',
+      'commands/**',
+    ],
+    overrides: [{ files: ['*.md'], options: { proseWrap: 'always', printWidth: 100 } }],
+    sortImports: {
+      newlinesBetween: true,
+      groups: ['builtin', 'external', ['parent', 'sibling', 'index'], 'style', 'unknown'],
+    },
+  },
   staged: {
-    '*.{ts,tsx}': ['vp lint --fix', 'vp fmt . --write'],
-    '*.{json,md,yaml,yml,css}': 'prettier --write',
+    '*.{ts,tsx}': ['vp lint --fix', 'vp fmt . --write', () => 'pnpm fallow:staged'],
+    '*.{json,md,yaml,yml}': 'vp fmt . --write',
   },
   test: {
     projects: [

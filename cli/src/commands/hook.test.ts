@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logEvent } from '../eventLog';
 import { main } from '../main';
-import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
-
 import {
   FLOW_PHASE_TTL_MS,
   HookService,
@@ -22,6 +20,7 @@ import {
   stripQuotedContent,
   userPromptSubmit,
 } from '../services/hook';
+import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -148,7 +147,6 @@ describe('detectExecutePlan', () => {
   });
 });
 
-
 const makeStubHookLayer = (
   overrides: Partial<{
     pluginRoot: string;
@@ -220,8 +218,7 @@ const reviewedAtEntry = (timestamp = Date.now()) => ({
   timestamp,
 });
 
-const flowPhaseFile = (phase: string) =>
-  stateFile({ flowPhase: flowPhaseEntry(phase) });
+const flowPhaseFile = (phase: string) => stateFile({ flowPhase: flowPhaseEntry(phase) });
 
 const trackerCacheFile = (cache: Record<string, unknown>) => ({
   '/test/hooks/context/tracker.json': JSON.stringify(cache),
@@ -253,23 +250,14 @@ const trackerCache = (timestamp = Date.now()) => ({
   },
 });
 
-const task = (
-  id: string,
-  status: string,
-  stateType: string,
-  title = 'Task',
-) => ({
+const task = (id: string, status: string, stateType: string, title = 'Task') => ({
   id,
   title,
   status,
   stateType,
 });
 
-const epic = (
-  id: string,
-  tasks: readonly ReturnType<typeof task>[],
-  title = 'My Epic',
-) => ({
+const epic = (id: string, tasks: readonly ReturnType<typeof task>[], title = 'My Epic') => ({
   id,
   title,
   status: 'In Progress',
@@ -743,14 +731,10 @@ describe('denyTable', () => {
 
   it('has block entries before redirect entries', () => {
     const firstRedirect = denyTable.findIndex((e) => e.tier === 'redirect');
-    const lastBlock = denyTable.reduce(
-      (acc, e, i) => (e.tier === 'block' ? i : acc),
-      -1,
-    );
+    const lastBlock = denyTable.reduce((acc, e, i) => (e.tier === 'block' ? i : acc), -1);
     expect(lastBlock).toBeLessThan(firstRedirect);
   });
 });
-
 
 describe('preToolUseBash', () => {
   it('passes through non-matching commands', async () => {
@@ -807,7 +791,6 @@ describe('preToolUseBash', () => {
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
       expectDeny(result, 'cape git create-branch');
     });
-
   });
 
   describe('block tier', () => {
@@ -975,14 +958,11 @@ describe('preToolUseSkill', () => {
     'cape:worktree',
     'cape:brainstorm',
     'cape:write-plan',
-  ])(
-    'allows non-gated skill %s',
-    async (skill) => {
-      const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
-      const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    },
-  );
+  ])('allows non-gated skill %s', async (skill) => {
+    const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
 
   it('denies pr when review has not stamped state', async () => {
     const layer = makeStubHookLayer({
@@ -1299,7 +1279,6 @@ describe('hook command - PreToolUse wiring', () => {
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
     console_.restore();
   });
-
 });
 
 describe('readFlowPhase', () => {
@@ -1334,7 +1313,6 @@ describe('readFlowPhase', () => {
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 });
-
 
 describe('hook command - PostToolUse wiring', () => {
   it('accepts PascalCase PostToolUse event name', async () => {

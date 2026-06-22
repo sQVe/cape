@@ -1,9 +1,9 @@
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { safeParseJson } from '../../utils/json';
 import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
 import type { TrackerEpic, TrackerTask } from '../tracker';
-import { safeParseJson } from '../../utils/json';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
@@ -131,7 +131,9 @@ export const readTrackerCache = () =>
 export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
-  return stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed';
+  return (
+    stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed'
+  );
 };
 
 export const isReadyTask = (task: TrackerTask) => {
@@ -279,10 +281,7 @@ export const userPromptSubmit = () =>
       return { decision: 'approve' as const };
     }
 
-    logEvent(
-      'hook.UserPromptSubmit',
-      skills.length > 0 ? skills.join(', ') : 'flow-context',
-    );
+    logEvent('hook.UserPromptSubmit', skills.length > 0 ? skills.join(', ') : 'flow-context');
 
     const parts: string[] = [];
     if (skills.length > 0) {

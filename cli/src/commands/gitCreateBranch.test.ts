@@ -23,10 +23,7 @@ const defaultValidation: BranchValidation = { valid: true, errors: [] };
 
 const defaultCreateResult = { created: true, branch: 'feat/test' };
 
-const makeGitLayer = (
-  validation = defaultValidation,
-  createResult = defaultCreateResult,
-) =>
+const makeGitLayer = (validation = defaultValidation, createResult = defaultCreateResult) =>
   Layer.succeed(GitService)({
     getContext: () =>
       Effect.succeed({
@@ -115,7 +112,9 @@ describe('git create-branch command', () => {
   it('outputs JSON with created and branch on success', async () => {
     const console_ = spyConsole();
     await Effect.runPromise(
-      run(['git', 'create-branch', 'feat/my-feature']).pipe(Effect.provide(testLayers(makeGitLayer()))),
+      run(['git', 'create-branch', 'feat/my-feature']).pipe(
+        Effect.provide(testLayers(makeGitLayer())),
+      ),
     );
     const result = JSON.parse(console_.output());
     expect(result).toEqual({ created: true, branch: 'feat/test' });

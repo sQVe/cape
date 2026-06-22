@@ -5,10 +5,8 @@ import { Effect, Layer } from 'effect';
 import type { BranchCreation, BranchValidation, DiffScope } from './git';
 import { BRANCH_PREFIXES, GitService } from './git';
 
-const git = (args: readonly string[]) =>
-  execFileSync('git', args, { encoding: 'utf-8' }).trim();
-const gitRaw = (args: readonly string[]) =>
-  execFileSync('git', args, { encoding: 'utf-8' });
+const git = (args: readonly string[]) => execFileSync('git', args, { encoding: 'utf-8' }).trim();
+const gitRaw = (args: readonly string[]) => execFileSync('git', args, { encoding: 'utf-8' });
 
 const tryGit = (args: readonly string[]) => {
   try {

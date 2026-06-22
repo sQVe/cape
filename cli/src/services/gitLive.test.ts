@@ -90,21 +90,19 @@ describe('GitServiceLive', () => {
         'diff --stat': '',
         'log --oneline': '',
       };
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (key.includes('symbolic-ref') || key.includes('--verify main')) {
-            throw new Error('not found');
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (key.includes('symbolic-ref') || key.includes('--verify main')) {
+          throw new Error('not found');
+        }
+        for (const [pattern, value] of Object.entries(responses)) {
+          if (key.includes(pattern)) {
+            return value;
           }
-          for (const [pattern, value] of Object.entries(responses)) {
-            if (key.includes(pattern)) {
-              return value;
-            }
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const ctx = await run(
         Effect.gen(function* () {
@@ -124,25 +122,23 @@ describe('GitServiceLive', () => {
         'diff --stat': '',
         'log --oneline': '',
       };
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (
-            key.includes('symbolic-ref') ||
-            key.includes('--verify main') ||
-            key.includes('--verify master')
-          ) {
-            throw new Error('not found');
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (
+          key.includes('symbolic-ref') ||
+          key.includes('--verify main') ||
+          key.includes('--verify master')
+        ) {
+          throw new Error('not found');
+        }
+        for (const [pattern, value] of Object.entries(responses)) {
+          if (key.includes(pattern)) {
+            return value;
           }
-          for (const [pattern, value] of Object.entries(responses)) {
-            if (key.includes(pattern)) {
-              return value;
-            }
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const ctx = await run(
         Effect.gen(function* () {
@@ -183,22 +179,20 @@ describe('GitServiceLive', () => {
     };
 
     it('returns unstaged diff', async () => {
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (key === 'diff') {
-            return 'unstaged diff';
-          }
-          if (key.includes('rev-parse --git-dir')) {
-            return '.git';
-          }
-          if (key.includes('symbolic-ref')) {
-            return 'refs/remotes/origin/main';
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (key === 'diff') {
+          return 'unstaged diff';
+        }
+        if (key.includes('rev-parse --git-dir')) {
+          return '.git';
+        }
+        if (key.includes('symbolic-ref')) {
+          return 'refs/remotes/origin/main';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const diff = await run(
         Effect.gen(function* () {
@@ -237,25 +231,23 @@ describe('GitServiceLive', () => {
     });
 
     it('appends uncommitted changes for pr scope', async () => {
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (key.includes('rev-parse --git-dir')) {
-            return '.git';
-          }
-          if (key.includes('symbolic-ref')) {
-            return 'refs/remotes/origin/main';
-          }
-          if (key === 'diff main...HEAD') {
-            return 'branch part';
-          }
-          if (key === 'diff') {
-            return 'uncommitted part';
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (key.includes('rev-parse --git-dir')) {
+          return '.git';
+        }
+        if (key.includes('symbolic-ref')) {
+          return 'refs/remotes/origin/main';
+        }
+        if (key === 'diff main...HEAD') {
+          return 'branch part';
+        }
+        if (key === 'diff') {
+          return 'uncommitted part';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const diff = await run(
         Effect.gen(function* () {
@@ -271,22 +263,20 @@ describe('GitServiceLive', () => {
 
   describe('validateBranch', () => {
     it('returns valid for a well-formed branch', async () => {
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (key.includes('rev-parse --git-dir')) {
-            return '.git';
-          }
-          if (key.includes('check-ref-format')) {
-            return 'feat/my-branch';
-          }
-          if (key.includes('rev-parse --verify')) {
-            throw new Error('not found');
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (key.includes('rev-parse --git-dir')) {
+          return '.git';
+        }
+        if (key.includes('check-ref-format')) {
+          return 'feat/my-branch';
+        }
+        if (key.includes('rev-parse --verify')) {
+          throw new Error('not found');
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const result = await run(
         Effect.gen(function* () {
@@ -300,25 +290,23 @@ describe('GitServiceLive', () => {
     });
 
     it('accumulates multiple validation errors', async () => {
-      mockExecFileSync.mockImplementation(
-        ((...args: unknown[]) => {
-          const gitArgs = args[1] as string[];
-          const key = gitArgs.join(' ');
-          if (key.includes('rev-parse --git-dir')) {
-            return '.git';
-          }
-          if (key.includes('check-ref-format')) {
-            throw new Error('invalid');
-          }
-          if (key.includes('refs/heads/bad-name')) {
-            return 'sha';
-          }
-          if (key.includes('refs/remotes/origin/bad-name')) {
-            return 'sha';
-          }
-          throw new Error(`unmocked: ${key}`);
-        }) as typeof execFileSync,
-      );
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const gitArgs = args[1] as string[];
+        const key = gitArgs.join(' ');
+        if (key.includes('rev-parse --git-dir')) {
+          return '.git';
+        }
+        if (key.includes('check-ref-format')) {
+          throw new Error('invalid');
+        }
+        if (key.includes('refs/heads/bad-name')) {
+          return 'sha';
+        }
+        if (key.includes('refs/remotes/origin/bad-name')) {
+          return 'sha';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
 
       const result = await run(
         Effect.gen(function* () {

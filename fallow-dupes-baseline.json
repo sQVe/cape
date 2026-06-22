@@ -1,0 +1,9 @@
+{
+  "clone_groups": [
+    "cli/src/commands/tracker.ts:18-32|cli/src/services/prLive.ts:18-41",
+    "cli/src/services/detect.ts:256-260|cli/src/services/detect.ts:289-293",
+    "cli/src/services/hooks/skillGates.ts:124-136|cli/src/services/hooks/skillGates.ts:76-84",
+    "cli/src/services/trackerLive.ts:100-107|cli/src/services/trackerLive.ts:128-136",
+    "cli/src/services/validate.ts:121-133|cli/src/services/validate.ts:86-98"
+  ]
+}

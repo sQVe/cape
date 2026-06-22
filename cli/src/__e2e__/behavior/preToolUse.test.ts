@@ -238,11 +238,7 @@ describe('pass-through for benign commands', () => {
   });
 
   it('allows br list', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('br list'),
-      env,
-    );
+    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], bashInput('br list'), env);
     expectPassThrough(result);
   });
 
@@ -272,9 +268,7 @@ describe('pass-through for benign commands', () => {
     );
     if (result.stdout) {
       const parsed = JSON.parse(result.stdout);
-      expect(parsed.hookSpecificOutput?.permissionDecisionReason ?? '').not.toContain(
-        'Force push',
-      );
+      expect(parsed.hookSpecificOutput?.permissionDecisionReason ?? '').not.toContain('Force push');
     }
   });
 });

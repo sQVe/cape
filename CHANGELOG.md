@@ -21,6 +21,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   one `type:*` label, `src:cape`, Medium priority, naming, `Done when:`, Mermaid for multi-step
   flows), referenced by write-plan, execute-plan, and fix-bug.
 - Tracker: added a workspace-setup checklist for the one-time Linear bootstrap.
+- Tooling: added fallow for dead-code and duplication auditing, with a staged pre-commit audit.
+- Tooling: added `.npmrc` with `save-exact` and `strict-peer-dependencies`.
 
 ### Changed
 
@@ -45,6 +47,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: cape no longer sets Linear status; the PR references the epic with `Fixes ABU-XX` so
   Linear's GitHub integration moves it to In Review on open and Done on merge. finish-epic verifies
   and hands off instead of closing.
+- Tooling: consolidated formatting on oxfmt; its config now lives in `vite.config.ts`.
+- Tooling: bumped oxlint, oxfmt, vite-plus, and `@types/node`, and added pinned `typescript` and
+  `tsx` devDeps.
+- Tooling: enabled strict `tsconfig` flags (`exactOptionalPropertyTypes`, `noImplicitOverride`,
+  `noFallthroughCasesInSwitch`).
 
 ### Removed
 
@@ -58,6 +65,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   throwing `callLinear` stub) and its test, plus the dead resolveTestCommand export; cache writes
   use the pure transform functions directly.
 - Skills: removed the orphaned epic-template.md and a stale elements-of-style prose reference.
+- Tooling: removed Prettier in favor of oxfmt.
 
 ## [1.3.0] - 2026-03-26
 

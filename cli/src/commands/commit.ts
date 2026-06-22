@@ -2,7 +2,6 @@ import { Console, Effect } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-
 import {
   commitNoEdit,
   detectSensitiveFiles,
@@ -15,9 +14,19 @@ import type { CommitResult } from '../services/commit';
 export const commit = Command.make(
   'commit',
   {
-    files: Argument.string('files').pipe(Argument.withDescription('Files to stage and commit'), Argument.atLeast(0)),
-    noEdit: Flag.boolean('no-edit').pipe(Flag.withDescription('Finalize a merge commit (git commit --no-edit)'), Flag.withDefault(false)),
-    message: Flag.string('message').pipe(Flag.withDescription('Commit message (repeatable, joined with blank line)'), Flag.withAlias('m'), Flag.atLeast(0)),
+    files: Argument.string('files').pipe(
+      Argument.withDescription('Files to stage and commit'),
+      Argument.atLeast(0),
+    ),
+    noEdit: Flag.boolean('no-edit').pipe(
+      Flag.withDescription('Finalize a merge commit (git commit --no-edit)'),
+      Flag.withDefault(false),
+    ),
+    message: Flag.string('message').pipe(
+      Flag.withDescription('Commit message (repeatable, joined with blank line)'),
+      Flag.withAlias('m'),
+      Flag.atLeast(0),
+    ),
   },
   Effect.fn(function* ({ files, noEdit, message }) {
     if (noEdit) {

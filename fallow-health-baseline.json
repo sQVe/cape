@@ -1,0 +1,54 @@
+{
+  "finding_counts": {
+    "cli/src/commands/hook.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/commands/pr.test.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/commands/pr.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/commands/validate.ts": {
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/services/check.ts": {
+      "complexity_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/services/hooks/skillGates.ts": {
+      "complexity_moderate": {
+        "count": 1
+      },
+      "crap_moderate": {
+        "count": 1
+      }
+    },
+    "cli/src/services/hooks/state.ts": {
+      "crap_high": {
+        "count": 1
+      }
+    },
+    "cli/src/services/tracker.ts": {
+      "crap_moderate": {
+        "count": 2
+      }
+    }
+  },
+  "runtime_coverage_findings": [],
+  "target_keys": [
+    "cli/src/services/detect.ts:high impact",
+    "cli/src/testStubs.ts:high impact",
+    "cli/src/services/hookLive.ts:high impact",
+    "cli/src/services/tracker.ts:untested risk"
+  ]
+}

@@ -21,8 +21,7 @@ export const denyTable: readonly DenyEntry[] = [
   },
   {
     pattern: /\bgh\s+pr\s+merge\b/,
-    message:
-      'PR merge via CLI is blocked. Reason: merges must go through review in the GitHub UI.',
+    message: 'PR merge via CLI is blocked. Reason: merges must go through review in the GitHub UI.',
     tier: 'block',
   },
   {

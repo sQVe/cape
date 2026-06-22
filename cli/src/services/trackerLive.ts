@@ -85,7 +85,9 @@ const labelName = (label: LinearLabel) => {
 };
 
 const issueType = (issue: LinearIssue) => {
-  const label = issueLabels(issue).map(labelName).find((name) => name?.startsWith('type:') === true);
+  const label = issueLabels(issue)
+    .map(labelName)
+    .find((name) => name?.startsWith('type:') === true);
   const type = label?.slice('type:'.length);
   return type == null || type.length === 0 ? undefined : type;
 };
@@ -151,7 +153,11 @@ export const toTasks = (value: unknown): readonly TrackerTask[] => {
   });
 };
 
-export const mergeEpic = (cache: TrackerCache | null, epic: TrackerEpic, timestamp: number): TrackerCache => ({
+export const mergeEpic = (
+  cache: TrackerCache | null,
+  epic: TrackerEpic,
+  timestamp: number,
+): TrackerCache => ({
   version: 1,
   timestamp,
   epics: {
