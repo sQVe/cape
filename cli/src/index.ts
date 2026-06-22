@@ -25,7 +25,7 @@ const AppLayer = Layer.mergeAll(
   ValidateServiceLive,
 );
 
-const skipCommands = new Set(['hook', 'stats']);
+const skipCommands = new Set(['hook']);
 const args = process.argv.slice(2);
 const cmdSegments = args.filter((a) => !a.startsWith('-'));
 const cmd = cmdSegments.join('.');

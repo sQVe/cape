@@ -42,7 +42,7 @@
 
 ---
 
-Fixes #[issue-number] Related to #[issue-number]
+Fixes ABU-XX Related to ABU-XX
 ```
 
 ## Section guidelines
@@ -53,7 +53,9 @@ Fixes #[issue-number] Related to #[issue-number]
 - **Verification performed**: Evidence of testing already done during development
 - **Deployment notes**: Operational steps for deployers (optional, omit if none)
 - **Manual verification**: Subjective human judgment only (optional, often omitted)
-- **Issues**: Link related issues with "Fixes #" or "Related to #"
+- **Issues**: Reference the Linear epic by its identifier — `Fixes ABU-XX` to close it on merge, or
+  `Related to ABU-XX` for a non-closing link. Linear's GitHub integration links and closes by Linear
+  identifier, not GitHub issue number
 
 ## Test plan format
 

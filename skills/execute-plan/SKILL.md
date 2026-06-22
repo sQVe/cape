@@ -156,7 +156,9 @@ Reflect in session:
 - What the next smallest vertical slice should be
 
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
-a Linear sub-issue through MCP, then refresh the epic cache from an MCP `get_issue` result:
+a Linear sub-issue through MCP. Load `cape:tracker` and apply its Agent contract for create-time
+rules, including dedupe, labels, priority, naming, and `Done when:`. Then refresh the epic cache
+from an MCP `get_issue` result:
 
 ```bash
 cape tracker cache-epic '<linear-epic-json-with-children>'
