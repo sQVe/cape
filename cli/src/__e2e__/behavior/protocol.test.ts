@@ -186,8 +186,8 @@ describe('event name normalization', () => {
   it('PascalCase PostToolUse works the same as kebab-case', () => {
     const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
 
-    const kebab = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    const pascal = cape(['hook', 'PostToolUse', '--matcher', 'Bash'], stdin, env);
+    const kebab = cape(['hook', 'post-tool-use', '--matcher', 'linear-write'], stdin, env);
+    const pascal = cape(['hook', 'PostToolUse', '--matcher', 'linear-write'], stdin, env);
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);
@@ -217,8 +217,8 @@ describe('event name normalization', () => {
   it('PascalCase PostToolUseFailure works the same as kebab-case', () => {
     const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
 
-    const kebab = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    const pascal = cape(['hook', 'PostToolUseFailure', '--matcher', 'Bash'], stdin, env);
+    const kebab = cape(['hook', 'post-tool-use-failure', '--matcher', 'linear-write'], stdin, env);
+    const pascal = cape(['hook', 'PostToolUseFailure', '--matcher', 'linear-write'], stdin, env);
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);
@@ -228,7 +228,9 @@ describe('event name normalization', () => {
 
 describe('encoding edge cases', () => {
   it('denies unicode command containing denial trigger', () => {
-    const stdin = JSON.stringify({ tool_input: { command: 'echo 日本語 && git commit -m "feat"' } });
+    const stdin = JSON.stringify({
+      tool_input: { command: 'echo 日本語 && git commit -m "feat"' },
+    });
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stdin, env);
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);

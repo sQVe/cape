@@ -5,8 +5,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { logEvent } from '../eventLog';
 import { main } from '../main';
-import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
-
 import {
   FLOW_PHASE_TTL_MS,
   HookService,
@@ -16,13 +14,13 @@ import {
   detectExecutePlan,
   detectTrackerSkill,
   normalizeEventName,
-  postToolUseBash,
   preToolUseBash,
   preToolUseSkill,
   sessionStart,
   stripQuotedContent,
   userPromptSubmit,
 } from '../services/hook';
+import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -149,7 +147,6 @@ describe('detectExecutePlan', () => {
   });
 });
 
-
 const makeStubHookLayer = (
   overrides: Partial<{
     pluginRoot: string;
@@ -158,6 +155,7 @@ const makeStubHookLayer = (
     stdin: string;
     writtenFiles: Record<string, string>;
     removedFiles: string[];
+    gitCalls: string[];
   }> = {},
 ) => {
   const {
@@ -167,6 +165,7 @@ const makeStubHookLayer = (
     stdin = '',
     writtenFiles = {},
     removedFiles = [],
+    gitCalls = [],
   } = overrides;
 
   const hookLayer = Layer.succeed(HookService)({
@@ -184,6 +183,7 @@ const makeStubHookLayer = (
     readStdin: () => Effect.succeed(stdin),
     spawnGit: (args) => {
       const key = args.join(' ');
+      gitCalls.push(key);
       for (const [pattern, response] of Object.entries(gitResponses)) {
         if (key.includes(pattern)) {
           return Effect.succeed(response);
@@ -218,8 +218,7 @@ const reviewedAtEntry = (timestamp = Date.now()) => ({
   timestamp,
 });
 
-const flowPhaseFile = (phase: string) =>
-  stateFile({ flowPhase: flowPhaseEntry(phase) });
+const flowPhaseFile = (phase: string) => stateFile({ flowPhase: flowPhaseEntry(phase) });
 
 const trackerCacheFile = (cache: Record<string, unknown>) => ({
   '/test/hooks/context/tracker.json': JSON.stringify(cache),
@@ -251,23 +250,14 @@ const trackerCache = (timestamp = Date.now()) => ({
   },
 });
 
-const task = (
-  id: string,
-  status: string,
-  stateType: string,
-  title = 'Task',
-) => ({
+const task = (id: string, status: string, stateType: string, title = 'Task') => ({
   id,
   title,
   status,
   stateType,
 });
 
-const epic = (
-  id: string,
-  tasks: readonly ReturnType<typeof task>[],
-  title = 'My Epic',
-) => ({
+const epic = (id: string, tasks: readonly ReturnType<typeof task>[], title = 'My Epic') => ({
   id,
   title,
   status: 'In Progress',
@@ -287,14 +277,14 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: { '/test/skills/don-cape/SKILL.md': 'test skill content' },
     });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('test skill content');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
   it('outputs fallback when SKILL.md missing', async () => {
     const layer = makeStubHookLayer();
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('cape plugin loaded.');
   });
 
@@ -305,30 +295,9 @@ describe('sessionStart', () => {
         ...flowPhaseFile('executing'),
       },
     });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('<flow-context>');
     expect(result.additionalContext).toContain('executing');
-  });
-
-  it('clears logs when flag is set', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      writtenFiles,
-      removedFiles,
-      files: stateFile({}),
-    });
-    await Effect.runPromise(sessionStart(true).pipe(Effect.provide(layer)));
-    expect(writtenFiles).toEqual({});
-  });
-
-  it('does not clear logs when flag is false', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({ writtenFiles, removedFiles });
-    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
-    expect(Object.keys(writtenFiles)).toHaveLength(0);
-    expect(removedFiles).toHaveLength(0);
   });
 
   it('removes legacy tddState key from state.json', async () => {
@@ -339,7 +308,7 @@ describe('sessionStart', () => {
       removedFiles,
       files: stateFile({ tddState: { phase: 'red', timestamp: Date.now() } }),
     });
-    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(removedFiles).toContain('/test/hooks/context/state.json');
   });
 
@@ -354,7 +323,7 @@ describe('sessionStart', () => {
         flowPhase: flowPhaseEntry('executing'),
       }),
     });
-    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     const written = writtenFiles['/test/hooks/context/state.json'];
     expect(written).toBeDefined();
     const parsed = JSON.parse(written as string);
@@ -363,6 +332,7 @@ describe('sessionStart', () => {
   });
 
   it('injects an active epic banner from the tracker cache as the first context', async () => {
+    const gitCalls: string[] = [];
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
@@ -371,19 +341,45 @@ describe('sessionStart', () => {
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15',
+        'rev-parse --git-dir': '/repo/.git/worktrees/abu-15',
+        'rev-parse --git-common-dir': '/repo/.git',
       },
+      gitCalls,
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).toMatch(/^Render this cape session banner verbatim/);
     expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
     expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
     expect(result.additionalContext).toContain('| Next   ABU-17 - Session banner');
     expect(result.additionalContext).toContain('| Branch feat/abu-15 (worktree)');
+    expect(result.additionalContext).not.toContain('stale');
+    expect(gitCalls).toContain('rev-parse --git-dir');
+    expect(gitCalls).toContain('rev-parse --git-common-dir');
     expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
       result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
     );
+  });
+
+  it('does not label the main git tree as a worktree', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        ...trackerCacheFile(trackerCache()),
+      },
+      gitResponses: {
+        'branch --show-current': 'feat/abu-15',
+        'rev-parse --git-dir': '/repo/.git',
+        'rev-parse --git-common-dir': '/repo/.git',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Branch feat/abu-15');
+    expect(result.additionalContext).not.toContain('| Branch feat/abu-15 (worktree)');
   });
 
   it('omits the banner when no active epic exists in flowPhase', async () => {
@@ -395,7 +391,7 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).not.toContain('+-- cape');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
@@ -410,7 +406,7 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).not.toContain('+-- cape');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
@@ -425,13 +421,13 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).not.toContain('+-- cape');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
-  it('omits the banner when the tracker cache is past its TTL', async () => {
+  it('renders the banner with a stale marker when the tracker cache is past its TTL', async () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
@@ -440,9 +436,12 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
-    expect(result.additionalContext).not.toContain('+-- cape');
+    expect(result.additionalContext).toContain('+-- cape');
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+    expect(result.additionalContext).toContain('stale');
+    expect(result.additionalContext).toContain('updated 30m ago');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
@@ -464,7 +463,7 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).toContain('| Next   None');
     expect(result.additionalContext).toContain('| Phase  BUILD  (1/1 tasks done)');
@@ -485,7 +484,7 @@ describe('sessionStart', () => {
       },
     });
 
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
 
     expect(result.additionalContext).not.toContain('+-- cape');
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
@@ -621,25 +620,6 @@ describe('hook command wiring', () => {
     console_.restore();
   });
 
-  it('clears logs with --clear-logs flag', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const hookLayer = makeStubHookLayer({
-      writtenFiles,
-      removedFiles,
-      files: stateFile({}),
-    });
-    const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['hook', 'session-start', '--clear-logs']).pipe(
-        Effect.provide(makeCommandLayers(hookLayer)),
-      ),
-    );
-    expect(writtenFiles).toEqual({});
-    expect(removedFiles).toHaveLength(0);
-    console_.restore();
-  });
-
   it('handles user-prompt-submit with tracker detection', async () => {
     const hookLayer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
@@ -751,14 +731,10 @@ describe('denyTable', () => {
 
   it('has block entries before redirect entries', () => {
     const firstRedirect = denyTable.findIndex((e) => e.tier === 'redirect');
-    const lastBlock = denyTable.reduce(
-      (acc, e, i) => (e.tier === 'block' ? i : acc),
-      -1,
-    );
+    const lastBlock = denyTable.reduce((acc, e, i) => (e.tier === 'block' ? i : acc), -1);
     expect(lastBlock).toBeLessThan(firstRedirect);
   });
 });
-
 
 describe('preToolUseBash', () => {
   it('passes through non-matching commands', async () => {
@@ -815,7 +791,6 @@ describe('preToolUseBash', () => {
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
       expectDeny(result, 'cape git create-branch');
     });
-
   });
 
   describe('block tier', () => {
@@ -983,14 +958,11 @@ describe('preToolUseSkill', () => {
     'cape:worktree',
     'cape:brainstorm',
     'cape:write-plan',
-  ])(
-    'allows non-gated skill %s',
-    async (skill) => {
-      const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
-      const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    },
-  );
+  ])('allows non-gated skill %s', async (skill) => {
+    const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
 
   it('denies pr when review has not stamped state', async () => {
     const layer = makeStubHookLayer({
@@ -1040,7 +1012,9 @@ describe('preToolUseSkill', () => {
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toEqual({
-      additionalContext: expect.stringContaining('review-before-pr override accepted (orchestrate)'),
+      additionalContext: expect.stringContaining(
+        'review-before-pr override accepted (orchestrate)',
+      ),
     });
     const context = (result as { additionalContext: string }).additionalContext;
     expect(context).toContain('proceeding');
@@ -1325,7 +1299,6 @@ describe('hook command - PreToolUse wiring', () => {
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
     console_.restore();
   });
-
 });
 
 describe('readFlowPhase', () => {
@@ -1336,7 +1309,7 @@ describe('readFlowPhase', () => {
         flowPhase: { phase: 'executing', issueId: 'cape-abc', timestamp: staleTimestamp },
       }),
     });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 
@@ -1346,7 +1319,7 @@ describe('readFlowPhase', () => {
         '/test/hooks/context/state.json': 'corrupted{{{',
       },
     });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 
@@ -1356,65 +1329,38 @@ describe('readFlowPhase', () => {
         flowPhase: { issueId: 'cape-abc', timestamp: Date.now() },
       }),
     });
-    const result = await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 });
 
-
-describe('postToolUseBash', () => {
-  it('returns null for non-matching commands', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const layer = makeStubHookLayer({ stdin: bashStdin('echo hello'), writtenFiles });
-    const result = await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-    expect(Object.keys(writtenFiles)).toHaveLength(0);
-  });
-
-  it('returns null for invalid JSON', async () => {
-    const layer = makeStubHookLayer({ stdin: 'not json' });
-    const result = await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('returns null for empty command', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('') });
-    const result = await Effect.runPromise(postToolUseBash().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-});
-
 describe('hook command - PostToolUse wiring', () => {
-  it('routes post-tool-use --matcher Bash without output', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('echo hello'),
-      writtenFiles,
-    });
+  it('accepts PascalCase PostToolUse event name', async () => {
+    const hookLayer = makeStubHookLayer();
     const console_ = spyConsole();
     await Effect.runPromise(
-      run(['hook', 'post-tool-use', '--matcher', 'Bash']).pipe(
+      run(['hook', 'PostToolUse', '--matcher', 'linear-write']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(console_.output()).toHaveLength(0);
-    expect(writtenFiles).toEqual({});
+    const result = JSON.parse(console_.output());
+    expect(result.hookSpecificOutput.additionalContext).toContain('cape tracker');
     console_.restore();
   });
 
-  it('accepts PascalCase PostToolUse event name', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const hookLayer = makeStubHookLayer({
-      stdin: bashStdin('echo hello'),
-      writtenFiles,
-    });
+  it('routes post-tool-use --matcher linear-write with tracker refresh context', async () => {
+    const hookLayer = makeStubHookLayer();
     const console_ = spyConsole();
     await Effect.runPromise(
-      run(['hook', 'PostToolUse', '--matcher', 'Bash']).pipe(
+      run(['hook', 'post-tool-use', '--matcher', 'linear-write']).pipe(
         Effect.provide(makeCommandLayers(hookLayer)),
       ),
     );
-    expect(writtenFiles).toEqual({});
+    const output = console_.output();
+    const result = JSON.parse(output);
+    expect(result.hookSpecificOutput.additionalContext).toContain('cape tracker');
+    expect(result.hookSpecificOutput).not.toHaveProperty('permissionDecision');
+    expect(result).not.toHaveProperty('decision');
     console_.restore();
   });
 
@@ -1504,7 +1450,7 @@ describe('event logging', () => {
 
   it('does not log for sessionStart', async () => {
     const layer = makeStubHookLayer();
-    await Effect.runPromise(sessionStart(false).pipe(Effect.provide(layer)));
+    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(logEvent).not.toHaveBeenCalled();
   });
 });

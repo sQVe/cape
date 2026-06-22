@@ -8,16 +8,12 @@ describe('catchAndDie', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const original = new Error('boom');
 
-    const exit = await Effect.runPromiseExit(
-      Effect.fail(original).pipe(catchAndDie),
-    );
+    const exit = await Effect.runPromiseExit(Effect.fail(original).pipe(catchAndDie));
 
     expect(errorSpy).toHaveBeenCalledWith(JSON.stringify({ error: 'boom' }));
     expect(Exit.isFailure(exit)).toBe(true);
     if (Exit.isFailure(exit)) {
-      const dies = exit.cause.reasons
-        .filter(Cause.isDieReason)
-        .map((r) => r.defect);
+      const dies = exit.cause.reasons.filter(Cause.isDieReason).map((r) => r.defect);
       expect(dies).toContain(original);
     }
 

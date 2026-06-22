@@ -8,7 +8,9 @@ import { catchAndDie } from '../utils/catchAndDie';
 export const gitCreateBranch = Command.make(
   'create-branch',
   {
-    name: Argument.string('name').pipe(Argument.withDescription('Branch name to validate and create')),
+    name: Argument.string('name').pipe(
+      Argument.withDescription('Branch name to validate and create'),
+    ),
   },
   Effect.fn(function* ({ name }) {
     const validation = yield* getValidateBranch(name).pipe(catchAndDie);

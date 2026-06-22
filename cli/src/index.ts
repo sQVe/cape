@@ -6,8 +6,8 @@ import type { UserError } from './dieWithError';
 import { logEvent } from './eventLog';
 import { main } from './main';
 import { CheckServiceLive } from './services/checkLive';
-import { ConformServiceLive } from './services/conformLive';
 import { CommitServiceLive } from './services/commitLive';
+import { ConformServiceLive } from './services/conformLive';
 import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
 import { HookServiceLive } from './services/hookLive';
@@ -25,7 +25,7 @@ const AppLayer = Layer.mergeAll(
   ValidateServiceLive,
 );
 
-const skipCommands = new Set(['hook', 'stats']);
+const skipCommands = new Set(['hook']);
 const args = process.argv.slice(2);
 const cmdSegments = args.filter((a) => !a.startsWith('-'));
 const cmd = cmdSegments.join('.');

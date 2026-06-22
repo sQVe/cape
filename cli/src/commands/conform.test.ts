@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import { ConformService, extractChangedPaths, parseRuleFile } from '../services/conform';
 import { GitService } from '../services/git';
+import { HookService } from '../services/hook';
 import { makeTestCommandLayers, spyConsole } from '../testUtils';
 
 describe('parseRuleFile', () => {
@@ -189,9 +190,7 @@ describe('conform command wiring', () => {
     });
 
     await Effect.runPromise(
-      run(['conform']).pipe(
-        Effect.provide(makeTestCommandLayers(gitLayer, conformLayer)),
-      ),
+      run(['conform']).pipe(Effect.provide(makeTestCommandLayers(gitLayer, conformLayer))),
     );
 
     const output = JSON.parse(console_.output());
@@ -212,6 +211,37 @@ describe('conform command wiring', () => {
 
     const output = JSON.parse(console_.output());
     expect(output.scope).toBe('unstaged');
+    console_.restore();
+  });
+
+  it('stamps the conformedAt gate key with the resolved scope', async () => {
+    const console_ = spyConsole();
+    const writes: { path: string; content: string }[] = [];
+    const hookLayer = Layer.succeed(HookService)({
+      pluginRoot: () => '/test',
+      readFile: () => Effect.succeed(null),
+      writeFile: (path: string, content: string) =>
+        Effect.sync(() => {
+          writes.push({ path, content });
+        }),
+      removeFile: () => Effect.succeed(undefined),
+      ensureDir: () => Effect.succeed(undefined),
+      readStdin: () => Effect.succeed(''),
+      spawnGit: () => Effect.succeed(null),
+      fileExists: () => Effect.succeed(false),
+    });
+
+    await Effect.runPromise(
+      run(['conform', 'staged']).pipe(Effect.provide(makeTestCommandLayers(hookLayer))),
+    );
+
+    const stateWrite = writes.find((w) => w.path.endsWith('state.json'));
+    if (stateWrite == null) {
+      throw new Error('conform did not write state.json');
+    }
+    const parsed = JSON.parse(stateWrite.content);
+    expect(parsed.conformedAt.scope).toBe('staged');
+    expect(typeof parsed.conformedAt.timestamp).toBe('number');
     console_.restore();
   });
 });

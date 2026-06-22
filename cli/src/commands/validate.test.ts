@@ -151,14 +151,11 @@ description: test
 <key_principles>Principles.</key_principles>
 `;
     const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain(
-      '<critical_rules> must appear before <the_process>',
-    );
+    expect(result.errors).toContain('<critical_rules> must appear before <the_process>');
   });
 
   it('detects duplicate XML tags', () => {
-    const content =
-      validSkill + '\n<critical_rules>\nDuplicate rules.\n</critical_rules>\n';
+    const content = validSkill + '\n<critical_rules>\nDuplicate rules.\n</critical_rules>\n';
     const result = validateSkillContent('test.md', content);
     expect(result.errors).toContain('Duplicate tag: <critical_rules>');
   });
@@ -178,9 +175,7 @@ description: test
       validSkill +
       '\n<agent_references>\n## `cape:nonexistent-agent` protocol:\nDispatch details.\n</agent_references>\n';
     const result = validateSkillContent('test.md', content, { knownAgents });
-    expect(result.errors).toContain(
-      'References unknown agent: cape:nonexistent-agent',
-    );
+    expect(result.errors).toContain('References unknown agent: cape:nonexistent-agent');
   });
 });
 
@@ -200,9 +195,7 @@ describe('validateAgentContent', () => {
   it('detects invalid model value', () => {
     const content = validAgent.replace('model: opus', 'model: sonnnet');
     const result = validateAgentContent('test.md', content);
-    expect(result.errors).toContain(
-      'Invalid model value: sonnnet (allowed: opus, sonnet, haiku)',
-    );
+    expect(result.errors).toContain('Invalid model value: sonnnet (allowed: opus, sonnet, haiku)');
   });
 
   it('detects missing name field', () => {
@@ -267,11 +260,10 @@ describe('validateCommandContent', () => {
 
   it('detects reference to nonexistent skill', () => {
     const knownSkills = new Set(['brainstorm', 'commit']);
-    const content = '---\ndescription: test\n---\nUse the cape:nonexistent skill exactly as written.';
+    const content =
+      '---\ndescription: test\n---\nUse the cape:nonexistent skill exactly as written.';
     const result = validateCommandContent('test.md', content, { knownSkills });
-    expect(result.errors).toContain(
-      'References unknown skill: cape:nonexistent',
-    );
+    expect(result.errors).toContain('References unknown skill: cape:nonexistent');
   });
 });
 
@@ -322,9 +314,7 @@ describe('validate command wiring', () => {
       '/repo/commands/test.md': validCommand,
     });
 
-    await Effect.runPromise(
-      run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer))),
-    );
+    await Effect.runPromise(run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer))));
 
     const output = JSON.parse(console_.output());
     expect(output.passed).toBe(3);
@@ -339,9 +329,7 @@ describe('validate command wiring', () => {
     });
 
     await expect(
-      Effect.runPromise(
-        run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer))),
-      ),
+      Effect.runPromise(run(['validate']).pipe(Effect.provide(makeTestCommandLayers(layer)))),
     ).rejects.toThrow();
 
     const output = JSON.parse(console_.output());

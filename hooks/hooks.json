@@ -50,6 +50,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__plugin_linear_linear__save_issue",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cape hook post-tool-use --matcher linear-write"
+          }
+        ]
+      }
     ]
   }
 }

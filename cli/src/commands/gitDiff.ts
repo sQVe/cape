@@ -12,7 +12,10 @@ const isDiffScope = (value: string): value is DiffScope =>
 export const gitDiff = Command.make(
   'diff',
   {
-    scope: Argument.string('scope').pipe(Argument.withDescription('Diff scope: unstaged | staged | branch (default: unstaged)'), Argument.optional),
+    scope: Argument.string('scope').pipe(
+      Argument.withDescription('Diff scope: unstaged | staged | branch (default: unstaged)'),
+      Argument.optional,
+    ),
   },
   Effect.fn(function* ({ scope }) {
     const raw = Option.isSome(scope) ? scope.value : 'unstaged';

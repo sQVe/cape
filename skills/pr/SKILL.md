@@ -121,8 +121,6 @@ found, use this bundled template — match the sections and heading levels exact
 
 !`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
 
-Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
-
 **Title:** conventional commit format — `type(scope): subject`
 
 **Section guidelines:**
@@ -137,7 +135,8 @@ Use the `elements-of-style:writing-clearly-and-concisely` skill for prose.
   none
 - **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
   backend changes
-- **Issues:** link related issues with "Fixes #" or "Related to #"
+- **Issues:** reference the epic with a closing keyword and Linear identifier (`Fixes ABU-XX`) so
+  Linear's GitHub integration links and closes it; use `Related to ABU-XX` for non-closing links
 
 If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
@@ -194,9 +193,14 @@ EOF
 
 After successful creation:
 
-1. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
-2. Add reviewers if the user mentioned any or the project has conventions
-3. Report:
+1. Identify the active epic from tracker cache or flow context.
+2. Ensure the PR description references the epic with a closing keyword (`Fixes ABU-XX`). Linear's
+   GitHub integration then moves the epic to `In Review` on open and `Done` on merge — cape does not
+   set status manually. This requires the GitHub↔Linear integration to be configured (see tracker
+   workspace-setup).
+3. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
+4. Add reviewers if the user mentioned any or the project has conventions
+5. Report:
 
 ```
 PR created: <url>

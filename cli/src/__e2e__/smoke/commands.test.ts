@@ -1,6 +1,6 @@
-import { capeCmd } from '../helpers';
-
 import { describe, expect, it } from 'vitest';
+
+import { capeCmd } from '../helpers';
 
 describe('smoke', () => {
   it('--help boots and exits 0', () => {
@@ -27,14 +27,6 @@ describe('smoke', () => {
     expect(capeCmd(['context', '--help']).status).toBe(0);
   });
 
-  it('detect boots and exits 0', () => {
-    expect(capeCmd(['detect']).status).toBe(0);
-  });
-
-  it('epic boots and exits 0', () => {
-    expect(capeCmd(['epic', '--help']).status).toBe(0);
-  });
-
   it('git context boots and exits 0', () => {
     expect(capeCmd(['git', 'context']).status).toBe(0);
   });
@@ -45,10 +37,6 @@ describe('smoke', () => {
 
   it('pr boots and exits 0', () => {
     expect(capeCmd(['pr', '--help']).status).toBe(0);
-  });
-
-  it('stats boots and exits 0', () => {
-    expect(capeCmd(['stats', '--help']).status).toBe(0);
   });
 
   it('test boots and exits 0', () => {

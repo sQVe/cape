@@ -6,6 +6,4 @@ export class UserError {
 }
 
 export const dieWithError = (error: string) =>
-  Console.error(JSON.stringify({ error })).pipe(
-    Effect.andThen(Effect.fail(new UserError(error))),
-  );
+  Console.error(JSON.stringify({ error })).pipe(Effect.andThen(Effect.fail(new UserError(error))));

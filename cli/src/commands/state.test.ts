@@ -51,9 +51,7 @@ const makeLayers = (stateContent: string | null = null) =>
 describe('cape state list', () => {
   it('shows all available keys when state is empty', async () => {
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['state', 'list']).pipe(Effect.provide(makeLayers(null))),
-    );
+    await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(null))));
     const output = console_.output();
     expect(output).toContain('Active state: None');
     expect(output).toContain('Available keys');
@@ -68,9 +66,7 @@ describe('cape state list', () => {
       flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() },
     });
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-    );
+    await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(state))));
     const output = console_.output();
     const activeIdx = output.indexOf('Active state:');
     const availableIdx = output.indexOf('Available keys:');
@@ -91,9 +87,7 @@ describe('cape state list', () => {
       flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() - 60 * 60 * 1000 },
     });
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-    );
+    await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(state))));
     const output = console_.output();
     const activeSection = output.slice(
       output.indexOf('Active state:'),
@@ -109,9 +103,7 @@ describe('cape state list', () => {
       myCustomKey: { value: 'hello', timestamp: Date.now() },
     });
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['state', 'list']).pipe(Effect.provide(makeLayers(state))),
-    );
+    await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(state))));
     const output = console_.output();
     const activeSection = output.slice(
       output.indexOf('Active state:'),
@@ -124,9 +116,7 @@ describe('cape state list', () => {
 
   it('shows common operations section with reset recipe', async () => {
     const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['state', 'list']).pipe(Effect.provide(makeLayers(null))),
-    );
+    await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(null))));
     const output = console_.output();
     expect(output).toContain('Common operations');
     expect(output).toContain('cape state reset');

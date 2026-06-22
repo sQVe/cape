@@ -9,6 +9,7 @@ import {
   isReadyTask,
   readFlowPhaseContext,
   readState,
+  readStateKey,
   readTrackerCache,
 } from './state';
 
@@ -25,6 +26,7 @@ export const denyWith = (reason: string) => ({
 const contextWith = (additionalContext: string) => ({ additionalContext });
 
 const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
+const CONFORM_BEFORE_REVIEW_TTL_MS = 60 * 60 * 1000;
 const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
 const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
 
@@ -51,6 +53,24 @@ export const preToolUseBash = () =>
 
       logEvent('hook.PreToolUse.Bash', entry.message);
       return denyWith(entry.message);
+    }
+
+    // conform-before-review: cape:review must run `cape conform` before it can
+    // stamp the reviewedAt completion marker. ponytail: any-scope match, not
+    // per-scope — tighten to scope-equality if cross-scope stamping shows up.
+    if (/\bcape\s+state\s+set\s+reviewedAt\b/.test(stripped)) {
+      if (stripped.includes(HARD_GATE_OVERRIDE)) {
+        return contextWith(
+          'conform-before-review override accepted: stamping review without a fresh `cape conform` run.',
+        );
+      }
+      const conformed = yield* readStateKey('conformedAt', CONFORM_BEFORE_REVIEW_TTL_MS);
+      if (conformed == null) {
+        const message =
+          'conform-before-review blocked: no fresh `cape conform` run found. Run `cape conform <scope>` and fold its convention findings into the review before stamping reviewedAt. To override explicitly, append CAPE_HARD_GATE_OVERRIDE to the command.';
+        logEvent('hook.PreToolUse.Bash', message);
+        return denyWith(message);
+      }
     }
 
     if (/\bgit\s+push\b/.test(stripped)) {
@@ -178,9 +198,8 @@ const gatePr = (args: string | null) =>
       return null;
     }
 
-    const reason = missingOrStale === 'stale'
-      ? 'the review stamp is stale'
-      : 'no fresh review stamp exists';
+    const reason =
+      missingOrStale === 'stale' ? 'the review stamp is stale' : 'no fresh review stamp exists';
     const proceeding = `proceeding without a fresh review stamp (${reason}).`;
 
     if (hasOrchestrateOverride(args)) {

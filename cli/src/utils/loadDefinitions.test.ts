@@ -10,9 +10,7 @@ const makeReader = (files: Record<string, string>): DefinitionReader => ({
     return Effect.succeed(Object.keys(files).filter((f) => f.startsWith(dir)));
   },
   readFile: (path: string) =>
-    files[path] != null
-      ? Effect.succeed(files[path])
-      : Effect.die(new Error(`no file: ${path}`)),
+    files[path] != null ? Effect.succeed(files[path]) : Effect.die(new Error(`no file: ${path}`)),
 });
 
 describe('loadDefinitions', () => {

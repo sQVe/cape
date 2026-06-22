@@ -22,7 +22,9 @@ const parsePhase = (value: string) => {
 const worktreeStart = Command.make(
   'start',
   {
-    issueId: Argument.string('epic-id').pipe(Argument.withDescription('Epic issue id to stamp into this worktree')),
+    issueId: Argument.string('epic-id').pipe(
+      Argument.withDescription('Epic issue id to stamp into this worktree'),
+    ),
     phase: Flag.string('phase').pipe(
       Flag.withDescription('Workflow phase to stamp: PLAN | BUILD | SHIP (default: BUILD)'),
       Flag.optional,
@@ -40,7 +42,9 @@ const worktreeStart = Command.make(
     }
 
     yield* writeStateKey('flowPhase', { phase: phaseValue, issueId: trimmedIssueId });
-    yield* Console.log(JSON.stringify({ stamped: true, issueId: trimmedIssueId, phase: phaseValue }));
+    yield* Console.log(
+      JSON.stringify({ stamped: true, issueId: trimmedIssueId, phase: phaseValue }),
+    );
   }),
 ).pipe(
   Command.withDescription(

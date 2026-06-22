@@ -3,7 +3,7 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import {
   normalizeEventName,
-  postToolUseBash,
+  postToolUseLinearWrite,
   preToolUseBash,
   preToolUseSkill,
   sessionStart,
@@ -13,16 +13,24 @@ import {
 const hookRun = Command.make(
   'hook',
   {
-    event: Argument.string('event').pipe(Argument.withDescription('Hook lifecycle event: SessionStart | UserPromptSubmit | PreToolUse | PostToolUse')),
-    clearLogs: Flag.boolean('clear-logs').pipe(Flag.withDescription('Clear event log on SessionStart'), Flag.withDefault(false)),
-    matcher: Flag.string('matcher').pipe(Flag.withDescription('Tool matcher: PreToolUse accepts Bash | Skill; PostToolUse accepts Bash'), Flag.withDefault('')),
+    event: Argument.string('event').pipe(
+      Argument.withDescription(
+        'Hook lifecycle event: SessionStart | UserPromptSubmit | PreToolUse | PostToolUse',
+      ),
+    ),
+    matcher: Flag.string('matcher').pipe(
+      Flag.withDescription(
+        'Tool matcher: PreToolUse accepts Bash | Skill; PostToolUse accepts linear-write',
+      ),
+      Flag.withDefault(''),
+    ),
   },
-  Effect.fn(function* ({ event, clearLogs, matcher }) {
+  Effect.fn(function* ({ event, matcher }) {
     const normalized = normalizeEventName(event);
 
     switch (normalized) {
       case 'SessionStart': {
-        const result = yield* sessionStart(clearLogs);
+        const result = yield* sessionStart();
         yield* Console.log(JSON.stringify(result));
         break;
       }
@@ -38,7 +46,9 @@ const hookRun = Command.make(
         } else if (matcher === 'Skill') {
           result = yield* preToolUseSkill();
         } else {
-          yield* Console.error(`cape hook: unknown PreToolUse matcher "${matcher}" — expected Bash | Skill. Check hooks.json.`);
+          yield* Console.error(
+            `cape hook: unknown PreToolUse matcher "${matcher}" — expected Bash | Skill. Check hooks.json.`,
+          );
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
@@ -47,10 +57,12 @@ const hookRun = Command.make(
       }
       case 'PostToolUse': {
         let result;
-        if (matcher === 'Bash') {
-          result = yield* postToolUseBash();
+        if (matcher === 'linear-write') {
+          result = yield* postToolUseLinearWrite();
         } else {
-          yield* Console.error(`cape hook: unknown PostToolUse matcher "${matcher}" — expected Bash. Check hooks.json.`);
+          yield* Console.error(
+            `cape hook: unknown PostToolUse matcher "${matcher}" — expected linear-write. Check hooks.json.`,
+          );
         }
         if (result != null) {
           yield* Console.log(JSON.stringify(result));
