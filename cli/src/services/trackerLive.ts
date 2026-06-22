@@ -71,7 +71,10 @@ const issueLabels = (issue: LinearIssue): readonly LinearLabel[] => {
   if (Array.isArray(labels)) {
     return labels;
   }
-  return Array.isArray(labels?.nodes) ? labels.nodes : [];
+  if (labels != null && 'nodes' in labels && Array.isArray(labels.nodes)) {
+    return labels.nodes;
+  }
+  return [];
 };
 
 const labelName = (label: LinearLabel) => {

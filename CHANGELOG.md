@@ -53,8 +53,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills and commands: replaced beads with tracker.
 - CLI and services: removed the br/beads command surface and validation service.
 - Hooks: removed br-show-log capture/cleanup and raw br-to-cape-br deny redirects.
+- CLI: removed the unused detect, epic, stats, and git validate-branch commands.
 - Services: removed the dead `TrackerService` Effect layer (interface, live implementation, and the
-  throwing `callLinear` stub) and its test; cache writes use the pure transform functions directly.
+  throwing `callLinear` stub) and its test, plus the dead resolveTestCommand export; cache writes
+  use the pure transform functions directly.
+- Skills: removed the orphaned epic-template.md and a stale elements-of-style prose reference.
 
 ## [1.3.0] - 2026-03-26
 
