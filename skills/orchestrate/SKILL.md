@@ -138,11 +138,13 @@ a worker or the codex reviewer. Each step reuses an existing cape skill by refer
 1. **`cape:finish-epic`** -- verify the epic's success criteria with evidence and hand off. cape
    does not set Linear status; the epic closes when this PR (referencing it with `Fixes ABU-XX`)
    merges.
-2. **`cape:review`** -- the Claude SHIP-phase review (structural graph + conform). This stamps the
-   fresh `reviewedAt` that `cape:pr` requires; it is never the codex reviewer.
+2. **`cape:review`** -- the Claude SHIP-phase review; never the codex reviewer. Run it in full: its
+   `cape conform` step (Step 3) clears the conform-before-review gate, then it stamps the fresh
+   `reviewedAt` that `cape:pr` requires. Skipping conform blocks the review stamp.
 3. **`cape:pr` with the `CAPE_ORCHESTRATE` marker** -- the AFK branch: print the full description to
-   the transcript, skip `AskUserQuestion`, and open the PR. Human review of the opened PR still
-   happens; AFK waives only the pre-create confirmation.
+   the transcript, skip `AskUserQuestion`, and open the PR. The description references the epic with
+   `Fixes ABU-XX` so it closes on merge. Human review of the opened PR still happens; AFK waives
+   only the pre-create confirmation.
 4. **Bounded PR-watch** -- poll CI with `gh` every 30s for up to 30 min. On green, poll PR review
    comments every 3 min for 15 min. For each valid comment, spawn a fix-worker tab (same worker
    contract as Step 2; recover stalls per the Recovery policy below), verify its commit, re-run
