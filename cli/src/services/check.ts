@@ -40,6 +40,16 @@ const nodeTestCommand = (
   return { label: framework, command, args: [...prefix, framework, ...extra] };
 };
 
+// Node-based tools are declared with `npx`; route them through the detected package manager so the
+// project's pinned binary runs instead of a globally resolved one. Standalone tools are unchanged.
+const withNodeExecutor = (cmd: CheckCommand, pm: string | null): CheckCommand => {
+  if (cmd.command !== 'npx') {
+    return cmd;
+  }
+  const { command, prefix } = nodeExecutor(pm);
+  return { ...cmd, command, args: [...prefix, ...cmd.args] };
+};
+
 const lintCommands: Record<string, CheckCommand> = {
   oxlint: { label: 'oxlint', command: 'npx', args: ['oxlint'] },
   eslint: { label: 'eslint', command: 'npx', args: ['eslint', '.'] },
@@ -84,10 +94,10 @@ export const resolveCheckCommands = (ecosystems: DetectResult[], pm: string | nu
     }
 
     const lint = eco.linter != null ? lintCommands[eco.linter] : undefined;
-    if (lint != null) commands.push(lint);
+    if (lint != null) commands.push(withNodeExecutor(lint, pm));
 
     const format = eco.formatter != null ? formatCommands[eco.formatter] : undefined;
-    if (format != null) commands.push(format);
+    if (format != null) commands.push(withNodeExecutor(format, pm));
   }
 
   return commands;
