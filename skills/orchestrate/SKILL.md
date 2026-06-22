@@ -11,8 +11,10 @@ description: >
 
 <skill_overview> Run one task per turn of an autonomous BUILD loop: orient from the tracker cache,
 drive the task through a herdr worker tab and a codex reviewer tab, verify a real commit, then close
-it in Linear and create the next task one ahead. Core contract: a task advances only on a verified
-git commit plus a PASS verdict; anything else halts the run with a summary. </skill_overview>
+it in Linear and create the next task one ahead. When no tasks remain, run the SHIP phase
+(finish-epic, review, AFK PR, bounded PR-watch) and emit the completion sentinel. Core contract: a
+task advances only on a verified git commit plus a PASS verdict; anything else halts the run with a
+summary. </skill_overview>
 
 <rigidity_level> LOW FREEDOM -- The per-turn order (orient, work, verify commit, review, close,
 create-next), commit-not-status verification, and sole-writer cache discipline are fixed; worker and
@@ -57,10 +59,8 @@ Read the tracker cache and pick the next task under the active epic, using the s
 `cape:execute-plan` (in-progress task first, then the next ready `unstarted` / `Todo` task). Do not
 network-read for orientation.
 
-If no ready tasks remain, BUILD is done: hand off to the SHIP phase. SHIP (`cape:review` ->
-`cape:pr` AFK -> bounded PR-watch -> emit the `CAPE_ORCHESTRATE_COMPLETE epic=… pr=…` sentinel) is a
-separate follow-up slice; until it lands, stop and report that BUILD is complete. The BUILD loop
-never emits the sentinel.
+If no ready tasks remain, BUILD is done: go to the SHIP phase below. The BUILD loop itself never
+emits the completion sentinel.
 
 ---
 
@@ -109,6 +109,31 @@ the cache.
 
 Loop back to Step 1 for the next turn.
 
+---
+
+## SHIP: when no tasks remain
+
+Once Step 1 finds no ready tasks, run the SHIP phase yourself (the orchestrator, as Claude) -- never
+a worker or the codex reviewer. Each step reuses an existing cape skill by reference:
+
+1. **`cape:finish-epic`** -- verify the epic's success criteria with evidence and close the epic.
+2. **`cape:review`** -- the Claude SHIP-phase review (structural graph + conform). This stamps the
+   fresh `reviewedAt` that `cape:pr` requires; it is never the codex reviewer.
+3. **`cape:pr` with the `CAPE_ORCHESTRATE` marker** -- the AFK branch: print the full description to
+   the transcript, skip `AskUserQuestion`, and open the PR. Human review of the opened PR still
+   happens; AFK waives only the pre-create confirmation.
+4. **Bounded PR-watch** -- poll CI with `gh`. On green, poll PR review comments for a bounded window
+   (lean default: re-check a few times over a short window, not indefinitely). For each valid
+   comment, spawn a fix-worker tab (same worker contract as Step 2), verify its commit, re-run
+   `cape:review`, and push. Skip invalid or out-of-scope comments with a one-line reason. Exact poll
+   interval, window, and retry counts are a separate bounds-tuning slice.
+5. **Emit the sentinel** -- only now, at the very end, print
+   `CAPE_ORCHESTRATE_COMPLETE epic=<id> pr=<url>`. This is the single line that satisfies the
+   `/goal` completion check, so it appears nowhere else in the run.
+
+`gh` and review-comment output can echo the sentinel; the summarize-never-paste rule stays binding
+through the whole PR-watch.
+
 </the_process>
 
 <skill_references>
@@ -121,6 +146,10 @@ Loop back to Step 1 for the next turn.
 ## Load `cape:tracker` with the Skill tool when:
 
 - You need the cache write commands or the cache shape after any Linear write
+
+## Load `cape:finish-epic`, `cape:review`, `cape:pr` with the Skill tool when:
+
+- BUILD is done and you enter the SHIP phase; run each in order rather than restating it
 
 </skill_references>
 
