@@ -186,8 +186,8 @@ describe('event name normalization', () => {
   it('PascalCase PostToolUse works the same as kebab-case', () => {
     const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
 
-    const kebab = cape(['hook', 'post-tool-use', '--matcher', 'Bash'], stdin, env);
-    const pascal = cape(['hook', 'PostToolUse', '--matcher', 'Bash'], stdin, env);
+    const kebab = cape(['hook', 'post-tool-use', '--matcher', 'linear-write'], stdin, env);
+    const pascal = cape(['hook', 'PostToolUse', '--matcher', 'linear-write'], stdin, env);
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);
@@ -217,8 +217,8 @@ describe('event name normalization', () => {
   it('PascalCase PostToolUseFailure works the same as kebab-case', () => {
     const stdin = JSON.stringify({ tool_input: { command: 'npx vitest run' } });
 
-    const kebab = cape(['hook', 'post-tool-use-failure', '--matcher', 'Bash'], stdin, env);
-    const pascal = cape(['hook', 'PostToolUseFailure', '--matcher', 'Bash'], stdin, env);
+    const kebab = cape(['hook', 'post-tool-use-failure', '--matcher', 'linear-write'], stdin, env);
+    const pascal = cape(['hook', 'PostToolUseFailure', '--matcher', 'linear-write'], stdin, env);
 
     expect(kebab.status).toBe(0);
     expect(pascal.status).toBe(0);

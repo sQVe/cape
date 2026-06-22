@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
 import { safeParseJson } from '../utils/json';
+import { isTrackerCache } from './tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
 
 interface LinearState {
@@ -11,10 +12,18 @@ interface LinearState {
   readonly type?: unknown;
 }
 
+type LinearLabel = { readonly name?: unknown } | string;
+
 interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
+  readonly project?: unknown;
+  readonly labels?:
+    | readonly LinearLabel[]
+    | {
+        readonly nodes?: readonly LinearLabel[];
+      };
   readonly state?: LinearState;
   readonly children?: {
     readonly nodes?: readonly LinearIssue[];
@@ -41,14 +50,58 @@ const issueStatus = (issue: LinearIssue) =>
 const issueStateType = (issue: LinearIssue) =>
   typeof issue.state?.type === 'string' ? issue.state.type : '';
 
+const issueProject = (issue: LinearIssue) => {
+  if (typeof issue.project === 'string') {
+    return issue.project;
+  }
+  if (
+    typeof issue.project === 'object' &&
+    issue.project != null &&
+    !Array.isArray(issue.project) &&
+    'name' in issue.project &&
+    typeof issue.project.name === 'string'
+  ) {
+    return issue.project.name;
+  }
+  return undefined;
+};
+
+const issueLabels = (issue: LinearIssue): readonly LinearLabel[] => {
+  const labels = issue.labels;
+  if (Array.isArray(labels)) {
+    return labels;
+  }
+  if (labels != null && 'nodes' in labels && Array.isArray(labels.nodes)) {
+    return labels.nodes;
+  }
+  return [];
+};
+
+const labelName = (label: LinearLabel) => {
+  if (typeof label === 'string') {
+    return label;
+  }
+  return typeof label.name === 'string' ? label.name : null;
+};
+
+const issueType = (issue: LinearIssue) => {
+  const label = issueLabels(issue).map(labelName).find((name) => name?.startsWith('type:') === true);
+  const type = label?.slice('type:'.length);
+  return type == null || type.length === 0 ? undefined : type;
+};
+
 const toTask = (issue: LinearIssue): TrackerTask | null => {
   const id = linearIssueId(issue);
   if (id == null) {
     return null;
   }
+  const project = issueProject(issue);
+  const type = issueType(issue);
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     stateType: issueStateType(issue),
   };
@@ -70,10 +123,14 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     const task = toTask(node);
     return task == null ? [] : [task];
   });
+  const project = issueProject(issue);
+  const type = issueType(issue);
 
   return {
     id,
     title: issueTitle(issue),
+    ...(project == null ? {} : { project }),
+    ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     tasks,
   };
@@ -118,6 +175,8 @@ export const mergeTasks = (
       [epicId]: {
         id: epicId,
         title: existing?.title ?? '',
+        ...(existing?.project == null ? {} : { project: existing.project }),
+        ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
         tasks,
       },
@@ -180,15 +239,6 @@ export const updateCachedIssueStatus = (update: CachedIssueStatusUpdate): Tracke
     timestamp,
     epics,
   };
-};
-
-const isTrackerCache = (value: unknown): value is TrackerCache => {
-  if (typeof value !== 'object' || value == null || Array.isArray(value)) {
-    return false;
-  }
-
-  const cache = value as { readonly version?: unknown; readonly timestamp?: unknown; readonly epics?: unknown };
-  return cache.version === 1 && typeof cache.timestamp === 'number' && typeof cache.epics === 'object' && cache.epics != null && !Array.isArray(cache.epics);
 };
 
 export const readCacheFile = () =>
