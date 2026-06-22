@@ -36,10 +36,13 @@ bundled template — never invent sections. </rigidity_level>
 
 1. **NEVER call `cape pr create` without user confirmation** — present the full description to the
    user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
+   The one exception is the AFK branch (step 6): when invoked with the `CAPE_ORCHESTRATE` marker,
+   print the full description to the transcript and create the PR without `AskUserQuestion`.
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
 3. **NEVER skip review-before-pr** — a fresh `reviewedAt` stamp from `cape:review` is required. The
    hard-gate escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` to downgrade
-   the hook deny to a warning.
+   the hook deny to a warning. An orchestrator run uses the distinct `CAPE_ORCHESTRATE` marker for
+   the same downgrade, keeping robot runs attributable.
 4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
 5. **Use `cape pr create`** — not the GitHub API directly
@@ -75,8 +78,9 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 - Current branch is not the default branch
 - All changes are committed
-- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Only
-  proceed without review when the user explicitly invokes `cape:pr` with `CAPE_HARD_GATE_OVERRIDE`.
+- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Proceed
+  without review only when `cape:pr` is invoked with an explicit override: `CAPE_HARD_GATE_OVERRIDE`
+  (human escape) or `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6).
 
 ---
 
@@ -146,6 +150,11 @@ prose through it; skip this for pure code or mechanical output.
 ## STOP — Step 6: Present, approve, execute, create (OUTPUT GATE)
 
 **You MUST stop here and get user approval before running tests or creating the PR.**
+
+**AFK branch:** when `cape:pr` is invoked with the `CAPE_ORCHESTRATE` marker, there is no human to
+approve. Print the full PR (title, description, automatable items) to the transcript so the opened
+PR is on record, skip `AskUserQuestion`, then run the test-plan gate and `cape pr create` as on
+approval below. The interactive path below is unchanged when the marker is absent.
 
 Output the full PR:
 

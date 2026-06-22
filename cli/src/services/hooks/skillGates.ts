@@ -28,6 +28,7 @@ const contextWith = (additionalContext: string) => ({ additionalContext });
 const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
 const CONFORM_BEFORE_REVIEW_TTL_MS = 60 * 60 * 1000;
 const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
+const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
@@ -179,6 +180,9 @@ const gateInternalSkill = () =>
 const hasReviewBeforePrOverride = (args: string | null) =>
   args?.includes(HARD_GATE_OVERRIDE) ?? false;
 
+const hasOrchestrateOverride = (args: string | null) =>
+  args?.includes(ORCHESTRATE_OVERRIDE) ?? false;
+
 const gatePr = (args: string | null) =>
   Effect.gen(function* () {
     const state = yield* readState();
@@ -194,18 +198,22 @@ const gatePr = (args: string | null) =>
       return null;
     }
 
-    const baseMessage =
-      missingOrStale === 'stale'
-        ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
-        : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
-    const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
-    const message = `${baseMessage} ${overrideHint}`;
+    const reason =
+      missingOrStale === 'stale' ? 'the review stamp is stale' : 'no fresh review stamp exists';
+    const proceeding = `proceeding without a fresh review stamp (${reason}).`;
 
-    if (hasReviewBeforePrOverride(args)) {
-      return contextWith(`review-before-pr override accepted: ${message}`);
+    if (hasOrchestrateOverride(args)) {
+      return contextWith(`review-before-pr override accepted (orchestrate): ${proceeding}`);
     }
 
-    return denyWith(message);
+    if (hasReviewBeforePrOverride(args)) {
+      return contextWith(`review-before-pr override accepted: ${proceeding}`);
+    }
+
+    const denyMessage =
+      `review-before-pr blocked: ${reason}. Run cape:review before cape:pr. ` +
+      `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
+    return denyWith(denyMessage);
   });
 
 const skillGates: Record<
