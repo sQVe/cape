@@ -30,7 +30,8 @@ ln -s "$PWD/cli/dist/index.mjs" ~/.local/bin/cape
 ## Inline review with hunk (optional)
 
 `cape:review` can post its findings into [hunk](https://github.com/modem-dev/hunk), a terminal diff
-viewer, so they show up inline in the diff you are reading. Skip this and review stays text-only.
+viewer, so they show up inline in the diff you are reading. Skip this and the review stays
+text-only.
 
 Install hunk and open a session before you review:
 
@@ -40,7 +41,7 @@ hunk diff --watch       # run in a separate pane; reloads as changes land
 ```
 
 When a session is open, `cape:review` finds it and adds inline comments under the author
-`cape:review`. Run the review again and it replaces those comments instead of stacking them. cape
+`cape:review`. Run the review again and it replaces those comments instead of stacking them. Cape
 ships no config for hunk; tune hunk through its own `~/.config/hunk/config.toml` or a per-repo
 `.hunk/config.toml`.
 

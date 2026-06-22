@@ -58,7 +58,7 @@ order is fixed. Depth adapts to change size. </rigidity_level>
 8. **Stamp completed reviews** -- after the report, run
    `cape state set reviewedAt '{"scope":"<scope>"}'` so `cape:pr` has a fresh review-before-pr
    signal
-9. **hunk annotations are additive** -- post findings to a live hunk session when one exists, but
+9. **Hunk annotations are additive** -- post findings to a live hunk session when one exists, but
    never replace the text report and never hard-depend on hunk; no session means text-only
 
 </critical_rules>
@@ -246,9 +246,10 @@ Map each finding to a comment:
 - `--focus`: only on `[Critical]` findings
 - anchor: `newLine` from the finding's line; `oldLine` for findings on deleted lines
 
-Only findings with a concrete diff-line anchor become comments. Coverage gaps, whole-file notes,
-summary counts, and convention findings without a line stay in the text report only -- the text
-report is always complete.
+A finding becomes a comment only when its `file:line` maps to a diff-line anchor (`newLine` or
+`oldLine`) inside the changed hunks. Findings that cite a line outside the diff -- coverage gaps,
+whole-file notes, summary counts, conventions on unchanged lines -- have no anchor and stay in the
+text report only. The text report is always complete.
 
 ---
 
