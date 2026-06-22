@@ -23,6 +23,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tracker: added a workspace-setup checklist for the one-time Linear bootstrap.
 - Tooling: added fallow for dead-code and duplication auditing, with a staged pre-commit audit.
 - Tooling: added `.npmrc` with `save-exact` and `strict-peer-dependencies`.
+- Skills: `cape:review` posts findings as inline comments to a live hunk diff session when one is
+  open, falling back to text-only otherwise; documented the optional hunk setup in the README.
 
 ### Changed
 
