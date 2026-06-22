@@ -9,6 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Skills: added `cape:orchestrate`, an autonomous BUILD-and-SHIP driver that runs a herdr worker and
+  codex reviewer per task, verifies commits, recovers stalled or dead workers, and ships through an
+  AFK PR plus bounded PR-watch.
+- Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
+  orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
 - Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
@@ -28,6 +33,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
   tracker protocol instead of local issue-tracking commands.
 - Skills: added stop-slop prose gates before finalizing prose-emitting skill output.
+- Pr: added an AFK branch that opens a PR unattended under the `CAPE_ORCHESTRATE` marker, skipping
+  the interactive approval while preserving human review of the opened PR.
 - Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
