@@ -46,8 +46,9 @@ reviewer prompt wording adapts to the task. </rigidity_level>
    file.
 4. **One epic worktree, sequential tasks** -- tasks run one at a time in the single grove epic
    worktree, created one ahead. No per-task worktree, no parallel fan-out.
-5. **Halt, don't fudge** -- a blocked worker, a missing commit, a timeout, or a FAIL verdict halts
-   the run with a summary. Never advance a task on assumed success or fabricate a result.
+5. **Recover, then halt** -- a stalled or dead worker triggers bounded retry/respawn (see Recovery),
+   not an immediate halt. A FAIL verdict or a spent retry budget halts the run with a summary. Never
+   advance a task on assumed success or fabricate a result.
 
 </critical_rules>
 
@@ -85,8 +86,8 @@ Block on the worker with `herdr wait agent-status <pane> --status done` (and a t
 stops, **verify a real commit landed** on the epic branch (`git log` shows a new commit for this
 task) -- this, not the pane status, is the success check.
 
-On `blocked`, a timeout, or no new commit: halt the run and summarize the state for the user.
-Bounded retry and respawn recovery is a named follow-up slice; for now, do not silently retry.
+On `blocked`, a timeout, or `done` with no new commit, the worker stalled -- apply the Recovery
+policy below (bounded retry/respawn) before parking.
 
 ---
 
@@ -124,15 +125,33 @@ a worker or the codex reviewer. Each step reuses an existing cape skill by refer
    happens; AFK waives only the pre-create confirmation.
 4. **Bounded PR-watch** -- poll CI with `gh`. On green, poll PR review comments for a bounded window
    (lean default: re-check a few times over a short window, not indefinitely). For each valid
-   comment, spawn a fix-worker tab (same worker contract as Step 2), verify its commit, re-run
-   `cape:review`, and push. Skip invalid or out-of-scope comments with a one-line reason. Exact poll
-   interval, window, and retry counts are a separate bounds-tuning slice.
+   comment, spawn a fix-worker tab (same worker contract as Step 2; recover stalls per the Recovery
+   policy below), verify its commit, re-run `cape:review`, and push. Skip invalid or out-of-scope
+   comments with a one-line reason. Exact poll interval, window, and retry counts are a separate
+   bounds-tuning slice.
 5. **Emit the sentinel** -- only now, at the very end, print
    `CAPE_ORCHESTRATE_COMPLETE epic=<id> pr=<url>`. This is the single line that satisfies the
    `/goal` completion check, so it appears nowhere else in the run.
 
 `gh` and review-comment output can echo the sentinel; the summarize-never-paste rule stays binding
 through the whole PR-watch.
+
+---
+
+## Recovery: stalled or dead workers
+
+Applies to any worker -- the BUILD worker (Step 3) and the SHIP fix-worker. Never park on the first
+stall; real runs recover by retrying or respawning.
+
+- **Stall** -- `blocked`, a timeout, or `done` with no new commit. Retry the same self-contained
+  spec: re-prompt the existing worker, or respawn a fresh worker tab if the pane is wedged.
+- **Death** -- the worker tab is gone or crashed (check `herdr pane list`). Respawn a fresh tab with
+  the same spec.
+- **Bounded** -- retry/respawn up to a small budget (lean default: 2 attempts; the exact count is
+  the bounds-tuning slice). A retry counts as success only when a real commit lands -- status alone
+  never counts (critical rule 1).
+- **Park** -- only after the budget is spent: halt the run, leave the task as it is in Linear, and
+  summarize what was tried and the last failure for the user.
 
 </the_process>
 
@@ -161,8 +180,9 @@ through the whole PR-watch.
 **Wrong:** Trust the `done` status, close the task in Linear, and move on -- advancing on work that
 does not exist.
 
-**Right:** Check `git log` on the epic branch, find no new commit, treat the task as blocked, and
-halt with a summary instead of closing it. </example>
+**Right:** Check `git log` on the epic branch, find no new commit, treat it as a stall, and
+retry/respawn the worker within the bounded budget before parking -- never close it on status.
+</example>
 
 <example>
 <scenario>The codex reviewer returns a detailed verdict</scenario>
