@@ -1,15 +1,13 @@
 {
   "unused_files": ["cli/src/__e2e__/globalSetup.ts"],
   "unused_exports": [
-    "cli/src/services/check.ts:resolveTestCommand",
-    "cli/src/services/hooks/state.ts:readStateKey",
-    "cli/src/services/hooks/state.ts:readFlowPhase",
-    "cli/src/services/hooks/state.ts:clearLogs",
-    "cli/src/services/trackerLive.ts:toTaskFromUnknown",
-    "cli/src/services/trackerLive.ts:isTrackerCache",
-    "cli/src/services/trackerLive.ts:TrackerServiceLive"
+    "cli/src/services/detect.ts:isTestFile",
+    "cli/src/services/detect.ts:resolveTestPath",
+    "cli/src/services/detect.ts:isTrivialFile",
+    "cli/src/services/detectLive.ts:findWorkspaceRoot",
+    "cli/src/services/hooks/state.ts:readFlowPhase"
   ],
-  "unused_types": [],
+  "unused_types": ["cli/src/services/check.ts:CheckCommand"],
   "private_type_leaks": [],
   "unused_dependencies": [],
   "unused_dev_dependencies": [],
