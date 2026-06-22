@@ -78,8 +78,9 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 - Current branch is not the default branch
 - All changes are committed
-- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Only
-  proceed without review when the user explicitly invokes `cape:pr` with `CAPE_HARD_GATE_OVERRIDE`.
+- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Proceed
+  without review only when `cape:pr` is invoked with an explicit override: `CAPE_HARD_GATE_OVERRIDE`
+  (human escape) or `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6).
 
 ---
 

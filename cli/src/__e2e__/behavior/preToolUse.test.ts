@@ -327,6 +327,7 @@ describe('skill gate: review-before-pr', () => {
       env,
     );
     expectWarn(result, 'review-before-pr override accepted');
+    expectWarn(result, 'proceeding without a fresh review stamp');
   });
 
   it('downgrades pr review gate to warning with orchestrate marker', () => {
@@ -336,6 +337,7 @@ describe('skill gate: review-before-pr', () => {
       env,
     );
     expectWarn(result, 'review-before-pr override accepted (orchestrate)');
+    expectWarn(result, 'proceeding without a fresh review stamp');
   });
 });
 

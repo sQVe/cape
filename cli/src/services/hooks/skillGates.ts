@@ -178,21 +178,23 @@ const gatePr = (args: string | null) =>
       return null;
     }
 
-    const baseMessage = missingOrStale === 'stale'
-      ? 'review-before-pr blocked: the review stamp is stale. Run cape:review again before cape:pr.'
-      : 'review-before-pr blocked: no fresh review stamp exists. Run cape:review before cape:pr.';
-    const overrideHint = `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
-    const message = `${baseMessage} ${overrideHint}`;
+    const reason = missingOrStale === 'stale'
+      ? 'the review stamp is stale'
+      : 'no fresh review stamp exists';
+    const proceeding = `proceeding without a fresh review stamp (${reason}).`;
 
     if (hasOrchestrateOverride(args)) {
-      return contextWith(`review-before-pr override accepted (orchestrate): ${baseMessage}`);
+      return contextWith(`review-before-pr override accepted (orchestrate): ${proceeding}`);
     }
 
     if (hasReviewBeforePrOverride(args)) {
-      return contextWith(`review-before-pr override accepted: ${message}`);
+      return contextWith(`review-before-pr override accepted: ${proceeding}`);
     }
 
-    return denyWith(message);
+    const denyMessage =
+      `review-before-pr blocked: ${reason}. Run cape:review before cape:pr. ` +
+      `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
+    return denyWith(denyMessage);
   });
 
 const skillGates: Record<
