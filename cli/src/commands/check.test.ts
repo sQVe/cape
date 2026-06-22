@@ -286,6 +286,38 @@ describe('resolveCheckCommands', () => {
     ]);
   });
 
+  it('uses pnpm exec for oxlint and oxfmt with pnpm package manager', () => {
+    const commands = resolveCheckCommands(
+      [{ language: 'typescript', testFramework: null, linter: 'oxlint', formatter: 'oxfmt' }],
+      'pnpm',
+    );
+    expect(commands).toEqual([
+      { label: 'oxlint', command: 'pnpm', args: ['exec', 'oxlint'] },
+      { label: 'oxfmt', command: 'pnpm', args: ['exec', 'oxfmt', '--check'] },
+    ]);
+  });
+
+  it('falls back to npx for oxlint and oxfmt without a package manager', () => {
+    const commands = resolveCheckCommands([
+      { language: 'typescript', testFramework: null, linter: 'oxlint', formatter: 'oxfmt' },
+    ]);
+    expect(commands).toEqual([
+      { label: 'oxlint', command: 'npx', args: ['oxlint'] },
+      { label: 'oxfmt', command: 'npx', args: ['oxfmt', '--check'] },
+    ]);
+  });
+
+  it('does not prefix standalone tools with the package manager', () => {
+    const commands = resolveCheckCommands(
+      [{ language: 'go', testFramework: null, linter: 'golangci-lint', formatter: 'gofmt' }],
+      'pnpm',
+    );
+    expect(commands).toEqual([
+      { label: 'golangci-lint', command: 'golangci-lint', args: ['run'] },
+      { label: 'gofmt', command: 'gofmt', args: ['-l', '.'] },
+    ]);
+  });
+
   it('resolves ruff format with correct args', () => {
     const commands = resolveCheckCommands([
       {

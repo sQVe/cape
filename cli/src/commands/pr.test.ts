@@ -408,6 +408,46 @@ describe('pr create command', () => {
     console_.restore();
   });
 
+  it('pushes with --porcelain so a successful no-op push is not read as failure', async () => {
+    const console_ = spyConsole();
+    let pushArgs: readonly string[] = [];
+    const hookLayer = Layer.succeed(HookService)({
+      pluginRoot: () => '/test',
+      readFile: () => Effect.succeed(null),
+      writeFile: () => Effect.succeed(undefined),
+      removeFile: () => Effect.succeed(undefined),
+      ensureDir: () => Effect.succeed(undefined),
+      readStdin: () => Effect.succeed(''),
+      spawnGit: (args) => {
+        const cmd = args.join(' ');
+        if (cmd.includes('rev-parse --abbrev-ref')) {
+          return Effect.succeed('feat/my-feature');
+        }
+        if (cmd.includes('symbolic-ref')) {
+          return Effect.succeed('refs/remotes/origin/main');
+        }
+        if (cmd.includes('status --porcelain')) {
+          return Effect.succeed(null);
+        }
+        if (cmd.includes('push')) {
+          pushArgs = args;
+          return Effect.succeed(
+            'To github.com:owner/repo.git\n=\trefs/heads/feat:refs/heads/feat\tDone',
+          );
+        }
+        return Effect.succeed(null);
+      },
+      fileExists: () => Effect.succeed(false),
+    });
+    await Effect.runPromise(
+      run(['pr', 'create', '--title', 'My PR', '--body', validBody]).pipe(
+        Effect.provide(makeCreateLayers(hookLayer)),
+      ),
+    );
+    expect(pushArgs).toEqual(['push', '--porcelain', '-u', 'origin', 'feat/my-feature']);
+    console_.restore();
+  });
+
   it('rejects when on default branch', async () => {
     const console_ = spyConsole();
     const hookLayer = makeCreateHookLayer({ branch: 'main' });
