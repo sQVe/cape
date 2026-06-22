@@ -1,12 +1,13 @@
 ---
 name: orchestrate
 description: >
-  Drive a planned Linear epic autonomously through its BUILD phase: spawn a worker tab per task,
-  verify its commit, have a codex tab review it, then close and lazily create the next task. Use
-  whenever the user hands a set plan to the machine. Triggers on: "orchestrate this epic", "run the
-  epic", "AFK the epic", "/cape:orchestrate", or starting an auto-mode `/goal` session after PLAN is
-  done. Do NOT use for: PLAN itself (use cape:brainstorm / cape:write-plan), a single manual task
-  (use cape:execute-plan), or when no planned epic with ready tasks exists.
+  Drive an epic autonomously through BUILD and SHIP: spawn a worker tab per task, verify its commit,
+  have a codex tab review it, then close and lazily create the next task. Takes either a Linear epic
+  id or a free-form description (which it turns into a lean epic first). Triggers on: "orchestrate
+  this epic", "orchestrate <description>", "run the epic", "AFK the epic", "/cape:orchestrate
+  ABU-123", "/cape:orchestrate <description>", or starting an auto-mode `/goal` session. Do NOT use
+  for: a single supervised task (use cape:execute-plan), or interactive PLAN exploration when you
+  want a human in the loop (use cape:brainstorm / cape:write-plan).
 ---
 
 <skill_overview> Run one task per turn of an autonomous BUILD loop: orient from the tracker cache,
@@ -22,15 +23,15 @@ reviewer prompt wording adapts to the task. </rigidity_level>
 
 <when_to_use>
 
-- A planned epic is In Progress with ready tasks and the user wants it built unattended
+- A planned epic with ready tasks, handed to the machine to build unattended
+- A free-form description of work to build autonomously, with no epic created yet
 - Running as Claude in a herdr control tab under auto mode + `/goal`
 - Resuming an autonomous run after a turn boundary
 
 **Don't use for:**
 
-- PLAN-phase work -- use `cape:brainstorm` then `cape:write-plan`
 - A single supervised task -- use `cape:execute-plan`
-- No epic, or no ready tasks remain
+- Interactive PLAN exploration with a human in the loop -- use `cape:brainstorm` / `cape:write-plan`
 
 </when_to_use>
 
@@ -56,8 +57,18 @@ reviewer prompt wording adapts to the task. </rigidity_level>
 
 ## Step 1: Orient from the tracker cache
 
-Determine the target epic: if the invocation named one (for example `/cape:orchestrate ABU-123`),
-use that epic; otherwise use the active epic from the cache, and if several are active, ask which.
+Resolve the target from the invocation:
+
+- **An epic id** (for example `/cape:orchestrate ABU-123`): use that epic.
+- **A free-form description** (no epic id): establish the epic first. Synthesize a lean epic from
+  the description -- title, goal, and success criteria -- and create it plus one first task in
+  Linear, then refresh the cache. You are the sole writer; follow the `cape:tracker` Linear
+  contract, or load `cape:write-plan` for the fuller shape. Keep it minimal: one first task is
+  enough because the loop creates later tasks one ahead. This means you are doing the planning a
+  human normally owns, so print a one-line plan summary (epic goal + first task) to the transcript
+  before building.
+- **Nothing**: use the active epic from the cache; if several are active, ask which.
+
 Then read the tracker cache and pick the next task under that epic, using the same orient logic as
 `cape:execute-plan` (in-progress task first, then the next ready `unstarted` / `Todo` task). Do not
 network-read for orientation.
@@ -124,7 +135,9 @@ Loop back to Step 1 for the next turn.
 Once Step 1 finds no ready tasks, run the SHIP phase yourself (the orchestrator, as Claude) -- never
 a worker or the codex reviewer. Each step reuses an existing cape skill by reference:
 
-1. **`cape:finish-epic`** -- verify the epic's success criteria with evidence and close the epic.
+1. **`cape:finish-epic`** -- verify the epic's success criteria with evidence and hand off. cape
+   does not set Linear status; the epic closes when this PR (referencing it with `Fixes ABU-XX`)
+   merges.
 2. **`cape:review`** -- the Claude SHIP-phase review (structural graph + conform). This stamps the
    fresh `reviewedAt` that `cape:pr` requires; it is never the codex reviewer.
 3. **`cape:pr` with the `CAPE_ORCHESTRATE` marker** -- the AFK branch: print the full description to
