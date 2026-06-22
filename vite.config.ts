@@ -26,7 +26,7 @@ export default defineConfig({
     },
   },
   staged: {
-    '*.{ts,tsx}': ['vp lint --fix', 'vp fmt . --write'],
+    '*.{ts,tsx}': ['vp lint --fix', 'vp fmt . --write', () => 'pnpm fallow:staged'],
     '*.{json,md,yaml,yml}': 'vp fmt . --write',
   },
   test: {

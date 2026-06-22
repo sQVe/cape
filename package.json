@@ -5,6 +5,10 @@
   "scripts": {
     "build": "pnpm --filter @cape/cli build",
     "check": "vp check",
+    "fallow": "fallow",
+    "fallow:audit": "fallow audit --ci",
+    "fallow:fix": "fallow fix --dry-run",
+    "fallow:staged": "fallow audit --changed-since HEAD --format compact",
     "typecheck": "tsc -p cli/tsconfig.json",
     "format": "vp fmt",
     "format:check": "vp fmt --check",
@@ -16,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "25.9.2",
+    "fallow": "2.101.0",
     "oxfmt": "0.55.0",
     "oxlint": "1.69.0",
     "tsx": "4.22.4",
