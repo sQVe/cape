@@ -5,7 +5,5 @@ hooks/context/
 node_modules/
 
 # AI.
-.beads
-.beads/
 .code-review-graph
 .code-review-graph/

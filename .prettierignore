@@ -4,6 +4,4 @@
 *.mts
 *.ts
 *.tsx
-.beads
-.beads/
 pnpm-lock.yaml
