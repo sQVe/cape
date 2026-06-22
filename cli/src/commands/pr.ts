@@ -121,7 +121,15 @@ const prCreate = Command.make(
     }
 
     if (!noPush) {
-      const pushResult = yield* hookService.spawnGit(['push', '-u', 'origin', branch]);
+      // --porcelain forces ref status to stdout even on a no-op push, so spawnGit returns a
+      // non-null string on success; a genuine failure exits non-zero and spawnGit returns null.
+      const pushResult = yield* hookService.spawnGit([
+        'push',
+        '--porcelain',
+        '-u',
+        'origin',
+        branch,
+      ]);
       if (pushResult == null) {
         return yield* dieWithError(`git push failed for branch "${branch}"`);
       }
