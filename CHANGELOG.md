@@ -13,6 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
 - Skills and commands: added tracker reference skill and slash command wrapper.
+- Tooling: added fallow for dead-code and duplication auditing, with a staged pre-commit audit.
+- Tooling: added `.npmrc` with `save-exact` and `strict-peer-dependencies`.
 
 ### Changed
 
@@ -32,6 +34,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
   warnings.
+- Tooling: consolidated formatting on oxfmt; its config now lives in `vite.config.ts`.
+- Tooling: bumped oxlint, oxfmt, vite-plus, and `@types/node`, and added pinned `typescript` and
+  `tsx` devDeps.
+- Tooling: enabled strict `tsconfig` flags (`exactOptionalPropertyTypes`, `noImplicitOverride`,
+  `noFallthroughCasesInSwitch`).
 
 ### Removed
 
@@ -40,6 +47,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills and commands: replaced beads with tracker.
 - CLI and services: removed the br/beads command surface and validation service.
 - Hooks: removed br-show-log capture/cleanup and raw br-to-cape-br deny redirects.
+- Tooling: removed Prettier in favor of oxfmt.
 
 ## [1.3.0] - 2026-03-26
 
