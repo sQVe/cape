@@ -58,6 +58,8 @@ order is fixed. Depth adapts to change size. </rigidity_level>
 8. **Stamp completed reviews** -- after the report, run
    `cape state set reviewedAt '{"scope":"<scope>"}'` so `cape:pr` has a fresh review-before-pr
    signal
+9. **Hunk annotations are additive** -- post findings to a live hunk session when one exists, but
+   never replace the text report and never hard-depend on hunk; no session means text-only
 
 </critical_rules>
 
@@ -191,7 +193,67 @@ name, or PR number. Then proceed to follow-up actions without announcing another
 
 ---
 
-## Step 6: Optional Tracking
+## Step 6: Annotate A Live hunk Session
+
+If a hunk diff session is open for this repo, post the findings there as inline comments so the
+human sees them in the diff they are already scrolling. This augments the text report; it never
+replaces it.
+
+Detect a session for the current repo:
+
+```bash
+hunk session get --repo . --json
+```
+
+If that errors (no session, or `hunk` not installed), the review is text-only -- append one line and
+stop:
+
+> Run `hunk diff --watch` for inline annotations next time.
+
+If `--repo` is unsupported on the installed hunk, fall back to `hunk session list --json` matched
+against `git rev-parse --show-toplevel`.
+
+With a live session:
+
+1. Load hunk's own skill for the exact command surface, then follow it:
+
+   ```bash
+   hunk skill path
+   ```
+
+   Do not launch the TUI (`hunk diff`, `hunk show`) yourself -- that surface belongs to the human.
+
+2. Read the diff structure to resolve anchors:
+
+   ```bash
+   hunk session review --repo . --json
+   ```
+
+3. Clear prior `cape:review` comments first so re-reviews replace rather than stack, then batch-post
+   the fresh set in one call:
+
+   ```bash
+   hunk session comment list --repo . --type agent
+   hunk session comment rm --repo . <comment-id>   # each prior cape:review comment
+   hunk session comment apply --repo . --stdin     # all findings at once
+   ```
+
+Map each finding to a comment:
+
+- `summary`: `[Severity] <one-line description>`
+- `rationale`: the full finding body (suggestion, impact)
+- `author`: `cape:review`
+- `--focus`: only on `[Critical]` findings
+- anchor: `newLine` from the finding's line; `oldLine` for findings on deleted lines
+
+A finding becomes a comment only when its `file:line` maps to a diff-line anchor (`newLine` or
+`oldLine`) inside the changed hunks. Findings that cite a line outside the diff -- coverage gaps,
+whole-file notes, summary counts, conventions on unchanged lines -- have no anchor and stay in the
+text report only. The text report is always complete.
+
+---
+
+## Step 7: Optional Tracking
 
 For own-code reviews, ask whether to track critical and important findings. If the user opts in,
 create one Linear issue per finding through MCP Linear `save_issue`.
