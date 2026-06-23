@@ -12,11 +12,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: added `cape:set-goal`, an interview-first front end that drafts an autonomous
   BUILD-and-SHIP run for an epic and stages it for review -- a `/goal` completion condition plus an
   approach prompt. A four-question interview (builder, TDD, review, free-text run instructions)
-  shapes the run and auto-derives task source from the cache. In a herdr workspace set-goal types
-  the draft into your pane (arming `/goal`, leaving the approach prompt unsubmitted for a one-Enter
-  launch); otherwise it writes the draft to a temp file and prints the path. It never presses the
-  final Enter. The emitted run verifies tasks by commit, reviews each, reaps per-task worker and
-  reviewer tabs, and ships through an AFK PR plus bounded PR-watch.
+  shapes the run and auto-derives task source from the cache. In a herdr workspace set-goal writes
+  the draft to a temp file and opens it in a split editor pane; `:wq` launches the run (arming
+  `/goal` and submitting the prompt in one beat), `:cq` cancels. Outside herdr it writes the draft
+  and prints the path. set-goal never launches itself. The emitted run verifies tasks by commit,
+  reviews each, reaps per-task worker and reviewer tabs, and ships through an AFK PR plus bounded
+  PR-watch.
+- Commands: added `cape workspace phase <phase>`, which relabels the current herdr workspace and tab
+  with the workflow-phase icon (📋 plan, 🔨 build, 🔍 review, 🚀 pr, ⛔ blocked, ✅ done) for the
+  active epic. Best-effort and a safe no-op outside a herdr workspace or with no stamped epic.
 - Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
   orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
