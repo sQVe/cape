@@ -87,7 +87,7 @@ From inside the epic worktree, stamp the focused epic:
 cape worktree start <epic-id>
 ```
 
-Then label the herdr workspace to match the phase: `cape workspace phase build` (or `plan` for a
+Then label the herdr workspace to match the phase: `cape workspace phase build` (or `cape workspace phase plan` for a
 PLAN worktree). It relabels the herdr rail and tab and is a safe no-op outside herdr.
 
 Use `--phase PLAN`, `--phase BUILD`, or `--phase SHIP` only when the current phase is not BUILD. The
