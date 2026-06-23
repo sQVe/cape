@@ -191,7 +191,11 @@ EOF
 
 ## Step 7: Finalize
 
-After successful creation:
+After successful creation, label the herdr workspace, then finalize:
+
+```bash
+cape workspace phase pr
+```
 
 1. Identify the active epic from tracker cache or flow context.
 2. Ensure the PR description references the epic with a closing keyword (`Fixes ABU-XX`). Linear's

@@ -52,8 +52,8 @@ writes Linear status. Verification details adapt to the repository. </rigidity_l
 Read `hooks/context/tracker.json` and locate the epic. Confirm every child task has a completed
 state type or a done-like status.
 
-If the epic itself is already `Done` (the PR merged before this ran), the work is closed: report
-that and stop. Do not re-close or rewrite status.
+If the epic itself is already `Done` (the PR merged before this ran), the work is closed: run
+`cape workspace phase done`, report that, and stop. Do not re-close or rewrite status.
 
 If any task remains open, report the open task IDs and stop. Do not skip them.
 

@@ -20,7 +20,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   PR-watch.
 - Commands: added `cape workspace phase <phase>`, which relabels the current herdr workspace and tab
   with the workflow-phase icon (📋 plan, 🔨 build, 🔍 review, 🚀 pr, ⛔ blocked, ✅ done) for the
-  active epic. Best-effort and a safe no-op outside a herdr workspace or with no stamped epic.
+  active epic. Best-effort and a safe no-op outside a herdr workspace or with no stamped epic. The
+  workflow skills (worktree, execute-plan, fix-bug, review, pr, finish-epic) call it at each phase
+  transition, and a set-goal run labels its per-task worker and reviewer tabs with role icons.
 - Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
   orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
