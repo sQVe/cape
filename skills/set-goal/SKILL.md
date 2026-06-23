@@ -14,8 +14,9 @@ description: >
 <skill_overview> Interview an epic into a reviewable `/goal` draft and stage it for launch. The
 draft is two blocks: a `/goal` completion condition and an approach prompt that primes an autonomous
 BUILD-and-SHIP run. In a herdr workspace set-goal types both into your pane (arming the goal,
-leaving the prompt unsubmitted); otherwise it prints them. Core contract: set-goal stages but never
-presses the final Enter -- the human reviews, edits, and launches. </skill_overview>
+leaving the prompt unsubmitted); otherwise it writes the draft to a temp file and prints the path.
+Core contract: set-goal stages but never presses the final Enter -- the human reviews, edits, and
+launches. </skill_overview>
 
 <rigidity_level> LOW FREEDOM -- The stage-not-start boundary, the two-block output shape, and the
 paired `CAPE-RUN` line and condition are fixed; the interview defaults and the approach-prompt
@@ -193,7 +194,9 @@ free-text field was empty.
 Offer **Run / Edit / Cancel** with `AskUserQuestion`:
 
 - **Run** -- stage the run, then stop. set-goal never presses the final Enter; the human launches.
-  - **In a herdr workspace** (`HERDR_ENV=1`), inject into the current pane (`$HERDR_PANE_ID`):
+  - **If the pane is a live herdr workspace** -- `$HERDR_PANE_ID` is set AND
+    `herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be
+    reachable) -- inject into the current pane:
     1. Collapse Block 1 to a single line, then
        `herdr pane send-text $HERDR_PANE_ID "/goal <one-line condition>"` followed by
        `herdr pane send-keys $HERDR_PANE_ID Enter` to arm the goal.
@@ -202,7 +205,10 @@ Offer **Run / Edit / Cancel** with `AskUserQuestion`:
        goal arms even while this turn is still running).
     3. Print one line -- "Goal armed; the approach prompt is in your input box, review and press
        Enter to launch" -- then end the turn.
-  - **Outside herdr**, print the two blocks and "Copy them and launch them yourself," then stop.
+  - **Otherwise** (no reachable herdr pane) -- write both blocks to a temp file (for example
+    `${TMPDIR:-/tmp}/cape-set-goal-<epic-id>.md`) and print only its path, so the user opens or
+    `cat`s the file to copy the condition and prompt instead of selecting them out of the
+    transcript. Then stop.
 - **Edit** -- apply the named deltas, re-render the entire draft from the top (never patch a single
   line), and offer the gate again.
 - **Cancel** -- stop; nothing was touched.
@@ -233,8 +239,9 @@ Loop until Run or Cancel. set-goal stages the run but never presses the final En
 fire-and-forget loop the user can no longer review.
 
 **Right:** Orient from the cache, run the four-question interview, render the draft, and on Run
-stage it -- in herdr, arm `/goal` and type the approach prompt into the pane for a one-Enter launch;
-otherwise print the blocks to copy. Never press the final Enter yourself. </example>
+stage it -- in a reachable herdr pane, arm `/goal` and type the approach prompt into the pane for a
+one-Enter launch; otherwise write the draft to a temp file and give the path. Never press the final
+Enter yourself. </example>
 
 <example>
 <scenario>After the draft prints, the user says "review: self-review only"</scenario>
