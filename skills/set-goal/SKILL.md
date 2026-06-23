@@ -155,7 +155,8 @@ never touches the workspace label.
 - Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
   created when it starts. The task's worker, reviewer, and any QA run as panes split inside that one
   tab -- same task, same box.
-- Review: separate -- a codex reviewer pane in the task's tab judges each task (up to 2 fix-cycles).
+- Review: a separate agent -- a codex reviewer runs as a pane in the task's tab (not a separate tab)
+  and judges each task (up to 2 fix-cycles).
 - Task source: execute the planned tasks in dependency order; respect Linear blocking relations and
   the dependency notes in task descriptions. Do not invent tasks.
 - Reap: when a task closes, close its tab -- one `herdr tab close` reaps all its panes. Never
@@ -165,8 +166,9 @@ never touches the workspace label.
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
 2. Open the task's tab (its box): `herdr tab create --workspace <this workspace> --label
-   "<task-id> <short-title>"`, read `result.root_pane`. Run the builder in that root pane and label
-   it: `herdr pane run <root_pane> "<builder>"`, then `herdr pane rename <root_pane> "🔨 worker"`.
+   "<task-id> <short-title>"`, and capture both `result.tab.tab_id` (the `<task-tab>`, closed in
+   step 5) and `result.root_pane.pane_id` (the `<root_pane>`). Run the builder in that root pane and
+   label it: `herdr pane run <root_pane> "<builder>"`, then `herdr pane rename <root_pane> "🔨 worker"`.
    Give it a self-contained spec; require TDD and a self-commit whose message includes the task id,
    e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
