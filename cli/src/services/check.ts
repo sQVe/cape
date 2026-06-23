@@ -40,6 +40,14 @@ const nodeTestCommand = (
   return { label: framework, command, args: [...prefix, framework, ...extra] };
 };
 
+// vite-plus bundles oxlint and oxfmt and owns their config (oxfmt's lives in vite.config.ts), so run
+// them through `vp` instead of the standalone binaries, which can't find that config or match the
+// pinned tool versions.
+const vpCommand = (label: string, sub: readonly string[], pm: string | null): CheckCommand => {
+  const { command, prefix } = nodeExecutor(pm);
+  return { label, command, args: [...prefix, 'vp', ...sub] };
+};
+
 // Node-based tools are declared with `npx`; route them through the detected package manager so the
 // project's pinned binary runs instead of a globally resolved one. Standalone tools are unchanged.
 const withNodeExecutor = (cmd: CheckCommand, pm: string | null): CheckCommand => {
@@ -93,11 +101,21 @@ export const resolveCheckCommands = (ecosystems: DetectResult[], pm: string | nu
       }
     }
 
-    const lint = eco.linter != null ? lintCommands[eco.linter] : undefined;
-    if (lint != null) commands.push(withNodeExecutor(lint, pm));
+    const isVitePlus = eco.testFramework === 'vite-plus';
 
-    const format = eco.formatter != null ? formatCommands[eco.formatter] : undefined;
-    if (format != null) commands.push(withNodeExecutor(format, pm));
+    if (isVitePlus && eco.linter === 'oxlint') {
+      commands.push(vpCommand('oxlint', ['lint'], pm));
+    } else if (eco.linter != null) {
+      const lint = lintCommands[eco.linter];
+      if (lint != null) commands.push(withNodeExecutor(lint, pm));
+    }
+
+    if (isVitePlus && eco.formatter === 'oxfmt') {
+      commands.push(vpCommand('oxfmt', ['fmt', '--check'], pm));
+    } else if (eco.formatter != null) {
+      const format = formatCommands[eco.formatter];
+      if (format != null) commands.push(withNodeExecutor(format, pm));
+    }
   }
 
   return commands;
