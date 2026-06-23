@@ -260,8 +260,11 @@ reachable):
    review pane itself on every exit path (`:wq`, `:cq`, or error), so set-goal never leaves a
    dangling editor pane in the workspace.
 
-3. Split a review pane and run the helper in it:
-   - `herdr pane split --direction down --focus` -- capture the new pane id from the result.
+3. Split a review pane off the invoking pane -- target `$HERDR_PANE_ID` explicitly, never the
+   focused pane: focus may be in another workspace, which would open the draft in the wrong place.
+   Run the helper in the new pane:
+   - `herdr pane split "$HERDR_PANE_ID" --direction down --focus` -- capture the new pane id from
+     the result.
    - `herdr pane run <new-pane-id> "bash '<review path>'"`
 
 4. Print one line -- "Draft open in the split below: review, then `:wq` to launch or `:cq` to
