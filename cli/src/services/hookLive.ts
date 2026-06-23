@@ -43,12 +43,13 @@ const readStdin = () =>
     catch: () => new Error('failed to read stdin'),
   }).pipe(Effect.orElseSucceed(() => ''));
 
-const spawnGit = (args: readonly string[]) =>
+const spawnGit = (args: readonly string[], cwd?: string) =>
   Effect.try({
     try: () => {
       const result = execFileSync('git', [...args], {
         encoding: 'utf-8',
         timeout: 3000,
+        cwd,
       });
       return result.trim() || null;
     },

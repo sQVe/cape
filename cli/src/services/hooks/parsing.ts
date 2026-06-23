@@ -58,6 +58,15 @@ export const parseCommand = (input: string): string | null => {
   }
 };
 
+export const parseCwd = (input: string): string | null => {
+  try {
+    const data = JSON.parse(input);
+    return parseString(data.cwd);
+  } catch {
+    return null;
+  }
+};
+
 export interface SkillInput {
   readonly name: string;
   readonly args: string | null;

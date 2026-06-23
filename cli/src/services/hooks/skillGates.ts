@@ -2,7 +2,7 @@ import { Effect } from 'effect';
 
 import { logEvent } from '../../eventLog';
 import { denyTable } from './denyTable';
-import { parseCommand, parseSkillInput, stripQuotedContent } from './parsing';
+import { parseCommand, parseCwd, parseSkillInput, stripQuotedContent } from './parsing';
 import {
   HookService,
   isDoneTask,
@@ -11,6 +11,7 @@ import {
   readState,
   readStateKey,
   readTrackerCache,
+  resolveBranchInfo,
 } from './state';
 
 export { denyTable } from './denyTable';
@@ -74,10 +75,9 @@ export const preToolUseBash = () =>
     }
 
     if (/\bgit\s+push\b/.test(stripped)) {
-      const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+      const cwd = parseCwd(input) ?? undefined;
+      const { branch, defaultBranch } = yield* resolveBranchInfo(cwd);
       if (branch != null) {
-        const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-        const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
         if (branch === defaultBranch) {
           const message = `Push from \`${branch}\` is blocked. Reason: direct pushes to the default branch bypass review. Run \`cape git create-branch --help\` to start a feature branch first.`;
           logEvent('hook.PreToolUse.Bash', message);

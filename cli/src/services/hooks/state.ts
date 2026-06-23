@@ -21,10 +21,19 @@ export class HookService extends ServiceMap.Service<
     readonly removeFile: (path: string) => Effect.Effect<void>;
     readonly ensureDir: (path: string) => Effect.Effect<void>;
     readonly readStdin: () => Effect.Effect<string>;
-    readonly spawnGit: (args: readonly string[]) => Effect.Effect<string | null>;
+    readonly spawnGit: (args: readonly string[], cwd?: string) => Effect.Effect<string | null>;
     readonly fileExists: (path: string) => Effect.Effect<boolean>;
   }
 >()('HookService') {}
+
+export const resolveBranchInfo = (cwd?: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD'], cwd);
+    const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD'], cwd);
+    const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
+    return { branch, defaultBranch };
+  });
 
 type StateValue = Record<string, unknown> & { timestamp: number };
 type StateFile = Record<string, StateValue>;
