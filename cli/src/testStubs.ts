@@ -5,6 +5,7 @@ import { CommitService } from './services/commit';
 import { ConformService } from './services/conform';
 import { DetectService } from './services/detect';
 import { GitService } from './services/git';
+import { HerdrService } from './services/herdr';
 import { HookService } from './services/hook';
 import { PrService } from './services/pr';
 import { ValidateService } from './services/validate';
@@ -65,4 +66,10 @@ export const stubValidateLayer = Layer.succeed(ValidateService)({
 export const stubConformLayer = Layer.succeed(ConformService)({
   discoverRules: () => Effect.succeed([]),
   readFiles: () => Effect.succeed([]),
+});
+
+export const stubHerdrLayer = Layer.succeed(HerdrService)({
+  workspaceId: () => null,
+  tabId: () => null,
+  rename: () => Effect.succeed(true),
 });

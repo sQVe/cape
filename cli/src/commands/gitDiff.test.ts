@@ -14,6 +14,7 @@ import {
   stubPrLayer,
   stubConformLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 
 const run = Command.runWith(main, { version: '0.1.0' });
@@ -65,6 +66,7 @@ const makeScopeCapturingLayer = () => {
 const testLayers = (gitLayer: Layer.Layer<GitService>) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     gitLayer,
     stubDetectLayer,
     stubCheckLayer,

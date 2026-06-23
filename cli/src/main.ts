@@ -9,6 +9,7 @@ import { pr } from './commands/pr';
 import { state } from './commands/state';
 import { tracker } from './commands/tracker';
 import { validate } from './commands/validate';
+import { workspace } from './commands/workspace';
 import { worktree } from './commands/worktree';
 
 export const main = Command.make('cape').pipe(
@@ -23,6 +24,7 @@ export const main = Command.make('cape').pipe(
     state,
     tracker,
     validate,
+    workspace,
     worktree,
   ]),
 );

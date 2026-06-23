@@ -15,6 +15,7 @@ import {
   stubPrLayer,
   stubConformLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
 
@@ -58,6 +59,7 @@ const run = Command.runWith(main, { version: '0.1.0' });
 
 const commandLayers = Layer.mergeAll(
   NodeServices.layer,
+  stubHerdrLayer,
   makeTestDetectLayer(),
   makeTestCheckLayer(),
   stubGitLayer,
@@ -80,6 +82,7 @@ describe('check command wiring', () => {
   it('rejects when any check fails', async () => {
     const layers = Layer.mergeAll(
       NodeServices.layer,
+      stubHerdrLayer,
       makeTestDetectLayer(),
       makeFailingCheckLayer([{ check: 'vitest', passed: false, output: 'FAIL' }]),
       stubGitLayer,
@@ -103,6 +106,7 @@ describe('check command wiring', () => {
     });
     const layers = Layer.mergeAll(
       NodeServices.layer,
+      stubHerdrLayer,
       errorDetectLayer,
       makeTestCheckLayer(),
       stubGitLayer,
@@ -120,6 +124,7 @@ describe('check command wiring', () => {
   it('rejects when check execution fails', async () => {
     const layers = Layer.mergeAll(
       NodeServices.layer,
+      stubHerdrLayer,
       makeTestDetectLayer(),
       makeErrorCheckLayer(),
       stubGitLayer,

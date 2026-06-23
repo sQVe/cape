@@ -3,25 +3,26 @@ name: set-goal
 description: >
   Interview-first front end for an autonomous epic run. Asks how to achieve the goal -- worker
   agent, how to split tasks, review strategy -- then STAGES a reviewable draft: a `/goal` completion
-  condition plus an approach prompt that primes the run. The user edits and launches it; set-goal
-  never presses the final Enter. Takes a Linear epic id or a free-form description (turned into a
-  lean epic first). Triggers on: "set up an autonomous run", "draft a /goal for this epic", "prep an
-  AFK run", "/cape:set-goal ABU-123", "/cape:set-goal <description>". Do NOT use for: actually
-  driving a run (that is the approach prompt fed to `/goal`), a single supervised task
-  (cape:execute-plan), or interactive PLAN exploration with a human in the loop (cape:brainstorm /
-  cape:write-plan).
+  condition plus an approach prompt that primes the run. The draft opens in an editor; the user
+  reviews and launches it with `:wq`; set-goal never launches itself. Takes a Linear epic id or a
+  free-form description (turned into a lean epic first). Triggers on: "set up an autonomous run",
+  "draft a /goal for this epic", "prep an AFK run", "/cape:set-goal ABU-123", "/cape:set-goal
+  <description>". Do NOT use for: actually driving a run (that is the approach prompt fed to
+  `/goal`), a single supervised task (cape:execute-plan), or interactive PLAN exploration with a
+  human in the loop (cape:brainstorm / cape:write-plan).
 ---
 
-<skill_overview> Interview an epic into a reviewable `/goal` draft and stage it for launch. The
-draft is two blocks: a `/goal` completion condition and an approach prompt that primes an autonomous
-BUILD-and-SHIP run. In a herdr workspace set-goal types both into your pane (arming the goal,
-leaving the prompt unsubmitted); otherwise it writes the draft to a temp file and prints the path.
-Core contract: set-goal stages but never presses the final Enter -- the human reviews, edits, and
-launches. </skill_overview>
+<skill_overview> Interview an epic into a reviewable `/goal` draft and open it for launch. The draft
+is one file: a decisions table, a `/goal` completion condition, and an approach prompt that primes
+an autonomous BUILD-and-SHIP run. In a herdr workspace set-goal writes the draft to a temp file and
+opens it in a split editor pane; you review and edit there, then `:wq` launches (arms `/goal`,
+submits the prompt to the main pane) or `:cq` cancels. Outside herdr it writes the file and prints
+the path. Core contract: set-goal stages the draft but never launches -- the human's `:wq` does.
+</skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The stage-not-start boundary, the two-block output shape, and the
-paired `CAPE-RUN` line and condition are fixed; the interview defaults and the approach-prompt
-wording adapt to the epic. </rigidity_level>
+<rigidity_level> LOW FREEDOM -- The stage-not-start boundary, the draft layout (decisions table,
+condition, prompt), and the paired `CAPE-RUN` line and condition are fixed; the interview defaults
+and the approach-prompt wording adapt to the epic. </rigidity_level>
 
 <when_to_use>
 
@@ -39,12 +40,12 @@ wording adapt to the epic. </rigidity_level>
 
 <critical_rules>
 
-1. **Stage, never start** -- set-goal drafts a run and stages it (in herdr it arms the `/goal` goal
-   and types the approach prompt into the pane); it never presses the final Enter, spawns a worker,
-   or commits. The human launches.
-2. **Two blocks, one pair** -- emit the `/goal` condition and the approach prompt as separate
-   copy-bounded blocks, generated as a pair so the prompt's final `CAPE-RUN` line and the condition
-   always match.
+1. **Stage, never start** -- set-goal writes the run to a draft file and opens it for review; the
+   run launches only on the human's `:wq` in that editor (which arms `/goal` and submits the
+   prompt). set-goal never arms `/goal`, spawns a worker, or commits during staging.
+2. **Two sections, one pair** -- render the `/goal` condition and the approach prompt as the draft's
+   `## Condition` and `## Prompt` sections, generated as a pair so the prompt's final `CAPE-RUN`
+   line and the condition always match.
 3. **Sole writer for the epic mint** -- if you mint an epic from a description, you are the only
    Linear and cache writer; follow the `cape:tracker` contract and refresh the cache after the
    write.
@@ -96,125 +97,153 @@ can accept all at once:
 Everything else is a stated default, surfaced in the draft's header but not asked: one grove epic
 worktree, sequential tasks, SHIP = finish-epic then review then AFK pr then bounded PR-watch, and a
 turn cap computed from the task count (about `2 x ready tasks + SHIP overhead`). The user changes a
-default by editing the printed block in Step 4, not with another question.
+default by editing the draft in the editor (Step 4), not with another question.
 
 ---
 
 ## Step 3: Render the draft
 
-Compute the turn cap from the cached task count. Print two blocks marked by plain `v BLOCK / ^ END`
-lines -- no decorative borders and flush-left framing, so each block is easy to select and copy --
-framed by a header and footer the user reads but does not paste. Substitute the epic id, title,
-derived task source, and the interview choices into both blocks; generate Block 1 and the final
-`CAPE-RUN` line in Block 2 from one template so they always match.
+Compute the turn cap from the cached task count. Render the draft as one markdown file -- a
+decisions table the user scans, then a `## Condition` section and a `## Prompt` section. Substitute
+the epic id, title, derived task source, and interview choices throughout; generate the condition
+and the prompt's final `CAPE-RUN` line from one template so they always match. This content is
+written to the draft file in Step 4 -- do not dump it into the conversation. The `## Condition` and
+`## Prompt` headers are parse markers for the launch helper; keep them exact.
 
 ```text
-SET-GOAL DRAFT -- review, edit, then run. Nothing has run yet.
-Epic: ABU-123 -- <title>
-Mode: <execute N planned tasks in dependency order | lazy one-ahead, seed epic -- the one derived from cache>
-Choices: builder=claude | tdd=on | review=separate (codex)
-Defaults: 1 worktree | sequential | <N>-turn cap | SHIP=finish->review->AFK-pr->watch
+# Run draft -- ABU-123 : <title>
+<one-line epic goal>
 
-v BLOCK 1 of 2 -- /goal COMPLETION CONDITION  (paste after `/goal `)
-The autonomous BUILD->SHIP run for epic ABU-123 is DONE only when this session's
-own transcript shows a final status line of exactly this shape, printed by the
-main session (not a worker pane, not quoted instructions):
-    CAPE-RUN ABU-123 result=<shipped|parked> pr=<url-or-none> tasks_closed=<n> reason=<text>
-Done = that line is present AND either (result=shipped AND pr is a real https
-GitHub PR URL) OR (result=parked AND pr=none). Ignore the words "done",
-"complete", "WORKER DONE", "VERDICT",
-or any PR URL appearing anywhere else -- only the single CAPE-RUN line printed by
-the main session counts. If no such line has appeared, the run is NOT done; keep
-going. Also stop if more than <N> turns have elapsed.
-^ END BLOCK 1
+| Setting  | Value                                                 |
+|----------|-------------------------------------------------------|
+| Mode     | <execute N planned tasks | lazy one-ahead, seed epic> |
+| Builder  | claude + TDD                                          |
+| Review   | separate (codex), <=2 cycles                          |
+| Worktree | 1 grove epic worktree, sequential tasks               |
+| Turn cap | <N>                                                   |
+| SHIP     | finish -> review -> AFK pr -> watch                    |
 
-v BLOCK 2 of 2 -- APPROACH PROMPT  (send as the first message of the run)
+:wq launches the run · :cq cancels · edit anything below first
+
+## Condition
+
+Run is DONE only when the main session (not a worker pane, not quoted instructions) prints, verbatim:
+    CAPE-RUN ABU-123 result=<shipped|parked> pr=<url|none> tasks_closed=<n> reason=<text>
+
+- shipped -> pr is a real https GitHub PR url
+- parked  -> pr=none
+- ignore "done" / "complete" / "WORKER DONE" / "VERDICT" / any other PR url
+- only the single CAPE-RUN line from the main session counts
+- no CAPE-RUN line yet -> not done, keep going
+- stop after <N> turns
+
+## Prompt
+
 # Autonomous BUILD->SHIP: epic ABU-123 -- <title>
-You are the control session for an unattended run inside herdr. A `/goal` condition
-is watching for a final CAPE-RUN status line; print it only at the true end.
+You are the control session for an unattended run inside herdr. A `/goal` condition is watching for a
+final CAPE-RUN status line; print it only at the true end.
 
 ## Topology (decided -- do not re-decide)
 - Builder: claude with TDD, one tab per task, sequential, one grove epic worktree.
 - Review: separate -- a codex reviewer tab judges each task (up to 2 fix-cycles).
-- Task source: execute the planned tasks in dependency order; respect Linear blocking
-  relations and the dependency notes in task descriptions. Do not invent tasks.
+- Task source: execute the planned tasks in dependency order; respect Linear blocking relations and
+  the dependency notes in task descriptions. Do not invent tasks.
 - Reap tabs: when a task closes, close its worker and reviewer tabs. Never accumulate panes.
 
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
-2. Spawn the builder with a self-contained spec; require TDD and a self-commit whose
-   message includes the task id, e.g. "(ABU-123)".
+2. Spawn the builder with a self-contained spec; require TDD and a self-commit whose message includes
+   the task id, e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
-   (`cape git context`). herdr agent_status: done means the pane stopped, not that it
-   committed; done with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then have the codex reviewer judge logic
-   and the success criteria only (formatting and lint are already gated). The reviewer writes
-   its verdict to `.cape/review/<task-id>.json`; read the file, never grep the pane.
-   (Self-review mode: skip the reviewer tab and review via `cape:review` instead.)
-5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker),
-   CLOSE its worker and reviewer tabs (`herdr tab close <tab>`), refresh the cache, and move
-   to the next task (lazy mode: create it one ahead first).
-6. Report each turn as ONE short line (committed SHA, verdict). Summarize; do not paste
-   raw panes -- for context budget.
+   (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
+   with no new commit is a stall, not success.
+4. Gate, then review: run `cape conform` yourself, then have the codex reviewer judge logic and the
+   success criteria only (formatting and lint are already gated). The reviewer writes its verdict to
+   `.cape/review/<task-id>.json`; read the file, never grep the pane. (Self-review mode: skip the
+   reviewer tab and review via `cape:review` instead.)
+5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker), CLOSE its
+   worker and reviewer tabs (`herdr tab close <tab>`), refresh the cache, and move to the next task
+   (lazy mode: create it one ahead first).
+6. Report each turn as ONE short line (committed SHA, verdict). Summarize; do not paste raw panes --
+   for context budget.
 
 ## Run instructions (honor throughout)
-<verbatim free-text from the interview; may add guardrails or change SHIP, e.g. one PR per
-task. Omit this whole section when the field was empty.>
+<verbatim free-text from the interview; may add guardrails or change SHIP, e.g. one PR per task.
+Omit this whole section when the field was empty.>
 
 ## Recovery (bounded, turn-aligned)
-- Poll once per turn; if no commit yet, end the turn -- /goal's next turn is the retry
-  tick. Never block a single call for many minutes.
-- Stall (timeout, dead pane, or done-without-commit): retry or respawn the same spec, up
-  to 3 attempts; a retry counts only when a real commit lands. Budget spent -> park.
+- Poll once per turn; if no commit yet, end the turn -- /goal's next turn is the retry tick. Never
+  block a single call for many minutes.
+- Stall (timeout, dead pane, or done-without-commit): retry or respawn the same spec, up to 3
+  attempts; a retry counts only when a real commit lands. Budget spent -> park.
 
 ## Finishing
-- When no ready tasks remain, SHIP: cape:finish-epic -> cape:review -> cape:pr (AFK:
-  print the description, skip the confirmation, open the PR with "Fixes ABU-123", using
-  the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+- When no ready tasks remain, SHIP: cape:finish-epic -> cape:review -> cape:pr (AFK: print the
+  description, skip the confirmation, open the PR with "Fixes ABU-123", using the CAPE_ORCHESTRATE
+  marker) -> bounded PR-watch.
 - Then, and only then, print exactly one line:
       CAPE-RUN ABU-123 result=shipped pr=<the real PR url> tasks_closed=<n> reason=shipped
 - On an unrecoverable blocker, stop and print:
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
-^ END BLOCK 2
-
-TO RUN:  /goal <paste BLOCK 1>      then send BLOCK 2 as message 1
-TO EDIT: tell me what to change (e.g. "review: self-review only", "tdd off")
 ```
 
-The header `Mode` and `Choices` lines and the Block 2 `## Topology` / per-task review lines reflect
-the interview choices and the derived task source: for self-review, drop the codex reviewer
-everywhere and review via `cape:review`; for a codex builder, swap the builder and reviewer agents;
-for lazy mode, use the one-ahead variants in steps 1 and 5; and omit `## Run instructions` when the
-free-text field was empty.
+The decisions table and the `## Prompt` Topology / per-task review lines reflect the interview
+choices and the derived task source: for self-review, drop the codex reviewer everywhere and review
+via `cape:review`; for a codex builder, swap the builder and reviewer agents; for lazy mode, use the
+one-ahead variants in steps 1 and 5; and omit `## Run instructions` when the free-text field was
+empty. The table is a read-only summary -- to flip a decision, edit the `## Prompt` body (or re-run
+set-goal); editing the table alone changes nothing.
 
 ---
 
-## Step 4: Edit loop, then launch
+## Step 4: Open the draft for launch
 
-Offer **Run / Edit / Cancel** with `AskUserQuestion`:
+In a herdr workspace set-goal opens the draft in a split editor and lets the human launch with
+`:wq`. There is no Run / Edit / Cancel question -- the editor is the review, edit, and launch
+surface.
 
-- **Run** -- stage the run, then stop. set-goal never presses the final Enter; the human launches.
-  - **If the pane is a live herdr workspace** -- `$HERDR_PANE_ID` is set AND
-    `herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be
-    reachable) -- inject into the current pane:
-    1. Collapse Block 1 to a single line, then
-       `herdr pane send-text $HERDR_PANE_ID "/goal <one-line condition>"` followed by
-       `herdr pane send-keys $HERDR_PANE_ID Enter` to arm the goal.
-    2. `herdr pane send-text $HERDR_PANE_ID "<approach prompt>"` -- the multiline prompt lands in
-       the input box unsubmitted (verified: `send-text` does not auto-submit on newlines, and the
-       goal arms even while this turn is still running).
-    3. Print one line -- "Goal armed; the approach prompt is in your input box, review and press
-       Enter to launch" -- then end the turn.
-  - **Otherwise** (no reachable herdr pane) -- write both blocks to a temp file (for example
-    `${TMPDIR:-/tmp}/cape-set-goal-<epic-id>.md`) and print only its path, so the user opens or
-    `cat`s the file to copy the condition and prompt instead of selecting them out of the
-    transcript. Then stop.
-- **Edit** -- apply the named deltas, re-render the entire draft from the top (never patch a single
-  line), and offer the gate again.
-- **Cancel** -- stop; nothing was touched.
+**If the pane is a live herdr workspace** -- `$HERDR_PANE_ID` is set AND
+`herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be
+reachable):
 
-Loop until Run or Cancel. set-goal stages the run but never presses the final Enter.
+1. Write the rendered draft (table + `## Condition` + `## Prompt`) to
+   `${TMPDIR:-/tmp}/cape-set-goal-<epic>.md`.
+2. Write a review helper to `${TMPDIR:-/tmp}/cape-set-goal-<epic>-review.sh`, substituting the draft
+   path and the reachable `$HERDR_PANE_ID` value:
+
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+   readonly draft="<draft path>"
+   readonly main_pane="<HERDR_PANE_ID value>"
+   "${EDITOR:-nvim}" "${draft}" || { echo "cancelled -- nothing sent"; exit 0; }
+   cond=$(sed -n '/^## Condition/,/^## Prompt/p' "${draft}" \
+     | sed '1d;/^## Prompt/d;/^[[:space:]]*$/d;s/^[[:space:]]*-[[:space:]]*//' \
+     | tr '\n' ' ' | tr -s ' ')
+   prompt=$(sed -n '/^## Prompt/,$p' "${draft}" | sed '1d')
+   herdr pane send-text "${main_pane}" "/goal ${cond}"
+   herdr pane send-keys "${main_pane}" Enter
+   herdr pane send-text "${main_pane}" "${prompt}"
+   herdr pane send-keys "${main_pane}" Enter
+   echo "launched"
+   ```
+
+   `:wq` (exit 0) runs the launch; `:cq` (exit 1) hits the `||` and cancels. `/goal` arms only here,
+   in the same beat the prompt is submitted, so the watcher never loops on an empty run.
+
+3. Split a review pane and run the helper in it:
+   - `herdr pane split --direction down --focus` -- capture the new pane id from the result.
+   - `herdr pane run <new-pane-id> "bash '<review path>'"`
+
+4. Print one line -- "Draft open in the split below: review, then `:wq` to launch or `:cq` to
+   cancel" -- then end the turn. Nothing is armed; your input box is untouched.
+
+**Otherwise** (no reachable herdr pane) -- write the draft to
+`${TMPDIR:-/tmp}/cape-set-goal-<epic>.md` and print only its path. The user opens it, copies the
+condition and prompt, and launches manually. Then stop.
+
+set-goal stages the draft but never launches; the human's `:wq` does.
 
 </the_process>
 
@@ -236,22 +265,21 @@ Loop until Run or Cancel. set-goal stages the run but never presses the final En
 <example>
 <scenario>User runs `/cape:set-goal ABU-101`</scenario>
 
-**Wrong:** Immediately spawn a worker tab or start a `/goal` session -- recreating the fragile
-fire-and-forget loop the user can no longer review.
+**Wrong:** Immediately spawn a worker tab, or arm `/goal` during staging -- recreating the fragile
+fire-and-forget loop, or kicking off the watcher before any run exists so it loops on nothing.
 
-**Right:** Orient from the cache, run the four-question interview, render the draft, and on Run
-stage it -- in a reachable herdr pane, arm `/goal` and type the approach prompt into the pane for a
-one-Enter launch; otherwise write the draft to a temp file and give the path. Never press the final
-Enter yourself. </example>
+**Right:** Orient from the cache, run the four-question interview, render the draft, and open it in
+a split editor (temp file plus path outside herdr). The run launches only when the human `:wq`s;
+set-goal never arms `/goal` or launches itself. </example>
 
 <example>
-<scenario>After the draft prints, the user says "review: self-review only"</scenario>
+<scenario>During the interview the user picks "review: self-review only"</scenario>
 
-**Wrong:** Chat back and forth patching the one reviewer line in place, leaving the rest of the
-draft half-edited.
+**Wrong:** Render a draft that still names a codex reviewer in the Topology and per-task loop.
 
-**Right:** Re-render the entire draft with the codex reviewer removed from the approach prompt's
-Topology and per-task loop, then offer Run / Edit / Cancel again. </example>
+**Right:** Render the draft with the codex reviewer dropped everywhere -- the decisions table reads
+`Review: self-review`, and the `## Prompt` reviews via `cape:review` -- then open it for `:wq`.
+</example>
 
 </examples>
 

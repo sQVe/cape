@@ -29,6 +29,7 @@ import {
   stubPrLayer,
   stubConformLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
 
@@ -587,6 +588,7 @@ const run = Command.runWith(main, { version: '0.1.0' });
 const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     stubGitLayer,
     stubDetectLayer,
     stubCheckLayer,

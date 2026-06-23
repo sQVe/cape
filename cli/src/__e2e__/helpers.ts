@@ -13,6 +13,7 @@ import { CommitServiceLive } from '../services/commitLive';
 import { ConformServiceLive } from '../services/conformLive';
 import { DetectServiceLive } from '../services/detectLive';
 import { GitServiceLive } from '../services/gitLive';
+import { HerdrServiceLive } from '../services/herdrLive';
 import { HookServiceLive } from '../services/hookLive';
 import { PrServiceLive } from '../services/prLive';
 import { ValidateServiceLive } from '../services/validateLive';
@@ -64,6 +65,7 @@ const liveCommandLayers = Layer.mergeAll(
   ConformServiceLive,
   DetectServiceLive,
   GitServiceLive,
+  HerdrServiceLive,
   HookServiceLive,
   PrServiceLive,
   ValidateServiceLive,
