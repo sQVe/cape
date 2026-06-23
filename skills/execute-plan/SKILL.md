@@ -102,10 +102,11 @@ operation. Immediately refresh the local cache:
 cape tracker cache-status <task-id> "In Progress" started
 ```
 
-Signal workflow state:
+Signal workflow state and label the herdr workspace:
 
 ```bash
 cape state set workflowActive
+cape workspace phase build
 ```
 
 Load `cape:test-driven-development` with the Skill tool before production edits.

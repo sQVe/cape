@@ -81,6 +81,7 @@ Parse the argument:
 Run:
 
 ```bash
+cape workspace phase review
 cape check
 cape git context
 cape git diff <scope>

@@ -111,6 +111,8 @@ report that before editing production code.
 
 ## Step 3: Fix With TDD
 
+Signal the build phase for the herdr rail: `cape workspace phase build`.
+
 Load `cape:test-driven-development` with the Skill tool. The root cause is the test target.
 
 Scope guard:

@@ -153,13 +153,15 @@ final CAPE-RUN status line; print it only at the true end.
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
-2. Spawn the builder with a self-contained spec; require TDD and a self-commit whose message includes
-   the task id, e.g. "(ABU-123)".
+2. Spawn the builder in its own tab, labeled `🔨 <task-id> worker` (`herdr tab rename`). Give it a
+   self-contained spec; require TDD and a self-commit whose message includes the task id, e.g.
+   "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
    with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then have the codex reviewer judge logic and the
-   success criteria only (formatting and lint are already gated). The reviewer writes its verdict to
+4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its own tab,
+   labeled `🔍 <task-id> review` (`herdr tab rename`); have it judge logic and the success criteria
+   only (formatting and lint are already gated). The reviewer writes its verdict to
    `.cape/review/<task-id>.json`; read the file, never grep the pane. (Self-review mode: skip the
    reviewer tab and review via `cape:review` instead.)
 5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker), CLOSE its
@@ -176,7 +178,8 @@ Omit this whole section when the field was empty.>
 - Poll once per turn; if no commit yet, end the turn -- /goal's next turn is the retry tick. Never
   block a single call for many minutes.
 - Stall (timeout, dead pane, or done-without-commit): retry or respawn the same spec, up to 3
-  attempts; a retry counts only when a real commit lands. Budget spent -> park.
+  attempts; a retry counts only when a real commit lands. Budget spent -> park: run
+  `cape workspace phase blocked`, then stop.
 
 ## Finishing
 - When no ready tasks remain, SHIP: cape:finish-epic -> cape:review -> cape:pr (AFK: print the
