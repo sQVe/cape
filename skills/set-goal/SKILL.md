@@ -2,13 +2,14 @@
 name: set-goal
 description: >
   Interview-first front end for an autonomous epic run. Asks how to achieve the goal -- worker
-  agent, how to split tasks, review strategy -- then PRINTS a reviewable draft: a `/goal` completion
+  agent, how to split tasks, review strategy -- then STAGES a reviewable draft: a `/goal` completion
   condition plus an approach prompt that primes the run. The user edits and launches it; set-goal
-  never starts the run itself. Takes a Linear epic id or a free-form description (turned into a lean
-  epic first). Triggers on: "set up an autonomous run", "draft a /goal for this epic", "prep an AFK
-  run", "/cape:set-goal ABU-123", "/cape:set-goal <description>". Do NOT use for: actually driving a
-  run (that is the printed prompt fed to `/goal`), a single supervised task (cape:execute-plan), or
-  interactive PLAN exploration with a human in the loop (cape:brainstorm / cape:write-plan).
+  never presses the final Enter. Takes a Linear epic id or a free-form description (turned into a
+  lean epic first). Triggers on: "set up an autonomous run", "draft a /goal for this epic", "prep an
+  AFK run", "/cape:set-goal ABU-123", "/cape:set-goal <description>". Do NOT use for: actually
+  driving a run (that is the approach prompt fed to `/goal`), a single supervised task
+  (cape:execute-plan), or interactive PLAN exploration with a human in the loop (cape:brainstorm /
+  cape:write-plan).
 ---
 
 <skill_overview> Interview an epic into a reviewable `/goal` draft and stage it for launch. The
@@ -30,7 +31,7 @@ wording adapt to the epic. </rigidity_level>
 
 **Don't use for:**
 
-- Driving the run itself -- that is the printed prompt, fed to `/goal`
+- Driving the run itself -- that is the approach prompt, fed to `/goal`
 - A single supervised task -- use `cape:execute-plan`
 - Interactive PLAN exploration with a human in the loop -- use `cape:brainstorm` / `cape:write-plan`
 
@@ -102,15 +103,15 @@ default by editing the printed block in Step 4, not with another question.
 ## Step 3: Render the draft
 
 Compute the turn cap from the cached task count. Print two blocks marked by plain `v BLOCK / ^ END`
-lines -- no decorative borders or indentation, so each block is easy to select and copy -- framed by
-a header and footer the user reads but does not paste. Substitute the epic id, title, derived task
-source, and the interview choices into both blocks; generate Block 1 and the final `CAPE-RUN` line
-in Block 2 from one template so they always match.
+lines -- no decorative borders and flush-left framing, so each block is easy to select and copy --
+framed by a header and footer the user reads but does not paste. Substitute the epic id, title,
+derived task source, and the interview choices into both blocks; generate Block 1 and the final
+`CAPE-RUN` line in Block 2 from one template so they always match.
 
 ```text
 SET-GOAL DRAFT -- review, edit, then run. Nothing has run yet.
 Epic: ABU-123 -- <title>
-Mode: execute <N> planned tasks in dependency order   (or: lazy one-ahead, seed epic)
+Mode: <execute N planned tasks in dependency order | lazy one-ahead, seed epic -- the one derived from cache>
 Choices: builder=claude | tdd=on | review=separate (codex)
 Defaults: 1 worktree | sequential | <N>-turn cap | SHIP=finish->review->AFK-pr->watch
 
@@ -256,7 +257,7 @@ Topology and per-task loop, then offer Run / Edit / Cancel again. </example>
 
 <key_principles>
 
-- **Print, don't run** -- set-goal is the human checkpoint before AFK, not the driver
+- **Stage, don't run** -- set-goal is the human checkpoint before AFK, not the driver
 - **`/goal` is the driver** -- set-goal hands it a good condition; the loop lives in the real
   `/goal` session the user launches
 - **Commit is truth** -- the printed run verifies tasks by git, not by pane or agent status

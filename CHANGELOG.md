@@ -14,9 +14,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   approach prompt. A four-question interview (builder, TDD, review, free-text run instructions)
   shapes the run and auto-derives task source from the cache. In a herdr workspace set-goal types
   the draft into your pane (arming `/goal`, leaving the approach prompt unsubmitted for a one-Enter
-  launch); otherwise it prints the blocks. It never presses the final Enter. The emitted run
-  verifies tasks by commit, reviews each, reaps per-task worker and reviewer tabs, and ships through
-  an AFK PR plus bounded PR-watch.
+  launch); otherwise it writes the draft to a temp file and prints the path. It never presses the
+  final Enter. The emitted run verifies tasks by commit, reviews each, reaps per-task worker and
+  reviewer tabs, and ships through an AFK PR plus bounded PR-watch.
 - Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
   orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
