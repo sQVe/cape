@@ -143,6 +143,12 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for a
 final CAPE-RUN status line; print it only at the true end.
 
+First, label this workspace so its prefix tracks overall progress: run `cape worktree start ABU-123
+--phase BUILD`, then `cape workspace phase build` -- this renames your workspace and tab to
+`🔨 ABU-123 <title>`. Advance the phase only at overall transitions (not per task): `pr` when SHIP
+starts, `done` on a clean ship, `blocked` on park. Per-task review happens in reviewer tabs and never
+touches the workspace label.
+
 ## Topology (decided -- do not re-decide)
 - Builder: claude with TDD, one tab per task, sequential, one grove epic worktree.
 - Review: separate -- a codex reviewer tab judges each task (up to 2 fix-cycles).
@@ -182,12 +188,12 @@ Omit this whole section when the field was empty.>
   `cape workspace phase blocked`, then stop.
 
 ## Finishing
-- When no ready tasks remain, SHIP: cape:finish-epic -> cape:review -> cape:pr (AFK: print the
-  description, skip the confirmation, open the PR with "Fixes ABU-123", using the CAPE_ORCHESTRATE
-  marker) -> bounded PR-watch.
-- Then, and only then, print exactly one line:
+- When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic -> cape:review
+  -> cape:pr (AFK: print the description, skip the confirmation, open the PR with "Fixes ABU-123",
+  using the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+- On a clean ship, run `cape workspace phase done`, then print exactly one line:
       CAPE-RUN ABU-123 result=shipped pr=<the real PR url> tasks_closed=<n> reason=shipped
-- On an unrecoverable blocker, stop and print:
+- On an unrecoverable blocker, run `cape workspace phase blocked`, then stop and print:
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 
