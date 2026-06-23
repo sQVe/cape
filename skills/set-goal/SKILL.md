@@ -143,6 +143,13 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for a
 final CAPE-RUN status line; print it only at the true end.
 
+First, label this workspace so its prefix tracks overall progress:
+run `cape worktree start ABU-123 --phase BUILD`, then `cape workspace phase build` -- this renames
+your workspace and tab to
+`🔨 ABU-123 <title>`. Advance the phase only at overall transitions (not per task): `pr` when SHIP
+starts, `done` on a clean ship, `blocked` on park. Per-task review happens in reviewer tabs and never
+touches the workspace label.
+
 ## Topology (decided -- do not re-decide)
 - Builder: claude with TDD, one tab per task, sequential, one grove epic worktree.
 - Review: separate -- a codex reviewer tab judges each task (up to 2 fix-cycles).
@@ -153,14 +160,16 @@ final CAPE-RUN status line; print it only at the true end.
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
-2. Spawn the builder in its own tab, labeled `🔨 <task-id> worker` (`herdr tab rename`). Give it a
-   self-contained spec; require TDD and a self-commit whose message includes the task id, e.g.
-   "(ABU-123)".
+2. Spawn the builder in its OWN TAB (not a pane split): `herdr tab create --workspace <this
+   workspace> --label "🔨 <task-id> worker"`, read `result.root_pane`, then `herdr pane run
+   <root_pane> "<builder>"`. Give it a self-contained spec; require TDD and a self-commit whose
+   message includes the task id, e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
    with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its own tab,
-   labeled `🔍 <task-id> review` (`herdr tab rename`); have it judge logic and the success criteria
+4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its OWN TAB the
+   same way (`herdr tab create --label "🔍 <task-id> review"`, then `herdr pane run` the reviewer
+   into its `root_pane`); have it judge logic and the success criteria
    only (formatting and lint are already gated). The reviewer writes its verdict to
    `.cape/review/<task-id>.json`; read the file, never grep the pane. (Self-review mode: skip the
    reviewer tab and review via `cape:review` instead.)
@@ -182,12 +191,12 @@ Omit this whole section when the field was empty.>
   `cape workspace phase blocked`, then stop.
 
 ## Finishing
-- When no ready tasks remain, SHIP: cape:finish-epic -> cape:review -> cape:pr (AFK: print the
-  description, skip the confirmation, open the PR with "Fixes ABU-123", using the CAPE_ORCHESTRATE
-  marker) -> bounded PR-watch.
-- Then, and only then, print exactly one line:
+- When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic -> cape:review
+  -> cape:pr (AFK: print the description, skip the confirmation, open the PR with "Fixes ABU-123",
+  using the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+- On a clean ship, run `cape workspace phase done`, then print exactly one line:
       CAPE-RUN ABU-123 result=shipped pr=<the real PR url> tasks_closed=<n> reason=shipped
-- On an unrecoverable blocker, stop and print:
+- On an unrecoverable blocker, run `cape workspace phase blocked`, then stop and print:
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 
@@ -220,6 +229,8 @@ reachable):
    set -euo pipefail
    readonly draft="<draft path>"
    readonly main_pane="<HERDR_PANE_ID value>"
+   readonly self="${HERDR_PANE_ID}"
+   trap 'herdr pane close "${self}" >/dev/null 2>&1 || true' EXIT
    "${EDITOR:-nvim}" "${draft}" || { echo "cancelled -- nothing sent"; exit 0; }
    cond=$(sed -n '/^## Condition/,/^## Prompt/p' "${draft}" \
      | sed '1d;/^## Prompt/d;/^[[:space:]]*$/d;s/^[[:space:]]*-[[:space:]]*//' \
@@ -239,7 +250,9 @@ reachable):
    Arming starts a turn immediately with the bare condition as directive, so `Escape` cancels that
    empty turn (the goal stays armed -- Esc interrupts only the in-flight turn); `wait output` on
    `Interrupted` confirms the cancel landed before the approach prompt is sent as the genuine first
-   directive. The watcher then evaluates normally after each turn.
+   directive. The watcher then evaluates normally after each turn. The `trap ... EXIT` closes the
+   review pane itself on every exit path (`:wq`, `:cq`, or error), so set-goal never leaves a
+   dangling editor pane in the workspace.
 
 3. Split a review pane and run the helper in it:
    - `herdr pane split --direction down --focus` -- capture the new pane id from the result.
