@@ -35,7 +35,7 @@ const workspacePhase = Command.make(
       );
     }
 
-    yield* herdr.rename('workspace', workspaceId, labels.workspace);
+    const renamed = yield* herdr.rename('workspace', workspaceId, labels.workspace);
     const tabId = herdr.tabId();
     if (tabId != null) {
       yield* herdr.rename('tab', tabId, labels.tab);
@@ -43,7 +43,7 @@ const workspacePhase = Command.make(
 
     yield* Console.log(
       JSON.stringify({
-        renamed: true,
+        renamed,
         workspace: labels.workspace,
         tab: tabId == null ? null : labels.tab,
       }),

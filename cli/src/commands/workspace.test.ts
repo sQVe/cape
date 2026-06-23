@@ -43,14 +43,14 @@ const makeHookLayer = (files: Record<string, string> = {}) =>
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
 
-const makeHerdrLayer = (workspaceId: string | null, tabId: string | null) => {
+const makeHerdrLayer = (workspaceId: string | null, tabId: string | null, renameResult = true) => {
   const renames: { kind: string; id: string; label: string }[] = [];
   const layer = Layer.succeed(HerdrService)({
     workspaceId: () => workspaceId,
     tabId: () => tabId,
     rename: (kind, id, label) => {
       renames.push({ kind, id, label });
-      return Effect.succeed(undefined);
+      return Effect.succeed(renameResult);
     },
   });
   return { layer, renames };
@@ -177,6 +177,28 @@ describe('cape workspace phase', () => {
       reason: 'unknown phase: deploy',
     });
     expect(renames).toEqual([]);
+    console_.restore();
+  });
+
+  it('reports renamed false when the herdr rename fails', async () => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1', false);
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'build']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: false,
+      workspace: '🔨 ABU-134 Surface cape workflow',
+      tab: '🔨 ABU-134',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: '🔨 ABU-134 Surface cape workflow' },
+      { kind: 'tab', id: 'tab1', label: '🔨 ABU-134' },
+    ]);
     console_.restore();
   });
 

@@ -44,6 +44,10 @@ export class HerdrService extends ServiceMap.Service<
   {
     readonly workspaceId: () => string | null;
     readonly tabId: () => string | null;
-    readonly rename: (kind: 'workspace' | 'tab', id: string, label: string) => Effect.Effect<void>;
+    readonly rename: (
+      kind: 'workspace' | 'tab',
+      id: string,
+      label: string,
+    ) => Effect.Effect<boolean>;
   }
 >()('HerdrService') {}
