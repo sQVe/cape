@@ -14,6 +14,7 @@ import {
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
 
@@ -70,6 +71,7 @@ const makeCapturingLayer = () => {
 const testLayers = (gitLayer: Layer.Layer<GitService>) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     gitLayer,
     stubDetectLayer,
     stubCheckLayer,

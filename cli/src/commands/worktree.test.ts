@@ -13,6 +13,7 @@ import {
   stubGitLayer,
   stubPrLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
 
@@ -80,6 +81,7 @@ const makeHookLayer = (
 const makeLayers = (hookLayer: Layer.Layer<HookService>) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     stubGitLayer,
     stubDetectLayer,
     stubCheckLayer,

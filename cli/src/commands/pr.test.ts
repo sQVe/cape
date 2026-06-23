@@ -19,6 +19,7 @@ import {
   stubHookLayer,
   stubConformLayer,
   stubValidateLayer,
+  stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
 
@@ -52,6 +53,7 @@ const run = Command.runWith(main, { version: '0.1.0' });
 const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     stubGitLayer,
     stubDetectLayer,
     stubCheckLayer,
@@ -378,6 +380,7 @@ const makeCreatePrLayer = (ghResult: string | Error = 'https://github.com/owner/
 const makeCreateLayers = (hookLayer = makeCreateHookLayer(), prLayer = makeCreatePrLayer()) =>
   Layer.mergeAll(
     NodeServices.layer,
+    stubHerdrLayer,
     stubGitLayer,
     stubDetectLayer,
     stubCheckLayer,
