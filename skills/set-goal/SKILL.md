@@ -159,14 +159,16 @@ touches the workspace label.
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
-2. Spawn the builder in its own tab, labeled `🔨 <task-id> worker` (`herdr tab rename`). Give it a
-   self-contained spec; require TDD and a self-commit whose message includes the task id, e.g.
-   "(ABU-123)".
+2. Spawn the builder in its OWN TAB (not a pane split): `herdr tab create --workspace <this
+   workspace> --label "🔨 <task-id> worker"`, read `result.root_pane`, then `herdr pane run
+   <root_pane> "<builder>"`. Give it a self-contained spec; require TDD and a self-commit whose
+   message includes the task id, e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
    with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its own tab,
-   labeled `🔍 <task-id> review` (`herdr tab rename`); have it judge logic and the success criteria
+4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its OWN TAB the
+   same way (`herdr tab create --label "🔍 <task-id> review"`, then `herdr pane run` the reviewer
+   into its `root_pane`); have it judge logic and the success criteria
    only (formatting and lint are already gated). The reviewer writes its verdict to
    `.cape/review/<task-id>.json`; read the file, never grep the pane. (Self-review mode: skip the
    reviewer tab and review via `cape:review` instead.)
@@ -226,6 +228,8 @@ reachable):
    set -euo pipefail
    readonly draft="<draft path>"
    readonly main_pane="<HERDR_PANE_ID value>"
+   readonly self="${HERDR_PANE_ID}"
+   trap 'herdr pane close "${self}" >/dev/null 2>&1 || true' EXIT
    "${EDITOR:-nvim}" "${draft}" || { echo "cancelled -- nothing sent"; exit 0; }
    cond=$(sed -n '/^## Condition/,/^## Prompt/p' "${draft}" \
      | sed '1d;/^## Prompt/d;/^[[:space:]]*$/d;s/^[[:space:]]*-[[:space:]]*//' \
@@ -245,7 +249,9 @@ reachable):
    Arming starts a turn immediately with the bare condition as directive, so `Escape` cancels that
    empty turn (the goal stays armed -- Esc interrupts only the in-flight turn); `wait output` on
    `Interrupted` confirms the cancel landed before the approach prompt is sent as the genuine first
-   directive. The watcher then evaluates normally after each turn.
+   directive. The watcher then evaluates normally after each turn. The `trap ... EXIT` closes the
+   review pane itself on every exit path (`:wq`, `:cq`, or error), so set-goal never leaves a
+   dangling editor pane in the workspace.
 
 3. Split a review pane and run the helper in it:
    - `herdr pane split --direction down --focus` -- capture the new pane id from the result.
