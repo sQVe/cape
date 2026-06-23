@@ -45,7 +45,9 @@ adapt to the epic. </rigidity_level>
    Linear and cache writer; follow the `cape:tracker` contract and refresh the cache after the
    write.
 4. **No sentinel, no leak protocol** -- completion is the data-carrying `CAPE-RUN` line, never a
-   constant string; do not reintroduce a fixed sentinel or a summarize-never-paste rule.
+   constant string; do not reintroduce a fixed sentinel or a summarize-never-paste rule _as leak
+   protection_. Summarizing pane output to save context budget is fine -- it just no longer guards a
+   sentinel.
 
 </critical_rules>
 
