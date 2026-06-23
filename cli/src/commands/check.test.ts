@@ -276,6 +276,48 @@ describe('resolveCheckCommands', () => {
     expect(commands).toEqual([{ label: 'vitest', command: 'pnpm', args: ['exec', 'vp', 'test'] }]);
   });
 
+  it('routes oxlint and oxfmt through vp for a vite-plus ecosystem', () => {
+    const commands = resolveCheckCommands([
+      { language: 'typescript', testFramework: 'vite-plus', linter: 'oxlint', formatter: 'oxfmt' },
+    ]);
+    expect(commands).toEqual([
+      { label: 'vitest', command: 'npx', args: ['vp', 'test'] },
+      { label: 'oxlint', command: 'npx', args: ['vp', 'lint'] },
+      { label: 'oxfmt', command: 'npx', args: ['vp', 'fmt', '--check'] },
+    ]);
+  });
+
+  it('uses pnpm exec vp lint and fmt for vite-plus with pnpm package manager', () => {
+    const commands = resolveCheckCommands(
+      [
+        {
+          language: 'typescript',
+          testFramework: 'vite-plus',
+          linter: 'oxlint',
+          formatter: 'oxfmt',
+        },
+      ],
+      'pnpm',
+    );
+    expect(commands).toEqual([
+      { label: 'vitest', command: 'pnpm', args: ['exec', 'vp', 'test'] },
+      { label: 'oxlint', command: 'pnpm', args: ['exec', 'vp', 'lint'] },
+      { label: 'oxfmt', command: 'pnpm', args: ['exec', 'vp', 'fmt', '--check'] },
+    ]);
+  });
+
+  it('keeps standalone oxlint and oxfmt when vite-plus is absent', () => {
+    const commands = resolveCheckCommands(
+      [{ language: 'typescript', testFramework: 'vitest', linter: 'oxlint', formatter: 'oxfmt' }],
+      'pnpm',
+    );
+    expect(commands).toEqual([
+      { label: 'vitest', command: 'pnpm', args: ['exec', 'vitest', 'run'] },
+      { label: 'oxlint', command: 'pnpm', args: ['exec', 'oxlint'] },
+      { label: 'oxfmt', command: 'pnpm', args: ['exec', 'oxfmt', '--check'] },
+    ]);
+  });
+
   it('uses pnpm exec for vitest with pnpm package manager', () => {
     const commands = resolveCheckCommands(
       [{ language: 'typescript', testFramework: 'vitest', linter: null, formatter: null }],
