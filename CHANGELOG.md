@@ -10,10 +10,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Skills: added `cape:set-goal`, an interview-first front end that drafts an autonomous
-  BUILD-and-SHIP run for an epic and prints it for review -- a `/goal` completion condition plus an
-  approach prompt the user edits and launches. It never starts the run itself; the real `/goal`
-  session drives the loop, verifying tasks by commit, reviewing each, and shipping through an AFK PR
-  plus bounded PR-watch.
+  BUILD-and-SHIP run for an epic and stages it for review -- a `/goal` completion condition plus an
+  approach prompt. A four-question interview (builder, TDD, review, free-text run instructions)
+  shapes the run and auto-derives task source from the cache. In a herdr workspace set-goal types
+  the draft into your pane (arming `/goal`, leaving the approach prompt unsubmitted for a one-Enter
+  launch); otherwise it prints the blocks. It never presses the final Enter. The emitted run
+  verifies tasks by commit, reviews each, reaps per-task worker and reviewer tabs, and ships through
+  an AFK PR plus bounded PR-watch.
 - Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
   orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
