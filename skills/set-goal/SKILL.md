@@ -225,15 +225,21 @@ reachable):
      | sed '1d;/^## Prompt/d;/^[[:space:]]*$/d;s/^[[:space:]]*-[[:space:]]*//' \
      | tr '\n' ' ' | tr -s ' ')
    prompt=$(sed -n '/^## Prompt/,$p' "${draft}" | sed '1d')
-   herdr pane send-text "${main_pane}" "/goal ${cond}"
-   herdr pane send-keys "${main_pane}" Enter
-   herdr pane send-text "${main_pane}" "${prompt}"
-   herdr pane send-keys "${main_pane}" Enter
+   herdr pane run "${main_pane}" "/goal ${cond}"
+   herdr wait output "${main_pane}" --match "Goal set:" --timeout 15000
+   herdr pane send-keys "${main_pane}" Escape
+   herdr wait output "${main_pane}" --match "Interrupted" --timeout 10000
+   herdr pane run "${main_pane}" "${prompt}"
    echo "launched"
    ```
 
-   `:wq` (exit 0) runs the launch; `:cq` (exit 1) hits the `||` and cancels. `/goal` arms only here,
-   in the same beat the prompt is submitted, so the watcher never loops on an empty run.
+   `:wq` (exit 0) runs the launch; `:cq` (exit 1) hits the `||` and cancels. `/goal` arms only here.
+   `pane run` submits the condition and its Enter atomically; `wait output` on `Goal set:` confirms
+   the arm before anything else, so the condition and prompt never merge into one over-length input.
+   Arming starts a turn immediately with the bare condition as directive, so `Escape` cancels that
+   empty turn (the goal stays armed -- Esc interrupts only the in-flight turn); `wait output` on
+   `Interrupted` confirms the cancel landed before the approach prompt is sent as the genuine first
+   directive. The watcher then evaluates normally after each turn.
 
 3. Split a review pane and run the helper in it:
    - `herdr pane split --direction down --focus` -- capture the new pane id from the result.
