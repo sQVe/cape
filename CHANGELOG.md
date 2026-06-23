@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- CI: added `.github/workflows/ci.yml`, gating the repo on push to `main` and on pull requests
+  targeting `main`. A blocking `check` job runs `format:check`, `lint`, and `typecheck`; a blocking
+  `test` job runs the suite; and a non-blocking, PR-only `fallow` job reports code-health findings
+  with `gate: new-only` and a comment, never blocking merge. Node 22 with a pnpm cache and
+  frozen-lockfile installs; concurrency cancels superseded runs per ref; all third-party actions are
+  pinned by commit SHA.
 - Skills: added `cape:set-goal`, an interview-first front end that drafts an autonomous
   BUILD-and-SHIP run for an epic and stages it for review -- a `/goal` completion condition plus an
   approach prompt. A four-question interview (builder, TDD, review, free-text run instructions)

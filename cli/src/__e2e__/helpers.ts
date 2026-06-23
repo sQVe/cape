@@ -36,6 +36,11 @@ export const initTestRepo = (prefix = 'cape-repo'): string => {
     timeout: 5_000,
   }).trim();
   execFileSync('git', ['init', '-b', 'main', dir], { timeout: 5_000 });
+  // Give the repo its own identity so in-process commands (which run git with
+  // the ambient env, not GIT_ENV) commit without depending on a global config.
+  execFileSync('git', ['-C', dir, 'config', 'user.name', 'test'], { timeout: 5_000 });
+  execFileSync('git', ['-C', dir, 'config', 'user.email', 'test@test.com'], { timeout: 5_000 });
+  execFileSync('git', ['-C', dir, 'config', 'commit.gpgsign', 'false'], { timeout: 5_000 });
   execFileSync(
     'git',
     ['-C', dir, '-c', 'commit.gpgsign=false', 'commit', '--allow-empty', '-m', 'initial'],
