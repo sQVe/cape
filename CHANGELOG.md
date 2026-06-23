@@ -9,9 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Skills: added `cape:orchestrate`, an autonomous BUILD-and-SHIP driver that runs a herdr worker and
-  codex reviewer per task, verifies commits, recovers stalled or dead workers, and ships through an
-  AFK PR plus bounded PR-watch.
+- Skills: added `cape:set-goal`, an interview-first front end that drafts an autonomous
+  BUILD-and-SHIP run for an epic and prints it for review -- a `/goal` completion condition plus an
+  approach prompt the user edits and launches. It never starts the run itself; the real `/goal`
+  session drives the loop, verifying tasks by commit, reviewing each, and shipping through an AFK PR
+  plus bounded PR-watch.
 - Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
   orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
