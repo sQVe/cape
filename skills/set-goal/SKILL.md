@@ -147,35 +147,41 @@ First, label this workspace so its prefix tracks overall progress:
 run `cape worktree start ABU-123 --phase BUILD`, then `cape workspace phase build` -- this renames
 your workspace and tab to
 `🔨 ABU-123 <title>`. Advance the phase only at overall transitions (not per task): `pr` when SHIP
-starts, `done` on a clean ship, `blocked` on park. Per-task review happens in reviewer tabs and never
-touches the workspace label.
+starts, `done` on a clean ship, `blocked` on park. Per-task work happens in the task's own tab and
+never touches the workspace label.
 
 ## Topology (decided -- do not re-decide)
-- Builder: claude with TDD, one tab per task, sequential, one grove epic worktree.
-- Review: separate -- a codex reviewer tab judges each task (up to 2 fix-cycles).
+- Builder: claude with TDD, sequential, one grove epic worktree.
+- Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
+  created when it starts. The task's worker, reviewer, and any QA run as panes split inside that one
+  tab -- same task, same box.
+- Review: separate -- a codex reviewer pane in the task's tab judges each task (up to 2 fix-cycles).
 - Task source: execute the planned tasks in dependency order; respect Linear blocking relations and
   the dependency notes in task descriptions. Do not invent tasks.
-- Reap tabs: when a task closes, close its worker and reviewer tabs. Never accumulate panes.
+- Reap: when a task closes, close its tab -- one `herdr tab close` reaps all its panes. Never
+  accumulate tabs or panes.
 
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
    descriptions, not just next-ready. (Lazy mode: create the next task one ahead instead.)
-2. Spawn the builder in its OWN TAB (not a pane split): `herdr tab create --workspace <this
-   workspace> --label "🔨 <task-id> worker"`, read `result.root_pane`, then `herdr pane run
-   <root_pane> "<builder>"`. Give it a self-contained spec; require TDD and a self-commit whose
-   message includes the task id, e.g. "(ABU-123)".
+2. Open the task's tab (its box): `herdr tab create --workspace <this workspace> --label
+   "<task-id> <short-title>"`, read `result.root_pane`. Run the builder in that root pane and label
+   it: `herdr pane run <root_pane> "<builder>"`, then `herdr pane rename <root_pane> "🔨 worker"`.
+   Give it a self-contained spec; require TDD and a self-commit whose message includes the task id,
+   e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
    with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then spawn the codex reviewer in its OWN TAB the
-   same way (`herdr tab create --label "🔍 <task-id> review"`, then `herdr pane run` the reviewer
-   into its `root_pane`); have it judge logic and the success criteria
-   only (formatting and lint are already gated). The reviewer writes its verdict to
-   `.cape/review/<task-id>.json`; read the file, never grep the pane. (Self-review mode: skip the
-   reviewer tab and review via `cape:review` instead.)
-5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker), CLOSE its
-   worker and reviewer tabs (`herdr tab close <tab>`), refresh the cache, and move to the next task
-   (lazy mode: create it one ahead first).
+4. Gate, then review: run `cape conform` yourself, then add the codex reviewer as a pane in the SAME
+   task tab: `herdr pane split <root_pane> --direction down` (capture the new pane id),
+   `herdr pane run <reviewer-pane> "<reviewer>"`, `herdr pane rename <reviewer-pane> "🔍 review"`.
+   Have it judge logic and the success criteria only (formatting and lint are already gated). The
+   reviewer writes its verdict to `.cape/review/<task-id>.json`; read the file, never grep the pane.
+   (Self-review mode: skip the reviewer pane and review via `cape:review` instead.)
+5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker), close the
+   task's tab (`herdr tab close <task-tab>`) -- one close reaps the worker, reviewer, and any QA
+   panes together -- refresh the cache, and move to the next task (lazy mode: create it one ahead
+   first).
 6. Report each turn as ONE short line (committed SHA, verdict). Summarize; do not paste raw panes --
    for context budget.
 
@@ -287,8 +293,9 @@ set-goal stages the draft but never launches; the human's `:wq` does.
 <example>
 <scenario>User runs `/cape:set-goal ABU-101`</scenario>
 
-**Wrong:** Immediately spawn a worker tab, or arm `/goal` during staging -- recreating the fragile
-fire-and-forget loop, or kicking off the watcher before any run exists so it loops on nothing.
+**Wrong:** Immediately spawn a task tab or worker pane, or arm `/goal` during staging -- recreating
+the fragile fire-and-forget loop, or kicking off the watcher before any run exists so it loops on
+nothing.
 
 **Right:** Orient from the cache, run the four-question interview, render the draft, and open it in
 a split editor (temp file plus path outside herdr). The run launches only when the human `:wq`s;
