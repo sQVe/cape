@@ -11,14 +11,15 @@ description: >
   interactive PLAN exploration with a human in the loop (cape:brainstorm / cape:write-plan).
 ---
 
-<skill_overview> Interview an epic into a reviewable `/goal` draft, print it, and stop. The draft is
-two paste-blocks: a `/goal` completion condition and an approach prompt that primes an autonomous
-BUILD-and-SHIP run. Core contract: set-goal only prints -- it never launches `/goal`, spawns a
-worker, or writes code. The human reviews, edits, and runs. </skill_overview>
+<skill_overview> Interview an epic into a reviewable `/goal` draft and stage it for launch. The
+draft is two blocks: a `/goal` completion condition and an approach prompt that primes an autonomous
+BUILD-and-SHIP run. In a herdr workspace set-goal types both into your pane (arming the goal,
+leaving the prompt unsubmitted); otherwise it prints them. Core contract: set-goal stages but never
+presses the final Enter -- the human reviews, edits, and launches. </skill_overview>
 
-<rigidity_level> LOW FREEDOM -- The print-only boundary, the two-block output shape, and the paired
-`CAPE-RUN` line and condition are fixed; the interview defaults and the approach-prompt wording
-adapt to the epic. </rigidity_level>
+<rigidity_level> LOW FREEDOM -- The stage-not-start boundary, the two-block output shape, and the
+paired `CAPE-RUN` line and condition are fixed; the interview defaults and the approach-prompt
+wording adapt to the epic. </rigidity_level>
 
 <when_to_use>
 
@@ -36,8 +37,9 @@ adapt to the epic. </rigidity_level>
 
 <critical_rules>
 
-1. **Print, never run** -- set-goal prints a draft and stops. It never launches `/goal`, spawns a
-   worker, or commits. The human pastes and runs.
+1. **Stage, never start** -- set-goal drafts a run and stages it (in herdr it arms the `/goal` goal
+   and types the approach prompt into the pane); it never presses the final Enter, spawns a worker,
+   or commits. The human launches.
 2. **Two blocks, one pair** -- emit the `/goal` condition and the approach prompt as separate
    copy-bounded blocks, generated as a pair so the prompt's final `CAPE-RUN` line and the condition
    always match.
@@ -186,17 +188,26 @@ free-text field was empty.
 
 ---
 
-## Step 4: Edit loop, then stop
+## Step 4: Edit loop, then launch
 
 Offer **Run / Edit / Cancel** with `AskUserQuestion`:
 
-- **Run** -- print "Copy the two blocks above and launch them." Then stop. set-goal does not
-  execute.
+- **Run** -- stage the run, then stop. set-goal never presses the final Enter; the human launches.
+  - **In a herdr workspace** (`HERDR_ENV=1`), inject into the current pane (`$HERDR_PANE_ID`):
+    1. Collapse Block 1 to a single line, then
+       `herdr pane send-text $HERDR_PANE_ID "/goal <one-line condition>"` followed by
+       `herdr pane send-keys $HERDR_PANE_ID Enter` to arm the goal.
+    2. `herdr pane send-text $HERDR_PANE_ID "<approach prompt>"` -- the multiline prompt lands in
+       the input box unsubmitted (verified: `send-text` does not auto-submit on newlines, and the
+       goal arms even while this turn is still running).
+    3. Print one line -- "Goal armed; the approach prompt is in your input box, review and press
+       Enter to launch" -- then end the turn.
+  - **Outside herdr**, print the two blocks and "Copy them and launch them yourself," then stop.
 - **Edit** -- apply the named deltas, re-render the entire draft from the top (never patch a single
   line), and offer the gate again.
 - **Cancel** -- stop; nothing was touched.
 
-Loop until Run or Cancel. set-goal never launches `/goal` itself.
+Loop until Run or Cancel. set-goal stages the run but never presses the final Enter.
 
 </the_process>
 
@@ -221,8 +232,9 @@ Loop until Run or Cancel. set-goal never launches `/goal` itself.
 **Wrong:** Immediately spawn a worker tab or start a `/goal` session -- recreating the fragile
 fire-and-forget loop the user can no longer review.
 
-**Right:** Orient from the cache, run the four-question interview, print the two paste-blocks, and
-stop. The user pastes Block 1 into `/goal` and sends Block 2 to launch the run. </example>
+**Right:** Orient from the cache, run the four-question interview, render the draft, and on Run
+stage it -- in herdr, arm `/goal` and type the approach prompt into the pane for a one-Enter launch;
+otherwise print the blocks to copy. Never press the final Enter yourself. </example>
 
 <example>
 <scenario>After the draft prints, the user says "review: self-review only"</scenario>
