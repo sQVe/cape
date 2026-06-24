@@ -132,7 +132,9 @@ this branch. Write to that reader:
 - **Name behavior, not the diff** — say what the code now does, not which symbols moved. No dumps of
   type signatures or function names (`FieldDescriptor<E,V,C>`, `compareByField`); those live in the
   diff. Mention an identifier only when the reviewer needs that exact name to find something.
-- **Hyperlink every tracker id** (`[ABU-12](https://linear.app/...)`), matching repo PR style.
+- **Hyperlink tracker ids in prose** (`[ABU-12](https://linear.app/...)`), matching repo PR style.
+  Leave the closing `Fixes ABU-XX` / `Related to ABU-XX` line plain — the integration parses the
+  bare id, and a link there can break the close.
 - **Be short.** A reviewer skims this before reading code. Cut exhaustive enumerations.
 
 **Section guidelines:**
@@ -146,6 +148,9 @@ this branch. Write to that reader:
   none
 - **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
   backend changes
+- **Deferred verification:** acceptance checks that need a deployed env and could not run pre-merge
+  (see `cape:finish-epic` `[~]`) — list explicitly as not-yet-done, verify post-merge. Distinct from
+  Manual verification; never mark these done.
 - **Issues:** reference the epic with a closing keyword and Linear identifier (`Fixes ABU-XX`) so
   Linear's GitHub integration links and closes it; use `Related to ABU-XX` for non-closing links
 
@@ -167,8 +172,9 @@ approve. Print the full PR (title, description, automatable items) to the transc
 PR is on record, skip `AskUserQuestion`, then run the test-plan gate and `cape pr create` as on
 approval below. The interactive path below is unchanged when the marker is absent.
 
-No human edits the body before it ships, so the step 5 quality bar and stop-slop are not optional —
-nothing downstream catches a slop description. Two AFK-only rules on top of that bar:
+No human edits the body before it ships, so the step 5 quality bar applies in full and stop-slop
+runs on the body — the "mechanical output" skip never applies, since an AFK PR description is always
+prose. Nothing downstream catches a slop description. Two AFK-only rules on top of that bar:
 
 - **Never write the `CAPE_ORCHESTRATE` marker, or any robot signature/emoji, into the PR title or
   body.** It is an input/hook signal only — it must not leak into what reviewers read.

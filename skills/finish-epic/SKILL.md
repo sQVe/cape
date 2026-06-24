@@ -86,9 +86,10 @@ verification is behavioral (UI flow, deployed endpoint) and that **could not be 
 not deployed, no preview env — is `[~]` DEFERRED, never `[x]`. Verify it on a branch preview deploy
 if one exists; otherwise it stays deferred. Do not launder a deferral into a met criterion.
 
-`[~]` does not block hand-off, but every deferred criterion MUST be carried into the PR's manual-
-verification section verbatim as "not yet done — verify post-merge." `cape:pr` must not present a
-deferred criterion as verified.
+`[~]` does not block hand-off, but every deferred criterion MUST be carried into the PR's **Deferred
+verification** section (the `cape:pr` section for env-dependent checks) verbatim as "not yet done —
+verify post-merge." Do not put it under Manual verification (subjective judgment only). `cape:pr`
+must not present a deferred criterion as verified.
 
 If any criterion is `[ ]` NOT MET, stop and recommend the next task to create through
 `cape:execute-plan`. Do not hand off.
