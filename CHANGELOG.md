@@ -98,6 +98,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: removed the orphaned epic-template.md and a stale elements-of-style prose reference.
 - Tooling: removed Prettier in favor of oxfmt.
 
+### Fixed
+
+- Hooks: the push gate now resolves the current branch from the hook payload's `cwd` instead of the
+  hook process cwd, so a `git push` from a feature-branch worktree is no longer blocked when the
+  session sits on the default branch. The branch-vs-default-branch check now lives in one shared
+  `resolveBranchInfo` helper used by the push gate, the execute-plan nudge, and `cape pr`.
+
 ## [1.3.0] - 2026-03-26
 
 ### Added
