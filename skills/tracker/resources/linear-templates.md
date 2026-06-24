@@ -102,7 +102,6 @@ flowchart LR
     C -->|No| E[Error or recovery]
     D --> F[Final state]
 ```
-````
 
 ## Required constraints
 
@@ -142,11 +141,10 @@ flowchart LR
 | --------- | -------- | ---------- |
 | [Slice 1] | R1, R3   | [Boundary] |
 | [Slice 2] | R2       | [Boundary] |
-
 ````
 
-The work breakdown is a non-binding sketch; do not pre-create these as sub-issues. `cape:execute-plan`
-creates each one lazily, after the previous task reveals what it should be.
+The work breakdown is a non-binding sketch; do not pre-create these as sub-issues.
+`cape:execute-plan` creates each one lazily, after the previous task reveals what it should be.
 
 ## Task
 
@@ -178,7 +176,7 @@ Done when: [load-bearing completion condition]
 ## References
 
 - [file:line — verified pattern or helper]
-````
+```
 
 ## Bug
 
