@@ -78,10 +78,10 @@ Create a Linear bug issue for this fix?
 ```
 
 After approval, load `cape:tracker` and apply its Agent contract for create-time rules: dedupe,
-labels (this is a bug — `type:bug`), priority, a `Fix <symptom>` title, and `Done when:`. Use MCP
-Linear `save_issue` to create the bug issue. Include root cause, evidence, reproduction steps,
-expected behavior, actual behavior, suggested fix, and success criteria in the description. Then
-refresh the cache. If the bug belongs under an epic, refresh the parent epic:
+labels (this is a bug — `type:bug` plus `agent-ticket`), priority, a `Fix <symptom>` title, and
+`Done when:`. Use MCP Linear `save_issue` to create the bug issue. Include root cause, evidence,
+reproduction steps, expected behavior, actual behavior, suggested fix, and success criteria in the
+description. Then refresh the cache. If the bug belongs under an epic, refresh the parent epic:
 
 ```bash
 cape tracker cache-epic '<linear-epic-json-with-bug-child>'
