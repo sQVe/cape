@@ -155,7 +155,8 @@ this branch. Write to that reader:
   integration links AND closes the epic on merge. Use `Related to ABU-XX` (non-closing) ONLY when
   this PR does not complete the epic — more PRs or a live cutover still pending. A non-closing link
   moves the issue through pre-merge statuses but never closes it; that is the usual reason an epic
-  stays open after its PR merges. Never put both keywords on the same id.
+  stays open after its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`,
+  `implement` (and their tenses). Never put both keywords on the same id.
 
 If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
