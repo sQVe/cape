@@ -901,6 +901,23 @@ describe('preToolUseBash', () => {
       ]);
     });
 
+    it('treats an empty payload cwd as missing and falls back to the process cwd', async () => {
+      const seenCwds: Array<string | undefined> = [];
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push origin main', ''),
+        spawnGit: (args, cwd) => {
+          seenCwds.push(cwd);
+          const key = args.join(' ');
+          return Effect.succeed(key.includes('rev-parse') ? 'main' : 'refs/remotes/origin/main');
+        },
+      });
+
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+
+      expectDeny(result, 'Push from `main` is blocked');
+      expect(seenCwds).toEqual([undefined, undefined]);
+    });
+
     it('allows push from feature branch', async () => {
       const layer = makeStubHookLayer({
         stdin: bashStdin('git push origin feat/foo'),
