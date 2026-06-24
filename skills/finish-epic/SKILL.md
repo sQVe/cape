@@ -77,12 +77,22 @@ Present a checklist:
 Success criteria audit - <epic-id>
 
 [x] Criterion 1 - Evidence: <proof>
-[x] Criterion 2 - Evidence: <proof>
+[~] Criterion 2 - DEFERRED: <behavioral check that could not run live, e.g. UI on an undeployed branch>
 [ ] Criterion 3 - NOT MET: <gap>
 ```
 
-If any criterion is not met, stop and recommend the next task to create through `cape:execute-plan`.
-Do not hand off.
+Evidence honesty: mark `[x]` only with evidence the run actually produced. A criterion whose only
+verification is behavioral (UI flow, deployed endpoint) and that **could not be exercised** — branch
+not deployed, no preview env — is `[~]` DEFERRED, never `[x]`. Verify it on a branch preview deploy
+if one exists; otherwise it stays deferred. Do not launder a deferral into a met criterion.
+
+`[~]` does not block hand-off, but every deferred criterion MUST be carried into the PR's **Deferred
+verification** section (the `cape:pr` section for env-dependent checks) verbatim as "not yet done —
+verify post-merge." Do not put it under Manual verification (subjective judgment only). `cape:pr`
+must not present a deferred criterion as verified.
+
+If any criterion is `[ ]` NOT MET, stop and recommend the next task to create through
+`cape:execute-plan`. Do not hand off.
 
 ---
 

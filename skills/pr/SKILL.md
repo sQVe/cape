@@ -123,11 +123,24 @@ found, use this bundled template — match the sections and heading levels exact
 
 **Title:** conventional commit format — `type(scope): subject`
 
+**Quality bar (every PR, not just AFK):** the body is for a reviewer who knows the domain but not
+this branch. Write to that reader:
+
+- **Organize by what changed** — group by area / module / feature, in plain language. NEVER by how
+  the work was sharded: no `T0 (XYZ-1)` per-task or per-issue-id bullet structure, no per-task test
+  counts. The reviewer does not care how the work was split.
+- **Name behavior, not the diff** — say what the code now does, not which symbols moved. No dumps of
+  type signatures or function names (`FieldDescriptor<E,V,C>`, `compareByField`); those live in the
+  diff. Mention an identifier only when the reviewer needs that exact name to find something.
+- **Hyperlink tracker ids in prose** (`[ABU-12](https://linear.app/...)`), matching repo PR style.
+  Leave the closing `Fixes ABU-XX` / `Related to ABU-XX` line plain — the integration parses the
+  bare id, and a link there can break the close.
+- **Be short.** A reviewer skims this before reading code. Cut exhaustive enumerations.
+
 **Section guidelines:**
 
-- Write as if explaining to a colleague who knows the domain but not this code
 - **Motivation:** why this change, why now (1-3 sentences)
-- **Changes:** what was implemented with technical details
+- **Changes:** what the change does, in reviewer terms — behavior and scope, not an identifier list
 - **Test plan (checkboxes):** commands to run NOW, before PR creation (e.g., `npm test`,
   `curl localhost:3000/api`) — these are the gate
 - **Verification performed:** tests already run during development — evidence, not promises
@@ -135,6 +148,9 @@ found, use this bundled template — match the sections and heading levels exact
   none
 - **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
   backend changes
+- **Deferred verification:** acceptance checks that need a deployed env and could not run pre-merge
+  (see `cape:finish-epic` `[~]`) — list explicitly as not-yet-done, verify post-merge. Distinct from
+  Manual verification; never mark these done.
 - **Issues:** reference the epic with a closing keyword and Linear identifier (`Fixes ABU-XX`) so
   Linear's GitHub integration links and closes it; use `Related to ABU-XX` for non-closing links
 
@@ -155,6 +171,15 @@ prose through it; skip this for pure code or mechanical output.
 approve. Print the full PR (title, description, automatable items) to the transcript so the opened
 PR is on record, skip `AskUserQuestion`, then run the test-plan gate and `cape pr create` as on
 approval below. The interactive path below is unchanged when the marker is absent.
+
+No human edits the body before it ships, so the step 5 quality bar applies in full and stop-slop
+runs on the body — the "mechanical output" skip never applies, since an AFK PR description is always
+prose. Nothing downstream catches a slop description. Two AFK-only rules on top of that bar:
+
+- **Never write the `CAPE_ORCHESTRATE` marker, or any robot signature/emoji, into the PR title or
+  body.** It is an input/hook signal only — it must not leak into what reviewers read.
+- **Do not narrate the run.** The body describes the change, not the orchestration that produced it
+  (no task graph, no agent/review-pass mentions).
 
 Output the full PR:
 
