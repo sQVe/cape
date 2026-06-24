@@ -50,6 +50,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- PR: the issue-linking guidance now defaults to a closing keyword (`Fixes ABU-XX`) so the epic
+  auto-closes on merge, and reserves `Related to ABU-XX` for PRs that do not complete the epic. The
+  template placeholder no longer pairs both keywords on one line, which had produced non-closing
+  epic links that left merged epics open.
 - Set-goal: the emitted autonomous run now gates each task on conventions and the commit message,
   not just the reviewer verdict. `cape conform` findings are a fix-cycle the same as a reviewer
   FAIL, the commit-verify step checks for conventional format plus the task id, and the codex
