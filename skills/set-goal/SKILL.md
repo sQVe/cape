@@ -173,17 +173,20 @@ never touches the workspace label.
    e.g. "(ABU-123)".
 3. Verify by GIT, not status: a task advances only on a new commit on the epic branch
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
-   with no new commit is a stall, not success.
-4. Gate, then review: run `cape conform` yourself, then add the codex reviewer as a pane in the SAME
-   task tab: `herdr pane split <root_pane> --direction down` (capture the new pane id),
-   `herdr pane run <reviewer-pane> "<reviewer>"`, `herdr pane rename <reviewer-pane> "🔍 review"`.
-   Have it judge logic and the success criteria only (formatting and lint are already gated). The
-   reviewer writes its verdict to `.cape/review/<task-id>.json`; read the file, never grep the pane.
-   (Self-review mode: skip the reviewer pane and review via `cape:review` instead.)
-5. On FAIL: bounded fix cycles (<= 2), then park. On PASS: close the task (cape:tracker), close the
-   task's tab (`herdr tab close <task-tab>`) -- one close reaps the worker, reviewer, and any QA
-   panes together -- refresh the cache, and move to the next task (lazy mode: create it one ahead
-   first).
+   with no new commit is a stall, not success. Check the commit message too: conventional format and
+   the task id (e.g. "(ABU-123)"); a malformed message is a fix-cycle, not a pass.
+4. Gate, then review: run `cape conform` yourself and treat its convention findings as a task gate --
+   unaddressed violations are a fix-cycle, same as a reviewer FAIL. Then add the codex reviewer as a
+   pane in the SAME task tab: `herdr pane split <root_pane> --direction down` (capture the new pane
+   id), `herdr pane run <reviewer-pane> "<reviewer>"`, `herdr pane rename <reviewer-pane> "🔍 review"`.
+   Have it judge logic and the success criteria only (tests, typecheck, fallow, and conform are
+   already gated). The reviewer writes its verdict to `.cape/review/<task-id>.json`; read the file,
+   never grep the pane. (Self-review mode: skip the reviewer pane and review via `cape:review`
+   instead.)
+5. On FAIL (reviewer verdict or unresolved conform findings): bounded fix cycles (<= 2), then park.
+   On PASS: close the task (cape:tracker), close the task's tab (`herdr tab close <task-tab>`) -- one
+   close reaps the worker, reviewer, and any QA panes together -- refresh the cache, and move to the
+   next task (lazy mode: create it one ahead first).
 6. Report each turn as ONE short line (committed SHA, verdict). Summarize; do not paste raw panes --
    for context budget.
 

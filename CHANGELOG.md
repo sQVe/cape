@@ -50,6 +50,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Set-goal: the emitted autonomous run now gates each task on conventions and the commit message,
+  not just the reviewer verdict. `cape conform` findings are a fix-cycle the same as a reviewer
+  FAIL, the commit-verify step checks for conventional format plus the task id, and the codex
+  reviewer brief lists conform among the already-gated checks so style ownership reads as
+  intentional.
 - Agents: consolidated to 5; merged bug-tracer, test-auditor, and notebox-researcher into
   codebase-investigator modes.
 - Skills: folded standalone bug diagnosis into fix-bug as a loop-first diagnosis gate.
