@@ -202,6 +202,12 @@ Omit this whole section when the field was empty.>
 - When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic -> cape:review
   -> cape:pr (AFK: print the description, skip the confirmation, open the PR with "Fixes ABU-123",
   using the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+- Bounded PR-watch: poll CI; once green, poll PR review comments. For a valid one, fix it (spawn a
+  worker, verify the commit, re-review, push), then resolve that review thread with a reply citing
+  the fix commit. For an invalid / out-of-scope one, reply with a one-line reason and leave it
+  unresolved. An unresolved thread must mean still-open: never leave a thread you fixed unresolved,
+  never resolve one you did not fix. Resolve via the GraphQL `resolveReviewThread` mutation -- `gh
+  pr` has no resolve verb.
 - On a clean ship, run `cape workspace phase done`, then print exactly one line:
       CAPE-RUN ABU-123 result=shipped pr=<the real PR url> tasks_closed=<n> reason=shipped
 - On an unrecoverable blocker, run `cape workspace phase blocked`, then stop and print:
