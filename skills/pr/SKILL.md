@@ -151,8 +151,11 @@ this branch. Write to that reader:
 - **Deferred verification:** acceptance checks that need a deployed env and could not run pre-merge
   (see `cape:finish-epic` `[~]`) — list explicitly as not-yet-done, verify post-merge. Distinct from
   Manual verification; never mark these done.
-- **Issues:** reference the epic with a closing keyword and Linear identifier (`Fixes ABU-XX`) so
-  Linear's GitHub integration links and closes it; use `Related to ABU-XX` for non-closing links
+- **Issues:** default to a closing keyword + Linear identifier (`Fixes ABU-XX`) so Linear's GitHub
+  integration links AND closes the epic on merge. Use `Related to ABU-XX` (non-closing) ONLY when
+  this PR does not complete the epic — more PRs or a live cutover still pending. A non-closing link
+  moves the issue through pre-merge statuses but never closes it; that is the usual reason an epic
+  stays open after its PR merges. Never put both keywords on the same id.
 
 If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If

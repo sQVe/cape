@@ -42,7 +42,11 @@
 
 ---
 
-Fixes ABU-XX Related to ABU-XX
+<!-- DEFAULT: `Fixes ABU-XX` so the epic auto-closes on merge. Use `Related to ABU-XX`
+     ONLY when this PR does not complete the epic (more PRs or a live cutover still pending).
+     Pick one keyword per issue — never both on the same id. -->
+
+Fixes ABU-XX
 ```
 
 ## Section guidelines
@@ -53,9 +57,13 @@ Fixes ABU-XX Related to ABU-XX
 - **Verification performed**: Evidence of testing already done during development
 - **Deployment notes**: Operational steps for deployers (optional, omit if none)
 - **Manual verification**: Subjective human judgment only (optional, often omitted)
-- **Issues**: Reference the Linear epic by its identifier — `Fixes ABU-XX` to close it on merge, or
-  `Related to ABU-XX` for a non-closing link. Linear's GitHub integration links and closes by Linear
-  identifier, not GitHub issue number
+- **Issues**: Reference the Linear epic by its identifier. **Default to a closing keyword**
+  (`Fixes ABU-XX`) so the epic auto-closes on merge. Use a non-closing keyword (`Related to ABU-XX`)
+  ONLY when this PR does not complete the epic — more PRs or a live cutover still pending. A
+  non-closing link still moves the issue through pre-merge statuses but never closes it, which is
+  the most common reason an epic stays open after its PR merges. Closing keywords: `close`, `fix`,
+  `resolve`, `complete`, `implement` (and their tenses). Linear links and closes by Linear
+  identifier, not GitHub issue number.
 
 ## Test plan format
 
