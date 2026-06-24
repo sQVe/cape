@@ -62,9 +62,10 @@ latest MCP result already available in session. Do not depend on the CLI for net
 
 ---
 
-## Step 2: Audit Success Criteria
+## Step 2: Audit Acceptance Criteria
 
-Read the epic contract from session context. For each success criterion, find concrete evidence:
+Read the epic contract from session context. For each acceptance criterion (each tied to an R-ID),
+find concrete evidence:
 
 - Passing test output
 - File or diff evidence
@@ -74,7 +75,7 @@ Read the epic contract from session context. For each success criterion, find co
 Present a checklist:
 
 ```text
-Success criteria audit - <epic-id>
+Acceptance criteria audit - <epic-id>
 
 [x] Criterion 1 - Evidence: <proof>
 [~] Criterion 2 - DEFERRED: <behavioral check that could not run live, e.g. UI on an undeployed branch>
@@ -105,7 +106,7 @@ capture output without filling the main context.
 If checks fail, report the failing command and stop. Do not hand off.
 
 Dispatch `cape:code-reviewer` for non-trivial epics. Pass the epic contract and branch diff; the
-reviewer judges the delivered code against requirements and anti-patterns.
+reviewer judges the delivered code against the R-IDs and required constraints.
 
 ---
 
