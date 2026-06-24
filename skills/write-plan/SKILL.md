@@ -102,8 +102,8 @@ constraints, anti-patterns, success criteria, and architecture. The epic itself 
 parent.
 
 Use MCP Linear `save_issue` again to create exactly one child/sub-issue under the epic for the first
-task. Apply exactly one task `type:*` label from the tracker contract. Put only task-level details
-in the task description.
+task. Apply the sub-issue labels from the tracker contract: exactly one `type:*` label plus
+`agent-ticket`. Put only task-level details in the task description.
 
 After the writes, refresh the local cache. Preferred path:
 
