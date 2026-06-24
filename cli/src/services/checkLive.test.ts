@@ -112,5 +112,28 @@ describe('CheckServiceLive', () => {
         stdio: ['pipe', 'pipe', 'pipe'],
       });
     });
+
+    it('wraps non-Error execution failures', async () => {
+      mockExistsSync.mockReturnValue(false);
+      mockSpawnSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* CheckService;
+            yield* service.runChecks([
+              {
+                language: 'go',
+                testFramework: 'go-test',
+                linter: null,
+                formatter: null,
+              },
+            ]);
+          }),
+        ),
+      ).rejects.toThrow('check execution failed');
+    });
   });
 });

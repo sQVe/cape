@@ -86,6 +86,21 @@ describe('PrServiceLive', () => {
       ).rejects.toThrow('read failed');
       expect(mockReadFileUtf8).toHaveBeenCalledWith('/repo/missing.md');
     });
+
+    it('wraps non-Error throws with the path in the message', async () => {
+      mockReadFileUtf8.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* PrService;
+            yield* service.readFile('/repo/missing.md');
+          }),
+        ),
+      ).rejects.toThrow('failed to read file: /repo/missing.md');
+    });
   });
 
   describe('readStdin', () => {
@@ -117,6 +132,21 @@ describe('PrServiceLive', () => {
         ),
       ).rejects.toThrow('stdin failed');
       expect(mockReadFileSync).toHaveBeenCalledWith('/dev/stdin', 'utf-8');
+    });
+
+    it('wraps non-Error stdin failures', async () => {
+      mockReadFileSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* PrService;
+            yield* service.readStdin();
+          }),
+        ),
+      ).rejects.toThrow('failed to read stdin');
     });
   });
 

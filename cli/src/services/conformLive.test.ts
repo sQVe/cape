@@ -103,6 +103,22 @@ describe('ConformServiceLive', () => {
         ),
       ).rejects.toThrow('git failed');
     });
+
+    it('wraps non-Error discovery failures', async () => {
+      mockHomedir.mockReturnValue('/home/me');
+      mockGitRoot.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* ConformService;
+            yield* service.discoverRules();
+          }),
+        ),
+      ).rejects.toThrow('rule discovery failed');
+    });
   });
 
   describe('readFiles', () => {
@@ -139,6 +155,21 @@ describe('ConformServiceLive', () => {
           }),
         ),
       ).rejects.toThrow('root failed');
+    });
+
+    it('wraps non-Error read setup failures', async () => {
+      mockGitRoot.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* ConformService;
+            yield* service.readFiles(['src/app.ts']);
+          }),
+        ),
+      ).rejects.toThrow('file read failed');
     });
   });
 });

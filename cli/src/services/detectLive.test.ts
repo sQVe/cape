@@ -97,6 +97,21 @@ describe('DetectServiceLive', () => {
         ),
       ).rejects.toThrow('no ecosystem detected');
     });
+
+    it('wraps non-Error detection failures', async () => {
+      mockExistsSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* DetectService;
+            yield* service.detect();
+          }),
+        ),
+      ).rejects.toThrow('detection failed');
+    });
   });
 
   describe('mapDirectory', () => {
@@ -150,6 +165,21 @@ describe('DetectServiceLive', () => {
         ),
       ).rejects.toThrow('no ecosystem detected');
       expect(mockReaddirSync).not.toHaveBeenCalled();
+    });
+
+    it('wraps non-Error mapping failures', async () => {
+      mockExistsSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* DetectService;
+            yield* service.mapDirectory('/project');
+          }),
+        ),
+      ).rejects.toThrow('mapping failed');
     });
   });
 });

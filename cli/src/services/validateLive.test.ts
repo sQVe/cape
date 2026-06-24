@@ -62,6 +62,21 @@ describe('ValidateServiceLive', () => {
       ).rejects.toThrow('glob failed');
       expect(mockGlobSync).toHaveBeenCalledWith('bad/**/*.md');
     });
+
+    it('wraps non-Error throws as a glob failed error', async () => {
+      mockGlobSync.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* ValidateService;
+            yield* service.globFiles('skills/*.md');
+          }),
+        ),
+      ).rejects.toThrow('glob failed');
+    });
   });
 
   describe('readFile', () => {
@@ -93,6 +108,21 @@ describe('ValidateServiceLive', () => {
         ),
       ).rejects.toThrow('read failed');
       expect(mockReadFileUtf8).toHaveBeenCalledWith('missing.md');
+    });
+
+    it('wraps non-Error throws with the path in the message', async () => {
+      mockReadFileUtf8.mockImplementation(() => {
+        throw 'boom';
+      });
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* ValidateService;
+            yield* service.readFile('missing.md');
+          }),
+        ),
+      ).rejects.toThrow('read failed: missing.md');
     });
   });
 
