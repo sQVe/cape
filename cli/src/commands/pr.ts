@@ -2,7 +2,7 @@ import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-import { HookService } from '../services/hook';
+import { HookService, resolveBranchInfo } from '../services/hook';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
 import { catchAndDie } from '../utils/catchAndDie';
 
@@ -92,13 +92,11 @@ const prCreate = Command.make(
     const hookService = yield* HookService;
     const prService = yield* PrService;
 
-    const branch = yield* hookService.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+    const { branch, defaultBranch } = yield* resolveBranchInfo();
     if (branch == null) {
       return yield* dieWithError('failed to determine current branch');
     }
 
-    const defaultRef = yield* hookService.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-    const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
     if (branch === defaultBranch) {
       return yield* dieWithError(
         `Cannot create PR from default branch "${branch}". Create a feature branch first.`,

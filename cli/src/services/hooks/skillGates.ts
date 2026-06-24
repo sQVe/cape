@@ -104,7 +104,6 @@ type GateResult = ReturnType<typeof denyWith> | ContextResult | null;
 
 const gateExecutePlan = () =>
   Effect.gen(function* () {
-    const service = yield* HookService;
     const cache = yield* readTrackerCache();
     if (cache === null) {
       return null;
@@ -122,10 +121,8 @@ const gateExecutePlan = () =>
         'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
       );
     }
-    const branch = yield* service.spawnGit(['rev-parse', '--abbrev-ref', 'HEAD']);
+    const { branch, defaultBranch } = yield* resolveBranchInfo();
     if (branch != null) {
-      const defaultRef = yield* service.spawnGit(['symbolic-ref', 'refs/remotes/origin/HEAD']);
-      const defaultBranch = defaultRef?.replace(/^refs\/remotes\/origin\//, '') ?? 'main';
       if (branch === defaultBranch) {
         return {
           additionalContext: [
