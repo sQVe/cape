@@ -58,6 +58,19 @@ export const parseCommand = (input: string): string | null => {
   }
 };
 
+export const parseCwd = (input: string): string | null => {
+  try {
+    const data = JSON.parse(input);
+    const cwd = parseString(data.cwd);
+    // Treat empty/whitespace cwd as missing: an empty string forwarded to
+    // execFileSync({ cwd }) throws ENOENT, which would silently disable the
+    // push gate. Fall back to the hook process cwd instead.
+    return cwd != null && cwd.trim() !== '' ? cwd : null;
+  } catch {
+    return null;
+  }
+};
+
 export interface SkillInput {
   readonly name: string;
   readonly args: string | null;

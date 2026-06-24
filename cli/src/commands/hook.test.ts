@@ -157,6 +157,7 @@ const makeStubHookLayer = (
     writtenFiles: Record<string, string>;
     removedFiles: string[];
     gitCalls: string[];
+    spawnGit: (args: readonly string[], cwd?: string) => Effect.Effect<string | null>;
   }> = {},
 ) => {
   const {
@@ -167,6 +168,7 @@ const makeStubHookLayer = (
     writtenFiles = {},
     removedFiles = [],
     gitCalls = [],
+    spawnGit,
   } = overrides;
 
   const hookLayer = Layer.succeed(HookService)({
@@ -182,16 +184,18 @@ const makeStubHookLayer = (
     },
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(stdin),
-    spawnGit: (args) => {
-      const key = args.join(' ');
-      gitCalls.push(key);
-      for (const [pattern, response] of Object.entries(gitResponses)) {
-        if (key.includes(pattern)) {
-          return Effect.succeed(response);
+    spawnGit:
+      spawnGit ??
+      ((args) => {
+        const key = args.join(' ');
+        gitCalls.push(key);
+        for (const [pattern, response] of Object.entries(gitResponses)) {
+          if (key.includes(pattern)) {
+            return Effect.succeed(response);
+          }
         }
-      }
-      return Effect.succeed(null);
-    },
+        return Effect.succeed(null);
+      }),
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
 
@@ -652,7 +656,8 @@ describe('hook command wiring', () => {
   });
 });
 
-const bashStdin = (command: string) => JSON.stringify({ tool_input: { command } });
+const bashStdin = (command: string, cwd?: string) =>
+  JSON.stringify({ ...(cwd != null ? { cwd } : {}), tool_input: { command } });
 
 const skillStdin = (skill: string, args?: string) =>
   JSON.stringify({ tool_input: { skill, ...(args != null ? { args } : {}) } });
@@ -862,14 +867,55 @@ describe('preToolUseBash', () => {
   describe('push branch check', () => {
     it('denies push from default branch', async () => {
       const layer = makeStubHookLayer({
-        stdin: bashStdin('git push origin main'),
-        gitResponses: {
-          'rev-parse': 'main',
-          'symbolic-ref': 'refs/remotes/origin/main',
+        stdin: bashStdin('git push origin main', '/work/repo'),
+        spawnGit: (args, cwd) => {
+          expect(cwd).toBe('/work/repo');
+          const key = args.join(' ');
+          return Effect.succeed(key.includes('rev-parse') ? 'main' : 'refs/remotes/origin/main');
         },
       });
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
       expectDeny(result, 'Push from `main` is blocked');
+    });
+
+    it('allows push from payload cwd feature branch when process cwd is default branch', async () => {
+      const gitCalls: Array<{ args: string; cwd: string | undefined }> = [];
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push origin feature/x', '/work/repo'),
+        spawnGit: (args, cwd) => {
+          gitCalls.push({ args: args.join(' '), cwd });
+          const key = args.join(' ');
+          if (key.includes('rev-parse')) {
+            return Effect.succeed(cwd == null ? 'main' : 'feature/x');
+          }
+          return Effect.succeed('refs/remotes/origin/main');
+        },
+      });
+
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+
+      expect(result).toBeNull();
+      expect(gitCalls).toEqual([
+        { args: 'rev-parse --abbrev-ref HEAD', cwd: '/work/repo' },
+        { args: 'symbolic-ref refs/remotes/origin/HEAD', cwd: '/work/repo' },
+      ]);
+    });
+
+    it('treats an empty payload cwd as missing and falls back to the process cwd', async () => {
+      const seenCwds: Array<string | undefined> = [];
+      const layer = makeStubHookLayer({
+        stdin: bashStdin('git push origin main', ''),
+        spawnGit: (args, cwd) => {
+          seenCwds.push(cwd);
+          const key = args.join(' ');
+          return Effect.succeed(key.includes('rev-parse') ? 'main' : 'refs/remotes/origin/main');
+        },
+      });
+
+      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
+
+      expectDeny(result, 'Push from `main` is blocked');
+      expect(seenCwds).toEqual([undefined, undefined]);
     });
 
     it('allows push from feature branch', async () => {
