@@ -82,22 +82,21 @@ pre-planned epic) means the run executes them in dependency order; a freshly min
 epic means the run seeds tasks lazily one ahead. Surface the derived mode in the draft header (Step
 3).
 
-Then ask four structured questions with `AskUserQuestion`, each with a marked default so the user
+Then ask three structured questions with `AskUserQuestion`, each with a marked default so the user
 can accept all at once:
 
-1. **Builder** -- `claude` builds (default) / `codex` builds. The reviewer is the _other_ agent when
-   review is separate.
-2. **TDD** -- on (default) / off.
-3. **Review** -- separate review (default): the paired agent reviews each task, up to 2 fix-cycles /
-   self-review only: no separate reviewer, the run self-reviews via `cape:review`.
-4. **Run instructions** -- open free-text for anything that shapes the run: guardrails ("no schema
+1. **Builder** -- `claude` builds (default) / `codex` builds.
+2. **Review** -- who reviews each task, chosen independently of the builder: `codex` reviews
+   (default) / `claude` reviews / self-review only (no separate reviewer, the run self-reviews via
+   `cape:review`). A separate reviewer runs up to 2 fix-cycles.
+3. **Run instructions** -- open free-text for anything that shapes the run: guardrails ("no schema
    changes", "no new deps"), workflow ("one PR per task"), review focus, areas to avoid. Empty =
    defaults only.
 
-Everything else is a stated default, surfaced in the draft's header but not asked: one grove epic
-worktree, sequential tasks, SHIP = finish-epic then review then AFK pr then bounded PR-watch, and a
-turn cap computed from the task count (about `2 x ready tasks + SHIP overhead`). The user changes a
-default by editing the draft in the editor (Step 4), not with another question.
+Everything else is a stated default, surfaced in the draft's header but not asked: TDD on, one grove
+epic worktree, sequential tasks, SHIP = finish-epic then review then AFK pr then bounded PR-watch,
+and a turn cap computed from the task count (about `2 x ready tasks + SHIP overhead`). The user
+changes a default by editing the draft in the editor (Step 4), not with another question.
 
 ---
 
@@ -218,11 +217,12 @@ Omit this whole section when the field was empty.>
 ```
 
 The decisions table and the `## Prompt` Topology / per-task review lines reflect the interview
-choices and the derived task source: for self-review, drop the codex reviewer everywhere and review
-via `cape:review`; for a codex builder, swap the builder and reviewer agents; for lazy mode, use the
-one-ahead variants in steps 1 and 5; and omit `## Run instructions` when the free-text field was
-empty. The table is a read-only summary -- to flip a decision, edit the `## Prompt` body (or re-run
-set-goal); editing the table alone changes nothing.
+choices and the derived task source: render the builder and reviewer from their own answers (they
+are chosen independently -- the reviewer is not derived from the builder); for self-review, drop the
+separate reviewer everywhere and review via `cape:review`; for lazy mode, use the one-ahead variants
+in steps 1 and 5; and omit `## Run instructions` when the free-text field was empty. The table is a
+read-only summary -- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the
+table alone changes nothing.
 
 ---
 
