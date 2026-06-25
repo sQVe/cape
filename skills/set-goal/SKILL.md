@@ -150,16 +150,12 @@ starts, `done` on a clean ship, `blocked` on park. Per-task work happens in the 
 never touches the workspace label.
 
 ## Topology (decided -- do not re-decide)
-- Builder: claude with TDD, sequential, one grove epic worktree.
 - Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
-  created when it starts. The task's worker, reviewer, and any QA run as panes split inside that one
-  tab -- same task, same box.
-- Review: a separate agent -- a codex reviewer runs as a pane in the task's tab (not a separate tab)
-  and judges each task (up to 2 fix-cycles).
+  with its worker, reviewer, and any QA as panes split inside that one tab. When the task closes, one
+  `herdr tab close` reaps every pane in it -- never accumulate tabs or panes. (Builder, reviewer, and
+  cycle cap are in the decisions table.)
 - Task source: execute the planned tasks in dependency order; respect Linear blocking relations and
   the dependency notes in task descriptions. Do not invent tasks.
-- Reap: when a task closes, close its tab -- one `herdr tab close` reaps all its panes. Never
-  accumulate tabs or panes.
 
 ## Per-task loop (one task per turn)
 1. Pick the next task by dependency order -- honor Linear blocking relations and the task
@@ -183,9 +179,9 @@ never touches the workspace label.
    never grep the pane. (Self-review mode: skip the reviewer pane and review via `cape:review`
    instead.)
 5. On FAIL (reviewer verdict or unresolved conform findings): bounded fix cycles (<= 2), then park.
-   On PASS: close the task (cape:tracker), close the task's tab (`herdr tab close <task-tab>`) -- one
-   close reaps the worker, reviewer, and any QA panes together -- refresh the cache, and move to the
-   next task (lazy mode: create it one ahead first).
+   On PASS: close the task (cape:tracker), close the task's tab (`herdr tab close <task-tab>`, which
+   reaps its panes), refresh the cache, and move to the next task (lazy mode: create it one ahead
+   first).
 6. Report each turn as ONE short line (committed SHA, verdict). Summarize; do not paste raw panes --
    for context budget.
 
@@ -216,11 +212,12 @@ Omit this whole section when the field was empty.>
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 
-The decisions table and the `## Prompt` Topology / per-task review lines reflect the interview
-choices and the derived task source: render the builder and reviewer from their own answers (they
+The decisions table and the `## Prompt` per-task loop reflect the interview choices and the derived
+task source: render the builder and reviewer from their own answers (they
 are chosen independently -- the reviewer is not derived from the builder); for self-review, drop the
-separate reviewer everywhere and review via `cape:review`; for lazy mode, use the one-ahead variants
-in steps 1 and 5; and omit `## Run instructions` when the free-text field was empty. The table is a
+separate reviewer from the loop and review via `cape:review`; for lazy mode, use the one-ahead
+variants in steps 1 and 5; and omit `## Run instructions` when the free-text field was empty. The
+table is a
 read-only summary -- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the
 table alone changes nothing.
 
@@ -318,11 +315,11 @@ set-goal never arms `/goal` or launches itself. </example>
 <example>
 <scenario>During the interview the user picks "review: self-review only"</scenario>
 
-**Wrong:** Render a draft that still names a codex reviewer in the Topology and per-task loop.
+**Wrong:** Render a draft that still names a codex reviewer in the per-task loop.
 
-**Right:** Render the draft with the codex reviewer dropped everywhere -- the decisions table reads
-`Review: self-review`, and the `## Prompt` reviews via `cape:review` -- then open it for `:wq`.
-</example>
+**Right:** Render the draft with the codex reviewer dropped from the loop -- the decisions table
+reads `Review: self-review`, and the `## Prompt` reviews via `cape:review` -- then open it for
+`:wq`. </example>
 
 </examples>
 
