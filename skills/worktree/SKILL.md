@@ -63,23 +63,39 @@ requires a different base.
 
 ---
 
-## Step 2: Ensure the grove worktree
+## Step 2: Derive the branch slug
+
+Fetch the epic's canonical branch name from Linear so the worktree is descriptive and deterministic
+rather than an invented summary. Read `gitBranchName` from the `get_issue` MCP tool, then sanitize
+it to ASCII kebab-case: lowercase, replace any character outside `[a-z0-9-]` with `-`, and collapse
+repeated dashes. For ABU-71 this turns `abu-71-cape-×-herdr-parallel-multi-agent-orchestration` into
+`abu-71-cape-herdr-parallel-multi-agent-orchestration`.
+
+---
+
+## Step 3: Ensure the grove worktree
 
 Use grove to create or enter the per-epic worktree. Assume the repository is already inside a grove
 workspace; do not convert the cape repo or initialize unrelated workspace metadata.
 
-Recommended shape:
+Recommended shape (omit `--name` so grove derives the directory from the branch):
 
 ```bash
-grove add --base main feat/<epic-id-kebab-summary> --name <epic-id>
+grove add --base main <type>/<branch-slug>
 ```
 
-If grove reports that the named worktree already exists, enter or switch to that existing worktree
-instead of creating another one. Keep exactly one worktree per epic.
+`<type>` is the conventional-commit prefix for the work (`feat`, `fix`, `chore`, ...). This yields a
+branch like `feat/abu-71-cape-herdr-parallel-multi-agent-orchestration` and a matching worktree
+directory `feat-abu-71-cape-herdr-parallel-multi-agent-orchestration`. Because the slug derives from
+Linear it is stable per epic: re-running produces the same name, so grove finds the existing
+worktree instead of creating a duplicate.
+
+If grove reports that the worktree already exists, enter or switch to it instead of creating another
+one. Keep exactly one worktree per epic.
 
 ---
 
-## Step 3: Stamp cape context
+## Step 4: Stamp cape context
 
 From inside the epic worktree, stamp the focused epic:
 
@@ -98,7 +114,7 @@ banner stays quiet until a tracker read refreshes the cache.
 
 ---
 
-## Step 4: Start focused work
+## Step 5: Start focused work
 
 Once the worktree exists and the epic is stamped, continue with the correct workflow phase. For
 BUILD work, load `cape:execute-plan`. For SHIP work, load `cape:finish-epic` or `cape:pr` as
