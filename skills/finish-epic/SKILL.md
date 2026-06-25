@@ -145,7 +145,7 @@ Epic verified - <epic-id>: <title>
 
 Summary: <what shipped>
 Tasks completed: <N>
-Success criteria: all <N> met
+Acceptance criteria: all <N> met
 Verification: <commands passed>
 
 Epic verified and ready for PR; Linear will close it on merge.
@@ -195,7 +195,7 @@ and the user explicitly asks to create the PR.
 alone, and hand off to review/PR. Linear closes the epic when the PR merges. </example>
 
 <example>
-<scenario>A acceptance criterion is not met</scenario>
+<scenario>An acceptance criterion is not met</scenario>
 
 **Wrong:** Hand off because all known tasks are done.
 
