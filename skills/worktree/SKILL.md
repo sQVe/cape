@@ -81,14 +81,15 @@ workspace; do not convert the cape repo or initialize unrelated workspace metada
 Recommended shape (omit `--name` so grove derives the directory from the branch):
 
 ```bash
-grove add --base main <type>/<branch-slug>
+grove add --base <default-branch> <type>/<branch-slug>
 ```
 
-`<type>` is the conventional-commit prefix for the work (`feat`, `fix`, `chore`, ...). This yields a
+Use the default branch detected in Step 1 as the base. `<type>` is the conventional-commit prefix
+for the work (`feat`, `fix`, `chore`, ...); keep it consistent for a given epic. This yields a
 branch like `feat/abu-71-cape-herdr-parallel-multi-agent-orchestration` and a matching worktree
-directory `feat-abu-71-cape-herdr-parallel-multi-agent-orchestration`. Because the slug derives from
-Linear it is stable per epic: re-running produces the same name, so grove finds the existing
-worktree instead of creating a duplicate.
+directory `feat-abu-71-cape-herdr-parallel-multi-agent-orchestration`. The slug derives from Linear,
+so it is stable per epic: re-running with the same `<type>` produces the same name and grove finds
+the existing worktree instead of creating a duplicate.
 
 If grove reports that the worktree already exists, enter or switch to it instead of creating another
 one. Keep exactly one worktree per epic.
