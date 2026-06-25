@@ -9,6 +9,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Skills: added `cape:pr-feedback`, which drives the inbound PR review-comment loop end to end:
+  fetch every open review thread with its node ID, triage each comment as valid, invalid, or out of
+  scope with `file:line` evidence, fix the accepted ones (a nit is a direct edit; behavioral changes
+  go through `cape:test-driven-development` or `cape:fix-bug`), then reply, resolve the matching
+  threads via GraphQL, and commit through `cape:commit`. Thread node IDs come only from the
+  `reviewThreads` query and are carried per comment, so resolution never depends on hand-pasted IDs.
 - CI: added `.github/workflows/ci.yml`, gating the repo on push to `main` and on pull requests
   targeting `main`. A blocking `check` job runs `format:check`, `lint`, and `typecheck`; a blocking
   `test` job runs the suite; and a non-blocking, PR-only `fallow` job reports code-health findings
@@ -53,6 +59,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: rewrote step headings to sentence case across seven skills (don-cape, execute-plan,
   finish-epic, fix-bug, review, tracker, write-plan), matching the documented sentence-case heading
   rule.
+- Skills: every `stop-slop` invocation now also requires simple language and clear, scannable
+  structure (review, pr, commit, brainstorm, tracker, write-plan, finish-epic, fix-bug), so
+  generated prose stays plain and readable rather than only stripped of AI tells.
 - PR: the issue-linking guidance now defaults to a closing keyword (`Fixes ABU-XX`) so the epic
   auto-closes on merge, and reserves `Related to ABU-XX` for PRs that do not complete the epic. The
   template placeholder no longer pairs both keywords on one line, which had produced non-closing
