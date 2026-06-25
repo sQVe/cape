@@ -47,7 +47,7 @@ and cache refresh after writes are fixed. Implementation tactics adapt to the ta
 
 <the_process>
 
-## Step 1: Orient From Tracker Cache
+## Step 1: Orient from tracker cache
 
 Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`:
 
@@ -78,7 +78,7 @@ refresh it from the current MCP result available in the session. Do not invent t
 
 ---
 
-## Step 2: Expand In Session
+## Step 2: Expand in session
 
 Load the epic contract and task details from the active session context. If the detailed Linear
 description is not present in the session, use the cache to identify the task and ask the user to
@@ -113,7 +113,7 @@ Load `cape:test-driven-development` with the Skill tool before production edits.
 
 ---
 
-## Step 3: Implement And Verify
+## Step 3: Implement and verify
 
 Execute the in-session breakdown one slice at a time:
 
@@ -140,7 +140,7 @@ implementation depends on claims about codebase structure or APIs.
 
 ---
 
-## Step 4: Close Task And Plan Next
+## Step 4: Close task and plan next
 
 Close the task in Linear through MCP. Then update the local cache:
 
@@ -169,7 +169,7 @@ If no more work remains, load `cape:finish-epic`.
 
 ---
 
-## Step 5: Checkpoint And Stop
+## Step 5: Checkpoint and stop
 
 Present:
 

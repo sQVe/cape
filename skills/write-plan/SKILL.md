@@ -47,7 +47,7 @@ STOP after creation are fixed. Validation depth adapts to the design's complexit
 
 <the_process>
 
-## Step 1: Verify Design Context
+## Step 1: Verify design context
 
 Verify that a design summary exists in conversation context. If not, stop and ask for one or route
 to `cape:brainstorm`.
@@ -63,7 +63,7 @@ Resolve blocking questions before creating Linear issues.
 
 ---
 
-## Step 2: Refine Into Epic Contract
+## Step 2: Refine into epic contract
 
 Turn the design into a durable epic description using the canonical shape in `cape:tracker`'s
 [linear-templates.md](../tracker/resources/linear-templates.md). Pick the variant first: **Light**
@@ -104,7 +104,7 @@ The first task must be a vertical slice with:
 
 ---
 
-## Step 3: Create Linear Epic And First Task
+## Step 3: Create Linear epic and first task
 
 Before creating issues, load the global `stop-slop` skill and run the epic contract and first-task
 prose through it; skip this for pure code or mechanical output.
@@ -140,7 +140,7 @@ Do not run any tracker network reads from the CLI. `cape tracker` only writes th
 
 ---
 
-## Step 4: Present And Stop
+## Step 4: Present and stop
 
 Present:
 

@@ -48,7 +48,7 @@ descriptions adapt to the chain using the tracker. </rigidity_level>
 
 <the_process>
 
-## Step 1: Understand The Cache
+## Step 1: Understand the cache
 
 The cache file is `hooks/context/tracker.json`.
 
@@ -106,7 +106,7 @@ Apply this agent contract before every issue create or update:
 
 ---
 
-## Step 2: Create Work
+## Step 2: Create work
 
 Apply the Agent contract above, then create an epic with MCP Linear `save_issue`. Put the durable
 epic contract in the Linear issue description. Then create child task issues with MCP Linear
@@ -138,7 +138,7 @@ cape tracker cache-tasks <epic-id> '<linear-task-array-json>'
 
 ---
 
-## Step 3: List Ready Work
+## Step 3: List ready work
 
 Read `hooks/context/tracker.json`; do not call Linear for ready-work reads.
 
@@ -150,7 +150,7 @@ refresh cache from an MCP result already obtained in the session before continui
 
 ---
 
-## Step 4: Update Status
+## Step 4: Update status
 
 Update Linear first through MCP. Then refresh the matching cached issue:
 
@@ -164,7 +164,7 @@ membership stays current.
 
 ---
 
-## Step 5: Close Work
+## Step 5: Close work
 
 Close a task or bug in Linear through MCP. Then update the cache:
 

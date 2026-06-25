@@ -65,7 +65,7 @@ order is fixed. Depth adapts to change size. </rigidity_level>
 
 <the_process>
 
-## Step 1: Determine Scope
+## Step 1: Determine scope
 
 Parse the argument:
 
@@ -91,7 +91,7 @@ If no changed files are found, report that and stop.
 
 ---
 
-## Step 2: Build Structural Context
+## Step 2: Build structural context
 
 Use the code-review-graph tools in order:
 
@@ -104,7 +104,7 @@ nodes, fall back to diff and file reads and say structural analysis is unavailab
 
 ---
 
-## Step 3: Check Documented Conventions
+## Step 3: Check documented conventions
 
 Run `cape conform <scope>` for the same review scope. Use its JSON output as the source of truth for
 applicable rules and rule sources. Report convention violations separately from correctness findings
@@ -115,7 +115,7 @@ stamp is hard-gated on it. Skipping conform blocks review completion.
 
 ---
 
-## Step 4: Review The Changes
+## Step 4: Review the changes
 
 Review each changed file using graph context and diff evidence:
 
@@ -133,7 +133,7 @@ Calibrate depth:
 
 ---
 
-## Step 5: Present Report
+## Step 5: Present report
 
 Before presenting the review write-up, load the global `stop-slop` skill and run the prose through
 it; skip this for pure code or mechanical output.
@@ -194,7 +194,7 @@ name, or PR number. Then proceed to follow-up actions without announcing another
 
 ---
 
-## Step 6: Annotate A Live hunk Session
+## Step 6: Annotate a live hunk session
 
 If a hunk diff session is open for this repo, post the findings there as inline comments so the
 human sees them in the diff they are already scrolling. This augments the text report; it never
@@ -254,7 +254,7 @@ text report only. The text report is always complete.
 
 ---
 
-## Step 7: Optional Tracking
+## Step 7: Optional tracking
 
 For own-code reviews, ask whether to track critical and important findings. If the user opts in,
 create one Linear issue per finding through MCP Linear `save_issue`.

@@ -47,7 +47,7 @@ writes Linear status. Verification details adapt to the repository. </rigidity_l
 
 <the_process>
 
-## Step 1: Confirm Completion From Cache
+## Step 1: Confirm completion from cache
 
 Read `hooks/context/tracker.json` and locate the epic. Confirm every child task has a completed
 state type or a done-like status.
@@ -62,7 +62,7 @@ latest MCP result already available in session. Do not depend on the CLI for net
 
 ---
 
-## Step 2: Audit Acceptance Criteria
+## Step 2: Audit acceptance criteria
 
 Read the epic contract from session context. For each acceptance criterion (the R-ID rows plus the
 out-of-scope regression check), find concrete evidence:
@@ -97,7 +97,7 @@ If any criterion is `[ ]` NOT MET, stop and recommend the next task to create th
 
 ---
 
-## Step 3: Run Final Verification
+## Step 3: Run final verification
 
 Run the required project verification for this repository. At minimum, run the checks the epic or
 project expects. When helpful, dispatch `cape:test-runner` (model: haiku) to run commands and
@@ -110,7 +110,7 @@ reviewer judges the delivered code against the R-IDs and required constraints.
 
 ---
 
-## Step 4: Hand Off
+## Step 4: Hand off
 
 Load `cape:commit` with the Skill tool to commit remaining changes before handing off when there are
 uncommitted implementation changes.
