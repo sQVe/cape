@@ -46,7 +46,7 @@ closure, and cache refresh after Linear writes are fixed. Investigation depth ad
 
 <the_process>
 
-## Step 1: Diagnose And Track
+## Step 1: Diagnose and track
 
 If a Linear bug issue already exists in the session or user request, adopt it. Use the local tracker
 cache for orientation and issue status. If the issue details are not in session, ask the user for
@@ -92,7 +92,7 @@ the cache has a containing epic entry.
 
 ---
 
-## Step 2: Reproduce And Start
+## Step 2: Reproduce and start
 
 Run the reproduction steps from the issue or investigation summary. Confirm the symptom locally
 before writing the fix.
@@ -109,7 +109,7 @@ report that before editing production code.
 
 ---
 
-## Step 3: Fix With TDD
+## Step 3: Fix with TDD
 
 Signal the build phase for the herdr rail: `cape workspace phase build`.
 
@@ -135,7 +135,7 @@ regressions.
 
 ---
 
-## Step 4: Verify And Close
+## Step 4: Verify and close
 
 Re-run the original reproduction steps and confirm the symptom is gone. Run the relevant tests and
 project checks.

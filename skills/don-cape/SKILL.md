@@ -35,7 +35,7 @@ Always active. Injected at session start via hook. Applies to every user message
 
 <the_process>
 
-## Step 1: Route The Request
+## Step 1: Route the request
 
 Short-circuit first when the user has already committed to a phase entry or specific skill:
 
@@ -88,7 +88,7 @@ that tracker cache needs a refresh from the latest Linear MCP result.
 
 ---
 
-## Step 2: Follow The Chain
+## Step 2: Follow the chain
 
 Phase chains:
 
@@ -115,7 +115,7 @@ is the user's explicit choice to skip earlier links.
 
 ---
 
-## Step 3: Use Skills Correctly
+## Step 3: Use skills correctly
 
 Load matching skills with the Skill tool and follow their instructions. Skills evolve between
 sessions; do not work from memory.

@@ -50,6 +50,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Skills: rewrote step headings to sentence case across seven skills (don-cape, execute-plan,
+  finish-epic, fix-bug, review, tracker, write-plan), matching the documented sentence-case heading
+  rule.
 - PR: the issue-linking guidance now defaults to a closing keyword (`Fixes ABU-XX`) so the epic
   auto-closes on merge, and reserves `Related to ABU-XX` for PRs that do not complete the epic. The
   template placeholder no longer pairs both keywords on one line, which had produced non-closing
