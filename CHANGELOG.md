@@ -60,8 +60,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   section; the approach is framed as a `Proposed approach` the agent may improve; and acceptance
   criteria reference R-IDs. Epics open with a scannable at-a-glance card, and the shape now has a
   Light (default) and a Full variant. Tasks name `Delivers: R1, R2`; write-plan, execute-plan, and
-  finish-epic reference R-IDs and required constraints. Fixed a stale `epic-template.md` reference in
-  the tracker templates.
+  finish-epic reference R-IDs and required constraints. Fixed a stale `epic-template.md` reference
+  in the tracker templates.
 - Set-goal: the emitted autonomous run now gates each task on conventions and the commit message,
   not just the reviewer verdict. `cape conform` findings are a fix-cycle the same as a reviewer
   FAIL, the commit-verify step checks for conventional format plus the task id, and the codex
