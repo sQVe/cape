@@ -3,17 +3,17 @@ name: finish-epic
 description: >
   Verify and hand off a Linear tracker epic after all tasks are complete. Use when the user says
   "finish the epic", "we're done", "close out the epic", all tasks are done and the user wants to
-  close it, or execute-plan detects all success criteria appear met. Runs final verification, checks
-  success criteria with evidence, optionally writes a minimal outcome summary to Linear, and hands
-  off to review/PR. Linear's GitHub integration closes the epic when the PR merges; cape never sets
-  Linear status.
+  close it, or execute-plan detects all acceptance criteria appear met. Runs final verification,
+  checks acceptance criteria with evidence, optionally writes a minimal outcome summary to Linear,
+  and hands off to review/PR. Linear's GitHub integration closes the epic when the PR merges; cape
+  never sets Linear status.
 ---
 
-<skill_overview> The final step in the build chain. Verify every success criterion, run project
+<skill_overview> The final step in the build chain. Verify every acceptance criterion, run project
 checks, hand off to review/PR, and report what shipped. cape never sets Linear status: Linear's
 GitHub integration moves the epic to `Done` when the PR (referencing it with `Fixes ABU-XX`) merges.
 
-Core contract: only hand off when every success criterion has evidence. </skill_overview>
+Core contract: only hand off when every acceptance criterion has evidence. </skill_overview>
 
 <rigidity_level> MEDIUM FREEDOM -- The evidence gate and automated checks are fixed. cape never
 writes Linear status. Verification details adapt to the repository. </rigidity_level>
@@ -22,7 +22,7 @@ writes Linear status. Verification details adapt to the repository. </rigidity_l
 
 - All tasks in a tracker epic are completed
 - User says "finish the epic", "we're done", "close it out", "wrap this up"
-- execute-plan detects no ready tasks remain and success criteria appear met
+- execute-plan detects no ready tasks remain and acceptance criteria appear met
 - User references an epic ID and wants closure
 
 **Don't use for:**
@@ -37,7 +37,7 @@ writes Linear status. Verification details adapt to the repository. </rigidity_l
 
 1. **All tasks must be complete** -- do not skip open tasks just to hand off the epic
 2. **All automated checks must pass** -- run the repository's required verification
-3. **All success criteria need evidence** -- cite tests, files, or behavior
+3. **All acceptance criteria need evidence** -- cite tests, files, or behavior
 4. **Stop on failure** -- report missing evidence or failing checks instead of handing off
 5. **Never set Linear status** -- Linear's GitHub integration closes the epic when the PR merges
 6. **Keep outcome minimal** -- detailed outcome stays in session; Linear gets only a concise durable
@@ -64,8 +64,8 @@ latest MCP result already available in session. Do not depend on the CLI for net
 
 ## Step 2: Audit Acceptance Criteria
 
-Read the epic contract from session context. For each acceptance criterion (each tied to an R-ID),
-find concrete evidence:
+Read the epic contract from session context. For each acceptance criterion (the R-ID rows plus the
+out-of-scope regression check), find concrete evidence:
 
 - Passing test output
 - File or diff evidence
@@ -116,8 +116,8 @@ Load `cape:commit` with the Skill tool to commit remaining changes before handin
 uncommitted implementation changes.
 
 Do not set Linear status. The epic reaches `Done` automatically when the PR (referencing it with
-`Fixes ABU-XX`) merges, via Linear's GitHub integration. finish-epic only verifies success criteria
-with evidence, runs final verification, and hands off to review/PR.
+`Fixes ABU-XX`) merges, via Linear's GitHub integration. finish-epic only verifies acceptance
+criteria with evidence, runs final verification, and hands off to review/PR.
 
 Optionally write a minimal outcome summary to the Linear epic DESCRIPTION through MCP Linear
 `save_issue` (description-only; this is not a status change):
@@ -191,11 +191,11 @@ and the user explicitly asks to create the PR.
 
 **Wrong:** Hand off based only on task count, or set the Linear epic to `Done`.
 
-**Right:** Audit each success criterion with evidence, run final checks, leave Linear status alone,
-and hand off to review/PR. Linear closes the epic when the PR merges. </example>
+**Right:** Audit each acceptance criterion with evidence, run final checks, leave Linear status
+alone, and hand off to review/PR. Linear closes the epic when the PR merges. </example>
 
 <example>
-<scenario>A success criterion is not met</scenario>
+<scenario>A acceptance criterion is not met</scenario>
 
 **Wrong:** Hand off because all known tasks are done.
 
@@ -213,7 +213,7 @@ through execute-plan. </example>
 
 <key_principles>
 
-- **Evidence beats optimism** -- success criteria need proof
+- **Evidence beats optimism** -- acceptance criteria need proof
 - **Completeness over speed** -- rushing hand off creates follow-up debt
 - **The board stays clean** -- Linear gets a minimal durable summary, not transcripts; status is
   owned by the GitHub integration, never by cape

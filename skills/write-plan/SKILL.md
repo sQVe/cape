@@ -85,9 +85,9 @@ Keep the four questions separate; never blend them:
 - **Acceptance criteria**: evidence per R-ID, plus a regression check that out-of-scope behavior
   holds.
 
-Lead with the at-a-glance card (Outcome, Problem, User/system, Variant, Done when) so the first
-lines stand alone. For Full, sketch the work breakdown as a non-binding table in the parent; do not
-pre-create it.
+Lead with the at-a-glance card so the first lines stand alone; use the chosen variant's fields
+(Light leads with Outcome, Problem, User/system; Full uses Primary user and adds Risk). For Full,
+sketch the work breakdown as a non-binding table in the parent; do not pre-create it.
 
 Before formalizing the first task, dispatch `cape:codebase-investigator` in default mode (model:
 haiku), or verify manually with search and file reads. Confirm file paths, APIs, test setup, helper
