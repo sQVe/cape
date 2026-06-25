@@ -163,7 +163,8 @@ deployment notes. Check coverage: happy path, edge cases, integration points, re
 gaps found, add missing test plan items.
 
 Before presenting or creating the PR, load the global `stop-slop` skill and run the description
-prose through it; skip this for pure code or mechanical output.
+prose through it; skip this for pure code or mechanical output. Write in simple language with clear,
+scannable structure.
 
 ---
 

@@ -301,7 +301,7 @@ claim against codebase evidence (`file:line`) and external sources (`URL — Tie
 - **Unverifiable** claims — remove from the design summary; note them under "Open questions" instead
 
 Before presenting, load the global `stop-slop` skill and run the user-facing prose through it; skip
-this for pure code or mechanical output.
+this for pure code or mechanical output. Write in simple language with clear, scannable structure.
 
 Present the final design summary only after fact-checking is complete.
 

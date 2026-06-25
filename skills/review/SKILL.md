@@ -141,7 +141,8 @@ Calibrate depth:
 ## Step 5: Present report
 
 Before presenting the review write-up, load the global `stop-slop` skill and run the prose through
-it; skip this for pure code or mechanical output.
+it; skip this for pure code or mechanical output. Write in simple language with clear, scannable
+structure.
 
 Use this format:
 

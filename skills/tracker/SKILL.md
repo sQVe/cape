@@ -113,7 +113,8 @@ epic contract in the Linear issue description. Then create child task issues wit
 `save_issue` using the epic as parent.
 
 Before creating user-facing issue descriptions, load the global `stop-slop` skill and run the prose
-through it; skip this for pure code or mechanical output.
+through it; skip this for pure code or mechanical output. Write in simple language with clear,
+scannable structure.
 
 After creation, refresh cache from the MCP epic result. Preferred:
 

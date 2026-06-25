@@ -129,7 +129,8 @@ Tasks completed: <N>
 ```
 
 Before posting an outcome summary, load the global `stop-slop` skill and run the prose through it;
-skip this for pure code or mechanical output.
+skip this for pure code or mechanical output. Write in simple language with clear, scannable
+structure.
 
 Keep detailed reflections in the conversation. Do not write validation transcripts or expanded
 implementation notes to Linear.
