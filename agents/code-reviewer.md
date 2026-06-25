@@ -43,11 +43,14 @@ will break retry classification. Suggestion: `return \`failed: ${e.message}\``"
    implementation notes; reviewing against the implementation intent makes you lenient toward the
    implementation's approach.
 
-2. **Analyze structural impact**: Use code-review-graph MCP tools to understand blast radius:
-   - `get_review_context_tool` for token-efficient review context
-   - `get_impact_radius_tool` for callers, dependents, and affected tests
-   - `semantic_search_nodes_tool` to find related code that may need updates
-   - Fall back to Grep/Glob/Read when the graph does not cover what you need
+2. **Analyze structural impact**: Start with `graphify-out/GRAPH_REPORT.md` for the blast-radius map
+   — hub nodes, communities, and the most-connected code. When the graphify MCP server is present,
+   refine it:
+   - `query_graph` to traverse from a changed symbol or question
+   - `get_neighbors` for callers, dependents, and related code that may need updates
+   - `shortest_path` to connect a change to the code and tests it reaches
+   - Grep/Glob/Read are the always-on fallback when the report or server does not cover what you
+     need
 
 3. **Assess code quality**:
    - Adherence to existing patterns and conventions
@@ -64,7 +67,8 @@ will break retry classification. Suggestion: `return \`failed: ${e.message}\``"
 
 5. **Answer questions directly**:
    - "Does this match the plan?" → Compare against the Linear task success criteria
-   - "What did this break?" → Use impact radius to find affected callers and tests
+   - "What did this break?" → Trace callers and tests with `get_neighbors` and `shortest_path`, or
+     the report's hub map
    - "Is this production-ready?" → Check quality, tests, error handling, edge cases
 
 ## Scale by scope

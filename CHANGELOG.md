@@ -98,6 +98,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `tsx` devDeps.
 - Tooling: enabled strict `tsconfig` flags (`exactOptionalPropertyTypes`, `noImplicitOverride`,
   `noFallthroughCasesInSwitch`).
+- Tooling: replaced the code-review-graph MCP server with graphify. The graph is built by the
+  `graphify` CLI into a committed `graphify-out/` (`graph.json` + `GRAPH_REPORT.md`) every worktree
+  inherits, and `.mcp.json` serves it read-only on demand via uvx. codebase-investigator,
+  code-reviewer, and the review skill read the committed report first, then use graphify's tools
+  (`query_graph`, `get_neighbors`, `shortest_path`) when the server is present, with Grep/Read as
+  the always-on fallback — no per-review rebuild.
 
 ### Removed
 

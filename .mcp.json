@@ -1,8 +1,15 @@
 {
   "mcpServers": {
-    "code-review-graph": {
+    "graphify": {
       "command": "uvx",
-      "args": ["code-review-graph", "serve"]
+      "args": [
+        "--from",
+        "graphifyy[mcp]",
+        "python",
+        "-m",
+        "graphify.serve",
+        "graphify-out/graph.json"
+      ]
     }
   }
 }
