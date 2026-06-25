@@ -18,6 +18,7 @@ export default defineConfig({
       'hooks/**',
       'scripts/**',
       'commands/**',
+      'graphify-out/**',
     ],
     overrides: [{ files: ['*.md'], options: { proseWrap: 'always', printWidth: 100 } }],
     sortImports: {
