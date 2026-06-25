@@ -2,10 +2,10 @@
 name: review
 description: >
   Review code changes for bugs, logic errors, security issues, design problems, and documented
-  convention violations using structural analysis from the code-review-graph plus cape conform. Use
-  whenever the user wants a code review: "review my changes", "review this", "check my code",
-  "/cape:review", "anything wrong here?", "is this ready?", or reviewing another PR or branch. Do
-  NOT use for writing prose or committing.
+  convention violations using structural analysis from the committed graphify graph plus cape
+  conform. Use whenever the user wants a code review: "review my changes", "review this", "check my
+  code", "/cape:review", "anything wrong here?", "is this ready?", or reviewing another PR or
+  branch. Do NOT use for writing prose or committing.
 ---
 
 <skill_overview> Review code changes using structural graph context, documented conventions, and
@@ -47,7 +47,8 @@ order is fixed. Depth adapts to change size. </rigidity_level>
 
 <critical_rules>
 
-1. **Always update the graph first** -- stale graph means stale review
+1. **Read the current graph report first** -- the graph is committed and refreshed out-of-band,
+   never rebuilt per review
 2. **Lead with the verdict** -- never bury the conclusion
 3. **Use the report format** -- verdict, risk, scope, findings, coverage gaps, summary
 4. **Never offer to fix** -- review and fix are separate concerns
@@ -93,14 +94,18 @@ If no changed files are found, report that and stop.
 
 ## Step 2: Build Structural Context
 
-Use the code-review-graph tools in order:
+Read the committed graph report at `graphify-out/GRAPH_REPORT.md` for blast radius — hub nodes,
+communities, and the most-connected code the diff touches. The graph is committed and refreshed
+out-of-band; do not rebuild it during review.
 
-1. `build_or_update_graph_tool()`
-2. `get_review_context_tool()`
-3. `get_impact_radius_tool()`
+When the graphify MCP server is present, refine the report with an optional query:
 
-For branch or PR scope, pass the detected main branch as the base. If the graph has no parseable
-nodes, fall back to diff and file reads and say structural analysis is unavailable.
+- `query_graph` to traverse from a changed symbol or question
+- `get_neighbors` for callers, dependents, and affected tests
+- `shortest_path` to connect a change to the code it reaches
+
+If the report is missing or the graph has no parseable nodes, fall back to diff and file reads and
+say structural analysis is unavailable. A missing report or server never blocks review.
 
 ---
 

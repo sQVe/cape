@@ -33,11 +33,12 @@ information that supports planning and design decisions.
   confidence by overlap and score, and report "No relevant notes found" gracefully with the queries
   tried.
 
-1. **Follow traces**: Start with code-review-graph MCP tools — use `semantic_search_nodes_tool` to
-   find classes, functions, or types by name, and `query_graph_tool` with patterns like
-   `imports_of`, `importers_of`, `callers_of`, or `file_summary` to explore relationships. Fall back
-   to Glob for file patterns, Grep for content search, Read for implementation details. Don't stop
-   at first result — explore multiple paths.
+1. **Follow traces**: Start with the committed graph report at `graphify-out/GRAPH_REPORT.md` for
+   the structural map — communities, hub nodes, and entry points. When the graphify MCP server is
+   present, drill in: `query_graph` to traverse from a question, `get_node` to look up a class,
+   function, or type, and `get_neighbors` to explore callers, importers, and dependents. Glob, Grep,
+   and Read are the always-on fallback whenever the report or server does not cover what you need —
+   use them freely. Don't stop at first result — explore multiple paths.
 
 2. **Answer questions directly**:
    - "Where is X?" → Exact file paths and line numbers
