@@ -65,14 +65,29 @@ Resolve blocking questions before creating Linear issues.
 
 ## Step 2: Refine Into Epic Contract
 
-Turn the design into a durable epic description:
+Turn the design into a durable epic description using the canonical shape in `cape:tracker`'s
+[linear-templates.md](../tracker/resources/linear-templates.md). Pick the variant first: **Light**
+by default, **Full** when a user journey changes, a new lifecycle or state exists, a migration runs,
+authorization matters, multiple systems or teams are involved, or rollout, observability, or
+rollback matters.
 
-- Requirements: specific, testable statements
-- Global constraints: shared rules for all tasks, or "N/A - single task"
-- Durable decisions: routes, schemas, service boundaries, auth/storage patterns
-- Anti-patterns: every entry uses "NO X (reason: Y)"
-- Success criteria: objective checks, including tests and project checks
-- Approach and architecture: concrete files, components, data flow, and known risks
+Keep the four questions separate; never blend them:
+
+- **Required behavior**: a numbered table (R1, R2, …) of `Scenario → Expected result`. Name the
+  actor, action, and observable proof in each row ("When an admin uploads a CSV with missing
+  headers, the import lists each missing header"). Never "works as expected." Subtasks reference
+  these rows. Stable upfront. Drop to `GIVEN/WHEN/THEN` in the scenario cell when a case has several
+  preconditions.
+- **Required constraints**: settled boundaries (routes, schemas, service boundaries, auth/storage
+  patterns, compatibility rules) and anti-patterns as `NO X (reason: Y)`.
+- **Proposed approach**: a recommendation the agent may improve, with concrete files, components,
+  data flow, and known risks.
+- **Acceptance criteria**: evidence per R-ID, plus a regression check that out-of-scope behavior
+  holds.
+
+Lead with the at-a-glance card so the first lines stand alone; use the chosen variant's fields
+(Light leads with Outcome, Problem, User/system; Full uses Primary user and adds Risk). For Full,
+sketch the work breakdown as a non-binding table in the parent; do not pre-create it.
 
 Before formalizing the first task, dispatch `cape:codebase-investigator` in default mode (model:
 haiku), or verify manually with search and file reads. Confirm file paths, APIs, test setup, helper
@@ -80,7 +95,7 @@ reuse, and similar implementation patterns.
 
 The first task must be a vertical slice with:
 
-- Goal
+- Goal, with `Delivers: R1, R2` naming the epic R-IDs it covers
 - Interface: inputs, outputs, side effects
 - Execution mode: HITL or AFK
 - Behaviors small enough for TDD cycles
@@ -97,9 +112,10 @@ prose through it; skip this for pure code or mechanical output.
 Load `cape:tracker` and apply its Agent contract for create-time rules, including dedupe, project
 routing, `src:cape`, `Medium`, naming, and `Done when:`. Confirm with the user before creating a new
 Linear project. Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear
-description. Keep it concise enough to be readable, but include the durable requirements,
-constraints, anti-patterns, success criteria, and architecture. The epic itself stays an untyped
-parent.
+description using the chosen variant's shape: at-a-glance card, the R-ID required-behavior table,
+required constraints, proposed approach, and acceptance criteria (Full adds before/after, user
+journey, release/observability, dependencies/risks, and a work-breakdown sketch). Keep it scannable.
+The epic itself stays an untyped parent.
 
 Use MCP Linear `save_issue` again to create exactly one child/sub-issue under the epic for the first
 task. Apply the sub-issue labels from the tracker contract: exactly one `type:*` label plus
@@ -132,8 +148,8 @@ Present:
 Epic <epic-id> created: <title>
 First task <task-id> created: <title>
 
-The epic has <N> requirements, <N> anti-patterns, and <N> success criteria.
-The first task was codebase-verified and stress-tested.
+The epic (<Light|Full>) has R1-R<N> required behaviors, <N> constraints, and <N> acceptance criteria.
+The first task delivers <R-IDs> and was codebase-verified and stress-tested.
 
 Continue with cape:execute-plan to start building.
 ```

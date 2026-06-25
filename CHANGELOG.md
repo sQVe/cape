@@ -54,6 +54,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   auto-closes on merge, and reserves `Related to ABU-XX` for PRs that do not complete the epic. The
   template placeholder no longer pairs both keywords on one line, which had produced non-closing
   epic links that left merged epics open.
+- Skills: restructured the epic contract for readability and agent precision. Required behavior is
+  now a numbered `R1 | Scenario | Expected result` table that doubles as the testable contract;
+  global constraints, durable decisions, and anti-patterns collapse into one `Required constraints`
+  section; the approach is framed as a `Proposed approach` the agent may improve; and acceptance
+  criteria reference R-IDs. Epics open with a scannable at-a-glance card, and the shape now has a
+  Light (default) and a Full variant. Tasks name `Delivers: R1, R2`; write-plan, execute-plan, and
+  finish-epic reference R-IDs and required constraints. Fixed a stale `epic-template.md` reference
+  in the tracker templates.
 - Set-goal: the emitted autonomous run now gates each task on conventions and the commit message,
   not just the reviewer verdict. `cape conform` findings are a fix-cycle the same as a reviewer
   FAIL, the commit-verify step checks for conventional format plus the task id, and the codex

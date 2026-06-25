@@ -87,7 +87,7 @@ provide the current task description or re-run the chain step that created it.
 Before coding, build an in-session implementation breakdown:
 
 - Task goal and success criteria
-- Relevant epic requirements and anti-patterns
+- Relevant epic R-IDs (required behavior) and required constraints
 - Files and patterns verified by `cape:codebase-investigator` or manual search
 - TDD slices, each with one behavior and one verification command
 - Risks, assumptions, and explicit out-of-scope items
@@ -124,9 +124,9 @@ Execute the in-session breakdown one slice at a time:
 5. Clean up only when it clearly improves the result.
 6. Run the slice verification command before moving on.
 
-When obstacles appear, re-read the epic contract from the session. If a requirement or anti-pattern
-forces a change of approach, explain the divergence in the conversation and continue only when the
-new approach still satisfies the contract. Keep the divergence in session.
+When obstacles appear, re-read the epic contract from the session. If an R-ID or a required
+constraint forces a change of approach, explain the divergence in the conversation and continue only
+when the new approach still satisfies the contract. Keep the divergence in session.
 
 Before closing, run the chain's own verification:
 
