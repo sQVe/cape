@@ -132,7 +132,8 @@ When writing the body, explain **why** the change was made, not what it does. Th
 the what.
 
 Before presenting or committing a generated commit message body, load the global `stop-slop` skill
-and run the prose through it; skip this for pure code or mechanical output.
+and run the prose through it; skip this for pure code or mechanical output. Write in simple language
+with clear, scannable structure.
 
 **Staging rules:**
 
