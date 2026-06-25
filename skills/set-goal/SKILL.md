@@ -151,9 +151,9 @@ never touches the workspace label.
 
 ## Topology (decided -- do not re-decide)
 - Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
-  with its worker, reviewer, and any QA as panes split inside that one tab. When the task closes, one
-  `herdr tab close` reaps every pane in it -- never accumulate tabs or panes. (Builder, reviewer, and
-  cycle cap are in the decisions table.)
+  with its worker plus any reviewer and QA panes split inside that one tab (no reviewer pane in
+  self-review mode). When the task closes, one `herdr tab close` reaps every pane in it -- never
+  accumulate tabs or panes. (Builder, reviewer, and cycle cap are in the decisions table.)
 - Task source: execute the planned tasks in dependency order; respect Linear blocking relations and
   the dependency notes in task descriptions. Do not invent tasks.
 
@@ -213,13 +213,12 @@ Omit this whole section when the field was empty.>
 ```
 
 The decisions table and the `## Prompt` per-task loop reflect the interview choices and the derived
-task source: render the builder and reviewer from their own answers (they
-are chosen independently -- the reviewer is not derived from the builder); for self-review, drop the
-separate reviewer from the loop and review via `cape:review`; for lazy mode, use the one-ahead
-variants in steps 1 and 5; and omit `## Run instructions` when the free-text field was empty. The
-table is a
-read-only summary -- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the
-table alone changes nothing.
+task source: render the builder and reviewer from their own answers (they are chosen independently
+-- the reviewer is not derived from the builder); for self-review, drop the separate reviewer from
+the loop and review via `cape:review`; for lazy mode, use the one-ahead variants in steps 1 and 5;
+and omit `## Run instructions` when the free-text field was empty. The table is a read-only summary
+-- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the table alone
+changes nothing.
 
 ---
 
