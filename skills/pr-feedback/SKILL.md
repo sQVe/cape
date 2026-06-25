@@ -88,20 +88,24 @@ instead of a manual paste step later:
 
 ```bash
 gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
-  query($owner:String!, $repo:String!, $pr:Int!) {
+  query($owner:String!, $repo:String!, $pr:Int!, $after:String) {
     repository(owner:$owner, name:$repo) {
       pullRequest(number:$pr) {
-        reviewThreads(first:100) { nodes {
-          id isResolved
-          comments(first:20) { nodes { databaseId body path line author { login } } }
-        } }
+        reviewThreads(first:100, after:$after) {
+          pageInfo { hasNextPage endCursor }
+          nodes {
+            id isResolved
+            comments(first:20) { nodes { databaseId body path line author { login } } }
+          }
+        }
       }
     }
   }'
 ```
 
-Keep only `isResolved: false` threads. If none remain, report that and stop. If a PR has more than
-100 threads, page with the `after` cursor — otherwise do not add pagination.
+Keep only `isResolved: false` threads. If none remain, report that and stop. If
+`pageInfo.hasNextPage` is true (a PR with more than 100 threads), repeat the call with
+`-F after=<endCursor>` until it is false — otherwise do not page.
 
 ---
 
