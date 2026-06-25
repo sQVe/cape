@@ -38,14 +38,40 @@ export const resolveBranchInfo = (cwd?: string) =>
 type StateValue = Record<string, unknown> & { timestamp: number };
 type StateFile = Record<string, StateValue>;
 
-const statePath = (root: string) => `${root}/hooks/context/state.json`;
 const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
-export const readState = () =>
+// State (the epic stamp, workflow flags) is per-worktree, but it must stay under
+// the shared plugin install rather than the worktree's own tree -- cape runs as
+// a plugin over other repos, and writing hooks/context/ into them would litter
+// user working trees. So we keep the single context dir on pluginRoot and give
+// each linked worktree its own state file instead. Without that suffix every
+// worktree and herdr workspace overwrites one global stamp.
+//
+// A linked worktree has git-dir `<common>/worktrees/<name>` while the main tree
+// has git-dir == git-common-dir; we key off basename(git-dir), which is unique
+// per worktree within a repo. The main tree and non-git callers keep the
+// unsuffixed `state.json`.
+// ponytail: assumes one pluginRoot per repo, so worktree names don't collide
+// across repos; revisit only if a single install ever serves multiple repos.
+const stateFilePath = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
-    const content = yield* service.readFile(statePath(root));
+    // spawnGit already trims to a non-empty string or null (see hookLive.ts).
+    const gitDir = yield* service.spawnGit(['rev-parse', '--git-dir']);
+    const commonDir = yield* service.spawnGit(['rev-parse', '--git-common-dir']);
+    const isLinkedWorktree = gitDir != null && commonDir != null && gitDir !== commonDir;
+    const name = isLinkedWorktree
+      ? (gitDir.replace(/\/+$/, '').split('/').pop() ?? '').replace(/[^A-Za-z0-9._-]/g, '-')
+      : '';
+    const suffix = name === '' ? '' : `-${name}`;
+    return { dir: `${root}/hooks/context`, path: `${root}/hooks/context/state${suffix}.json` };
+  });
+
+const readStateAt = (path: string) =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const content = yield* service.readFile(path);
     if (content == null) {
       return {} as StateFile;
     }
@@ -56,29 +82,35 @@ export const readState = () =>
     return Object.fromEntries(Object.entries(raw)) as StateFile;
   });
 
+export const readState = () =>
+  Effect.gen(function* () {
+    const { path } = yield* stateFilePath();
+    return yield* readStateAt(path);
+  });
+
 export const writeStateKey = (key: string, value: Record<string, unknown>) =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const root = service.pluginRoot();
-    const state = yield* readState();
+    const { dir, path } = yield* stateFilePath();
+    const state = yield* readStateAt(path);
     state[key] = { ...value, timestamp: Date.now() };
-    yield* service.ensureDir(`${root}/hooks/context`);
-    yield* service.writeFile(statePath(root), JSON.stringify(state));
+    yield* service.ensureDir(dir);
+    yield* service.writeFile(path, JSON.stringify(state));
   });
 
 export const removeStateKey = (key: string) =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const root = service.pluginRoot();
-    const state = yield* readState();
+    const { path } = yield* stateFilePath();
+    const state = yield* readStateAt(path);
     if (!(key in state)) {
       return;
     }
     const { [key]: _, ...rest } = state;
     if (Object.keys(rest).length === 0) {
-      yield* service.removeFile(statePath(root));
+      yield* service.removeFile(path);
     } else {
-      yield* service.writeFile(statePath(root), JSON.stringify(rest));
+      yield* service.writeFile(path, JSON.stringify(rest));
     }
   });
 
