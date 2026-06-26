@@ -341,7 +341,9 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        '/test/hooks/context/state-abu-15.json': JSON.stringify({
+          flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15'),
+        }),
         ...trackerCacheFile(trackerCache()),
       },
       gitResponses: {

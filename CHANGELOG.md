@@ -130,6 +130,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Hooks: per-worktree state (the epic stamp and workflow flags) now lives in its own file per
+  worktree instead of a single shared `state.json`. Because `cape` is a symlinked binary,
+  `pluginRoot` resolved to one install directory, so every worktree and herdr workspace overwrote
+  one stamp -- the last `cape worktree start` won, collapsing multiple workspaces onto the same epic
+  label. Each linked worktree now gets its own `state-<name>.json` under the same context directory,
+  keyed off `git-dir` differing from `git-common-dir`; the tracker cache stays global.
 - Hooks: the push gate now resolves the current branch from the hook payload's `cwd` instead of the
   hook process cwd, so a `git push` from a feature-branch worktree is no longer blocked when the
   session sits on the default branch. The branch-vs-default-branch check now lives in one shared

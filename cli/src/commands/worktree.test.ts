@@ -130,6 +130,27 @@ describe('cape worktree start', () => {
     console_.restore();
   });
 
+  it('gives a linked worktree its own state file so stamps do not collide', async () => {
+    const { hookLayer, files } = makeHookLayer(
+      {},
+      {
+        'rev-parse --git-dir': '/repo/.bare/worktrees/abu-50',
+        'rev-parse --git-common-dir': '/repo/.bare',
+      },
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run(['worktree', 'start', 'ABU-50']).pipe(Effect.provide(makeLayers(hookLayer))),
+    );
+
+    const worktreeState = files['/test/hooks/context/state-abu-50.json'];
+    expect(worktreeState).toBeTypeOf('string');
+    expect(JSON.parse(worktreeState as string).flowPhase.issueId).toBe('ABU-50');
+    expect(files[statePath]).toBeUndefined();
+    console_.restore();
+  });
+
   it('rejects a blank epic id without writing state', async () => {
     const { hookLayer, files } = makeHookLayer();
     const console_ = spyConsole();
@@ -231,7 +252,8 @@ describe('cape worktree start', () => {
 
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(hookLayer)));
 
-    expect(files[statePath]).toContain('ABU-50');
+    expect(files['/test/hooks/context/state-abu-50.json']).toContain('ABU-50');
+    expect(files[statePath]).toBeUndefined();
     expect(result.additionalContext).toContain('| Epic   ABU-50  Worktree skill');
     expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
     expect(result.additionalContext).toContain('| Next   ABU-52 - Skill markdown');
@@ -284,6 +306,29 @@ describe('cape worktree stop', () => {
     expect(JSON.parse(console_.output())).toEqual({ cleared: true });
     expect(files[statePath]).toBeUndefined();
     expect(removedFiles).toEqual([statePath]);
+    console_.restore();
+  });
+
+  it('clears the linked worktree state file, not the shared state.json', async () => {
+    const worktreeStatePath = '/test/hooks/context/state-abu-50.json';
+    const { hookLayer, files, removedFiles } = makeHookLayer(
+      {
+        [worktreeStatePath]: JSON.stringify({
+          flowPhase: { phase: 'BUILD', issueId: 'ABU-50', timestamp: Date.now() },
+        }),
+      },
+      {
+        'rev-parse --git-dir': '/repo/.bare/worktrees/abu-50',
+        'rev-parse --git-common-dir': '/repo/.bare',
+      },
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(run(['worktree', 'stop']).pipe(Effect.provide(makeLayers(hookLayer))));
+
+    expect(JSON.parse(console_.output())).toEqual({ cleared: true });
+    expect(files[worktreeStatePath]).toBeUndefined();
+    expect(removedFiles).toEqual([worktreeStatePath]);
     console_.restore();
   });
 });
