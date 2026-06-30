@@ -266,9 +266,9 @@ Summary points:       <count>  (fixed / replied / no action — no thread to res
 and resolve threads whose fixes are still uncommitted locally.
 
 **Right:** Fetch threads via the `reviewThreads` GraphQL query (the only source of thread IDs),
-triage each in a table keyed by source, fix the valid ones (nits edited directly, behavioral
-changes through TDD), commit and push, then loop `resolveReviewThread` over exactly the threads
-whose fixes are now on the remote. </example>
+triage each in a table keyed by source, fix the valid ones (nits edited directly, behavioral changes
+through TDD), commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes
+are now on the remote. </example>
 
 <example>
 <scenario>A reviewer leaves a one-line "rename `data` to `rows` for clarity"</scenario>
