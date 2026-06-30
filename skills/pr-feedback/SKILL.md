@@ -90,7 +90,7 @@ both in one call, or the summary is silently dropped:
 
 ```bash
 gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
-  query($owner:String!, $repo:String!, $pr:Int!, $after:String) {
+  query($owner:String!, $repo:String!, $pr:Int!, $after:String, $reviewsAfter:String) {
     repository(owner:$owner, name:$repo) {
       pullRequest(number:$pr) {
         reviewThreads(first:100, after:$after) {
@@ -100,7 +100,8 @@ gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
             comments(first:20) { nodes { databaseId body path line author { login } } }
           }
         }
-        reviews(first:100) {
+        reviews(first:100, after:$reviewsAfter) {
+          pageInfo { hasNextPage endCursor }
           nodes { author { login } state body submittedAt }
         }
       }
@@ -110,9 +111,11 @@ gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
 
 Keep only `isResolved: false` threads, and only `reviews` nodes with a non-empty `body` (most are
 empty — a reviewer who only left inline comments produces a bodyless review; bots emit boilerplate).
-If neither remains, report that and stop. If `pageInfo.hasNextPage` is true (a PR with more than 100
-threads), repeat the call with `-F after=<endCursor>` until it is false — read `reviews` from the
-first page only; do not page it.
+If neither remains, report that and stop. Both connections paginate independently: if
+`reviewThreads.pageInfo.hasNextPage` is true, repeat with `-F after=<threads endCursor>`; if
+`reviews.pageInfo.hasNextPage` is true, repeat with `-F reviewsAfter=<reviews endCursor>`. Keep
+paging each until its `hasNextPage` is false so no thread or summary body is dropped on long-lived
+PRs.
 
 ---
 
@@ -138,8 +141,8 @@ Before presenting the triage prose, load the global `stop-slop` skill and run th
 it; skip for pure code or mechanical output. Write in simple language with clear, scannable
 structure.
 
-Present the tracking table, keyed by source (thread ID or summary author), with the decided action
-per comment:
+Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
+non-empty bodies from the same reviewer stay distinct), with the decided action per comment:
 
 ```text
 PR #<number> — review feedback triage
@@ -150,13 +153,14 @@ PR #<number> — review feedback triage
 | 2 | PRRT_b…      | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
 | 3 | PRRT_c…      | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
 | 4 | PRRT_d…      | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
-| 5 | summary:alice| —           | missing rollback    | Valid        | Fix (edit)     |
+| 5 | summary:alice@2026-06-30T07:24:25Z | — | missing rollback | Valid | Fix (edit) |
 
 Apply the fixes marked Fix and respond to the rest?
 ```
 
-The `source` column carries the thread node ID for inline comments, or `summary:<author>` for a
-review summary body (no thread ID exists for it).
+The `source` column carries the thread node ID for inline comments, or
+`summary:<author>@<submittedAt>` for a review summary body (no thread ID exists for it; the
+timestamp keeps multiple bodies from one author unambiguous).
 
 ---
 
