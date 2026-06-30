@@ -64,7 +64,8 @@ is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_
 7. **Commit through cape:commit** — never write the commit by hand.
 8. **Resolve only what landed** — resolve a thread after its fix is pushed, or after a reply states
    why it was dismissed. Skip threads already `isResolved`. Never resolve silently or on an unpushed
-   change.
+   change. A review summary body has no thread node ID; reply via a top-level PR comment at most,
+   never resolve it.
 9. **Replies use simple language and clear structure** — short, plain sentences; lead with a capital
    letter; one point per reply; no filler, hedging, or emoji padding. Run reply prose through the
    global `stop-slop` skill before posting.
@@ -73,7 +74,7 @@ is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_
 
 <the_process>
 
-## Step 1: Resolve the PR and fetch threads with their IDs
+## Step 1: Resolve the PR and fetch threads and review summaries
 
 Identify the PR. If the user gave a number or URL use it; otherwise resolve the current branch's PR:
 
@@ -82,13 +83,14 @@ gh repo view --json owner,name
 gh pr status --json number,headRefName,url
 ```
 
-Fetch every review thread in one GraphQL call. This is the only source that exposes the `PRRT_`
-thread node IDs, and it carries each comment beside its parent thread, so correlation is automatic
-instead of a manual paste step later:
+A review has two parts and they live in two places. **Inline thread comments** ("shards") are in
+`reviewThreads`. The **top-level review summary body** — the main message a reviewer types when
+hitting Approve / Request changes / Comment — is in `reviews.nodes.body`, a separate field. Fetch
+both in one call, or the summary is silently dropped:
 
 ```bash
 gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
-  query($owner:String!, $repo:String!, $pr:Int!, $after:String) {
+  query($owner:String!, $repo:String!, $pr:Int!, $after:String, $reviewsAfter:String) {
     repository(owner:$owner, name:$repo) {
       pullRequest(number:$pr) {
         reviewThreads(first:100, after:$after) {
@@ -98,25 +100,38 @@ gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
             comments(first:20) { nodes { databaseId body path line author { login } } }
           }
         }
+        reviews(first:100, after:$reviewsAfter) {
+          pageInfo { hasNextPage endCursor }
+          nodes { author { login } state body submittedAt }
+        }
       }
     }
   }'
 ```
 
-Keep only `isResolved: false` threads. If none remain, report that and stop. If
-`pageInfo.hasNextPage` is true (a PR with more than 100 threads), repeat the call with
-`-F after=<endCursor>` until it is false — otherwise do not page.
+Keep only `isResolved: false` threads, and only `reviews` nodes with a non-empty `body` (most are
+empty — a reviewer who only left inline comments produces a bodyless review; bots emit boilerplate).
+If neither remains, report that and stop. Both connections paginate independently: if
+`reviewThreads.pageInfo.hasNextPage` is true, repeat with `-F after=<threads endCursor>`; if
+`reviews.pageInfo.hasNextPage` is true, repeat with `-F reviewsAfter=<reviews endCursor>`. Keep
+paging each until its `hasNextPage` is false so no thread or summary body is dropped on long-lived
+PRs.
 
 ---
 
 ## Step 2: Triage validity
 
-For each open thread, read the cited code and judge it:
+For each open thread and each non-empty review summary, read the cited code and judge it:
 
 - **Valid** — a real bug, regression, convention violation, or correctness issue; cite the
   `file:line` evidence
 - **Invalid** — the concern does not hold; state why against the current code
 - **Out of scope** — legitimate but belongs in a separate change; note it
+
+A review summary often restates points already raised inline. Fold those into the matching thread
+row rather than triaging them twice; triage only the summary's net-new points. A summary has no
+thread node ID, so it can never be resolved — its only outcomes are a fix plus an optional top-level
+reply, or no action.
 
 Surface scope creep here: if a comment asks for a refactor or feature beyond the PR's intent, flag
 it out of scope rather than silently expanding the work. A polite or confident comment is not
@@ -126,20 +141,26 @@ Before presenting the triage prose, load the global `stop-slop` skill and run th
 it; skip for pure code or mechanical output. Write in simple language with clear, scannable
 structure.
 
-Present the tracking table, keyed by thread ID, with the decided action per comment:
+Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
+non-empty bodies from the same reviewer stay distinct), with the decided action per comment:
 
 ```text
 PR #<number> — review feedback triage
 
-| # | thread     | file:line   | comment (short)     | verdict      | action         |
-|---|------------|-------------|---------------------|--------------|----------------|
-| 1 | PRRT_a…    | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
-| 2 | PRRT_b…    | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
-| 3 | PRRT_c…    | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
-| 4 | PRRT_d…    | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
+| # | source       | file:line   | comment (short)     | verdict      | action         |
+|---|--------------|-------------|---------------------|--------------|----------------|
+| 1 | PRRT_a…      | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
+| 2 | PRRT_b…      | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
+| 3 | PRRT_c…      | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
+| 4 | PRRT_d…      | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
+| 5 | summary:alice@2026-06-30T07:24:25Z | — | missing rollback | Valid | Fix (edit) |
 
 Apply the fixes marked Fix and respond to the rest?
 ```
+
+The `source` column carries the thread node ID for inline comments, or
+`summary:<author>@<submittedAt>` for a review summary body (no thread ID exists for it; the
+timestamp keeps multiple bodies from one author unambiguous).
 
 ---
 
@@ -191,11 +212,18 @@ gh api graphql -F threadId=<PRRT_id> -F body='<reason>' -f query='
     }
   }'
 
-# Resolve once the fix landed or a dismissal reply was posted
+# Resolve once the fix landed or a dismissal reply was posted (threads only)
 gh api graphql -F threadId=<PRRT_id> -f query='
   mutation($threadId:ID!) {
     resolveReviewThread(input:{threadId:$threadId}) { thread { id isResolved } }
   }'
+```
+
+A review summary has no thread to reply into or resolve. When a summary point warrants a reply, post
+it once as a top-level PR comment — never resolve it:
+
+```bash
+gh pr comment <number> --body '<reply>'
 ```
 
 Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
@@ -207,6 +235,7 @@ Resolved <K>/<N> threads on PR #<number>
 Fixed + resolved:     <count>  (<paths>)
 Dismissed + resolved: <count>  (<paths>, reason)
 Left open:            <count>  (<paths>, needs your call)
+Summary points:       <count>  (fixed / replied / no action — no thread to resolve)
 ```
 
 </the_process>
@@ -241,9 +270,9 @@ Left open:            <count>  (<paths>, needs your call)
 and resolve threads whose fixes are still uncommitted locally.
 
 **Right:** Fetch threads via the `reviewThreads` GraphQL query (the only source of thread IDs),
-triage each in a table keyed by thread ID, fix the valid ones (nits edited directly, behavioral
-changes through TDD), commit and push, then loop `resolveReviewThread` over exactly the threads
-whose fixes are now on the remote. </example>
+triage each in a table keyed by source, fix the valid ones (nits edited directly, behavioral changes
+through TDD), commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes
+are now on the remote. </example>
 
 <example>
 <scenario>A reviewer leaves a one-line "rename `data` to `rows` for clarity"</scenario>

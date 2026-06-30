@@ -15,6 +15,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   go through `cape:test-driven-development` or `cape:fix-bug`), then reply, resolve the matching
   threads via GraphQL, and commit through `cape:commit`. Thread node IDs come only from the
   `reviewThreads` query and are carried per comment, so resolution never depends on hand-pasted IDs.
+  The fetch also pulls top-level review summary bodies (`reviews.nodes.body`) — the main message a
+  reviewer types when submitting — and triages them alongside the inline threads; a summary has no
+  thread node ID, so it is replied to via a top-level PR comment and never resolved.
 - CI: added `.github/workflows/ci.yml`, gating the repo on push to `main` and on pull requests
   targeting `main`. A blocking `check` job runs `format:check`, `lint`, and `typecheck`; a blocking
   `test` job runs the suite; and a non-blocking, PR-only `fallow` job reports code-health findings
