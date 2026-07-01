@@ -19,10 +19,10 @@
     "test:e2e": "vp test --project e2e"
   },
   "devDependencies": {
-    "@types/node": "25.9.2",
-    "fallow": "2.101.0",
-    "oxfmt": "0.55.0",
-    "oxlint": "1.69.0",
+    "@types/node": "26.1.0",
+    "fallow": "2.103.0",
+    "oxfmt": "0.57.0",
+    "oxlint": "1.72.0",
     "tsx": "4.22.4",
     "typescript": "6.0.3",
     "vite-plus": "0.2.1"

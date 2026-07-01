@@ -59,6 +59,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Tooling: bumped `@types/node` (25 to 26), `fallow`, `oxfmt`, `oxlint`, `smol-toml`, and `tsdown`
+  to their latest releases.
 - Skills: rewrote step headings to sentence case across seven skills (don-cape, execute-plan,
   finish-epic, fix-bug, review, tracker, write-plan), matching the documented sentence-case heading
   rule.
