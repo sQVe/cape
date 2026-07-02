@@ -173,7 +173,9 @@ the table exactly before proceeding. Do not change code until the user approves 
 
 ## Step 4: Apply accepted fixes
 
-Signal the build phase: `cape workspace phase build`.
+Signal the build phase and workflow state: `cape state set workflowActive` then
+`cape workspace phase build`. The `workflowActive` flag is what lets an accepted comment hand off to
+`cape:test-driven-development` — the internal-skill gate blocks TDD without it.
 
 For each comment marked **Fix**, apply the change at the right weight:
 
@@ -226,8 +228,9 @@ it once as a top-level PR comment — never resolve it:
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
-dismissed vs left-open is recorded for later verification:
+Confirm each resolve response shows `isResolved: true`. Clear the workflow flag once the fixes are
+committed: `cape state clear workflowActive`. Present the final table so applied vs dismissed vs
+left-open is recorded for later verification:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>

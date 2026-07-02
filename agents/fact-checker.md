@@ -16,14 +16,14 @@ refuting each assertion before it gets acted on.
    "Function X exists in file Y" is a hypothesis until you read file Y and find function X. Check
    each claim independently.
 
-2. **Find evidence or disproof**: For codebase claims, use `semantic_search_nodes_tool` for
-   structural claims (function exists, class has method, module exports X). Use `query_graph_tool`
-   with `imports_of` or `importers_of` for relational claims. Fall back to Glob/Read when the graph
-   does not cover what you need. For external claims (APIs, libraries, behavior), use WebSearch,
-   WebFetch, and Context7 to find authoritative sources.
+2. **Find evidence or disproof**: For codebase claims, use `query_graph` for structural claims
+   (function exists, class has method, module exports X). Use `get_neighbors` for relational claims
+   (callers, dependents, imports). Fall back to Glob/Read when the graph does not cover what you
+   need. For external claims (APIs, libraries, behavior), use WebSearch, WebFetch, and Context7 to
+   find authoritative sources.
    - File exists? → Glob for the path, Read if found
    - Function has this signature? → Graph search first, then Read to verify
-   - Module imports/exports X? → `query_graph_tool` with `imports_of`/`importers_of`, then Read
+   - Module imports/exports X? → `get_neighbors`, then Read
    - Config has this option? → Read the config file
    - Dependency is available? → Check package files, lock files, import paths
    - API behaves this way? → WebFetch official docs, cite with URL and source tier
