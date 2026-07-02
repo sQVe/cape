@@ -40,9 +40,9 @@ Don't use for:
    the current test, and avoid batching future behaviors into the same pass.
 3. **Cleanup is optional, not ceremonial.** Once the behavior passes, improve names or structure
    only when it clearly helps; skip cleanup when no useful simplification is apparent.
-4. **Override is explicit only.** The hard-gate escape phrase is `CAPE_HARD_GATE_OVERRIDE`; use it
-   only when the user explicitly accepts skipping red-before-green for a stated reason, and report
-   that the TDD contract was overridden.
+4. **Override is explicit only.** No hook enforces red-before-green — the cycle is a discipline you
+   keep, not a gate the harness blocks on. Skip it only when the user explicitly accepts doing so
+   for a stated reason, and report that the TDD contract was overridden.
 
 </critical_rules>
 

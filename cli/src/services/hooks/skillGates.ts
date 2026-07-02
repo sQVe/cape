@@ -89,13 +89,7 @@ export const preToolUseBash = () =>
     return null;
   });
 
-const gatedSkills = new Set([
-  'execute-plan',
-  'finish-epic',
-  'fix-bug',
-  'pr',
-  'test-driven-development',
-]);
+const gatedSkills = new Set(['execute-plan', 'finish-epic', 'pr', 'test-driven-development']);
 
 interface ContextResult {
   additionalContext: string;
@@ -156,13 +150,6 @@ const gateFinishEpic = (targetEpicId: string | null) =>
     return null;
   });
 
-const gateFixBug = () =>
-  Effect.succeed(
-    contextWith(
-      'No diagnosed bug exists. Run the fix-bug diagnosis gate first, then create a Linear bug with cape:tracker.',
-    ),
-  );
-
 const gateInternalSkill = () =>
   Effect.gen(function* () {
     const state = yield* readState();
@@ -219,7 +206,6 @@ const skillGates: Record<
 > = {
   'execute-plan': () => gateExecutePlan(),
   'finish-epic': (args) => gateFinishEpic(args),
-  'fix-bug': () => gateFixBug(),
   pr: (args) => gatePr(args),
   'test-driven-development': () => gateInternalSkill(),
 };

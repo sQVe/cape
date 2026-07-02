@@ -5,7 +5,9 @@ description: >
   write-plan creates the epic and first sub-issue, execute-plan implements it. Triggers on:
   "continue", "next task", "resume", "let's go", "work on the plan", a Linear issue ID, or
   transitioning after planning is complete. Uses the local tracker cache for orientation and
-  refreshes that cache after every Linear write.
+  refreshes that cache after every Linear write. Do NOT use for bug fixes (use cape:fix-bug),
+  exploratory design (use cape:brainstorm), or acting on inbound PR review comments (use
+  cape:pr-feedback).
 ---
 
 <skill_overview> Implement one tracker task, verify it, close it in Linear, create or identify the
@@ -49,22 +51,7 @@ and cache refresh after writes are fixed. Implementation tactics adapt to the ta
 
 ## Step 1: Orient from tracker cache
 
-Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`:
-
-```json
-{
-  "version": 1,
-  "timestamp": 0,
-  "epics": {
-    "ABU-15": {
-      "id": "ABU-15",
-      "title": "Cape V2",
-      "status": "In Progress",
-      "tasks": [{ "id": "ABU-56", "title": "Task", "status": "Todo", "stateType": "unstarted" }]
-    }
-  }
-}
-```
+Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`.
 
 Pick work in this order:
 

@@ -56,12 +56,14 @@ First matching row wins:
 | "How should I approach X" or unclear requirements                 | `cape:brainstorm`   | Design before code         |
 | Formalize a design into an epic                                   | `cape:write-plan`   | Requires brainstorm output |
 | "Continue", "next task", "work on the plan", Linear task ID       | `cape:execute-plan` | Orient from tracker cache  |
+| Set up an autonomous run, draft a `/goal`, prep an AFK run        | `cape:set-goal`     | Stages a run draft         |
 | Something broken, error, stack trace, "doesn't work"              | `cape:fix-bug`      | Diagnose then patch        |
 | Fix a diagnosed Linear bug issue                                  | `cape:fix-bug`      | Diagnose then patch        |
 | Start work in an epic worktree, create/enter per-epic worktree    | `cape:worktree`     | Standalone                 |
-| Finish or close a tracker epic, all tasks done                    | `cape:finish-epic`  | End of build chain         |
+| Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`  | End of build chain         |
 | Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |
+| Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`  | Inbound review loop        |
 | Review code, "check my code", "anything wrong?"                   | `cape:review`       | Read-only review           |
 | Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
 
@@ -99,16 +101,8 @@ SHIP   finish-epic -> review -> STOP for PR approval -> pr
 BUG    fix-bug -> test-driven-development -> commit, then rejoin BUILD tail
 ```
 
-- `brainstorm` researches, asks questions, compares approaches, and produces a design summary.
-- `write-plan` creates a Linear epic and one first sub-issue task, then refreshes tracker cache.
-- `execute-plan` implements one task, verifies it, closes it in Linear, creates or identifies the
-  next task, refreshes cache, and stops for review.
-- `finish-epic` verifies all success criteria, closes the Linear epic, refreshes cache, and reports.
-- `review` stamps `reviewedAt` after a completed review so `pr` can proceed.
-- `pr` requires explicit user approval before creating the pull request.
-- `fix-bug` diagnoses to root cause, adopts or creates a Linear bug issue, writes a failing
-  regression test, implements the fix, verifies, closes in Linear, and refreshes cache.
-- `commit` persists completed work.
+Each link's contract lives in its own skill; load it and follow it. The STOP points above are
+load-bearing: honor them.
 
 Vague feature requests go through the build chain. Direct skill invocation or a ready tracker task
 is the user's explicit choice to skip earlier links.
@@ -132,30 +126,4 @@ sessions; do not work from memory.
 **Right:** Route to `cape:brainstorm`, research the codebase, discuss design, then use
 `cape:write-plan` to create the Linear epic and first task. </example>
 
-<example>
-<scenario>User reports something broken</scenario>
-
-**Wrong:** Guess a fix and patch it without a reproduction.
-
-**Right:** Route to `cape:fix-bug`, reproduce the symptom, trace root cause, track the bug in
-Linear, fix with a failing regression test, close, and refresh cache. </example>
-
-<example>
-<scenario>User says "continue"</scenario>
-
-**Wrong:** Ask where to start without checking state.
-
-**Right:** Read tracker cache, load `cape:execute-plan` if ready work exists, or suggest
-`cape:finish-epic` if all tasks appear done. </example>
-
 </examples>
-
-<key_principles>
-
-- **Skills are mandatory** -- finding a matching skill means using it
-- **Chains have order** -- each link feeds the next
-- **STOP means STOP** -- after the brainstorm summary, write-plan, and each execute-plan task,
-  present results and wait
-- **Tracker is the state seam** -- Linear handles writes; cache powers local reads
-
-</key_principles>

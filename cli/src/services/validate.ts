@@ -31,12 +31,12 @@ const skillRequiredTags = [
   'when_to_use',
   'critical_rules',
   'the_process',
-  'examples',
-  'key_principles',
 ];
 
 const skillAllKnownTags = [
   ...skillRequiredTags,
+  'examples',
+  'key_principles',
   'agent_references',
   'skill_references',
   'anti_batching',

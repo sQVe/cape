@@ -137,9 +137,7 @@ Surface scope creep here: if a comment asks for a refactor or feature beyond the
 it out of scope rather than silently expanding the work. A polite or confident comment is not
 evidence.
 
-Before presenting the triage prose, load the global `stop-slop` skill and run the rationales through
-it; skip for pure code or mechanical output. Write in simple language with clear, scannable
-structure.
+Run the triage rationales through the global `stop-slop` skill before presenting.
 
 Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
 non-empty bodies from the same reviewer stay distinct), with the decided action per comment:
@@ -173,7 +171,11 @@ the table exactly before proceeding. Do not change code until the user approves 
 
 ## Step 4: Apply accepted fixes
 
-Signal the build phase: `cape workspace phase build`.
+Signal the build phase and workflow state: `cape state set workflowActive` then
+`cape workspace phase build`. The `workflowActive` flag is what lets an accepted comment hand off to
+`cape:test-driven-development` — the internal-skill gate blocks TDD without it. Once set, always
+clear it before finishing: run `cape state clear workflowActive` on any exit after this point —
+normal completion (Step 5), abort, or stop — so the flag never leaks past the skill.
 
 For each comment marked **Fix**, apply the change at the right weight:
 
@@ -226,8 +228,9 @@ it once as a top-level PR comment — never resolve it:
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
-dismissed vs left-open is recorded for later verification:
+Confirm each resolve response shows `isResolved: true`. Clear the workflow flag once the fixes are
+committed: `cape state clear workflowActive`. Present the final table so applied vs dismissed vs
+left-open is recorded for later verification:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>

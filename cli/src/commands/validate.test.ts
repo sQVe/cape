@@ -108,7 +108,7 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Empty tag: <skill_overview>');
   });
 
-  it('requires all seven tags', () => {
+  it('requires the five core tags', () => {
     const content = '---\nname: x\ndescription: x\n---\n';
     const result = validateSkillContent('test.md', content);
     expect(result.valid).toBe(false);
@@ -117,8 +117,13 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Missing required tag: <when_to_use>');
     expect(result.errors).toContain('Missing required tag: <critical_rules>');
     expect(result.errors).toContain('Missing required tag: <the_process>');
-    expect(result.errors).toContain('Missing required tag: <examples>');
-    expect(result.errors).toContain('Missing required tag: <key_principles>');
+  });
+
+  it('treats examples and key_principles as optional', () => {
+    const content = '---\nname: x\ndescription: x\n---\n';
+    const result = validateSkillContent('test.md', content);
+    expect(result.errors).not.toContain('Missing required tag: <examples>');
+    expect(result.errors).not.toContain('Missing required tag: <key_principles>');
   });
 
   it('detects missing the_process tag', () => {
@@ -130,10 +135,10 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Missing required tag: <the_process>');
   });
 
-  it('detects missing examples tag', () => {
+  it('allows a skill without an examples tag', () => {
     const content = validSkill.replace(/<examples>[\s\S]*?<\/examples>\n*/, '');
     const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('Missing required tag: <examples>');
+    expect(result.valid).toBe(true);
   });
 
   it('detects critical_rules after the_process', () => {

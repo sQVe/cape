@@ -1199,14 +1199,12 @@ describe('preToolUseSkill', () => {
     });
   });
 
-  it('adds diagnosis gate context for fix-bug', async () => {
+  it('allows fix-bug through without an unconditional diagnosis nudge', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:fix-bug'),
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('diagnosis gate'),
-    });
+    expect(result).toBeNull();
   });
 
   it('returns additionalContext when on default branch with open epic and ready tasks', async () => {

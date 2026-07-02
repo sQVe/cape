@@ -5,7 +5,8 @@ description: >
   convention violations using structural analysis from the committed graphify graph plus cape
   conform. Use whenever the user wants a code review: "review my changes", "review this", "check my
   code", "/cape:review", "anything wrong here?", "is this ready?", or reviewing another PR or
-  branch. Do NOT use for writing prose or committing.
+  branch. Do NOT use for writing prose, committing, or acting on inbound PR review comments (use
+  cape:pr-feedback).
 ---
 
 <skill_overview> Review code changes using structural graph context, documented conventions, and
@@ -140,9 +141,7 @@ Calibrate depth:
 
 ## Step 5: Present report
 
-Before presenting the review write-up, load the global `stop-slop` skill and run the prose through
-it; skip this for pure code or mechanical output. Write in simple language with clear, scannable
-structure.
+Run the review write-up through the global `stop-slop` skill before presenting.
 
 Use this format:
 

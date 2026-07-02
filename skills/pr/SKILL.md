@@ -36,13 +36,11 @@ bundled template — never invent sections. </rigidity_level>
 
 1. **NEVER call `cape pr create` without user confirmation** — present the full description to the
    user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
-   The one exception is the AFK branch (step 6): when invoked with the `CAPE_ORCHESTRATE` marker,
-   print the full description to the transcript and create the PR without `AskUserQuestion`.
+   The one exception is the AFK branch (step 6).
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
 3. **NEVER skip review-before-pr** — a fresh `reviewedAt` stamp from `cape:review` is required. The
-   hard-gate escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` to downgrade
-   the hook deny to a warning. An orchestrator run uses the distinct `CAPE_ORCHESTRATE` marker for
-   the same downgrade, keeping robot runs attributable.
+   escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` (human escape) or
+   `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6) to downgrade the hook deny to a warning.
 4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
 5. **Use `cape pr create`** — not the GitHub API directly
@@ -162,9 +160,7 @@ If no subjective items exist, omit manual verification entirely. If no deploymen
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
 gaps found, add missing test plan items.
 
-Before presenting or creating the PR, load the global `stop-slop` skill and run the description
-prose through it; skip this for pure code or mechanical output. Write in simple language with clear,
-scannable structure.
+Run the description prose through the global `stop-slop` skill before presenting or creating the PR.
 
 ---
 
@@ -177,14 +173,12 @@ approve. Print the full PR (title, description, automatable items) to the transc
 PR is on record, skip `AskUserQuestion`, then run the test-plan gate and `cape pr create` as on
 approval below. The interactive path below is unchanged when the marker is absent.
 
-No human edits the body before it ships, so the step 5 quality bar applies in full and stop-slop
-runs on the body — the "mechanical output" skip never applies, since an AFK PR description is always
-prose. Nothing downstream catches a slop description. Two AFK-only rules on top of that bar:
+No human edits an AFK body before it ships, so the step 5 quality bar and stop-slop apply in full.
+Two AFK-only rules on top:
 
 - **Never write the `CAPE_ORCHESTRATE` marker, or any robot signature/emoji, into the PR title or
-  body.** It is an input/hook signal only — it must not leak into what reviewers read.
-- **Do not narrate the run.** The body describes the change, not the orchestration that produced it
-  (no task graph, no agent/review-pass mentions).
+  body** — it is an input/hook signal only.
+- **Do not narrate the run** — describe the change, not the orchestration that produced it.
 
 Output the full PR:
 
