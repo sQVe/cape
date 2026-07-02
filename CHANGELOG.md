@@ -133,6 +133,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Skills: the `cape:set-goal` launch helper now gates each send on the main pane's tail (a
+  `tail_until` poll over the last 15 unwrapped lines) instead of `herdr wait output`, which matches
+  recent scrollback including text older than the wait. Staging itself plants both wait markers in
+  the pane -- the helper-script preview contains the literal `Goal set:` and any earlier Esc leaves
+  an `Interrupted` line -- so both waits passed instantly, the send sequence lost all pacing, and
+  the `/goal` condition and approach prompt merged into one over-length input. With tail polling a
+  failed submit aborts the launch instead of merging. The builder interview question now also states
+  TDD is enforced for either builder.
 - Hooks: per-worktree state (the epic stamp and workflow flags) now lives in its own file per
   worktree instead of a single shared `state.json`. Because `cape` is a symlinked binary,
   `pluginRoot` resolved to one install directory, so every worktree and herdr workspace overwrote
