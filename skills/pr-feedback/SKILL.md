@@ -137,9 +137,7 @@ Surface scope creep here: if a comment asks for a refactor or feature beyond the
 it out of scope rather than silently expanding the work. A polite or confident comment is not
 evidence.
 
-Before presenting the triage prose, load the global `stop-slop` skill and run the rationales through
-it; skip for pure code or mechanical output. Write in simple language with clear, scannable
-structure.
+Run the triage rationales through the global `stop-slop` skill before presenting.
 
 Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
 non-empty bodies from the same reviewer stay distinct), with the decided action per comment:

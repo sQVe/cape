@@ -106,9 +106,8 @@ The first task must be a vertical slice with:
 
 ## Step 3: Create Linear epic and first task
 
-Before creating issues, load the global `stop-slop` skill and run the epic contract and first-task
-prose through it; skip this for pure code or mechanical output. Write in simple language with clear,
-scannable structure.
+Run the epic contract and first-task prose through the global `stop-slop` skill before creating
+issues.
 
 Load `cape:tracker` and apply its Agent contract for create-time rules, including dedupe, project
 routing, `src:cape`, `Medium`, naming, and `Done when:`. Confirm with the user before creating a new

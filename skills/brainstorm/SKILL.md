@@ -132,15 +132,8 @@ Present what you found — do not propose solutions yet:
 **Key decisions so far:** [table of user answers from clarifying questions]
 ```
 
-**STOP here.** Ask: "Anything to discuss or redirect before I propose approaches?"
-
-The user may:
-
-- Discuss findings, ask follow-ups, correct misunderstandings
-- Point out missed context or redirect research
-- Say "continue" to proceed to Step 2
-
-Do NOT proceed to Step 2 until the user responds.
+**STOP here.** Ask: "Anything to discuss or redirect before I propose approaches?" Do not proceed to
+Step 2 until the user responds.
 
 ---
 
@@ -196,17 +189,9 @@ I recommend option [N] because [specific reason, especially codebase consistency
 The other designs revealed [insight the recommended approach should absorb].
 ```
 
-**STOP here.** The comparison is the discussion artifact. Let the user react.
-
-The user may:
-
-- Pick an approach
-- Ask to combine elements from multiple approaches
-- Want to explore a direction not covered
-- Raise concerns or trade-offs
-- Ask for more detail on a specific approach
-
-Iterate until the user signals satisfaction with a direction. Only then proceed to Step 3.
+**STOP here.** The comparison is the discussion artifact. Let the user react — pick, combine,
+explore a new direction, or raise concerns. Iterate until the user signals satisfaction with a
+direction, then proceed to Step 3.
 
 ---
 
@@ -300,8 +285,7 @@ claim against codebase evidence (`file:line`) and external sources (`URL — Tie
 - **Partially correct** claims — update to reflect what was actually found
 - **Unverifiable** claims — remove from the design summary; note them under "Open questions" instead
 
-Before presenting, load the global `stop-slop` skill and run the user-facing prose through it; skip
-this for pure code or mechanical output. Write in simple language with clear, scannable structure.
+Run the user-facing prose through the global `stop-slop` skill before presenting.
 
 Present the final design summary only after fact-checking is complete.
 
@@ -313,33 +297,6 @@ Design summary complete (fact-checked). Next step: formalize into a Linear track
 ```
 
 </the_process>
-
-<agent_references>
-
-## Divergent mode — 3 parallel design sub-agents:
-
-Each sub-agent receives the same research context and designs under its assigned constraint:
-
-- Agent 1: "Minimize the interface — simplest possible approach"
-- Agent 2: "Maximize flexibility — support many use cases"
-- Agent 3: "Optimize for the most common case"
-
-If sub-agents aren't available, simulate constraints sequentially.
-
-## `cape:fact-checker` protocol (model: sonnet, Step 4):
-
-Dispatch `cape:fact-checker` (model: sonnet) after composing the design summary, before presenting
-to the user. Pass all factual claims from the Requirements, Architecture, and Research findings
-sections. Expect back per-claim verdicts (Confirmed/Refuted/Partially correct/Unverifiable) with
-evidence. Remove or correct claims based on the verdicts.
-
-## Research protocol:
-
-1. Codebase pattern exists → use it (unless clearly unwise)
-2. No codebase pattern → research external patterns
-3. Research yields nothing → ask user for direction
-
-</agent_references>
 
 <examples>
 

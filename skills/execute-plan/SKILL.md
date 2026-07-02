@@ -51,22 +51,7 @@ and cache refresh after writes are fixed. Implementation tactics adapt to the ta
 
 ## Step 1: Orient from tracker cache
 
-Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`:
-
-```json
-{
-  "version": 1,
-  "timestamp": 0,
-  "epics": {
-    "ABU-15": {
-      "id": "ABU-15",
-      "title": "Cape V2",
-      "status": "In Progress",
-      "tasks": [{ "id": "ABU-56", "title": "Task", "status": "Todo", "stateType": "unstarted" }]
-    }
-  }
-}
-```
+Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`.
 
 Pick work in this order:
 

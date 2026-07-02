@@ -9,8 +9,8 @@ description: >
 <skill_overview> [1-2 sentences: what this skill does and what it produces. State the core contract
 -- the non-negotiable guarantee this skill makes.] </skill_overview>
 
-<rigidity_level> [HIGH or LOW] FREEDOM -- [What's rigid and what adapts to context. One sentence.]
-</rigidity_level>
+<rigidity_level> [HIGH, MEDIUM, or LOW] FREEDOM -- [What's rigid and what adapts to context. One
+sentence.] </rigidity_level>
 
 <when_to_use>
 
@@ -56,6 +56,12 @@ committing. Keep it inline and focused.]
 
 [3-5 steps total. Each step is a discrete phase with a clear deliverable.]
 
+[Convention -- prose output: any step that emits human-facing prose (commit messages, PR or epic
+text, review write-ups, issue descriptions, replies) runs that prose through the global `stop-slop`
+skill before presenting or posting; skip only for pure code or mechanical output, and write in
+simple language with clear, scannable structure. State this as a one-line reminder at the emitting
+step -- do not repeat the full convention.]
+
 </the_process>
 
 <agent_references>
@@ -82,6 +88,8 @@ committing. Keep it inline and focused.]
 
 <examples>
 
+[Optional. Two contrasting examples at most; omit the section when the process is self-evident.]
+
 <example>
 <scenario>[Setup: what the user did or what state exists]</scenario>
 
@@ -100,8 +108,10 @@ committing. Keep it inline and focused.]
 
 <key_principles>
 
+[Optional. Include only principles not already stated in critical_rules or the process; cap at 4.
+Omit the section rather than restating rules.]
+
 - **[Bold phrase]** -- [explanation of the principle]
-- **[Bold phrase]** -- [explanation]
 - **[Bold phrase]** -- [explanation]
 
 </key_principles>

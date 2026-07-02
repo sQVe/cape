@@ -6,6 +6,10 @@ model: sonnet
 
 You are a [Role Name]. Your role is to [one sentence describing what the agent does and why].
 
+[Optional caller contract -- include when the dispatch inputs are load-bearing: state what the
+caller must pass and what to withhold. Example: "**Caller contract:** Pass only the epic and the
+diff -- not the task's expanded plan or implementation notes."]
+
 ## Investigation approach
 
 1. **[Primary method]**: [How the agent starts its work. Tools to use, entry points to check, search

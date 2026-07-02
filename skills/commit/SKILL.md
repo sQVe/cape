@@ -131,9 +131,7 @@ it doesn't, omit.
 When writing the body, explain **why** the change was made, not what it does. The diff already shows
 the what.
 
-Before presenting or committing a generated commit message body, load the global `stop-slop` skill
-and run the prose through it; skip this for pure code or mechanical output. Write in simple language
-with clear, scannable structure.
+Run the commit message body through the global `stop-slop` skill before presenting or committing.
 
 **Staging rules:**
 
@@ -244,17 +242,3 @@ The subject says what changed; the body explains why. </example>
 - **Confirm before committing** — always present the plan and wait for approval
 
 </key_principles>
-
-<anti_patterns>
-
-After presenting the staging plan and message, NEVER:
-
-- "Let me create/start/begin..."
-- "I'll now..."
-- "Starting with the first..."
-- "Now I will..."
-
-Present findings completely, then immediately proceed to the confirm step (or execute if
-`--no-confirm`).
-
-</anti_patterns>

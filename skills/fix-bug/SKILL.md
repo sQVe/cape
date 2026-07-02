@@ -61,9 +61,8 @@ If no bug issue exists, run the diagnosis gate before changing code:
 - Trace the symptom to a root cause
 - Record dead ends in the conversation
 
-Before presenting or creating bug issue prose, load the global `stop-slop` skill and run the
-root-cause and reproduction text through it; skip this for pure code or mechanical output. Write in
-simple language with clear, scannable structure.
+Run the root-cause and reproduction text through the global `stop-slop` skill before presenting or
+creating bug issue prose.
 
 Present the investigation summary and ask for approval before creating a Linear bug:
 
