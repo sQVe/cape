@@ -175,7 +175,9 @@ the table exactly before proceeding. Do not change code until the user approves 
 
 Signal the build phase and workflow state: `cape state set workflowActive` then
 `cape workspace phase build`. The `workflowActive` flag is what lets an accepted comment hand off to
-`cape:test-driven-development` — the internal-skill gate blocks TDD without it.
+`cape:test-driven-development` — the internal-skill gate blocks TDD without it. Once set, always
+clear it before finishing: run `cape state clear workflowActive` on any exit after this point —
+normal completion (Step 5), abort, or stop — so the flag never leaks past the skill.
 
 For each comment marked **Fix**, apply the change at the right weight:
 
