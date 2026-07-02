@@ -248,10 +248,11 @@ reachable):
    trap 'herdr pane close "${self}" >/dev/null 2>&1 || true' EXIT
    # Poll the pane TAIL for a marker. Never use `herdr wait output` here: it matches
    # pre-existing scrollback, and staging previews already planted these markers there.
+   # 15 lines: past the ~8 lines of composer/status chrome, far below stale markers.
    tail_until() {
      local marker="$1" tries="$2" i
      for ((i = 0; i < tries; i++)); do
-       if herdr pane read "${main_pane}" --source recent-unwrapped --lines 4 \
+       if herdr pane read "${main_pane}" --source recent-unwrapped --lines 15 \
          | grep -qF "${marker}"; then
          return 0
        fi
