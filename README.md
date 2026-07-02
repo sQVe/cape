@@ -71,21 +71,23 @@ ignore.
 
 ## Skills
 
-Cape ships 11 workflow skills plus the `don-cape` router.
+Cape ships 13 workflow skills plus the `don-cape` router.
 
-| Skill                     | Role                                              |
-| ------------------------- | ------------------------------------------------- |
-| `brainstorm`              | Explore a design before writing code              |
-| `write-plan`              | Turn a design into a Linear epic and first task   |
-| `execute-plan`            | Implement one task, verify it, queue the next     |
-| `test-driven-development` | Drive each change RED → GREEN → REFACTOR          |
-| `commit`                  | Stage selectively and write a conventional commit |
-| `finish-epic`             | Verify success criteria and close the epic        |
-| `review`                  | Review changes for bugs, logic, and conventions   |
-| `pr`                      | Open a pull request with a verified test plan     |
-| `fix-bug`                 | Diagnose to root cause, then patch test-first     |
-| `worktree`                | Create a per-epic grove worktree                  |
-| `tracker`                 | Write Linear results into the local cache         |
+| Skill                     | Role                                                  |
+| ------------------------- | ----------------------------------------------------- |
+| `brainstorm`              | Explore a design before writing code                  |
+| `write-plan`              | Turn a design into a Linear epic and first task       |
+| `execute-plan`            | Implement one task, verify it, queue the next         |
+| `set-goal`                | Draft a `/goal` and approach prompt for an AFK run    |
+| `test-driven-development` | Drive each change RED → GREEN → REFACTOR              |
+| `commit`                  | Stage selectively and write a conventional commit     |
+| `finish-epic`             | Verify acceptance criteria and hand off the epic      |
+| `review`                  | Review changes for bugs, logic, and conventions       |
+| `pr`                      | Open a pull request with a verified test plan         |
+| `pr-feedback`             | Triage inbound PR review comments and resolve threads |
+| `fix-bug`                 | Diagnose to root cause, then patch test-first         |
+| `worktree`                | Create a per-epic grove worktree                      |
+| `tracker`                 | Write Linear results into the local cache             |
 
 Skills that emit prose (commit messages, PR descriptions, epic text, review write-ups) run their
 output through the `stop-slop` skill before finalizing.

@@ -5,7 +5,9 @@ description: >
   write-plan creates the epic and first sub-issue, execute-plan implements it. Triggers on:
   "continue", "next task", "resume", "let's go", "work on the plan", a Linear issue ID, or
   transitioning after planning is complete. Uses the local tracker cache for orientation and
-  refreshes that cache after every Linear write.
+  refreshes that cache after every Linear write. Do NOT use for bug fixes (use cape:fix-bug),
+  exploratory design (use cape:brainstorm), or acting on inbound PR review comments (use
+  cape:pr-feedback).
 ---
 
 <skill_overview> Implement one tracker task, verify it, close it in Linear, create or identify the

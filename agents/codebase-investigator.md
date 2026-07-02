@@ -1,9 +1,10 @@
 ---
 name: codebase-investigator
 description:
-  Use this agent when you need to understand current codebase state, find existing patterns, or
-  verify assumptions about what exists. Dispatched during planning, debugging, bug fixing, task
-  expansion, test analysis, task refinement, and notebox research.
+  Use this agent when you need to understand current codebase state, find existing patterns, or map
+  how the current implementation works. Dispatched during planning, debugging, bug fixing, task
+  expansion, test analysis, task refinement, and notebox research. For verifying a specific claim or
+  assertion with a confirm/refute verdict, use fact-checker instead.
 model: haiku
 ---
 

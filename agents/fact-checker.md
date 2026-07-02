@@ -1,9 +1,10 @@
 ---
 name: fact-checker
 description:
-  Use this agent to verify claims, assertions, or assumptions against codebase and external evidence
-  before acting on them. Catches hallucinated paths, wrong function signatures, and stale
-  assumptions.
+  Use this agent to verify specific claims, assertions, or assumptions against codebase and external
+  evidence before acting on them — each gets a confirm/refute verdict with evidence. Catches
+  hallucinated paths, wrong function signatures, and stale assumptions. For open-ended exploration
+  of what exists or how code works, use codebase-investigator instead.
 model: sonnet
 ---
 
