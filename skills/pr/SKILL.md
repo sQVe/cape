@@ -39,8 +39,8 @@ bundled template — never invent sections. </rigidity_level>
    The one exception is the AFK branch (step 6).
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
 3. **NEVER skip review-before-pr** — a fresh `reviewedAt` stamp from `cape:review` is required. The
-   hard-gate escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` to downgrade
-   the hook deny to a warning.
+   escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` (human escape) or
+   `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6) to downgrade the hook deny to a warning.
 4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
 5. **Use `cape pr create`** — not the GitHub API directly
