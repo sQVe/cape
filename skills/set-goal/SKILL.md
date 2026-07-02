@@ -85,7 +85,9 @@ epic means the run seeds tasks lazily one ahead. Surface the derived mode in the
 Then ask three structured questions with `AskUserQuestion`, each with a marked default so the user
 can accept all at once:
 
-1. **Builder** -- `claude` builds (default) / `codex` builds.
+1. **Builder** -- `claude` builds (default) / `codex` builds. TDD is enforced either way (it is a
+   stated default, not part of this choice); word both options so neither implies TDD is
+   claude-only.
 2. **Review** -- who reviews each task, chosen independently of the builder: `codex` reviews
    (default) / `claude` reviews / self-review only (no separate reviewer, the run self-reviews via
    `cape:review`). A separate reviewer runs up to 2 fix-cycles.
@@ -116,7 +118,7 @@ written to the draft file in Step 4 -- do not dump it into the conversation. The
 | Setting  | Value                                                 |
 |----------|-------------------------------------------------------|
 | Mode     | <execute N planned tasks | lazy one-ahead, seed epic> |
-| Builder  | claude + TDD                                          |
+| Builder  | <claude|codex> + TDD                                  |
 | Review   | separate (codex), <=2 cycles                          |
 | Worktree | 1 grove epic worktree, sequential tasks               |
 | Turn cap | <N>                                                   |
@@ -244,26 +246,49 @@ reachable):
    readonly main_pane="<HERDR_PANE_ID value>"
    readonly self="${HERDR_PANE_ID}"
    trap 'herdr pane close "${self}" >/dev/null 2>&1 || true' EXIT
-   "${EDITOR:-nvim}" "${draft}" || { echo "cancelled -- nothing sent"; exit 0; }
+   # Poll the pane TAIL for a marker. Never use `herdr wait output` here: it matches
+   # pre-existing scrollback, and staging previews already planted these markers there.
+   tail_until() {
+     local marker="$1" tries="$2" i
+     for ((i = 0; i < tries; i++)); do
+       if herdr pane read "${main_pane}" --source recent-unwrapped --lines 4 \
+         | grep -qF "${marker}"; then
+         return 0
+       fi
+       sleep 0.5
+     done
+     echo "launch aborted: '${marker}' never reached the pane tail" >&2
+     return 1
+   }
+   "${EDITOR:-nvim}" "${draft}" || {
+     echo "cancelled -- nothing sent"
+     exit 0
+   }
    cond=$(sed -n '/^## Condition/,/^## Prompt/p' "${draft}" \
      | sed '1d;/^## Prompt/d;/^[[:space:]]*$/d;s/^[[:space:]]*-[[:space:]]*//' \
      | tr '\n' ' ' | tr -s ' ')
    prompt=$(sed -n '/^## Prompt/,$p' "${draft}" | sed '1d')
    herdr pane run "${main_pane}" "/goal ${cond}"
-   herdr wait output "${main_pane}" --match "Goal set:" --timeout 15000
+   tail_until "Goal set:" 30
    herdr pane send-keys "${main_pane}" Escape
-   herdr wait output "${main_pane}" --match "Interrupted" --timeout 10000
+   tail_until "Interrupted" 20
    herdr pane run "${main_pane}" "${prompt}"
    echo "launched"
    ```
 
    `:wq` (exit 0) runs the launch; `:cq` (exit 1) hits the `||` and cancels. `/goal` arms only here.
-   `pane run` submits the condition and its Enter atomically; `wait output` on `Goal set:` confirms
-   the arm before anything else, so the condition and prompt never merge into one over-length input.
+   `pane run` submits the condition and its Enter atomically; `tail_until "Goal set:"` confirms the
+   arm before anything else, so the condition and prompt never merge into one over-length input.
    Arming starts a turn immediately with the bare condition as directive, so `Escape` cancels that
-   empty turn (the goal stays armed -- Esc interrupts only the in-flight turn); `wait output` on
-   `Interrupted` confirms the cancel landed before the approach prompt is sent as the genuine first
-   directive. The watcher then evaluates normally after each turn. The `trap ... EXIT` closes the
+   empty turn (the goal stays armed -- Esc interrupts only the in-flight turn);
+   `tail_until "Interrupted"` confirms the cancel landed before the approach prompt is sent as the
+   genuine first directive. The watcher then evaluates normally after each turn. Both gates poll
+   only the last few lines of the pane, because `herdr wait output` matches recent scrollback
+   including text that predates the wait -- and staging itself plants both markers there (the
+   helper-script preview contains the literal `Goal set:`; any earlier Esc leaves an `Interrupted`
+   line). A poisoned wait passes instantly, un-paces the send sequence, and merges the condition and
+   prompt into one over-length `/goal` input. With tail polling, a failed submit times out and
+   aborts the launch (`set -e` plus the trap) instead of merging. The `trap ... EXIT` closes the
    review pane itself on every exit path (`:wq`, `:cq`, or error), so set-goal never leaves a
    dangling editor pane in the workspace.
 
