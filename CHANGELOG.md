@@ -135,6 +135,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- CLI: `cape state reset` now clears the current worktree's state file by routing through the same
+  per-worktree path resolver as `set`, `clear`, and `list`. It previously removed only the
+  unsuffixed `state.json`, so in a linked worktree it reported success while leaving every gate
+  stamp intact.
+- CLI: the `pr` diff scope now uses `git diff HEAD` for the uncommitted part, so
+  staged-but-uncommitted changes appear in review flows. Plain `git diff` covered only unstaged
+  changes.
 - Skills: the `cape:set-goal` launch helper now gates each send on the main pane's tail (a
   `tail_until` poll over the last 15 unwrapped lines) instead of `herdr wait output`, which matches
   recent scrollback including text older than the wait. Staging itself plants both wait markers in
