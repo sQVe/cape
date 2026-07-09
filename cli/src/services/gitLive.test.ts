@@ -241,10 +241,10 @@ describe('GitServiceLive', () => {
           return 'refs/remotes/origin/main';
         }
         if (key === 'diff main...HEAD') {
-          return 'branch part';
+          return 'committed branch hunk\n';
         }
-        if (key === 'diff') {
-          return 'uncommitted part';
+        if (key === 'diff HEAD') {
+          return 'staged hunk\nunstaged hunk\n';
         }
         throw new Error(`unmocked: ${key}`);
       }) as typeof execFileSync);
@@ -256,8 +256,11 @@ describe('GitServiceLive', () => {
         }),
       );
 
-      expect(diff).toContain('branch part');
-      expect(diff).toContain('uncommitted part');
+      expect(mockExecFileSync.mock.calls.slice(-2).map(([, args]) => args)).toEqual([
+        ['diff', 'main...HEAD'],
+        ['diff', 'HEAD'],
+      ]);
+      expect(diff).toBe('committed branch hunk\nstaged hunk\nunstaged hunk\n');
     });
   });
 
