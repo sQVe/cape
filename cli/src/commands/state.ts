@@ -1,7 +1,13 @@
 import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
-import { HookService, readState, removeStateKey, writeStateKey } from '../services/hook';
+import {
+  HookService,
+  readState,
+  removeStateKey,
+  stateFilePath,
+  writeStateKey,
+} from '../services/hook';
 
 // Source of truth for all known state keys.
 // Update this catalog when adding or changing state keys.
@@ -163,12 +169,12 @@ const stateReset = Command.make(
   {},
   Effect.fn(function* () {
     const service = yield* HookService;
-    const root = service.pluginRoot();
-    yield* service.removeFile(`${root}/hooks/context/state.json`);
+    const { path } = yield* stateFilePath();
+    yield* service.removeFile(path);
   }),
 ).pipe(
   Command.withDescription(
-    'Delete state.json entirely, removing all state. Use to clear all hook state at once.',
+    'Delete all hook state for the current worktree. No-op if no state file exists.',
   ),
 );
 

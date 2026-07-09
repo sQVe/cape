@@ -53,7 +53,7 @@ const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 // unsuffixed `state.json`.
 // ponytail: assumes one pluginRoot per repo, so worktree names don't collide
 // across repos; revisit only if a single install ever serves multiple repos.
-const stateFilePath = () =>
+export const stateFilePath = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
