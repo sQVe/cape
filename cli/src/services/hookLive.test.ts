@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 
 import { Effect } from 'effect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -15,6 +23,7 @@ vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
   renameSync: vi.fn(),
+  statSync: vi.fn(),
   writeFileSync: vi.fn(),
   rmSync: vi.fn(),
   mkdirSync: vi.fn(),
@@ -31,6 +40,7 @@ const mockExecFileSync = vi.mocked(execFileSync);
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFileSync = vi.mocked(readFileSync);
 const mockRenameSync = vi.mocked(renameSync);
+const mockStatSync = vi.mocked(statSync);
 const mockWriteFileSync = vi.mocked(writeFileSync);
 const mockRmSync = vi.mocked(rmSync);
 const mockMkdirSync = vi.mocked(mkdirSync);
@@ -98,11 +108,41 @@ describe('HookServiceLive', () => {
 
       const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
       expect(tempPath).toMatch(/^\/dir\/path\..+\.tmp$/);
-      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data');
+      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data', {});
       expect(mockRenameSync).toHaveBeenCalledWith(tempPath, '/dir/path');
       expect(mockWriteFileSync.mock.invocationCallOrder[0]).toBeLessThan(
         mockRenameSync.mock.invocationCallOrder[0] ?? 0,
       );
+    });
+
+    it('preserves the existing file mode on the temp file', async () => {
+      mockStatSync.mockReturnValue({ mode: 0o600 } as ReturnType<typeof statSync>);
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          yield* service.writeFile('/dir/path', 'data');
+        }),
+      );
+
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data', { mode: 0o600 });
+    });
+
+    it('removes the temp file when the rename fails', async () => {
+      mockRenameSync.mockImplementation(() => {
+        throw new Error('rename error');
+      });
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          yield* service.writeFile('/dir/path', 'data');
+        }),
+      );
+
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(mockRmSync).toHaveBeenCalledWith(tempPath, { force: true });
     });
 
     it('swallows errors via orElseSucceed', async () => {

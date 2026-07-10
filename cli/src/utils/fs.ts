@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 export const readFileUtf8 = (path: string): string => readFileSync(path, 'utf-8');
 
@@ -13,6 +13,12 @@ export const tryReadFileUtf8 = (path: string): string | null => {
 
 export const writeFileAtomic = (path: string, content: string): void => {
   const tempPath = `${path}.${randomUUID()}.tmp`;
-  writeFileSync(tempPath, content);
-  renameSync(tempPath, path);
+  const mode = statSync(path, { throwIfNoEntry: false })?.mode;
+  try {
+    writeFileSync(tempPath, content, mode == null ? {} : { mode });
+    renameSync(tempPath, path);
+  } catch (error) {
+    rmSync(tempPath, { force: true });
+    throw error;
+  }
 };
