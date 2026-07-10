@@ -22,7 +22,7 @@ import { spyConsole } from '../testUtils';
 const run = Command.runWith(main, { version: '0.1.0' });
 const statePath = '/test/hooks/context/state.json';
 const linkedStatePath = (commonDir: string) =>
-  `/test/hooks/context/${createHash('sha256').update(commonDir).digest('hex')}/state-abu-50.json`;
+  `/test/hooks/context/${createHash('sha256').update(commonDir).digest('hex')}/state-abu-50-17c19482.json`;
 const trackerPath = '/test/hooks/context/tracker.json';
 const skillPath = '/test/skills/don-cape/SKILL.md';
 

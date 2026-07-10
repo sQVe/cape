@@ -60,8 +60,12 @@ export const stateFilePath = () =>
     const repoId = createHash('sha256').update(normalizedCommonDir).digest('hex');
     const dir = `${contextDir}/${repoId}`;
     const isLinkedWorktree = gitDir != null && resolve(gitDir) !== normalizedCommonDir;
-    const name = isLinkedWorktree ? basename(gitDir).replace(/[^A-Za-z0-9._-]/g, '-') : '';
-    const suffix = name === '' ? '' : `-${name}`;
+    const rawName = isLinkedWorktree ? basename(gitDir) : '';
+    const name = rawName.replace(/[^A-Za-z0-9._-]/g, '-');
+    const suffix =
+      name === ''
+        ? ''
+        : `-${name}-${createHash('sha256').update(rawName).digest('hex').slice(0, 8)}`;
     return { dir, path: `${dir}/state${suffix}.json` };
   });
 

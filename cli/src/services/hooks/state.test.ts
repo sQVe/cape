@@ -42,6 +42,14 @@ describe('stateFilePath', () => {
     expect(main.path).not.toBe(worktree.path);
   });
 
+  it('isolates worktrees whose sanitized names collide', async () => {
+    const plus = await resolveStatePath('/repo/.git/worktrees/a+b', '/repo/.git');
+    const dash = await resolveStatePath('/repo/.git/worktrees/a-b', '/repo/.git');
+
+    expect(plus.path).toMatch(/\/state-a-b-[a-f0-9]{8}\.json$/);
+    expect(plus.path).not.toBe(dash.path);
+  });
+
   it('returns the same path for the same worktree across invocations', async () => {
     const first = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');
     const second = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');
