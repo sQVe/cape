@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 
 import { Effect } from 'effect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -14,6 +14,7 @@ vi.mock('node:child_process', () => ({
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
+  renameSync: vi.fn(),
   writeFileSync: vi.fn(),
   rmSync: vi.fn(),
   mkdirSync: vi.fn(),
@@ -29,6 +30,7 @@ const run = <A>(effect: Effect.Effect<A, never, HookService>) =>
 const mockExecFileSync = vi.mocked(execFileSync);
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFileSync = vi.mocked(readFileSync);
+const mockRenameSync = vi.mocked(renameSync);
 const mockWriteFileSync = vi.mocked(writeFileSync);
 const mockRmSync = vi.mocked(rmSync);
 const mockMkdirSync = vi.mocked(mkdirSync);
@@ -86,15 +88,21 @@ describe('HookServiceLive', () => {
   });
 
   describe('writeFile', () => {
-    it('delegates to fs writeFileSync', async () => {
+    it('writes to a temp file before renaming it over the target', async () => {
       await run(
         Effect.gen(function* () {
           const service = yield* HookService;
-          yield* service.writeFile('/path', 'data');
+          yield* service.writeFile('/dir/path', 'data');
         }),
       );
 
-      expect(mockWriteFileSync).toHaveBeenCalledWith('/path', 'data');
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(tempPath).toMatch(/^\/dir\/path\..+\.tmp$/);
+      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data');
+      expect(mockRenameSync).toHaveBeenCalledWith(tempPath, '/dir/path');
+      expect(mockWriteFileSync.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRenameSync.mock.invocationCallOrder[0] ?? 0,
+      );
     });
 
     it('swallows errors via orElseSucceed', async () => {

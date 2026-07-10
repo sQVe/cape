@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
-import { tryReadFileUtf8 } from '../utils/fs';
+import { tryReadFileUtf8, writeFileAtomic } from '../utils/fs';
 import { HookService } from './hook';
 
 const readFile = (path: string) =>
@@ -16,7 +16,7 @@ const readFile = (path: string) =>
 const writeFile = (path: string, content: string) =>
   Effect.try({
     try: () => {
-      writeFileSync(path, content);
+      writeFileAtomic(path, content);
     },
     catch: () => new Error(`failed to write: ${path}`),
   }).pipe(Effect.orElseSucceed(() => undefined));
