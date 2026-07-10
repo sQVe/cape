@@ -63,9 +63,7 @@ export const stateFilePath = () =>
     const rawName = isLinkedWorktree ? basename(gitDir) : '';
     const name = rawName.replace(/[^A-Za-z0-9._-]/g, '-');
     const suffix =
-      name === ''
-        ? ''
-        : `-${name}-${createHash('sha256').update(rawName).digest('hex').slice(0, 8)}`;
+      name === '' ? '' : `-${name}-${createHash('sha256').update(rawName).digest('hex')}`;
     return { dir, path: `${dir}/state${suffix}.json` };
   });
 
