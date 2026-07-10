@@ -135,6 +135,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- CLI: `cape workspace phase` now reads the tracker cache without the 30-minute TTL check, so the
+  herdr workspace label keeps the epic title in long sessions. The TTL-checked read dropped the
+  title once the cache went stale, relabeling the workspace to a bare phase icon plus Linear ID.
 - CLI: `cape state reset` now clears the current worktree's state file by routing through the same
   per-worktree path resolver as `set`, `clear`, and `list`. It previously removed only the
   unsuffixed `state.json`, so in a linked worktree it reported success while leaving every gate
