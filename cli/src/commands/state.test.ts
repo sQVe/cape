@@ -19,7 +19,11 @@ import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 
-const makeHookLayer = (stateContent: string | null = null) =>
+const makeHookLayer = (
+  stateContent: string | null = null,
+  gitResponses: Record<string, string | null> = {},
+  removedFiles: string[] = [],
+) =>
   Layer.succeed(HookService)({
     pluginRoot: () => '/test',
     readFile: (path) => {
@@ -29,14 +33,21 @@ const makeHookLayer = (stateContent: string | null = null) =>
       return Effect.succeed(null);
     },
     writeFile: () => Effect.succeed(undefined),
-    removeFile: () => Effect.succeed(undefined),
+    removeFile: (path) => {
+      removedFiles.push(path);
+      return Effect.succeed(undefined);
+    },
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
-    spawnGit: () => Effect.succeed(null),
+    spawnGit: (args) => Effect.succeed(gitResponses[args.join(' ')] ?? null),
     fileExists: () => Effect.succeed(false),
   });
 
-const makeLayers = (stateContent: string | null = null) =>
+const makeLayers = (
+  stateContent: string | null = null,
+  gitResponses: Record<string, string | null> = {},
+  removedFiles: string[] = [],
+) =>
   Layer.mergeAll(
     NodeServices.layer,
     stubHerdrLayer,
@@ -47,7 +58,7 @@ const makeLayers = (stateContent: string | null = null) =>
     stubPrLayer,
     stubValidateLayer,
     stubConformLayer,
-    makeHookLayer(stateContent),
+    makeHookLayer(stateContent, gitResponses, removedFiles),
   );
 
 describe('cape state list', () => {
@@ -123,5 +134,28 @@ describe('cape state list', () => {
     expect(output).toContain('Common operations');
     expect(output).toContain('cape state reset');
     console_.restore();
+  });
+});
+
+describe('cape state reset', () => {
+  it('removes the current linked worktree state file', async () => {
+    const removedFiles: string[] = [];
+
+    await Effect.runPromise(
+      run(['state', 'reset']).pipe(
+        Effect.provide(
+          makeLayers(
+            null,
+            {
+              'rev-parse --git-dir': '/repo/.git/worktrees/abu-205',
+              'rev-parse --git-common-dir': '/repo/.git',
+            },
+            removedFiles,
+          ),
+        ),
+      ),
+    );
+
+    expect(removedFiles).toEqual(['/test/hooks/context/state-abu-205.json']);
   });
 });

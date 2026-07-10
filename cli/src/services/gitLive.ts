@@ -69,7 +69,7 @@ const getDiff = (scope: DiffScope) =>
       const branchDiff = gitRaw(resolveDiffArgs(scope, mainBranch));
 
       if (scope === 'pr') {
-        const uncommitted = gitRaw(['diff']);
+        const uncommitted = gitRaw(['diff', 'HEAD']);
         return branchDiff + uncommitted;
       }
 
