@@ -218,6 +218,9 @@ const stateFile = (entries: Record<string, unknown>) => ({
   '/test/hooks/context/state.json': JSON.stringify(entries),
 });
 
+const repoStateDir =
+  '/test/hooks/context/6b4ca2db35cfaf43d6963005a8445402c4ea6f70b038086ad0d6decda64670c0';
+
 const reviewedAtEntry = (timestamp = Date.now()) => ({
   scope: 'branch',
   timestamp,
@@ -341,7 +344,7 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        '/test/hooks/context/state-abu-15.json': JSON.stringify({
+        [`${repoStateDir}/state-abu-15.json`]: JSON.stringify({
           flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15'),
         }),
         ...trackerCacheFile(trackerCache()),
@@ -373,7 +376,9 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        [`${repoStateDir}/state.json`]: JSON.stringify({
+          flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15'),
+        }),
         ...trackerCacheFile(trackerCache()),
       },
       gitResponses: {
@@ -1214,7 +1219,7 @@ describe('preToolUseSkill', () => {
         'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
       }),
       gitResponses: {
-        'rev-parse': 'main',
+        'rev-parse --abbrev-ref HEAD': 'main',
         'symbolic-ref': 'refs/remotes/origin/main',
       },
     });
@@ -1232,7 +1237,7 @@ describe('preToolUseSkill', () => {
         'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
       }),
       gitResponses: {
-        'rev-parse': 'feat/my-feature',
+        'rev-parse --abbrev-ref HEAD': 'feat/my-feature',
         'symbolic-ref': 'refs/remotes/origin/main',
       },
     });

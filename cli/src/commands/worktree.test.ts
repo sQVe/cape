@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
@@ -19,6 +21,8 @@ import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
 const statePath = '/test/hooks/context/state.json';
+const linkedStatePath = (commonDir: string) =>
+  `/test/hooks/context/${createHash('sha256').update(commonDir).digest('hex')}/state-abu-50.json`;
 const trackerPath = '/test/hooks/context/tracker.json';
 const skillPath = '/test/skills/don-cape/SKILL.md';
 
@@ -131,6 +135,7 @@ describe('cape worktree start', () => {
   });
 
   it('gives a linked worktree its own state file so stamps do not collide', async () => {
+    const worktreeStatePath = linkedStatePath('/repo/.bare');
     const { hookLayer, files } = makeHookLayer(
       {},
       {
@@ -144,7 +149,7 @@ describe('cape worktree start', () => {
       run(['worktree', 'start', 'ABU-50']).pipe(Effect.provide(makeLayers(hookLayer))),
     );
 
-    const worktreeState = files['/test/hooks/context/state-abu-50.json'];
+    const worktreeState = files[worktreeStatePath];
     expect(worktreeState).toBeTypeOf('string');
     expect(JSON.parse(worktreeState as string).flowPhase.issueId).toBe('ABU-50');
     expect(files[statePath]).toBeUndefined();
@@ -232,6 +237,7 @@ describe('cape worktree start', () => {
   });
 
   it('makes the session-start banner render the stamped epic from tracker cache', async () => {
+    const worktreeStatePath = linkedStatePath('/repo/.git');
     const { hookLayer, files } = makeHookLayer(
       {
         [skillPath]: 'don cape',
@@ -252,7 +258,7 @@ describe('cape worktree start', () => {
 
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(hookLayer)));
 
-    expect(files['/test/hooks/context/state-abu-50.json']).toContain('ABU-50');
+    expect(files[worktreeStatePath]).toContain('ABU-50');
     expect(files[statePath]).toBeUndefined();
     expect(result.additionalContext).toContain('| Epic   ABU-50  Worktree skill');
     expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
@@ -310,7 +316,7 @@ describe('cape worktree stop', () => {
   });
 
   it('clears the linked worktree state file, not the shared state.json', async () => {
-    const worktreeStatePath = '/test/hooks/context/state-abu-50.json';
+    const worktreeStatePath = linkedStatePath('/repo/.bare');
     const { hookLayer, files, removedFiles } = makeHookLayer(
       {
         [worktreeStatePath]: JSON.stringify({

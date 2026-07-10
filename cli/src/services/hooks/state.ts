@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { basename, resolve } from 'node:path';
+
 import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
@@ -40,19 +43,8 @@ type StateFile = Record<string, StateValue>;
 
 const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
-// State (the epic stamp, workflow flags) is per-worktree, but it must stay under
-// the shared plugin install rather than the worktree's own tree -- cape runs as
-// a plugin over other repos, and writing hooks/context/ into them would litter
-// user working trees. So we keep the single context dir on pluginRoot and give
-// each linked worktree its own state file instead. Without that suffix every
-// worktree and herdr workspace overwrites one global stamp.
-//
-// A linked worktree has git-dir `<common>/worktrees/<name>` while the main tree
-// has git-dir == git-common-dir; we key off basename(git-dir), which is unique
-// per worktree within a repo. The main tree and non-git callers keep the
-// unsuffixed `state.json`.
-// ponytail: assumes one pluginRoot per repo, so worktree names don't collide
-// across repos; revisit only if a single install ever serves multiple repos.
+// Invariant: git state is isolated by normalized git-common-dir and linked
+// worktree name under the shared plugin root; non-git callers use state.json.
 export const stateFilePath = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -60,12 +52,17 @@ export const stateFilePath = () =>
     // spawnGit already trims to a non-empty string or null (see hookLive.ts).
     const gitDir = yield* service.spawnGit(['rev-parse', '--git-dir']);
     const commonDir = yield* service.spawnGit(['rev-parse', '--git-common-dir']);
-    const isLinkedWorktree = gitDir != null && commonDir != null && gitDir !== commonDir;
-    const name = isLinkedWorktree
-      ? (gitDir.replace(/\/+$/, '').split('/').pop() ?? '').replace(/[^A-Za-z0-9._-]/g, '-')
-      : '';
+    const contextDir = `${root}/hooks/context`;
+    if (commonDir == null) {
+      return { dir: contextDir, path: `${contextDir}/state.json` };
+    }
+    const normalizedCommonDir = resolve(commonDir);
+    const repoId = createHash('sha256').update(normalizedCommonDir).digest('hex');
+    const dir = `${contextDir}/${repoId}`;
+    const isLinkedWorktree = gitDir != null && resolve(gitDir) !== normalizedCommonDir;
+    const name = isLinkedWorktree ? basename(gitDir).replace(/[^A-Za-z0-9._-]/g, '-') : '';
     const suffix = name === '' ? '' : `-${name}`;
-    return { dir: `${root}/hooks/context`, path: `${root}/hooks/context/state${suffix}.json` };
+    return { dir, path: `${dir}/state${suffix}.json` };
   });
 
 const readStateAt = (path: string) =>

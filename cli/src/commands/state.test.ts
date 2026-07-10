@@ -156,6 +156,8 @@ describe('cape state reset', () => {
       ),
     );
 
-    expect(removedFiles).toEqual(['/test/hooks/context/state-abu-205.json']);
+    expect(removedFiles).toEqual([
+      expect.stringMatching(/^\/test\/hooks\/context\/[a-f0-9]{64}\/state-abu-205\.json$/),
+    ]);
   });
 });
