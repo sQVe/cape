@@ -2,7 +2,7 @@ import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { composeLabels, HerdrService } from '../services/herdr';
-import { readFlowPhaseContext, readTrackerCache } from '../services/hook';
+import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
 
 const workspacePhase = Command.make(
   'phase',
@@ -26,7 +26,9 @@ const workspacePhase = Command.make(
       return yield* Console.log(JSON.stringify({ skipped: true, reason: 'no epic stamped' }));
     }
 
-    const cache = yield* readTrackerCache();
+    // Raw read on purpose: a stale cache still has the right epic title, and a
+    // bare "icon + id" label is worse than a slightly old title.
+    const cache = yield* readRawTrackerCache();
     const epic = cache?.epics[context.issueId] ?? null;
     const labels = composeLabels(phase, context.issueId, epic?.title ?? null);
     if (labels == null) {

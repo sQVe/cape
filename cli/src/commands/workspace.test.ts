@@ -24,10 +24,10 @@ const trackerPath = '/test/hooks/context/tracker.json';
 const stateFile = (issueId: string) =>
   JSON.stringify({ flowPhase: { phase: 'BUILD', issueId, timestamp: Date.now() } });
 
-const trackerFile = (issueId: string, title: string) =>
+const trackerFile = (issueId: string, title: string, timestamp = Date.now()) =>
   JSON.stringify({
     version: 1,
-    timestamp: Date.now(),
+    timestamp,
     epics: { [issueId]: { id: issueId, title, status: 'In Progress', tasks: [] } },
   });
 
@@ -114,6 +114,33 @@ describe('cape workspace phase', () => {
     const hookLayer = makeHookLayer({
       [statePath]: stateFile('ABU-134'),
       [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'build']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: '🔨 ABU-134 Surface cape workflow',
+      tab: '🔨 ABU-134',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: '🔨 ABU-134 Surface cape workflow' },
+      { kind: 'tab', id: 'tab1', label: '🔨 ABU-134' },
+    ]);
+    console_.restore();
+  });
+
+  it('keeps the epic title when the tracker cache is stale', async () => {
+    const staleTimestamp = Date.now() - 2 * 60 * 60 * 1000;
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile(
+        'ABU-134',
+        'Surface cape workflow phase in labels',
+        staleTimestamp,
+      ),
     });
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();

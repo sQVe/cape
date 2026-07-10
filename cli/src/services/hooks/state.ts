@@ -146,7 +146,9 @@ export const readFlowPhaseContext = () =>
     return { phase: entry.phase, issueId: entry.issueId };
   });
 
-const readRawTrackerCache = () =>
+// Ignores the cache TTL: use when reading data that does not go stale (epic
+// titles), not task status.
+export const readRawTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
