@@ -303,6 +303,26 @@ describe('pr validate command', () => {
     console_.restore();
   });
 
+  it('validates the stripped body so validate agrees with create on marker input', async () => {
+    const console_ = spyConsole();
+    const prLayer = Layer.succeed(PrService)({
+      fileExists: () => Effect.succeed(false),
+      readFile: () => Effect.fail(new Error('should not read file')),
+      readStdin: () =>
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan CAPE_ORCHESTRATE\n- [x] works',
+        ),
+      gitRoot: () => Effect.succeed('/repo'),
+      spawnGh: () => Effect.fail(new Error('no gh')),
+    });
+    await Effect.runPromise(
+      run(['pr', 'validate', '--stdin']).pipe(Effect.provide(makeCommandLayers(prLayer))),
+    );
+    const result = JSON.parse(console_.output());
+    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    console_.restore();
+  });
+
   it('rejects when neither file nor --stdin provided', async () => {
     const console_ = spyConsole();
     await expect(
@@ -580,6 +600,52 @@ describe('pr create command', () => {
     expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(
       validBody.replace('why', 'opened with the override'),
     );
+    console_.restore();
+  });
+
+  it('ships a marker-free body byte-identical, preserving whitespace', async () => {
+    const console_ = spyConsole();
+    let capturedGhArgs: readonly string[] = [];
+    const prLayer = Layer.succeed(PrService)({
+      fileExists: () => Effect.succeed(false),
+      readFile: () => Effect.fail(new Error('no file')),
+      readStdin: () => Effect.succeed(''),
+      gitRoot: () => Effect.succeed('/repo'),
+      spawnGh: (args) => {
+        capturedGhArgs = args;
+        return Effect.succeed('https://github.com/owner/repo/pull/5');
+      },
+    });
+    const body = `${validBody.replace('why', 'hard break  \nnext line')}\n\`\`\`\nout\n\n\n\nput\n\`\`\``;
+    await Effect.runPromise(
+      run(['pr', 'create', '--title', 'My PR', '--body', body]).pipe(
+        Effect.provide(makeCreateLayers(undefined, prLayer)),
+      ),
+    );
+    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(body);
+    console_.restore();
+  });
+
+  it('leaves marker superstrings like CAPE_ORCHESTRATE_TIMEOUT intact', async () => {
+    const console_ = spyConsole();
+    let capturedGhArgs: readonly string[] = [];
+    const prLayer = Layer.succeed(PrService)({
+      fileExists: () => Effect.succeed(false),
+      readFile: () => Effect.fail(new Error('no file')),
+      readStdin: () => Effect.succeed(''),
+      gitRoot: () => Effect.succeed('/repo'),
+      spawnGh: (args) => {
+        capturedGhArgs = args;
+        return Effect.succeed('https://github.com/owner/repo/pull/6');
+      },
+    });
+    const body = validBody.replace('why', 'see CAPE_ORCHESTRATE_TIMEOUT and MY_CAPE_ORCHESTRATE');
+    await Effect.runPromise(
+      run(['pr', 'create', '--title', 'My PR', '--body', body]).pipe(
+        Effect.provide(makeCreateLayers(undefined, prLayer)),
+      ),
+    );
+    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(body);
     console_.restore();
   });
 

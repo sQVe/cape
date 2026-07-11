@@ -135,11 +135,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- CLI: `cape pr create` now strips the `CAPE_ORCHESTRATE` and `CAPE_HARD_GATE_OVERRIDE` hook
-  override markers from the title and body before validation and `gh pr create`. The markers are
-  input signals for the PreToolUse skill gate, but AFK runs carried them into the PR body verbatim
-  (PR #42 shipped with a trailing `CAPE_ORCHESTRATE` line); the SKILL.md prose rule alone did not
-  hold, so the CLI now enforces it. (ABU-228)
+- CLI: `cape pr create` and `cape pr validate` now strip the `CAPE_ORCHESTRATE` and
+  `CAPE_HARD_GATE_OVERRIDE` hook override markers from the title and body before validation and
+  `gh pr create`, so both subcommands judge the same text. The markers are input signals for the
+  PreToolUse skill gate, but AFK runs carried them into the PR body verbatim (PR #42 shipped with a
+  trailing `CAPE_ORCHESTRATE` line); the SKILL.md prose rule alone did not hold, so the CLI now
+  enforces it. The marker list is shared with the skill-gate hook, superstrings like
+  `CAPE_ORCHESTRATE_TIMEOUT` are left alone, and marker-free text ships byte-identical. (ABU-228)
 - CLI: `cape workspace phase` now reads the tracker cache without the 30-minute TTL check, so the
   herdr workspace label keeps the epic title in long sessions. The TTL-checked read dropped the
   title once the cache went stale, relabeling the workspace to a bare phase icon plus Linear ID.

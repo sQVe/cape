@@ -3,17 +3,26 @@ import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
 import { HookService, resolveBranchInfo } from '../services/hook';
+import { HARD_GATE_OVERRIDE, ORCHESTRATE_OVERRIDE } from '../services/hooks/skillGates';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
 import { catchAndDie } from '../utils/catchAndDie';
 
 // Hook override markers are input signals for the PreToolUse skill gate; they must never reach
-// the published PR (see ABU-228, leaked in PR #42).
-const stripOverrideMarkers = (text: string) =>
-  text
-    .replaceAll(/[ \t]*(?:CAPE_ORCHESTRATE|CAPE_HARD_GATE_OVERRIDE)[ \t]*/g, ' ')
+// the published PR (see ABU-228, leaked in PR #42). Marker-free text ships byte-identical.
+const markerPattern = `(?<![A-Za-z0-9_])(?:${ORCHESTRATE_OVERRIDE}|${HARD_GATE_OVERRIDE})(?![A-Za-z0-9_])`;
+const containsMarker = new RegExp(markerPattern);
+const markerWithSpacing = new RegExp(`[ \\t]*${markerPattern}[ \\t]*`, 'g');
+
+const stripOverrideMarkers = (text: string) => {
+  if (!containsMarker.test(text)) {
+    return text;
+  }
+  return text
+    .replaceAll(markerWithSpacing, ' ')
     .replaceAll(/[ \t]+$/gm, '')
     .replaceAll(/\n{3,}/g, '\n\n')
     .trim();
+};
 
 const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
   const parts: string[] = [];
@@ -64,7 +73,7 @@ const prValidate = Command.make(
       return yield* dieWithError('provide <file> or --stdin');
     }
 
-    const result = validatePrBody(template.sections, body);
+    const result = validatePrBody(template.sections, stripOverrideMarkers(body));
     yield* Console.log(JSON.stringify(result));
 
     if (!result.valid) {
