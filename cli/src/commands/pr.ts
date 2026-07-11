@@ -6,6 +6,14 @@ import { HookService, resolveBranchInfo } from '../services/hook';
 import { findTemplate, PrService, readStdin, validatePrBody } from '../services/pr';
 import { catchAndDie } from '../utils/catchAndDie';
 
+// Hook override markers are input signals for the PreToolUse skill gate; they must never reach
+// the published PR (see ABU-228, leaked in PR #42).
+const stripOverrideMarkers = (text: string) =>
+  text
+    .replaceAll(/[ \t]*(?:CAPE_ORCHESTRATE|CAPE_HARD_GATE_OVERRIDE)[ \t]*/g, '')
+    .replaceAll(/\n{3,}/g, '\n\n')
+    .trim();
+
 const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
   const parts: string[] = [];
   if (result.missing.length > 0) {
@@ -88,7 +96,9 @@ const prCreate = Command.make(
       Flag.withDefault(false),
     ),
   },
-  Effect.fn(function* ({ title, body, draft, label, noPush }) {
+  Effect.fn(function* ({ title: rawTitle, body: rawBody, draft, label, noPush }) {
+    const title = stripOverrideMarkers(rawTitle);
+    const body = stripOverrideMarkers(rawBody);
     const hookService = yield* HookService;
     const prService = yield* PrService;
 
