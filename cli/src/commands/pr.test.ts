@@ -554,6 +554,35 @@ describe('pr create command', () => {
     console_.restore();
   });
 
+  it('strips an inline marker without gluing the surrounding words', async () => {
+    const console_ = spyConsole();
+    let capturedGhArgs: readonly string[] = [];
+    const prLayer = Layer.succeed(PrService)({
+      fileExists: () => Effect.succeed(false),
+      readFile: () => Effect.fail(new Error('no file')),
+      readStdin: () => Effect.succeed(''),
+      gitRoot: () => Effect.succeed('/repo'),
+      spawnGh: (args) => {
+        capturedGhArgs = args;
+        return Effect.succeed('https://github.com/owner/repo/pull/4');
+      },
+    });
+    await Effect.runPromise(
+      run([
+        'pr',
+        'create',
+        '--title',
+        'My PR',
+        '--body',
+        validBody.replace('why', 'opened with the CAPE_ORCHESTRATE override'),
+      ]).pipe(Effect.provide(makeCreateLayers(undefined, prLayer))),
+    );
+    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(
+      validBody.replace('why', 'opened with the override'),
+    );
+    console_.restore();
+  });
+
   it('passes --draft flag to gh', async () => {
     const console_ = spyConsole();
     let capturedGhArgs: readonly string[] = [];

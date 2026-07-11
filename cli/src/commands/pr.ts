@@ -10,7 +10,8 @@ import { catchAndDie } from '../utils/catchAndDie';
 // the published PR (see ABU-228, leaked in PR #42).
 const stripOverrideMarkers = (text: string) =>
   text
-    .replaceAll(/[ \t]*(?:CAPE_ORCHESTRATE|CAPE_HARD_GATE_OVERRIDE)[ \t]*/g, '')
+    .replaceAll(/[ \t]*(?:CAPE_ORCHESTRATE|CAPE_HARD_GATE_OVERRIDE)[ \t]*/g, ' ')
+    .replaceAll(/[ \t]+$/gm, '')
     .replaceAll(/\n{3,}/g, '\n\n')
     .trim();
 
