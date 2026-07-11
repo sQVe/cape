@@ -51,6 +51,17 @@ describe('stateFilePath', () => {
     expect(first.path).not.toBe(second.path);
   });
 
+  it('bounds the filename for long worktree names while keeping them distinct', async () => {
+    const longA = `${'a'.repeat(150)}x`;
+    const longB = `${'a'.repeat(150)}y`;
+    const first = await resolveStatePath(`/repo/.git/worktrees/${longA}`, '/repo/.git');
+    const second = await resolveStatePath(`/repo/.git/worktrees/${longB}`, '/repo/.git');
+
+    const filename = first.path.split('/').pop() ?? '';
+    expect(filename.length).toBeLessThanOrEqual(200);
+    expect(first.path).not.toBe(second.path);
+  });
+
   it('returns the same path for the same worktree across invocations', async () => {
     const first = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');
     const second = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');

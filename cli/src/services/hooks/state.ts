@@ -61,7 +61,9 @@ export const stateFilePath = () =>
     const dir = `${contextDir}/${repoId}`;
     const isLinkedWorktree = gitDir != null && resolve(gitDir) !== normalizedCommonDir;
     const rawName = isLinkedWorktree ? basename(gitDir) : '';
-    const name = rawName.replace(/[^A-Za-z0-9._-]/g, '-');
+    // Bounded so the filename stays under the 255-byte component limit even with
+    // writeFileAtomic's temp suffix; the full raw-name hash keeps truncations unique.
+    const name = rawName.replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 64);
     const suffix =
       name === '' ? '' : `-${name}-${createHash('sha256').update(rawName).digest('hex')}`;
     return { dir, path: `${dir}/state${suffix}.json` };
