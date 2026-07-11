@@ -32,6 +32,7 @@ const makeHookLayer = (files: Record<string, string>) =>
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
     spawnGit: () => Effect.succeed(null),
+    spawnGitChecked: () => Effect.succeed({ kind: 'exit-nonzero' as const }),
     fileExists: () => Effect.succeed(false),
   });
 

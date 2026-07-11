@@ -109,9 +109,11 @@ Then label the herdr workspace to match the phase: `cape workspace phase build` 
 no-op outside herdr.
 
 Use `--phase PLAN`, `--phase BUILD`, or `--phase SHIP` only when the current phase is not BUILD. The
-command writes `flowPhase { phase, issueId, timestamp }` to `hooks/context/state.json`. It does not
-call Linear, grove, or br. If the local tracker cache does not contain the epic yet, the session
-banner stays quiet until a tracker read refreshes the cache.
+command writes `flowPhase { phase, issueId, timestamp }` to a per-worktree state file,
+`hooks/context/state-<sha256(git-dir)>.json` (non-git callers fall back to
+`hooks/context/state-no-repo.json`). It does not call Linear, grove, or br. If the local tracker
+cache does not contain the epic yet, the session banner stays quiet until a tracker read refreshes
+the cache.
 
 ---
 

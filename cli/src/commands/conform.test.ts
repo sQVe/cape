@@ -228,6 +228,7 @@ describe('conform command wiring', () => {
       ensureDir: () => Effect.succeed(undefined),
       readStdin: () => Effect.succeed(''),
       spawnGit: () => Effect.succeed(null),
+      spawnGitChecked: () => Effect.succeed({ kind: 'exit-nonzero' as const }),
       fileExists: () => Effect.succeed(false),
     });
 
@@ -235,9 +236,9 @@ describe('conform command wiring', () => {
       run(['conform', 'staged']).pipe(Effect.provide(makeTestCommandLayers(hookLayer))),
     );
 
-    const stateWrite = writes.find((w) => w.path.endsWith('state.json'));
+    const stateWrite = writes.find((w) => w.path.endsWith('state-no-repo.json'));
     if (stateWrite == null) {
-      throw new Error('conform did not write state.json');
+      throw new Error('conform did not write the state file');
     }
     const parsed = JSON.parse(stateWrite.content);
     expect(parsed.conformedAt.scope).toBe('staged');

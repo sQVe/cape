@@ -241,6 +241,51 @@ describe('HookServiceLive', () => {
     });
   });
 
+  describe('spawnGitChecked', () => {
+    it('returns ok with trimmed stdout on success', async () => {
+      mockExecFileSync.mockReturnValue('/repo/.git\n/repo/.git\n');
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'ok', stdout: '/repo/.git\n/repo/.git' });
+    });
+
+    it('returns exit-nonzero when git exits with a nonzero status', async () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw Object.assign(new Error('not a git repository'), { status: 128 });
+      });
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'exit-nonzero' });
+    });
+
+    it('returns unavailable when git never answers', async () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw Object.assign(new Error('spawn timed out'), { status: null, signal: 'SIGTERM' });
+      });
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'unavailable' });
+    });
+  });
+
   describe('fileExists', () => {
     it('returns true when file exists', async () => {
       mockExistsSync.mockReturnValue(true);

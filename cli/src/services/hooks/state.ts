@@ -11,6 +11,14 @@ import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsin
 
 export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
+// Distinguishes "git ran and said no" from "git never answered": exit-nonzero
+// means not-a-repo, unavailable means timeout/missing binary. Conflating the
+// two made transient git failures write state to the wrong file.
+export type GitSpawnResult =
+  | { readonly kind: 'ok'; readonly stdout: string }
+  | { readonly kind: 'exit-nonzero' }
+  | { readonly kind: 'unavailable' };
+
 // HookService methods declare E=never intentionally: hooks must degrade
 // gracefully so a broken hook never crashes the CLI. hookLive.ts absorbs all
 // failures via Effect.orElseSucceed(fallback) — the one documented exception
@@ -25,6 +33,10 @@ export class HookService extends ServiceMap.Service<
     readonly ensureDir: (path: string) => Effect.Effect<void>;
     readonly readStdin: () => Effect.Effect<string>;
     readonly spawnGit: (args: readonly string[], cwd?: string) => Effect.Effect<string | null>;
+    readonly spawnGitChecked: (
+      args: readonly string[],
+      cwd?: string,
+    ) => Effect.Effect<GitSpawnResult>;
     readonly fileExists: (path: string) => Effect.Effect<boolean>;
   }
 >()('HookService') {}
@@ -43,30 +55,75 @@ type StateFile = Record<string, StateValue>;
 
 const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
-// Invariant: git state is isolated by normalized git-common-dir and linked
-// worktree name under the shared plugin root; non-git callers use state.json.
+type GitContext =
+  | { readonly kind: 'repo'; readonly gitDir: string; readonly isLinkedWorktree: boolean }
+  | { readonly kind: 'no-repo' }
+  | { readonly kind: 'unavailable' };
+
+// One combined rev-parse answers both questions in a single spawn; the
+// resolved comparison is the single source of worktree identity for both the
+// state path and the session banner.
+const gitContext = (): Effect.Effect<GitContext, never, HookService> =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const result = yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+    if (result.kind === 'unavailable') {
+      return { kind: 'unavailable' as const };
+    }
+    if (result.kind === 'exit-nonzero') {
+      return { kind: 'no-repo' as const };
+    }
+    const [gitDirRaw, commonDirRaw] = result.stdout.split('\n').map((line) => line.trim());
+    if (gitDirRaw == null || gitDirRaw === '' || commonDirRaw == null || commonDirRaw === '') {
+      return { kind: 'no-repo' as const };
+    }
+    const gitDir = resolve(gitDirRaw);
+    return { kind: 'repo' as const, gitDir, isLinkedWorktree: gitDir !== resolve(commonDirRaw) };
+  });
+
+// The resolved git-dir is unique per repo AND per worktree (main tree:
+// <repo>/.git; linked: <common>/worktrees/<name>), so one hash isolates both.
+export const stateFileName = (gitDir: string) =>
+  `state-${createHash('sha256').update(resolve(gitDir)).digest('hex')}.json`;
+
+// Invariant: git state is isolated by hashing the resolved git-dir under the
+// shared plugin root; non-git callers use state-no-repo.json (never the legacy
+// state.json, so pre-namespacing leftovers are inert); a git error yields null
+// and callers skip state IO rather than touch the wrong file.
 export const stateFilePath = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const root = service.pluginRoot();
-    // spawnGit already trims to a non-empty string or null (see hookLive.ts).
-    const gitDir = yield* service.spawnGit(['rev-parse', '--git-dir']);
-    const commonDir = yield* service.spawnGit(['rev-parse', '--git-common-dir']);
-    const contextDir = `${root}/hooks/context`;
-    if (commonDir == null) {
-      return { dir: contextDir, path: `${contextDir}/state.json` };
+    const contextDir = `${service.pluginRoot()}/hooks/context`;
+    const git = yield* gitContext();
+    if (git.kind === 'unavailable') {
+      return null;
     }
-    const normalizedCommonDir = resolve(commonDir);
-    const repoId = createHash('sha256').update(normalizedCommonDir).digest('hex');
-    const dir = `${contextDir}/${repoId}`;
-    const isLinkedWorktree = gitDir != null && resolve(gitDir) !== normalizedCommonDir;
-    const rawName = isLinkedWorktree ? basename(gitDir) : '';
-    // Bounded so the filename stays under the 255-byte component limit even with
-    // writeFileAtomic's temp suffix; the full raw-name hash keeps truncations unique.
-    const name = rawName.replace(/[^A-Za-z0-9._-]/g, '-').slice(0, 64);
-    const suffix =
-      name === '' ? '' : `-${name}-${createHash('sha256').update(rawName).digest('hex')}`;
-    return { dir, path: `${dir}/state${suffix}.json` };
+    if (git.kind === 'no-repo') {
+      return { dir: contextDir, path: `${contextDir}/state-no-repo.json` };
+    }
+    return { dir: contextDir, path: `${contextDir}/${stateFileName(git.gitDir)}` };
+  });
+
+// Everything `cape state reset` should remove: the current scheme's file plus
+// the pre-namespacing files (state.json, state-<worktree-name>.json) that
+// nothing reads anymore but that would otherwise be stranded forever.
+export const stateResetPaths = () =>
+  Effect.gen(function* () {
+    const service = yield* HookService;
+    const contextDir = `${service.pluginRoot()}/hooks/context`;
+    const git = yield* gitContext();
+    if (git.kind === 'unavailable') {
+      return [] as string[];
+    }
+    if (git.kind === 'no-repo') {
+      return [`${contextDir}/state-no-repo.json`, `${contextDir}/state.json`];
+    }
+    const paths = [`${contextDir}/${stateFileName(git.gitDir)}`, `${contextDir}/state.json`];
+    if (git.isLinkedWorktree) {
+      const legacyName = basename(git.gitDir).replace(/[^A-Za-z0-9._-]/g, '-');
+      paths.push(`${contextDir}/state-${legacyName}.json`);
+    }
+    return paths;
   });
 
 const readStateAt = (path: string) =>
@@ -85,14 +142,21 @@ const readStateAt = (path: string) =>
 
 export const readState = () =>
   Effect.gen(function* () {
-    const { path } = yield* stateFilePath();
-    return yield* readStateAt(path);
+    const file = yield* stateFilePath();
+    if (file == null) {
+      return {} as StateFile;
+    }
+    return yield* readStateAt(file.path);
   });
 
 export const writeStateKey = (key: string, value: Record<string, unknown>) =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const { dir, path } = yield* stateFilePath();
+    const file = yield* stateFilePath();
+    if (file == null) {
+      return;
+    }
+    const { dir, path } = file;
     const state = yield* readStateAt(path);
     state[key] = { ...value, timestamp: Date.now() };
     yield* service.ensureDir(dir);
@@ -102,7 +166,11 @@ export const writeStateKey = (key: string, value: Record<string, unknown>) =>
 export const removeStateKey = (key: string) =>
   Effect.gen(function* () {
     const service = yield* HookService;
-    const { path } = yield* stateFilePath();
+    const file = yield* stateFilePath();
+    if (file == null) {
+      return;
+    }
+    const { path } = file;
     const state = yield* readStateAt(path);
     if (!(key in state)) {
       return;
@@ -242,9 +310,8 @@ const readSessionBanner = () =>
 
     const service = yield* HookService;
     const branch = yield* service.spawnGit(['branch', '--show-current']);
-    const gitDir = yield* service.spawnGit(['rev-parse', '--git-dir']);
-    const gitCommonDir = yield* service.spawnGit(['rev-parse', '--git-common-dir']);
-    const isWorktree = gitDir != null && gitCommonDir != null && gitDir !== gitCommonDir;
+    const git = yield* gitContext();
+    const isWorktree = git.kind === 'repo' && git.isLinkedWorktree;
     const isStale = Date.now() - cache.timestamp > TRACKER_CACHE_TTL_MS;
     const staleAge = isStale ? formatRelativeAge(cache.timestamp) : null;
     return buildSessionBanner(epic, flowPhase.phase, { branch, isWorktree }, staleAge);

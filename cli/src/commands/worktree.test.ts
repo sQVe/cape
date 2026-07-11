@@ -1,12 +1,10 @@
-import { createHash } from 'node:crypto';
-
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
-import { HookService, sessionStart } from '../services/hook';
+import { HookService, sessionStart, stateFileName } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -20,9 +18,8 @@ import {
 import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
-const statePath = '/test/hooks/context/state.json';
-const linkedStatePath = (commonDir: string) =>
-  `/test/hooks/context/${createHash('sha256').update(commonDir).digest('hex')}/state-abu-50-17c1948277f3aa8e903b77d9467079da0b16b42a1b65e2d4ab57ce0910783a09.json`;
+const statePath = '/test/hooks/context/state-no-repo.json';
+const linkedStatePath = (gitDir: string) => `/test/hooks/context/${stateFileName(gitDir)}`;
 const trackerPath = '/test/hooks/context/tracker.json';
 const skillPath = '/test/skills/don-cape/SKILL.md';
 
@@ -73,6 +70,12 @@ const makeHookLayer = (
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
     spawnGit: (args) => Effect.succeed(gitResponses[args.join(' ')] ?? null),
+    spawnGitChecked: (args) => {
+      const value = gitResponses[args.join(' ')] ?? null;
+      return Effect.succeed(
+        value == null ? { kind: 'exit-nonzero' as const } : { kind: 'ok' as const, stdout: value },
+      );
+    },
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
   return {
@@ -135,12 +138,11 @@ describe('cape worktree start', () => {
   });
 
   it('gives a linked worktree its own state file so stamps do not collide', async () => {
-    const worktreeStatePath = linkedStatePath('/repo/.bare');
+    const worktreeStatePath = linkedStatePath('/repo/.bare/worktrees/abu-50');
     const { hookLayer, files } = makeHookLayer(
       {},
       {
-        'rev-parse --git-dir': '/repo/.bare/worktrees/abu-50',
-        'rev-parse --git-common-dir': '/repo/.bare',
+        'rev-parse --git-dir --git-common-dir': '/repo/.bare/worktrees/abu-50\n/repo/.bare',
       },
     );
     const console_ = spyConsole();
@@ -237,7 +239,7 @@ describe('cape worktree start', () => {
   });
 
   it('makes the session-start banner render the stamped epic from tracker cache', async () => {
-    const worktreeStatePath = linkedStatePath('/repo/.git');
+    const worktreeStatePath = linkedStatePath('/repo/.git/worktrees/abu-50');
     const { hookLayer, files } = makeHookLayer(
       {
         [skillPath]: 'don cape',
@@ -245,8 +247,7 @@ describe('cape worktree start', () => {
       },
       {
         'branch --show-current': 'feat/abu-50',
-        'rev-parse --git-dir': '/repo/.git/worktrees/abu-50',
-        'rev-parse --git-common-dir': '/repo/.git',
+        'rev-parse --git-dir --git-common-dir': '/repo/.git/worktrees/abu-50\n/repo/.git',
       },
     );
     const console_ = spyConsole();
@@ -315,8 +316,8 @@ describe('cape worktree stop', () => {
     console_.restore();
   });
 
-  it('clears the linked worktree state file, not the shared state.json', async () => {
-    const worktreeStatePath = linkedStatePath('/repo/.bare');
+  it('clears the linked worktree state file, not the shared fallback', async () => {
+    const worktreeStatePath = linkedStatePath('/repo/.bare/worktrees/abu-50');
     const { hookLayer, files, removedFiles } = makeHookLayer(
       {
         [worktreeStatePath]: JSON.stringify({
@@ -324,8 +325,7 @@ describe('cape worktree stop', () => {
         }),
       },
       {
-        'rev-parse --git-dir': '/repo/.bare/worktrees/abu-50',
-        'rev-parse --git-common-dir': '/repo/.bare',
+        'rev-parse --git-dir --git-common-dir': '/repo/.bare/worktrees/abu-50\n/repo/.bare',
       },
     );
     const console_ = spyConsole();

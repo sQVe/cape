@@ -46,6 +46,7 @@ export const stubHookLayer = Layer.succeed(HookService)({
   ensureDir: () => Effect.succeed(undefined),
   readStdin: () => Effect.succeed(''),
   spawnGit: () => Effect.succeed(null),
+  spawnGitChecked: () => Effect.succeed({ kind: 'exit-nonzero' as const }),
   fileExists: () => Effect.succeed(false),
 });
 

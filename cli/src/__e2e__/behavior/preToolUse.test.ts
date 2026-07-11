@@ -297,7 +297,7 @@ describe('bash gate: conform-before-review', () => {
 
   it('denies stamping reviewedAt when the conform stamp is stale', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({
         conformedAt: { scope: 'branch', timestamp: Date.now() - 2 * 60 * 60 * 1000 },
       }),
@@ -308,7 +308,7 @@ describe('bash gate: conform-before-review', () => {
 
   it('allows stamping reviewedAt when the conform stamp is fresh', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({ conformedAt: { scope: 'branch', timestamp: Date.now() } }),
     );
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Bash'], stampInput, env);
@@ -334,7 +334,7 @@ describe('skill gate: review-before-pr', () => {
 
   it('denies pr when review stamp is stale', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({
         reviewedAt: { scope: 'branch', timestamp: Date.now() - 2 * 60 * 60 * 1000 },
       }),
@@ -345,7 +345,7 @@ describe('skill gate: review-before-pr', () => {
 
   it('allows pr when review stamp is fresh', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({ reviewedAt: { scope: 'branch', timestamp: Date.now() } }),
     );
     const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput('cape:pr'), env);
@@ -385,7 +385,7 @@ describe('skill gate: internal skills nudge direct invocation', () => {
 
   it('allows test-driven-development when workflowActive exists in state.json', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({ workflowActive: { value: true, timestamp: Date.now() } }),
     );
     const result = cape(

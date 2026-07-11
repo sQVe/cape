@@ -1,65 +1,59 @@
 import { Effect, Layer } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { HookService, stateFilePath } from '../hook';
+import { HookService, stateFileName, stateFilePath, stateResetPaths } from '../hook';
+import type { GitSpawnResult } from '../hook';
+
+const makeLayer = (gitResult: GitSpawnResult) =>
+  Layer.succeed(HookService)({
+    pluginRoot: () => '/test',
+    readFile: () => Effect.succeed(null),
+    writeFile: () => Effect.succeed(undefined),
+    removeFile: () => Effect.succeed(undefined),
+    ensureDir: () => Effect.succeed(undefined),
+    readStdin: () => Effect.succeed(''),
+    spawnGit: () => Effect.succeed(null),
+    spawnGitChecked: () => Effect.succeed(gitResult),
+    fileExists: () => Effect.succeed(false),
+  });
 
 const resolveStatePath = (gitDir: string | null, commonDir: string | null) => {
-  const gitResponses: Record<string, string | null> = {
-    'rev-parse --git-dir': gitDir,
-    'rev-parse --git-common-dir': commonDir,
-  };
-  return Effect.runPromise(
-    stateFilePath().pipe(
-      Effect.provide(
-        Layer.succeed(HookService)({
-          pluginRoot: () => '/test',
-          readFile: () => Effect.succeed(null),
-          writeFile: () => Effect.succeed(undefined),
-          removeFile: () => Effect.succeed(undefined),
-          ensureDir: () => Effect.succeed(undefined),
-          readStdin: () => Effect.succeed(''),
-          spawnGit: (args) => Effect.succeed(gitResponses[args.join(' ')] ?? null),
-          fileExists: () => Effect.succeed(false),
-        }),
-      ),
-    ),
-  );
+  const gitResult: GitSpawnResult =
+    gitDir == null || commonDir == null
+      ? { kind: 'exit-nonzero' }
+      : { kind: 'ok', stdout: `${gitDir}\n${commonDir}` };
+  return Effect.runPromise(stateFilePath().pipe(Effect.provide(makeLayer(gitResult))));
 };
 
 describe('stateFilePath', () => {
-  it('isolates repositories with distinct git common directories', async () => {
+  it('isolates repositories with distinct git dirs', async () => {
     const repoA = await resolveStatePath('/repo-a/.git', '/repo-a/.git');
     const repoB = await resolveStatePath('/repo-b/.git', '/repo-b/.git');
 
-    expect(repoA.path).not.toBe(repoB.path);
+    expect(repoA?.path).not.toBe(repoB?.path);
   });
 
   it('isolates a linked worktree from its main tree', async () => {
     const main = await resolveStatePath('/repo/.git', '/repo/.git');
     const worktree = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');
 
-    expect(main.dir).toBe(worktree.dir);
-    expect(main.path).not.toBe(worktree.path);
+    expect(main?.path).not.toBe(worktree?.path);
   });
 
-  it('isolates worktrees with colliding truncated hashes', async () => {
-    const first = await resolveStatePath('/repo/.git/worktrees/$!@!@++', '/repo/.git');
-    const second = await resolveStatePath('/repo/.git/worktrees/@)#)#++', '/repo/.git');
+  it('derives the filename from stateFileName so tests and production share the scheme', async () => {
+    const worktree = await resolveStatePath('/repo/.git/worktrees/feature', '/repo/.git');
 
-    expect(first.path).toMatch(/\/state-{9}bd48f6e5[a-f0-9]{56}\.json$/);
-    expect(second.path).toMatch(/\/state-{9}bd48f6e5[a-f0-9]{56}\.json$/);
-    expect(first.path).not.toBe(second.path);
+    expect(worktree?.path).toBe(
+      `/test/hooks/context/${stateFileName('/repo/.git/worktrees/feature')}`,
+    );
+    expect(worktree?.path).toMatch(/\/state-[a-f0-9]{64}\.json$/);
   });
 
-  it('bounds the filename for long worktree names while keeping them distinct', async () => {
-    const longA = `${'a'.repeat(150)}x`;
-    const longB = `${'a'.repeat(150)}y`;
-    const first = await resolveStatePath(`/repo/.git/worktrees/${longA}`, '/repo/.git');
-    const second = await resolveStatePath(`/repo/.git/worktrees/${longB}`, '/repo/.git');
+  it('normalizes relative git dirs before hashing', async () => {
+    const absolute = await resolveStatePath('/repo/.git', '/repo/.git');
+    const viaParent = await resolveStatePath('/repo/sub/../.git', '/repo/.git');
 
-    const filename = first.path.split('/').pop() ?? '';
-    expect(filename.length).toBeLessThanOrEqual(200);
-    expect(first.path).not.toBe(second.path);
+    expect(absolute?.path).toBe(viaParent?.path);
   });
 
   it('returns the same path for the same worktree across invocations', async () => {
@@ -74,5 +68,47 @@ describe('stateFilePath', () => {
     const second = await resolveStatePath(null, null);
 
     expect(first).toEqual(second);
+    expect(first?.path).toBe('/test/hooks/context/state-no-repo.json');
+  });
+
+  it('returns null when git is unavailable instead of misdirecting to the fallback', async () => {
+    const path = await Effect.runPromise(
+      stateFilePath().pipe(Effect.provide(makeLayer({ kind: 'unavailable' }))),
+    );
+
+    expect(path).toBeNull();
+  });
+});
+
+describe('stateResetPaths', () => {
+  it('includes the current path, the legacy fallback, and the legacy worktree file', async () => {
+    const paths = await Effect.runPromise(
+      stateResetPaths().pipe(
+        Effect.provide(
+          makeLayer({ kind: 'ok', stdout: '/repo/.git/worktrees/feat+x\n/repo/.git' }),
+        ),
+      ),
+    );
+
+    expect(paths).toContain(`/test/hooks/context/${stateFileName('/repo/.git/worktrees/feat+x')}`);
+    expect(paths).toContain('/test/hooks/context/state.json');
+    expect(paths).toContain('/test/hooks/context/state-feat-x.json');
+  });
+
+  it('covers the fallback files outside a git repository', async () => {
+    const paths = await Effect.runPromise(
+      stateResetPaths().pipe(Effect.provide(makeLayer({ kind: 'exit-nonzero' }))),
+    );
+
+    expect(paths).toContain('/test/hooks/context/state-no-repo.json');
+    expect(paths).toContain('/test/hooks/context/state.json');
+  });
+
+  it('returns nothing when git is unavailable', async () => {
+    const paths = await Effect.runPromise(
+      stateResetPaths().pipe(Effect.provide(makeLayer({ kind: 'unavailable' }))),
+    );
+
+    expect(paths).toEqual([]);
   });
 });
