@@ -1,5 +1,13 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
 
 import { Effect } from 'effect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -14,6 +22,8 @@ vi.mock('node:child_process', () => ({
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
   readFileSync: vi.fn(),
+  renameSync: vi.fn(),
+  statSync: vi.fn(),
   writeFileSync: vi.fn(),
   rmSync: vi.fn(),
   mkdirSync: vi.fn(),
@@ -29,6 +39,8 @@ const run = <A>(effect: Effect.Effect<A, never, HookService>) =>
 const mockExecFileSync = vi.mocked(execFileSync);
 const mockExistsSync = vi.mocked(existsSync);
 const mockReadFileSync = vi.mocked(readFileSync);
+const mockRenameSync = vi.mocked(renameSync);
+const mockStatSync = vi.mocked(statSync);
 const mockWriteFileSync = vi.mocked(writeFileSync);
 const mockRmSync = vi.mocked(rmSync);
 const mockMkdirSync = vi.mocked(mkdirSync);
@@ -86,15 +98,51 @@ describe('HookServiceLive', () => {
   });
 
   describe('writeFile', () => {
-    it('delegates to fs writeFileSync', async () => {
+    it('writes to a temp file before renaming it over the target', async () => {
       await run(
         Effect.gen(function* () {
           const service = yield* HookService;
-          yield* service.writeFile('/path', 'data');
+          yield* service.writeFile('/dir/path', 'data');
         }),
       );
 
-      expect(mockWriteFileSync).toHaveBeenCalledWith('/path', 'data');
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(tempPath).toMatch(/^\/dir\/path\..+\.tmp$/);
+      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data', {});
+      expect(mockRenameSync).toHaveBeenCalledWith(tempPath, '/dir/path');
+      expect(mockWriteFileSync.mock.invocationCallOrder[0]).toBeLessThan(
+        mockRenameSync.mock.invocationCallOrder[0] ?? 0,
+      );
+    });
+
+    it('preserves the existing file mode on the temp file', async () => {
+      mockStatSync.mockReturnValue({ mode: 0o600 } as ReturnType<typeof statSync>);
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          yield* service.writeFile('/dir/path', 'data');
+        }),
+      );
+
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(mockWriteFileSync).toHaveBeenCalledWith(tempPath, 'data', { mode: 0o600 });
+    });
+
+    it('removes the temp file when the rename fails', async () => {
+      mockRenameSync.mockImplementation(() => {
+        throw new Error('rename error');
+      });
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          yield* service.writeFile('/dir/path', 'data');
+        }),
+      );
+
+      const tempPath = mockWriteFileSync.mock.calls[0]?.[0];
+      expect(mockRmSync).toHaveBeenCalledWith(tempPath, { force: true });
     });
 
     it('swallows errors via orElseSucceed', async () => {
@@ -190,6 +238,51 @@ describe('HookServiceLive', () => {
       );
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('spawnGitChecked', () => {
+    it('returns ok with trimmed stdout on success', async () => {
+      mockExecFileSync.mockReturnValue('/repo/.git\n/repo/.git\n');
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'ok', stdout: '/repo/.git\n/repo/.git' });
+    });
+
+    it('returns exit-nonzero when git exits with a nonzero status', async () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw Object.assign(new Error('not a git repository'), { status: 128 });
+      });
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'exit-nonzero' });
+    });
+
+    it('returns unavailable when git never answers', async () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw Object.assign(new Error('spawn timed out'), { status: null, signal: 'SIGTERM' });
+      });
+
+      const result = await run(
+        Effect.gen(function* () {
+          const service = yield* HookService;
+          return yield* service.spawnGitChecked(['rev-parse', '--git-dir', '--git-common-dir']);
+        }),
+      );
+
+      expect(result).toEqual({ kind: 'unavailable' });
     });
   });
 

@@ -1,11 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
-import { tryReadFileUtf8 } from '../utils/fs';
+import { tryReadFileUtf8, writeFileAtomic } from '../utils/fs';
 import { HookService } from './hook';
+import type { GitSpawnResult } from './hook';
 
 const readFile = (path: string) =>
   Effect.try({
@@ -16,7 +17,7 @@ const readFile = (path: string) =>
 const writeFile = (path: string, content: string) =>
   Effect.try({
     try: () => {
-      writeFileSync(path, content);
+      writeFileAtomic(path, content);
     },
     catch: () => new Error(`failed to write: ${path}`),
   }).pipe(Effect.orElseSucceed(() => undefined));
@@ -56,6 +57,27 @@ const spawnGit = (args: readonly string[], cwd?: string) =>
     catch: () => new Error('git command failed'),
   }).pipe(Effect.orElseSucceed(() => null));
 
+// A nonzero exit means git ran and answered (e.g. not a repo); anything else
+// (timeout, missing binary) means we don't know — callers must not treat the
+// two alike, or a transient failure redirects state to the wrong file.
+const spawnGitChecked = (args: readonly string[], cwd?: string) =>
+  Effect.sync((): GitSpawnResult => {
+    try {
+      const stdout = execFileSync('git', [...args], {
+        encoding: 'utf-8',
+        timeout: 3000,
+        cwd,
+      });
+      return { kind: 'ok', stdout: stdout.trim() };
+    } catch (error) {
+      const status = (error as { status?: unknown }).status;
+      if (typeof status === 'number' && status !== 0) {
+        return { kind: 'exit-nonzero' };
+      }
+      return { kind: 'unavailable' };
+    }
+  });
+
 const fileExists = (path: string) => Effect.succeed(existsSync(path));
 
 export const HookServiceLive = Layer.succeed(HookService)({
@@ -66,5 +88,6 @@ export const HookServiceLive = Layer.succeed(HookService)({
   ensureDir,
   readStdin,
   spawnGit,
+  spawnGitChecked,
   fileExists,
 });

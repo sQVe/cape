@@ -1,8 +1,9 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 
 import { Effect } from 'effect';
 
 import { pluginRoot } from '../pluginRoot';
+import { writeFileAtomic } from '../utils/fs';
 import { safeParseJson } from '../utils/json';
 import { isTrackerCache } from './tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
@@ -265,7 +266,7 @@ export const writeCacheFile = (cache: TrackerCache) =>
     try: () => {
       const root = pluginRoot();
       mkdirSync(`${root}/hooks/context`, { recursive: true });
-      writeFileSync(trackerCachePath(root), JSON.stringify(cache));
+      writeFileAtomic(trackerCachePath(root), JSON.stringify(cache));
     },
     catch: (error) =>
       error instanceof Error ? error : new Error('failed to write tracker cache', { cause: error }),

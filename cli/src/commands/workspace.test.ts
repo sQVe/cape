@@ -18,7 +18,7 @@ import {
 import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
-const statePath = '/test/hooks/context/state.json';
+const statePath = '/test/hooks/context/state-no-repo.json';
 const trackerPath = '/test/hooks/context/tracker.json';
 
 const stateFile = (issueId: string) =>
@@ -40,6 +40,7 @@ const makeHookLayer = (files: Record<string, string> = {}) =>
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
     spawnGit: () => Effect.succeed(null),
+    spawnGitChecked: () => Effect.succeed({ kind: 'exit-nonzero' as const }),
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
 

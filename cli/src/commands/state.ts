@@ -5,7 +5,7 @@ import {
   HookService,
   readState,
   removeStateKey,
-  stateFilePath,
+  stateResetPaths,
   writeStateKey,
 } from '../services/hook';
 
@@ -169,12 +169,14 @@ const stateReset = Command.make(
   {},
   Effect.fn(function* () {
     const service = yield* HookService;
-    const { path } = yield* stateFilePath();
-    yield* service.removeFile(path);
+    const paths = yield* stateResetPaths();
+    for (const path of paths) {
+      yield* service.removeFile(path);
+    }
   }),
 ).pipe(
   Command.withDescription(
-    'Delete all hook state for the current worktree. No-op if no state file exists.',
+    'Delete all hook state for the current worktree, including legacy pre-namespacing files. No-op if no state file exists.',
   ),
 );
 

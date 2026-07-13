@@ -4,7 +4,7 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
-import { HookService } from '../services/hook';
+import { HookService, stateFileName } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
@@ -27,7 +27,7 @@ const makeHookLayer = (
   Layer.succeed(HookService)({
     pluginRoot: () => '/test',
     readFile: (path) => {
-      if (path === '/test/hooks/context/state.json') {
+      if (path === '/test/hooks/context/state-no-repo.json') {
         return Effect.succeed(stateContent);
       }
       return Effect.succeed(null);
@@ -40,6 +40,12 @@ const makeHookLayer = (
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
     spawnGit: (args) => Effect.succeed(gitResponses[args.join(' ')] ?? null),
+    spawnGitChecked: (args) => {
+      const value = gitResponses[args.join(' ')] ?? null;
+      return Effect.succeed(
+        value == null ? { kind: 'exit-nonzero' as const } : { kind: 'ok' as const, stdout: value },
+      );
+    },
     fileExists: () => Effect.succeed(false),
   });
 
@@ -138,7 +144,7 @@ describe('cape state list', () => {
 });
 
 describe('cape state reset', () => {
-  it('removes the current linked worktree state file', async () => {
+  it('removes the current worktree state file and the legacy files', async () => {
     const removedFiles: string[] = [];
 
     await Effect.runPromise(
@@ -147,8 +153,7 @@ describe('cape state reset', () => {
           makeLayers(
             null,
             {
-              'rev-parse --git-dir': '/repo/.git/worktrees/abu-205',
-              'rev-parse --git-common-dir': '/repo/.git',
+              'rev-parse --git-dir --git-common-dir': '/repo/.git/worktrees/abu-205\n/repo/.git',
             },
             removedFiles,
           ),
@@ -156,6 +161,10 @@ describe('cape state reset', () => {
       ),
     );
 
-    expect(removedFiles).toEqual(['/test/hooks/context/state-abu-205.json']);
+    expect(removedFiles).toEqual([
+      `/test/hooks/context/${stateFileName('/repo/.git/worktrees/abu-205')}`,
+      '/test/hooks/context/state.json',
+      '/test/hooks/context/state-abu-205.json',
+    ]);
   });
 });

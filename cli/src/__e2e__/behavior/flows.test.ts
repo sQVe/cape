@@ -35,7 +35,7 @@ describe('flow 3: session-start', () => {
 
   it('renders the ABU-15 banner from a seeded tracker cache with network disabled', () => {
     writeFileSync(
-      join(contextDir, 'state.json'),
+      join(contextDir, 'state-no-repo.json'),
       JSON.stringify({
         flowPhase: {
           phase: 'BUILD',

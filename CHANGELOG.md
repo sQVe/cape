@@ -154,11 +154,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   failed submit aborts the launch instead of merging. The builder interview question now also states
   TDD is enforced for either builder.
 - Hooks: per-worktree state (the epic stamp and workflow flags) now lives in its own file per
-  worktree instead of a single shared `state.json`. Because `cape` is a symlinked binary,
-  `pluginRoot` resolved to one install directory, so every worktree and herdr workspace overwrote
-  one stamp -- the last `cape worktree start` won, collapsing multiple workspaces onto the same epic
-  label. Each linked worktree now gets its own `state-<name>.json` under the same context directory,
-  keyed off `git-dir` differing from `git-common-dir`; the tracker cache stays global.
+  repository and worktree instead of a single shared `state.json`. Because `cape` is a symlinked
+  binary, `pluginRoot` resolved to one install directory, so every repo, worktree, and herdr
+  workspace overwrote one stamp -- a stale `reviewedAt` from repo A could satisfy the
+  review-before-pr gate in repo B. Each worktree now gets `state-<sha256(resolved git-dir)>.json`
+  under the same context directory (the resolved git-dir is unique per repo and per worktree);
+  non-git callers use `state-no-repo.json`, never the legacy `state.json`, so pre-upgrade leftovers
+  are inert. A git error (timeout, missing binary) is distinguished from not-a-repo and skips state
+  IO instead of writing to the fallback file. Existing stamps reset once on upgrade;
+  `cape state reset` also removes the legacy pre-namespacing files. The tracker cache stays global.
 - Hooks: the push gate now resolves the current branch from the hook payload's `cwd` instead of the
   hook process cwd, so a `git push` from a feature-branch worktree is no longer blocked when the
   session sits on the default branch. The branch-vs-default-branch check now lives in one shared

@@ -17,6 +17,7 @@ import {
   preToolUseBash,
   preToolUseSkill,
   sessionStart,
+  stateFileName,
   stripQuotedContent,
   userPromptSubmit,
 } from '../services/hook';
@@ -196,6 +197,16 @@ const makeStubHookLayer = (
         }
         return Effect.succeed(null);
       }),
+    spawnGitChecked: (args) => {
+      const key = args.join(' ');
+      gitCalls.push(key);
+      for (const [pattern, response] of Object.entries(gitResponses)) {
+        if (key.includes(pattern) && response != null) {
+          return Effect.succeed({ kind: 'ok' as const, stdout: response });
+        }
+      }
+      return Effect.succeed({ kind: 'exit-nonzero' as const });
+    },
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
 
@@ -215,7 +226,7 @@ const flowPhaseEntryForIssue = (phase: string, issueId: string) => ({
 });
 
 const stateFile = (entries: Record<string, unknown>) => ({
-  '/test/hooks/context/state.json': JSON.stringify(entries),
+  '/test/hooks/context/state-no-repo.json': JSON.stringify(entries),
 });
 
 const reviewedAtEntry = (timestamp = Date.now()) => ({
@@ -305,7 +316,7 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('executing');
   });
 
-  it('removes legacy tddState key from state.json', async () => {
+  it('removes legacy tddState key from the state file', async () => {
     const writtenFiles: Record<string, string> = {};
     const removedFiles: string[] = [];
     const layer = makeStubHookLayer({
@@ -314,7 +325,7 @@ describe('sessionStart', () => {
       files: stateFile({ tddState: { phase: 'red', timestamp: Date.now() } }),
     });
     await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/state.json');
+    expect(removedFiles).toContain('/test/hooks/context/state-no-repo.json');
   });
 
   it('preserves flowPhase while removing legacy tddState', async () => {
@@ -329,7 +340,7 @@ describe('sessionStart', () => {
       }),
     });
     await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    const written = writtenFiles['/test/hooks/context/state.json'];
+    const written = writtenFiles['/test/hooks/context/state-no-repo.json'];
     expect(written).toBeDefined();
     const parsed = JSON.parse(written as string);
     expect(parsed).not.toHaveProperty('tddState');
@@ -341,15 +352,14 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        '/test/hooks/context/state-abu-15.json': JSON.stringify({
+        [`/test/hooks/context/${stateFileName('/repo/.git/worktrees/abu-15')}`]: JSON.stringify({
           flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15'),
         }),
         ...trackerCacheFile(trackerCache()),
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15',
-        'rev-parse --git-dir': '/repo/.git/worktrees/abu-15',
-        'rev-parse --git-common-dir': '/repo/.git',
+        'rev-parse --git-dir --git-common-dir': '/repo/.git/worktrees/abu-15\n/repo/.git',
       },
       gitCalls,
     });
@@ -362,8 +372,7 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('| Next   ABU-17 - Session banner');
     expect(result.additionalContext).toContain('| Branch feat/abu-15 (worktree)');
     expect(result.additionalContext).not.toContain('stale');
-    expect(gitCalls).toContain('rev-parse --git-dir');
-    expect(gitCalls).toContain('rev-parse --git-common-dir');
+    expect(gitCalls).toContain('rev-parse --git-dir --git-common-dir');
     expect(result.additionalContext.indexOf('| Epic   ABU-15')).toBeLessThan(
       result.additionalContext.indexOf('skills/don-cape/SKILL.md'),
     );
@@ -373,13 +382,14 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15') }),
+        [`/test/hooks/context/${stateFileName('/repo/.git')}`]: JSON.stringify({
+          flowPhase: flowPhaseEntryForIssue('BUILD', 'ABU-15'),
+        }),
         ...trackerCacheFile(trackerCache()),
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15',
-        'rev-parse --git-dir': '/repo/.git',
-        'rev-parse --git-common-dir': '/repo/.git',
+        'rev-parse --git-dir --git-common-dir': '/repo/.git\n/repo/.git',
       },
     });
 
@@ -1214,7 +1224,7 @@ describe('preToolUseSkill', () => {
         'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
       }),
       gitResponses: {
-        'rev-parse': 'main',
+        'rev-parse --abbrev-ref HEAD': 'main',
         'symbolic-ref': 'refs/remotes/origin/main',
       },
     });
@@ -1232,7 +1242,7 @@ describe('preToolUseSkill', () => {
         'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
       }),
       gitResponses: {
-        'rev-parse': 'feat/my-feature',
+        'rev-parse --abbrev-ref HEAD': 'feat/my-feature',
         'symbolic-ref': 'refs/remotes/origin/main',
       },
     });
@@ -1361,10 +1371,10 @@ describe('readFlowPhase', () => {
     expect(result.additionalContext).not.toContain('<flow-context>');
   });
 
-  it('returns null when state.json contains malformed JSON', async () => {
+  it('returns null when the state file contains malformed JSON', async () => {
     const layer = makeStubHookLayer({
       files: {
-        '/test/hooks/context/state.json': 'corrupted{{{',
+        '/test/hooks/context/state-no-repo.json': 'corrupted{{{',
       },
     });
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));

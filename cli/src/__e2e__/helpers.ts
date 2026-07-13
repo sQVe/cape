@@ -85,10 +85,9 @@ export const cape = (
     input: stdin,
     encoding: 'utf-8',
     env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
-    // Run from the simulated plugin/project dir, not the dev's cape checkout
-    // (a linked worktree). Otherwise per-worktree state files resolve to the
-    // checkout's worktree name instead of the unsuffixed state.json these tests
-    // seed under CLAUDE_PLUGIN_ROOT.
+    // Run from the simulated plugin/project dir, not the dev's cape checkout.
+    // Any git cwd resolves a hashed per-worktree state file; only a non-git cwd
+    // resolves the state-no-repo.json these tests seed under CLAUDE_PLUGIN_ROOT.
     cwd: env.CLAUDE_PLUGIN_ROOT ?? process.cwd(),
     timeout: 10_000,
   });
