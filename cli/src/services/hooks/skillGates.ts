@@ -28,8 +28,8 @@ const contextWith = (additionalContext: string) => ({ additionalContext });
 
 const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
 const CONFORM_BEFORE_REVIEW_TTL_MS = 60 * 60 * 1000;
-const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
-const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
+export const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
+export const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
