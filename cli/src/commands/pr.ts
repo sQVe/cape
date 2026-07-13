@@ -109,6 +109,9 @@ const prCreate = Command.make(
   Effect.fn(function* ({ title: rawTitle, body: rawBody, draft, label, noPush }) {
     const title = stripOverrideMarkers(rawTitle);
     const body = stripOverrideMarkers(rawBody);
+    if (title.length === 0) {
+      return yield* dieWithError('PR title is empty after stripping override markers.');
+    }
     const hookService = yield* HookService;
     const prService = yield* PrService;
 

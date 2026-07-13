@@ -603,6 +603,18 @@ describe('pr create command', () => {
     console_.restore();
   });
 
+  it('rejects a title that is empty after stripping override markers', async () => {
+    const console_ = spyConsole();
+    await expect(
+      Effect.runPromise(
+        run(['pr', 'create', '--title', 'CAPE_ORCHESTRATE', '--body', validBody]).pipe(
+          Effect.provide(makeCreateLayers()),
+        ),
+      ),
+    ).rejects.toThrow('PR title is empty after stripping override markers');
+    console_.restore();
+  });
+
   it('ships a marker-free body byte-identical, preserving whitespace', async () => {
     const console_ = spyConsole();
     let capturedGhArgs: readonly string[] = [];
