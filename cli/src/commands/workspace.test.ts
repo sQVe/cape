@@ -7,6 +7,7 @@ import { main } from '../main';
 import { HerdrService, composeLabels, phaseIcon } from '../services/herdr';
 import { HookService } from '../services/hook';
 import {
+  makeStubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
   stubConformLayer,
@@ -57,10 +58,14 @@ const makeHerdrLayer = (workspaceId: string | null, tabId: string | null, rename
   return { layer, renames };
 };
 
-const makeLayers = (hookLayer: Layer.Layer<HookService>, herdrLayer: Layer.Layer<HerdrService>) =>
+const makeLayers = (
+  hookLayer: Layer.Layer<HookService>,
+  herdrLayer: Layer.Layer<HerdrService>,
+  gitLayer = stubGitLayer,
+) =>
   Layer.mergeAll(
     NodeServices.layer,
-    stubGitLayer,
+    gitLayer,
     stubDetectLayer,
     stubCheckLayer,
     stubCommitLayer,
@@ -91,22 +96,46 @@ describe('phaseIcon', () => {
 });
 
 describe('composeLabels', () => {
-  it('puts the short title on the workspace label and icon + id on the tab', () => {
-    expect(composeLabels('build', 'ABU-134', 'Surface cape workflow phase in labels')).toEqual({
-      workspace: '🔨 ABU-134 Surface cape workflow',
-      tab: '🔨 ABU-134',
+  it('leads the workspace label with the repo and puts icon + lowercased id on the tab', () => {
+    expect(composeLabels('build', 'ABU-134', 'Rework cape workspace labels', 'cape')).toEqual({
+      workspace: 'cape: 🔨 rework cape workspace labels',
+      tab: '🔨 abu-134',
     });
   });
 
-  it('omits the title when none is available', () => {
-    expect(composeLabels('review', 'ABU-134', null)).toEqual({
-      workspace: '🔍 ABU-134',
-      tab: '🔍 ABU-134',
+  it('truncates the description on a word boundary to the 32 character herdr sidebar budget', () => {
+    expect(
+      composeLabels('build', 'ABU-134', 'Surface cape workflow phase in labels', 'cape'),
+    ).toEqual({
+      workspace: 'cape: 🔨 surface cape workflow phase in',
+      tab: '🔨 abu-134',
+    });
+  });
+
+  it('falls back to the issue id as the description when the title is missing', () => {
+    expect(composeLabels('review', 'ABU-134', null, 'cape')).toEqual({
+      workspace: 'cape: 🔍 abu-134',
+      tab: '🔍 abu-134',
+    });
+    expect(composeLabels('review', 'ABU-134', '   ', 'cape')).toEqual({
+      workspace: 'cape: 🔍 abu-134',
+      tab: '🔍 abu-134',
+    });
+  });
+
+  it('falls back to the id-led shape when the repo is missing', () => {
+    expect(composeLabels('build', 'ABU-134', 'Rework cape workspace labels', null)).toEqual({
+      workspace: '🔨 abu-134 rework cape workspace labels',
+      tab: '🔨 abu-134',
+    });
+    expect(composeLabels('build', 'ABU-134', null, '')).toEqual({
+      workspace: '🔨 abu-134',
+      tab: '🔨 abu-134',
     });
   });
 
   it('returns null for an unknown phase', () => {
-    expect(composeLabels('deploy', 'ABU-134', 'x')).toBeNull();
+    expect(composeLabels('deploy', 'ABU-134', 'x', 'cape')).toBeNull();
   });
 });
 
@@ -123,12 +152,36 @@ describe('cape workspace phase', () => {
     );
     expect(JSON.parse(console_.output())).toEqual({
       renamed: true,
-      workspace: '🔨 ABU-134 Surface cape workflow',
-      tab: '🔨 ABU-134',
+      workspace: 'cape: 🔨 surface cape workflow phase in',
+      tab: '🔨 abu-134',
     });
     expect(renames).toEqual([
-      { kind: 'workspace', id: 'ws1', label: '🔨 ABU-134 Surface cape workflow' },
-      { kind: 'tab', id: 'tab1', label: '🔨 ABU-134' },
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🔨 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
+    ]);
+    console_.restore();
+  });
+
+  it('falls back to the id-led label when the repo name is unresolvable', async () => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'build']).pipe(
+        Effect.provide(makeLayers(hookLayer, herdrLayer, makeStubGitLayer(null))),
+      ),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: '🔨 abu-134 surface cape workflow phase in',
+      tab: '🔨 abu-134',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: '🔨 abu-134 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
     ]);
     console_.restore();
   });
@@ -150,12 +203,12 @@ describe('cape workspace phase', () => {
     );
     expect(JSON.parse(console_.output())).toEqual({
       renamed: true,
-      workspace: '🔨 ABU-134 Surface cape workflow',
-      tab: '🔨 ABU-134',
+      workspace: 'cape: 🔨 surface cape workflow phase in',
+      tab: '🔨 abu-134',
     });
     expect(renames).toEqual([
-      { kind: 'workspace', id: 'ws1', label: '🔨 ABU-134 Surface cape workflow' },
-      { kind: 'tab', id: 'tab1', label: '🔨 ABU-134' },
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🔨 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
     ]);
     console_.restore();
   });
@@ -220,12 +273,12 @@ describe('cape workspace phase', () => {
     );
     expect(JSON.parse(console_.output())).toEqual({
       renamed: false,
-      workspace: '🔨 ABU-134 Surface cape workflow',
-      tab: '🔨 ABU-134',
+      workspace: 'cape: 🔨 surface cape workflow phase in',
+      tab: '🔨 abu-134',
     });
     expect(renames).toEqual([
-      { kind: 'workspace', id: 'ws1', label: '🔨 ABU-134 Surface cape workflow' },
-      { kind: 'tab', id: 'tab1', label: '🔨 ABU-134' },
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🔨 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
     ]);
     console_.restore();
   });
@@ -242,11 +295,11 @@ describe('cape workspace phase', () => {
     );
     expect(JSON.parse(console_.output())).toEqual({
       renamed: true,
-      workspace: '🚀 ABU-134 Surface cape workflow',
+      workspace: 'cape: 🚀 surface cape workflow phase in',
       tab: null,
     });
     expect(renames).toEqual([
-      { kind: 'workspace', id: 'ws1', label: '🚀 ABU-134 Surface cape workflow' },
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🚀 surface cape workflow phase in' },
     ]);
     console_.restore();
   });

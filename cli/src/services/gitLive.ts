@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { basename, dirname } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 
@@ -121,9 +122,28 @@ const createBranch = (name: string) =>
     catch: (error) => new Error(`failed to create branch: ${name}`, { cause: error }),
   });
 
+// The origin url is the source of truth: a grove worktree directory is named after
+// the branch, so the toplevel basename would give the branch instead of the repo.
+// Grove places worktrees as siblings under the workspace root, hence the parent dir
+// fallback when there is no origin remote.
+const repoName = () =>
+  Effect.sync(() => {
+    const origin = tryGit(['remote', 'get-url', 'origin']);
+    if (origin != null) {
+      const name = (origin.replace(/\/+$/, '').split(/[/:]/).pop() ?? '').replace(/\.git$/, '');
+      if (name.length > 0) {
+        return name;
+      }
+    }
+
+    const toplevel = tryGit(['rev-parse', '--show-toplevel']);
+    return toplevel == null ? null : basename(dirname(toplevel));
+  });
+
 export const GitServiceLive = Layer.succeed(GitService)({
   getContext,
   getDiff,
   validateBranch,
   createBranch,
+  repoName,
 });

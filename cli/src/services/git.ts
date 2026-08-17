@@ -31,6 +31,7 @@ export class GitService extends ServiceMap.Service<
     readonly getDiff: (scope: DiffScope) => Effect.Effect<string, Error>;
     readonly validateBranch: (name: string) => Effect.Effect<BranchValidation, Error>;
     readonly createBranch: (name: string) => Effect.Effect<BranchCreation, Error>;
+    readonly repoName: () => Effect.Effect<string | null>;
   }
 >()('GitService') {}
 

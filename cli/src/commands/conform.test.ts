@@ -187,6 +187,7 @@ describe('conform command wiring', () => {
         ),
       validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
       createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
+      repoName: () => Effect.succeed('cape'),
     });
 
     await Effect.runPromise(

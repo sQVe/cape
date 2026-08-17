@@ -1,6 +1,7 @@
 import { Console, Effect } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
+import { GitService } from '../services/git';
 import { composeLabels, HerdrService } from '../services/herdr';
 import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
 
@@ -13,6 +14,7 @@ const workspacePhase = Command.make(
   },
   Effect.fn(function* ({ phase }) {
     const herdr = yield* HerdrService;
+    const git = yield* GitService;
 
     const workspaceId = herdr.workspaceId();
     if (workspaceId == null) {
@@ -30,7 +32,8 @@ const workspacePhase = Command.make(
     // bare "icon + id" label is worse than a slightly old title.
     const cache = yield* readRawTrackerCache();
     const epic = cache?.epics[context.issueId] ?? null;
-    const labels = composeLabels(phase, context.issueId, epic?.title ?? null);
+    const repo = yield* git.repoName();
+    const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo);
     if (labels == null) {
       return yield* Console.log(
         JSON.stringify({ skipped: true, reason: `unknown phase: ${phase}` }),
