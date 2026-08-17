@@ -9,7 +9,6 @@ import { HookService } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
-  stubConformLayer,
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
@@ -68,7 +67,6 @@ const makeLayers = (hookLayer: Layer.Layer<HookService>, herdrLayer: Layer.Layer
     herdrLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('phaseIcon', () => {

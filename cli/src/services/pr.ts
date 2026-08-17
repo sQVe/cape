@@ -17,6 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
+  '- [ ] /code-review run on this branch, or an equivalent agent review, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 
@@ -26,22 +27,83 @@ export const extractPrSections = (content: string) =>
     .filter((line) => /^#{2,4}\s/.test(line))
     .map((line) => line.replace(/^#{2,4}\s+/, '').trim());
 
+// The section holding the review item is whatever the repo's own template calls it — "Test plan"
+// here, "Testing" elsewhere — so a repo is never locked out by a heading cape does not recognize.
+// Anchored, or an unrelated "Latest changes" would capture the search before the real section.
+const testSectionName = (templateSections: string[]) =>
+  templateSections.find((section) => /\btest/i.test(section));
+
+const HEADING = /^#{1,6}\s/;
+
+// Drop comments and fenced code first, so nothing downstream mistakes a `# comment` in a bash block
+// for a heading or treats a quoted checkbox as real. A fence closes only on the same character, at
+// least as long as the one that opened it — otherwise an inner ``` would end an outer ````.
+const visibleLines = (body: string) => {
+  let fence: string | null = null;
+  const visible: string[] = [];
+
+  for (const line of body.replace(/<!--[\s\S]*?-->/g, '').split('\n')) {
+    const marker = /^\s*(`{3,}|~{3,})/.exec(line)?.[1];
+    if (marker == null) {
+      if (fence == null) {
+        visible.push(line);
+      }
+    } else if (fence == null) {
+      fence = marker;
+    } else if (marker[0] === fence[0] && marker.length >= fence.length) {
+      fence = null;
+    }
+  }
+
+  return visible;
+};
+
+const sectionLines = (body: string, sectionName: string | undefined) => {
+  const lines = visibleLines(body);
+  if (sectionName == null) {
+    return lines.filter((line) => !HEADING.test(line));
+  }
+
+  const heading = new RegExp(
+    `^#{1,6}\\s+${sectionName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*$`,
+    'i',
+  );
+  const start = lines.findIndex((line) => heading.test(line));
+  if (start === -1) {
+    return [];
+  }
+
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => HEADING.test(line));
+  return end === -1 ? rest : rest.slice(0, end);
+};
+
+// Both halves of the gate read the same filtered view: a box quoted in a fence or a comment is not
+// a real box, so it must neither satisfy the review item nor fail the body as unticked.
 export const extractUncheckedBoxes = (body: string) =>
-  body
-    .split('\n')
+  sectionLines(body, undefined)
     .filter((line) => /^\s*- \[ \]/.test(line))
     .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
+
+// The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
+// that simply omits the box must fail rather than pass for having no unticked boxes.
+const hasReviewItem = (templateSections: string[], body: string) =>
+  sectionLines(body, testSectionName(templateSections)).some(
+    (line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'),
+  );
 
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);
   const missing = templateSections.filter((s) => !bodySections.includes(s));
   const extra = bodySections.filter((s) => !templateSections.includes(s));
   const unchecked = extractUncheckedBoxes(body);
+  const missingReviewItem = !hasReviewItem(templateSections, body);
   return {
-    valid: missing.length === 0 && unchecked.length === 0,
+    valid: missing.length === 0 && unchecked.length === 0 && !missingReviewItem,
     missing,
     extra,
     unchecked,
+    missingReviewItem,
   };
 };
 

@@ -8,7 +8,6 @@ import { HookService, sessionStart, stateFileName } from '../services/hook';
 import {
   stubCheckLayer,
   stubCommitLayer,
-  stubConformLayer,
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
@@ -96,7 +95,6 @@ const makeLayers = (hookLayer: Layer.Layer<HookService>) =>
     hookLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('cape worktree start', () => {

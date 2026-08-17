@@ -11,7 +11,6 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
-  stubConformLayer,
   stubValidateLayer,
   stubHerdrLayer,
 } from '../testStubs';
@@ -63,7 +62,6 @@ const makeLayers = (
     stubCommitLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
     makeHookLayer(stateContent, gitResponses, removedFiles),
   );
 

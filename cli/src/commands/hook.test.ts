@@ -28,7 +28,6 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
-  stubConformLayer,
   stubValidateLayer,
   stubHerdrLayer,
 } from '../testStubs';
@@ -227,11 +226,6 @@ const flowPhaseEntryForIssue = (phase: string, issueId: string) => ({
 
 const stateFile = (entries: Record<string, unknown>) => ({
   '/test/hooks/context/state-no-repo.json': JSON.stringify(entries),
-});
-
-const reviewedAtEntry = (timestamp = Date.now()) => ({
-  scope: 'branch',
-  timestamp,
 });
 
 const flowPhaseFile = (phase: string) => stateFile({ flowPhase: flowPhaseEntry(phase) });
@@ -611,7 +605,6 @@ const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
     stubCommitLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
     hookLayer,
   );
 
@@ -1013,7 +1006,7 @@ describe('preToolUseBash', () => {
 describe('preToolUseSkill', () => {
   it.each([
     'cape:commit',
-    'cape:review',
+    'cape:pr',
     'cape:tracker',
     'cape:worktree',
     'cape:brainstorm',
@@ -1022,64 +1015,6 @@ describe('preToolUseSkill', () => {
     const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
-  });
-
-  it('denies pr when review has not stamped state', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'review-before-pr');
-    expectDeny(result, 'CAPE_HARD_GATE_OVERRIDE');
-  });
-
-  it('denies pr when review stamp is stale', async () => {
-    const staleTimestamp = Date.now() - 2 * 60 * 60 * 1000;
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr'),
-      files: stateFile({ reviewedAt: reviewedAtEntry(staleTimestamp) }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expectDeny(result, 'stale');
-  });
-
-  it('allows pr when review stamp is fresh', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr'),
-      files: stateFile({ reviewedAt: reviewedAtEntry() }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('downgrades pr review gate to warning when explicit override is present', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr', 'CAPE_HARD_GATE_OVERRIDE'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('review-before-pr override accepted'),
-    });
-    const context = (result as { additionalContext: string }).additionalContext;
-    expect(context).toContain('proceeding');
-    expect(context).not.toContain('Run cape:review');
-    expect(context).not.toContain('blocked');
-  });
-
-  it('downgrades pr review gate to warning when orchestrate marker is present', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr', 'CAPE_ORCHESTRATE'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining(
-        'review-before-pr override accepted (orchestrate)',
-      ),
-    });
-    const context = (result as { additionalContext: string }).additionalContext;
-    expect(context).toContain('proceeding');
-    expect(context).not.toContain('Run cape:review');
-    expect(context).not.toContain('blocked');
   });
 
   it('passes through on invalid JSON', async () => {
@@ -1461,17 +1396,6 @@ describe('event logging', () => {
     const layer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
     await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
     expect(logEvent).not.toHaveBeenCalled();
-  });
-
-  it('logs deny event for preToolUseSkill gate denial', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:pr'),
-    });
-    await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(logEvent).toHaveBeenCalledWith(
-      'hook.PreToolUse.Skill',
-      expect.stringContaining('review-before-pr'),
-    );
   });
 
   it('does not log for preToolUseSkill pass-through', async () => {

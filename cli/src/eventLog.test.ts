@@ -51,13 +51,13 @@ describe('logEvent', () => {
   it('appends multiple events', () => {
     logEvent('commit');
     logEvent('check');
-    logEvent('conform');
+    logEvent('pr');
     const content = readFileSync(join(tempDir, 'hooks/context/events.jsonl'), 'utf-8');
     const lines = content.trim().split('\n');
     expect(lines).toHaveLength(3);
     expect(parseJsonLine(lines[0]).cmd).toBe('commit');
     expect(parseJsonLine(lines[1]).cmd).toBe('check');
-    expect(parseJsonLine(lines[2]).cmd).toBe('conform');
+    expect(parseJsonLine(lines[2]).cmd).toBe('pr');
   });
 
   it('creates hooks/context directory if missing', () => {
