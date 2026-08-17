@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { basename, dirname } from 'node:path';
 
 import { Effect, Layer } from 'effect';
 
@@ -121,9 +122,31 @@ const createBranch = (name: string) =>
     catch: (error) => new Error(`failed to create branch: ${name}`, { cause: error }),
   });
 
+// The origin url is the source of truth: a grove worktree directory is named after
+// the branch, so the toplevel basename would give the branch instead of the repo.
+// Without an origin, the git common dir points at the shared git data in both
+// layouts — '<workspace>/.bare' for a linked worktree, '<repo>/.git' for a plain
+// checkout — so its parent is the repo directory either way. Taking the worktree's
+// own parent instead would name the containing folder of a plain checkout.
+const repoName = () =>
+  Effect.sync(() => {
+    const origin = tryGit(['remote', 'get-url', 'origin']);
+    if (origin != null) {
+      const path = origin.replace(/[?#].*$/, '').replace(/\/+$/, '');
+      const name = (path.split(/[/:]/).pop() ?? '').replace(/\.git$/, '');
+      if (name.length > 0) {
+        return name;
+      }
+    }
+
+    const commonDir = tryGit(['rev-parse', '--path-format=absolute', '--git-common-dir']);
+    return commonDir == null ? null : basename(dirname(commonDir));
+  });
+
 export const GitServiceLive = Layer.succeed(GitService)({
   getContext,
   getDiff,
   validateBranch,
   createBranch,
+  repoName,
 });

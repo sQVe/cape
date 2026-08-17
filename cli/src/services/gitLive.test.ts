@@ -323,6 +323,92 @@ describe('GitServiceLive', () => {
     });
   });
 
+  describe('repoName', () => {
+    const runRepoName = () =>
+      run(
+        Effect.gen(function* () {
+          const service = yield* GitService;
+          return yield* service.repoName();
+        }),
+      );
+
+    it('takes the basename of an ssh origin url without the .git suffix', async () => {
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'git@github.com:sQVe/cape.git',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+    });
+
+    it('takes the basename of an https origin url without the .git suffix', async () => {
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'https://github.com/sQVe/cape.git',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+    });
+
+    it('drops a query string and fragment before taking the basename', async () => {
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'https://github.example.com/sQVe/cape.git?token=x',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'https://github.example.com/sQVe/cape.git#readme',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+    });
+
+    it('falls back to the workspace root of a linked worktree when there is no origin remote', async () => {
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const key = (args[1] as string[]).join(' ');
+        if (key.includes('remote get-url')) {
+          throw new Error('no such remote');
+        }
+        if (key.includes('--git-common-dir')) {
+          return '/home/me/cape/.bare';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
+
+      expect(await runRepoName()).toBe('cape');
+    });
+
+    it('falls back to the repository directory of a plain checkout, not its parent', async () => {
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const key = (args[1] as string[]).join(' ');
+        if (key.includes('remote get-url')) {
+          throw new Error('no such remote');
+        }
+        if (key.includes('--git-common-dir')) {
+          return '/home/me/code/myproject/.git';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
+
+      expect(await runRepoName()).toBe('myproject');
+    });
+
+    it('returns null outside a git repository', async () => {
+      mockExecFileSync.mockImplementation(() => {
+        throw new Error('not a git repo');
+      });
+
+      expect(await runRepoName()).toBeNull();
+    });
+  });
+
   describe('createBranch', () => {
     it('creates and returns branch info', async () => {
       mockExecFileSync.mockReturnValue('Switched to a new branch');

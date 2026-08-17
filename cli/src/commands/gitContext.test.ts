@@ -32,6 +32,7 @@ const makeTestGitLayer = (overrides: Partial<GitContext> = {}) =>
     getDiff: () => Effect.succeed(''),
     validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
     createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
+    repoName: () => Effect.succeed('cape'),
   });
 
 const makeErrorGitLayer = () =>
@@ -40,6 +41,7 @@ const makeErrorGitLayer = () =>
     getDiff: () => Effect.fail(new Error('not a git repository')),
     validateBranch: () => Effect.fail(new Error('not a git repository')),
     createBranch: () => Effect.fail(new Error('not a git repository')),
+    repoName: () => Effect.succeed('cape'),
   });
 
 const testLayers = Layer.mergeAll(

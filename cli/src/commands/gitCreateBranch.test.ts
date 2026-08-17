@@ -36,6 +36,7 @@ const makeGitLayer = (validation = defaultValidation, createResult = defaultCrea
     getDiff: () => Effect.succeed(''),
     validateBranch: () => Effect.succeed(validation),
     createBranch: () => Effect.succeed(createResult),
+    repoName: () => Effect.succeed('cape'),
   });
 
 const makeCapturingLayer = () => {
@@ -59,6 +60,7 @@ const makeCapturingLayer = () => {
       capturedCreate = name;
       return Effect.succeed({ created: true, branch: name });
     },
+    repoName: () => Effect.succeed('cape'),
   });
   return {
     layer,
@@ -152,6 +154,7 @@ describe('git create-branch command', () => {
       getDiff: () => Effect.succeed(''),
       validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
       createBranch: () => Effect.fail(new Error('git checkout failed')),
+      repoName: () => Effect.succeed('cape'),
     });
 
     const result = Effect.runPromise(
