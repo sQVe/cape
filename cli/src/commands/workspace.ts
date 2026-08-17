@@ -7,11 +7,13 @@ import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
 import { PrService } from '../services/pr';
 
 // gh emits '{"number":123}'. Anything else — no PR for the branch, an error message,
-// a payload without a usable number — means there is nothing to label with.
+// a payload without a usable number — means there is nothing to label with. Safe
+// integers only: JSON.parse rounds anything larger, so the label would name a
+// different PR than the payload did.
 const parsePrNumber = (raw: string): number | null => {
   try {
     const { number } = JSON.parse(raw) as { number?: unknown };
-    return typeof number === 'number' && Number.isInteger(number) && number > 0 ? number : null;
+    return typeof number === 'number' && Number.isSafeInteger(number) && number > 0 ? number : null;
   } catch {
     return null;
   }
@@ -20,8 +22,15 @@ const parsePrNumber = (raw: string): number | null => {
 // Looked up live rather than stamped at 'cape pr create' time: a PR can be opened
 // outside cape, and a stamp goes stale the moment one closes. Best-effort like
 // HerdrService.rename — a missing gh or a failed lookup degrades to the issue id.
-const lookupPrNumber = () =>
+// Only the pr phase labels with a PR number, so every other phase skips the gh
+// subprocess instead of waiting on a number it will not use. Normalized the same
+// way phaseIcon normalizes, so 'PR' and ' pr ' count too.
+const lookupPrNumber = (phase: string) =>
   Effect.gen(function* () {
+    if (phase.trim().toLowerCase() !== 'pr') {
+      return null;
+    }
+
     const pr = yield* PrService;
     const raw = yield* pr.spawnGh(['pr', 'view', '--json', 'number']);
     return parsePrNumber(raw);
@@ -55,7 +64,7 @@ const workspacePhase = Command.make(
     const cache = yield* readRawTrackerCache();
     const epic = cache?.epics[context.issueId] ?? null;
     const repo = yield* git.repoName();
-    const prNumber = yield* lookupPrNumber();
+    const prNumber = yield* lookupPrNumber(phase);
     const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo, prNumber);
     if (labels == null) {
       return yield* Console.log(

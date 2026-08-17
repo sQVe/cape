@@ -257,11 +257,56 @@ describe('cape workspace phase', () => {
     console_.restore();
   });
 
+  it('still looks the pr number up when the phase name is not already normalized', async () => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer } = makeHerdrLayer('ws1', 'tab1');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', ' PR ']).pipe(
+        Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
+      ),
+    );
+    expect(calls).toEqual([['pr', 'view', '--json', 'number']]);
+    expect(JSON.parse(console_.output())).toMatchObject({ tab: '🚀 #123' });
+    console_.restore();
+  });
+
+  it('keeps the issue id and never calls gh outside the pr phase', async () => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'build']).pipe(
+        Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
+      ),
+    );
+    expect(calls).toEqual([]);
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: 'cape: 🔨 surface cape workflow phase in',
+      tab: '🔨 abu-134',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🔨 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
+    ]);
+    console_.restore();
+  });
+
   it.each([
     ['a gh failure', new Error('gh: command not found')],
     ['no pr for the branch', ''],
     ['output that is not json', 'no pull requests found'],
     ['a payload without a usable number', '{"number":"123"}'],
+    ['a number past the safe integer range', '{"number":9007199254740993}'],
   ])('degrades to the issue id on %s', async (_case, ghResult) => {
     const hookLayer = makeHookLayer({
       [statePath]: stateFile('ABU-134'),
