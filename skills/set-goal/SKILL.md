@@ -90,10 +90,10 @@ can accept all at once:
    claude-only.
 2. **Review** -- who reviews each task, chosen independently of the builder: `codex` reviews
    (default) / `claude` reviews / self-review only (no separate reviewer). A separate reviewer runs
-   up to 2 fix-cycles. Self-review has no builtin review path today -- `/code-review` is a
-   human-typed command and cape has no tested way for an AFK run to invoke it, so self-review means
-   the worker's own judgment plus the automated gates. Prefer a separate reviewer for anything
-   non-trivial.
+   up to 2 fix-cycles. Self-review means the worker's own judgment plus the automated gates:
+   `/code-review` is a human-typed command an AFK run cannot invoke. Prefer a separate reviewer for
+   anything non-trivial. Either way the SHIP phase runs a `cape:code-reviewer` pass over the branch,
+   which is what lets an unattended run tick the PR's review box.
 3. **Run instructions** -- open free-text for anything that shapes the run: guardrails ("no schema
    changes", "no new deps"), workflow ("one PR per task"), review focus, areas to avoid. Empty =
    defaults only.

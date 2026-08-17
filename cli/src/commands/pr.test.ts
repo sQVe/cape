@@ -228,6 +228,43 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(true);
   });
 
+  it('does not mistake a section whose name merely contains "test" for the test plan', () => {
+    const body =
+      '#### Latest changes\nstuff\n#### Test plan\n- [x] /code-review run on this branch';
+    const result = validatePrBody(['Latest changes', 'Test plan'], body);
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('does not count an unchecked box that is only quoted inside a fence', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('```\n- [ ] example line in a snippet\n```\n- [x] /code-review run'),
+    );
+    expect(result.unchecked).toEqual([]);
+    expect(result.valid).toBe(true);
+  });
+
+  it('keeps the section open past a fenced block whose content looks like a heading', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '```bash\n# run the tests\npnpm test\n```\n- [x] /code-review run on this branch',
+      ),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('ignores a review item quoted inside a longer outer fence', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('````\nouter\n```\n- [x] /code-review run on this branch\n```\n````'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
   it('finds the review item under a template that names the section Testing', () => {
     const body = '#### Summary\nwhy\n#### Testing\n- [x] /code-review run on this branch';
     const result = validatePrBody(['Summary', 'Testing'], body);

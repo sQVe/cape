@@ -54,7 +54,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - CLI: `cape pr create` and `cape pr validate` now require a checked `/code-review` item in the test
   plan. The old check only rejected unticked boxes, which passed vacuously for a body with no
-  checkboxes at all, so the gate could be skipped by omitting the box.
+  checkboxes at all, so the gate could be skipped by omitting the box. The item is located in
+  whichever template section names the test plan, and checkbox scanning ignores fenced blocks and
+  HTML comments, so a quoted example neither satisfies the gate nor fails the body.
+- Pr: an unattended run satisfies the review item with a `cape:code-reviewer` pass. The builtin
+  `/code-review` is not model-invocable, so without this an AFK run could never open a PR; the
+  checkbox admits "an equivalent agent review" and the agent may tick it only on a reviewer pass.
 - Tooling: bumped `@types/node` (25 to 26), `fallow`, `oxfmt`, `oxlint`, `smol-toml`, and `tsdown`
   to their latest releases.
 - Skills: rewrote step headings to sentence case across six skills (don-cape, execute-plan,

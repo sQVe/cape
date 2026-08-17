@@ -47,7 +47,10 @@ Code review is Claude Code's builtin `/code-review`, not a cape skill. You run i
 carries the requirement as a test-plan checkbox, and `cape pr create` refuses a body with an
 unticked box.
 
-Every gate is a contextual warning you can ignore.
+Skill gates are contextual warnings you can ignore. Some Bash commands are still denied outright:
+pushing to the default branch, destructive git and `gh` commands (`git push --force`,
+`git commit --amend`, `gh pr merge`, `gh pr close`), and raw commands that have a cape equivalent
+(`git commit`, `gh pr create`), which are redirected rather than blocked.
 
 ## Skills
 

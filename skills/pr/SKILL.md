@@ -40,7 +40,8 @@ bundled template — never invent sections. </rigidity_level>
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
 3. **NEVER tick the `/code-review` box yourself** — the human runs the builtin `/code-review` and
    reports back. Never invoke it, never replicate a review in its place. If the box is unticked,
-   stop and ask the user to run it.
+   stop and ask the user to run it. The one exception is the AFK branch (step 6), where a
+   `cape:code-reviewer` verdict stands in for it.
 4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
 5. **Use `cape pr create`** — not the GitHub API directly
@@ -173,6 +174,13 @@ test-plan gate and `cape pr create` as on approval below. Take this branch only 
 statement that the run is unattended; when in doubt, a human is present and the interactive path
 below applies unchanged.
 
+**The review box on the AFK branch:** the builtin `/code-review` is not model-invocable, so an
+unattended run satisfies the review item with a `cape:code-reviewer` pass instead. Dispatch it over
+the branch diff and read its verdict; tick the box only on a pass, and only because the box admits
+"an equivalent agent review". On a fail, fix the findings and re-review, or stop with the box
+unticked — `cape pr create` will refuse the body either way. Never tick it because no human was
+available.
+
 No human edits an AFK body before it ships, so the step 5 quality bar and stop-slop apply in full.
 Two AFK-only rules on top:
 
@@ -199,12 +207,12 @@ not call any tools between outputting the description and calling `AskUserQuesti
 
 **On approval (Create PR or Create draft):** run every test-plan checkbox you can run, in order,
 mark each `- [x]` on pass, keep `- [ ]` on fail. The `/code-review` box is not yours to run — tick
-it only when the user confirms they ran it and handled the findings. On any failure, stop, report
-details, ask **Fix and retry** or **Cancel**. After all pass, validate the rewritten description
-with `cape pr validate --stdin` (rejects missing sections AND unchecked boxes — loop back if any
-`- [ ]` remains), then call `cape pr create` with the rewritten body. Add `--draft` for the draft
-option. On creation failure (push rejected, conflicts): auto-fix if trivial, re-attempt up to 3
-times, then ask the user.
+it only when the user confirms they ran it and handled the findings (on the AFK branch, on a
+`cape:code-reviewer` pass instead). On any failure, stop, report details, ask **Fix and retry** or
+**Cancel**. After all pass, validate the rewritten description with `cape pr validate --stdin`
+(rejects missing sections AND unchecked boxes — loop back if any `- [ ]` remains), then call
+`cape pr create` with the rewritten body. Add `--draft` for the draft option. On creation failure
+(push rejected, conflicts): auto-fix if trivial, re-attempt up to 3 times, then ask the user.
 
 ```bash
 cape pr create --title "the title" --body "$(cat <<'EOF'
