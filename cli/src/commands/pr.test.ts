@@ -228,6 +228,23 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(true);
   });
 
+  it('finds the review item under a template that names the section Testing', () => {
+    const body = '#### Summary\nwhy\n#### Testing\n- [x] /code-review run on this branch';
+    const result = validatePrBody(['Summary', 'Testing'], body);
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('still requires a review item when the template names no test section', () => {
+    const withItem = validatePrBody(
+      ['Summary'],
+      '#### Summary\nwhy\n- [x] /code-review run on this branch',
+    );
+    expect(withItem.missingReviewItem).toBe(false);
+    const without = validatePrBody(['Summary'], '#### Summary\nwhy');
+    expect(without.missingReviewItem).toBe(true);
+  });
+
   it('stops the test plan section at a heading of any level', () => {
     const body =
       '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\nran it manually\n' +

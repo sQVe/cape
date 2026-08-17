@@ -323,8 +323,10 @@ describe('cape pr', () => {
       const template = await inProcess(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = `${parsed.sections
-        .map((s: string) => `#### ${s}\n\nContent here.\n`)
-        .join('\n')}\n${checkedReviewItem}\n`;
+        .map((s: string) =>
+          /test/i.test(s) ? `#### ${s}\n\n${checkedReviewItem}\n` : `#### ${s}\n\nContent here.\n`,
+        )
+        .join('\n')}\n`;
       const bodyFile = join(tmpDir, 'pr-body.md');
       writeFileSync(bodyFile, body);
 
@@ -351,7 +353,7 @@ describe('cape pr', () => {
       const parsed = JSON.parse(template.stdout);
       const body = [
         ...parsed.sections.map((s: string) =>
-          s === 'Test plan' ? `#### ${s}\n\n${checkedReviewItem}\n` : `#### ${s}\n\nContent.\n`,
+          /test/i.test(s) ? `#### ${s}\n\n${checkedReviewItem}\n` : `#### ${s}\n\nContent.\n`,
         ),
         '#### Bonus section\n\nExtra.\n',
       ].join('\n');
