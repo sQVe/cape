@@ -209,6 +209,33 @@ describe('validatePrBody review item requirement', () => {
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
   });
+
+  it('ignores a checked /code-review item inside a tilde-fenced code block', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('~~~\n- [x] /code-review run on this branch\n~~~\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('ignores a checked /code-review item inside an HTML comment', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('<!--\n- [x] /code-review run on this branch\n-->\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('stops the test plan section at a heading of any level', () => {
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\nran it manually\n' +
+      '##### Notes\n- [x] /code-review run on some other branch';
+    const result = validatePrBody(template, body);
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
 });
 
 describe('pr template command', () => {

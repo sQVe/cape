@@ -37,17 +37,17 @@ export const extractUncheckedBoxes = (body: string) =>
 // that simply omits the box must fail rather than pass for having no unticked boxes. Scoped to the
 // Test plan section with code fences dropped, so a review line quoted elsewhere cannot satisfy it.
 const testPlanLines = (body: string) => {
-  const lines = body.split('\n');
-  const start = lines.findIndex((line) => /^#{2,4}\s+Test plan\s*$/i.test(line));
+  const lines = body.replace(/<!--[\s\S]*?-->/g, '').split('\n');
+  const start = lines.findIndex((line) => /^#{1,6}\s+Test plan\s*$/i.test(line));
   if (start === -1) {
     return [];
   }
   const rest = lines.slice(start + 1);
-  const end = rest.findIndex((line) => /^#{2,4}\s/.test(line));
+  const end = rest.findIndex((line) => /^#{1,6}\s/.test(line));
   const section = end === -1 ? rest : rest.slice(0, end);
   let inFence = false;
   return section.filter((line) => {
-    if (/^\s*```/.test(line)) {
+    if (/^\s*(```|~~~)/.test(line)) {
       inFence = !inFence;
       return false;
     }
