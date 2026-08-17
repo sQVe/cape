@@ -37,12 +37,14 @@ export interface WorkspaceLabels {
 
 // Composes the herdr labels for a phase + epic, or null when the phase is unknown.
 // The workspace label leads with the repo so sibling workspaces stay distinguishable;
-// the narrower tab label is icon + id only.
+// the narrower tab label carries the identifier worth acting on, which is the PR
+// number once one is open and the issue id before that.
 export const composeLabels = (
   phase: string,
   issueId: string,
   title: string | null,
   repo: string | null,
+  prNumber: number | null = null,
 ): WorkspaceLabels | null => {
   const icon = phaseIcon(phase);
   if (icon == null) {
@@ -52,17 +54,18 @@ export const composeLabels = (
   const id = issueId.trim().toLowerCase();
   const description = title == null ? '' : describeTitle(title);
   const repoName = repo == null ? '' : repo.trim().toLowerCase();
+  const tab = `${icon} ${prNumber == null ? id : `#${prNumber}`}`;
 
   if (repoName.length === 0) {
     return {
       workspace: description.length > 0 ? `${icon} ${id} ${description}` : `${icon} ${id}`,
-      tab: `${icon} ${id}`,
+      tab,
     };
   }
 
   return {
     workspace: `${repoName}: ${icon} ${description.length > 0 ? description : id}`,
-    tab: `${icon} ${id}`,
+    tab,
   };
 };
 

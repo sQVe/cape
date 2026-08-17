@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { main } from '../main';
 import { HerdrService, composeLabels, phaseIcon } from '../services/herdr';
 import { HookService } from '../services/hook';
+import { PrService } from '../services/pr';
 import {
   makeStubGitLayer,
   stubCheckLayer,
@@ -58,10 +59,26 @@ const makeHerdrLayer = (workspaceId: string | null, tabId: string | null, rename
   return { layer, renames };
 };
 
+const makePrLayer = (ghResult: string | Error) => {
+  const calls: string[][] = [];
+  const layer = Layer.succeed(PrService)({
+    fileExists: () => Effect.succeed(false),
+    readFile: () => Effect.fail(new Error('no file')),
+    readStdin: () => Effect.succeed(''),
+    gitRoot: () => Effect.succeed('/repo'),
+    spawnGh: (args) => {
+      calls.push([...args]);
+      return ghResult instanceof Error ? Effect.fail(ghResult) : Effect.succeed(ghResult);
+    },
+  });
+  return { layer, calls };
+};
+
 const makeLayers = (
   hookLayer: Layer.Layer<HookService>,
   herdrLayer: Layer.Layer<HerdrService>,
   gitLayer = stubGitLayer,
+  prLayer = stubPrLayer,
 ) =>
   Layer.mergeAll(
     NodeServices.layer,
@@ -71,7 +88,7 @@ const makeLayers = (
     stubCommitLayer,
     hookLayer,
     herdrLayer,
-    stubPrLayer,
+    prLayer,
     stubValidateLayer,
     stubConformLayer,
   );
@@ -141,6 +158,27 @@ describe('composeLabels', () => {
     });
   });
 
+  it('prefers the pr number over the issue id on the tab once a pr is open', () => {
+    expect(composeLabels('pr', 'ABU-134', 'Rework cape workspace labels', 'cape', 123)).toEqual({
+      workspace: 'cape: 🚀 rework cape workspace labels',
+      tab: '🚀 #123',
+    });
+  });
+
+  it('leaves the workspace label untouched whether or not a pr is open', () => {
+    const title = 'Rework cape workspace labels';
+    expect(composeLabels('pr', 'ABU-134', title, 'cape', 123)?.workspace).toBe(
+      composeLabels('pr', 'ABU-134', title, 'cape', null)?.workspace,
+    );
+  });
+
+  it('keeps the issue id on the tab when there is no pr', () => {
+    expect(composeLabels('pr', 'ABU-134', 'Rework cape workspace labels', 'cape', null)).toEqual({
+      workspace: 'cape: 🚀 rework cape workspace labels',
+      tab: '🚀 abu-134',
+    });
+  });
+
   it('returns null for an unknown phase', () => {
     expect(composeLabels('deploy', 'ABU-134', 'x', 'cape')).toBeNull();
   });
@@ -189,6 +227,62 @@ describe('cape workspace phase', () => {
     expect(renames).toEqual([
       { kind: 'workspace', id: 'ws1', label: '🔨 abu-134 surface cape workflow phase in' },
       { kind: 'tab', id: 'tab1', label: '🔨 abu-134' },
+    ]);
+    console_.restore();
+  });
+
+  it('labels the tab with the pr number when gh reports an open pr', async () => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'pr']).pipe(
+        Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
+      ),
+    );
+    expect(calls).toEqual([['pr', 'view', '--json', 'number']]);
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: 'cape: 🚀 surface cape workflow phase in',
+      tab: '🚀 #123',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🚀 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🚀 #123' },
+    ]);
+    console_.restore();
+  });
+
+  it.each([
+    ['a gh failure', new Error('gh: command not found')],
+    ['no pr for the branch', ''],
+    ['output that is not json', 'no pull requests found'],
+    ['a payload without a usable number', '{"number":"123"}'],
+  ])('degrades to the issue id on %s', async (_case, ghResult) => {
+    const hookLayer = makeHookLayer({
+      [statePath]: stateFile('ABU-134'),
+      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
+    });
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const { layer: prLayer } = makePrLayer(ghResult);
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'pr']).pipe(
+        Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
+      ),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: 'cape: 🚀 surface cape workflow phase in',
+      tab: '🚀 abu-134',
+    });
+    expect(renames).toEqual([
+      { kind: 'workspace', id: 'ws1', label: 'cape: 🚀 surface cape workflow phase in' },
+      { kind: 'tab', id: 'tab1', label: '🚀 abu-134' },
     ]);
     console_.restore();
   });

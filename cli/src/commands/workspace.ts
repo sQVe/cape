@@ -4,6 +4,28 @@ import { Argument, Command } from 'effect/unstable/cli';
 import { GitService } from '../services/git';
 import { composeLabels, HerdrService } from '../services/herdr';
 import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
+import { PrService } from '../services/pr';
+
+// gh emits '{"number":123}'. Anything else — no PR for the branch, an error message,
+// a payload without a usable number — means there is nothing to label with.
+const parsePrNumber = (raw: string): number | null => {
+  try {
+    const { number } = JSON.parse(raw) as { number?: unknown };
+    return typeof number === 'number' && Number.isInteger(number) && number > 0 ? number : null;
+  } catch {
+    return null;
+  }
+};
+
+// Looked up live rather than stamped at 'cape pr create' time: a PR can be opened
+// outside cape, and a stamp goes stale the moment one closes. Best-effort like
+// HerdrService.rename — a missing gh or a failed lookup degrades to the issue id.
+const lookupPrNumber = () =>
+  Effect.gen(function* () {
+    const pr = yield* PrService;
+    const raw = yield* pr.spawnGh(['pr', 'view', '--json', 'number']);
+    return parsePrNumber(raw);
+  }).pipe(Effect.orElseSucceed(() => null));
 
 const workspacePhase = Command.make(
   'phase',
@@ -33,7 +55,8 @@ const workspacePhase = Command.make(
     const cache = yield* readRawTrackerCache();
     const epic = cache?.epics[context.issueId] ?? null;
     const repo = yield* git.repoName();
-    const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo);
+    const prNumber = yield* lookupPrNumber();
+    const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo, prNumber);
     if (labels == null) {
       return yield* Console.log(
         JSON.stringify({ skipped: true, reason: `unknown phase: ${phase}` }),
