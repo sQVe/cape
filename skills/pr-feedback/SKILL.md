@@ -1,5 +1,6 @@
 ---
 name: pr-feedback
+argument-hint: '[pr number or url]'
 description: >
   Resolve inbound PR review comments end to end: fetch the threads with their node IDs, judge each
   comment's validity, fix the accepted ones, then reply, resolve the matching threads via GraphQL,

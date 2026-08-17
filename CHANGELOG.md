@@ -126,6 +126,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Removed
 
+- Commands: the 11 wrappers named after their own skill (brainstorm, commit, execute-plan,
+  finish-epic, fix-bug, pr, pr-feedback, set-goal, test-driven-development, worktree, write-plan).
+  Each one registered a second `/cape:name` entry in the slash-command menu on top of the skill's
+  own, doubling the list and the always-on token cost for nothing. Skills are invocable as
+  `/cape:name` on their own. The `argument-hint` values from `pr-feedback` and `set-goal` moved into
+  the skill frontmatter. Remaining commands earn their keep: `build`, `plan`, and `ship` alias
+  differently-named skills, and `tracker` exposes a skill marked `user-invocable: false`.
 - Skills, commands, and hooks: dropped cape's own review skill in favor of Claude Code's builtin
   `/code-review`. Gone with it: the `review` skill and its slash command, the whole `conform`
   subsystem (command, service, and skill gate), the review-before-pr and conform-before-review hard

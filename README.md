@@ -102,7 +102,7 @@ epic, phase, task progress, next task, and branch. The banner stays absent when 
 cape/
 ├── agents/       # Agent definitions
 ├── cli/          # cape CLI (TypeScript, Effect services)
-├── commands/     # Slash commands invoked with /cape:name
+├── commands/     # Slash command aliases for differently-named skills
 ├── skills/       # Skill workflows
 ├── hooks/        # Hook definitions and context cache
 ├── resources/    # Templates and reference files
@@ -114,7 +114,7 @@ cape/
 | ------------ | ----------------------------------------------------- |
 | `agents/`    | Agent configurations with model tiers                 |
 | `cli/`       | The `cape` CLI: validation, git, hooks, tracker cache |
-| `commands/`  | Slash commands invoked with `/cape:name`              |
+| `commands/`  | Aliases only; skills are already `/cape:name`         |
 | `skills/`    | Reusable skill workflows                              |
 | `hooks/`     | Session-start banner, gates, and the tracker cache    |
 | `resources/` | Templates for skills, agents, epics, and PRs          |
