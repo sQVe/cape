@@ -11,7 +11,6 @@ import {
   makeStubGitLayer,
   stubCheckLayer,
   stubCommitLayer,
-  stubConformLayer,
   stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
@@ -90,7 +89,6 @@ const makeLayers = (
     herdrLayer,
     prLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('phaseIcon', () => {

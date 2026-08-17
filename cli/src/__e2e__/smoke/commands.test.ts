@@ -19,10 +19,6 @@ describe('smoke', () => {
     expect(capeCmd(['commit', '--help']).status).toBe(0);
   });
 
-  it('conform boots and exits 0', () => {
-    expect(capeCmd(['conform', '--help']).status).toBe(0);
-  });
-
   it('context boots and exits 0', () => {
     expect(capeCmd(['context', '--help']).status).toBe(0);
   });

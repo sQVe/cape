@@ -10,7 +10,6 @@ import { vi } from 'vitest';
 import { main } from '../main';
 import { CheckServiceLive } from '../services/checkLive';
 import { CommitServiceLive } from '../services/commitLive';
-import { ConformServiceLive } from '../services/conformLive';
 import { DetectServiceLive } from '../services/detectLive';
 import { GitServiceLive } from '../services/gitLive';
 import { HerdrServiceLive } from '../services/herdrLive';
@@ -67,7 +66,6 @@ const liveCommandLayers = Layer.mergeAll(
   NodeServices.layer,
   CheckServiceLive,
   CommitServiceLive,
-  ConformServiceLive,
   DetectServiceLive,
   GitServiceLive,
   HerdrServiceLive,

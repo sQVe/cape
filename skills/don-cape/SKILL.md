@@ -9,7 +9,7 @@ description: >
 
 <skill_overview> Route every task to the right cape skill and enforce the order skills run in. Cape
 skills form PLAN (brainstorm -> write-plan), BUILD (execute-plan -> TDD -> commit loop), SHIP
-(finish-epic -> review -> pr), and BUG (fix-bug -> TDD -> commit) chains.
+(finish-epic -> pr), and BUG (fix-bug -> TDD -> commit) chains.
 
 Core contract: before acting on any user request, check the routing table. If a cape skill matches,
 load it with the Skill tool and follow it. </skill_overview>
@@ -64,22 +64,22 @@ First matching row wins:
 | Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |
 | Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`  | Inbound review loop        |
-| Review code, "check my code", "anything wrong?"                   | `cape:review`       | Read-only review           |
 | Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
 
 Internal skills:
 
 - `cape:test-driven-development` -- mandatory before production code. Loaded by execute-plan and
   fix-bug; hook safety nets cover resumed sessions.
-- `cape:review` -- model-invoked quality gate before `cape:pr`, and directly loaded only when the
-  user asks for a review.
+
+Code review is the builtin `/code-review`, not a cape skill. The user runs it; `cape:pr` carries the
+requirement as a test-plan checkbox.
 
 Invocation split:
 
 - Phase entries (`plan`, `build`, `ship`) are user-invoked commands with no new skills.
 - Chain steps and disciplines (`brainstorm`, `write-plan`, `execute-plan`, `finish-epic`,
-  `test-driven-development`, `review`, `pr`, `commit`) remain model-invoked through routing and keep
-  their trigger prose.
+  `test-driven-development`, `pr`, `commit`) remain model-invoked through routing and keep their
+  trigger prose.
 
 If nothing matches, proceed without a cape skill.
 
@@ -97,7 +97,7 @@ Phase chains:
 ```text
 PLAN   brainstorm -> write-plan -> STOP for epic approval
 BUILD  execute-plan -> test-driven-development -> commit, then STOP after each task
-SHIP   finish-epic -> review -> STOP for PR approval -> pr
+SHIP   finish-epic -> STOP for PR approval -> pr
 BUG    fix-bug -> test-driven-development -> commit, then rejoin BUILD tail
 ```
 

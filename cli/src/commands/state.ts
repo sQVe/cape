@@ -28,20 +28,6 @@ const STATE_KEY_CATALOG = [
     valueShape: '{ value: true }',
     ttlMs: null,
   },
-  {
-    key: 'reviewedAt',
-    description: 'Fresh cape:review completion stamp required by the review-before-pr hard gate',
-    validValues: 'set by cape:review after a completed review',
-    valueShape: '{ scope }',
-    ttlMs: 60 * 60 * 1000,
-  },
-  {
-    key: 'conformedAt',
-    description: 'Fresh cape conform run required by the conform-before-review hard gate',
-    validValues: 'set by cape conform; gates the reviewedAt stamp',
-    valueShape: '{ scope }',
-    ttlMs: 60 * 60 * 1000,
-  },
 ] as const;
 
 const catalogByKey = Object.fromEntries(STATE_KEY_CATALOG.map((entry) => [entry.key, entry]));

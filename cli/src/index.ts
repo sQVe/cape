@@ -7,7 +7,6 @@ import { logEvent } from './eventLog';
 import { main } from './main';
 import { CheckServiceLive } from './services/checkLive';
 import { CommitServiceLive } from './services/commitLive';
-import { ConformServiceLive } from './services/conformLive';
 import { DetectServiceLive } from './services/detectLive';
 import { GitServiceLive } from './services/gitLive';
 import { HerdrServiceLive } from './services/herdrLive';
@@ -17,7 +16,6 @@ import { ValidateServiceLive } from './services/validateLive';
 
 const AppLayer = Layer.mergeAll(
   CheckServiceLive,
-  ConformServiceLive,
   CommitServiceLive,
   DetectServiceLive,
   GitServiceLive,

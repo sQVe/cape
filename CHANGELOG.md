@@ -36,14 +36,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Commands: added `cape workspace phase <phase>`, which relabels the current herdr workspace and tab
   with the workflow-phase icon (📋 plan, 🔨 build, 🔍 review, 🚀 pr, ⛔ blocked, ✅ done) for the
   active epic. Best-effort and a safe no-op outside a herdr workspace or with no stamped epic. The
-  workflow skills (worktree, execute-plan, fix-bug, review, pr, finish-epic) call it at each phase
+  workflow skills (worktree, execute-plan, fix-bug, pr, finish-epic) call it at each phase
   transition, and a set-goal run labels its per-task worker and reviewer tabs with role icons.
-- Hooks: added the `CAPE_ORCHESTRATE` marker that downgrades the review-before-pr gate for
-  orchestrator runs, kept distinct from `CAPE_HARD_GATE_OVERRIDE`.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
-- Hooks: added review-before-pr hard gate with the explicit `CAPE_HARD_GATE_OVERRIDE` escape.
-- Hooks: added conform-before-review hard gate; `cape conform` stamps a marker that `cape:review`
-  requires before it can stamp completion.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
 - Skills and commands: added tracker reference skill and slash command wrapper.
 - Cache: added `project` and `type` fields on cached epics and tasks, populated from Linear.
@@ -54,19 +49,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tracker: added a workspace-setup checklist for the one-time Linear bootstrap.
 - Tooling: added fallow for dead-code and duplication auditing, with a staged pre-commit audit.
 - Tooling: added `.npmrc` with `save-exact` and `strict-peer-dependencies`.
-- Skills: `cape:review` posts findings as inline comments to a live hunk diff session when one is
-  open, falling back to text-only otherwise; documented the optional hunk setup in the README.
 
 ### Changed
 
+- CLI: `cape pr create` and `cape pr validate` now require a checked `/code-review` item in the test
+  plan. The old check only rejected unticked boxes, which passed vacuously for a body with no
+  checkboxes at all, so the gate could be skipped by omitting the box. The item is located in
+  whichever template section names the test plan, and checkbox scanning ignores fenced blocks and
+  HTML comments, so a quoted example neither satisfies the gate nor fails the body.
+- Pr: an unattended run satisfies the review item with a `cape:code-reviewer` pass. The builtin
+  `/code-review` is not model-invocable, so without this an AFK run could never open a PR; the
+  checkbox admits "an equivalent agent review" and the agent may tick it only on a reviewer pass.
 - Tooling: bumped `@types/node` (25 to 26), `fallow`, `oxfmt`, `oxlint`, `smol-toml`, and `tsdown`
   to their latest releases.
-- Skills: rewrote step headings to sentence case across seven skills (don-cape, execute-plan,
-  finish-epic, fix-bug, review, tracker, write-plan), matching the documented sentence-case heading
-  rule.
+- Skills: rewrote step headings to sentence case across six skills (don-cape, execute-plan,
+  finish-epic, fix-bug, tracker, write-plan), matching the documented sentence-case heading rule.
 - Skills: every `stop-slop` invocation now also requires simple language and clear, scannable
-  structure (review, pr, commit, brainstorm, tracker, write-plan, finish-epic, fix-bug), so
-  generated prose stays plain and readable rather than only stripped of AI tells.
+  structure (pr, commit, brainstorm, tracker, write-plan, finish-epic, fix-bug), so generated prose
+  stays plain and readable rather than only stripped of AI tells.
 - PR: the issue-linking guidance now defaults to a closing keyword (`Fixes ABU-XX`) so the epic
   auto-closes on merge, and reserves `Related to ABU-XX` for PRs that do not complete the epic. The
   template placeholder no longer pairs both keywords on one line, which had produced non-closing
@@ -79,25 +79,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Light (default) and a Full variant. Tasks name `Delivers: R1, R2`; write-plan, execute-plan, and
   finish-epic reference R-IDs and required constraints. Fixed a stale `epic-template.md` reference
   in the tracker templates.
-- Set-goal: the emitted autonomous run now gates each task on conventions and the commit message,
-  not just the reviewer verdict. `cape conform` findings are a fix-cycle the same as a reviewer
-  FAIL, the commit-verify step checks for conventional format plus the task id, and the codex
-  reviewer brief lists conform among the already-gated checks so style ownership reads as
-  intentional.
+- Set-goal: the emitted autonomous run now gates each task on the commit message, not just the
+  reviewer verdict. The commit-verify step checks for conventional format plus the task id.
 - Agents: consolidated to 5; merged bug-tracer, test-auditor, and notebox-researcher into
   codebase-investigator modes.
 - Skills: folded standalone bug diagnosis into fix-bug as a loop-first diagnosis gate.
-- Skills: folded conform into review for bugs/logic plus conventions, and added the reviewer
-  contract.
 - Skills: inlined expand-task into execute-plan, added a lightweight pre-flight plan scan, and
   removed the dead standalone expansion gate.
 - Skills: folded challenge into brainstorm and task-refinement into write-plan.
 - Write-plan: added proportional Global Constraints and per-task Interfaces for multi-task epics.
-- Skills: rewired write-plan, execute-plan, fix-bug, finish-epic, and review to use Linear via the
-  tracker protocol instead of local issue-tracking commands.
+- Skills: rewired write-plan, execute-plan, fix-bug, and finish-epic to use Linear via the tracker
+  protocol instead of local issue-tracking commands.
 - Skills: added stop-slop prose gates before finalizing prose-emitting skill output.
-- Pr: added an AFK branch that opens a PR unattended under the `CAPE_ORCHESTRATE` marker, skipping
-  the interactive approval while preserving human review of the opened PR.
+- Pr: added an AFK branch that opens a PR unattended when the invoking run states no human is
+  present to confirm, skipping the interactive approval while preserving human review of the opened
+  PR.
 - Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
@@ -114,13 +110,22 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `noFallthroughCasesInSwitch`).
 - Tooling: replaced the code-review-graph MCP server with graphify. The graph is built by the
   `graphify` CLI into a committed `graphify-out/` (`graph.json` + `GRAPH_REPORT.md`) every worktree
-  inherits, and `.mcp.json` serves it read-only on demand via uvx. codebase-investigator,
-  code-reviewer, and the review skill read the committed report first, then use graphify's tools
-  (`query_graph`, `get_neighbors`, `shortest_path`) when the server is present, with Grep/Read as
-  the always-on fallback — no per-review rebuild.
+  inherits, and `.mcp.json` serves it read-only on demand via uvx. codebase-investigator and
+  code-reviewer read the committed report first, then use graphify's tools (`query_graph`,
+  `get_neighbors`, `shortest_path`) when the server is present, with Grep/Read as the always-on
+  fallback — no per-review rebuild.
 
 ### Removed
 
+- Skills, commands, and hooks: dropped cape's own review skill in favor of Claude Code's builtin
+  `/code-review`. Gone with it: the `review` skill and its slash command, the whole `conform`
+  subsystem (command, service, and skill gate), the review-before-pr and conform-before-review hard
+  gates, both hook override markers (the human escape and the orchestrator one) along with the CLI
+  code that stripped them out of PR titles and bodies, the `reviewedAt` and `conformedAt` state
+  keys, and the optional hunk inline-comment integration. The requirement now rides on the PR test
+  plan: `skills/pr` ships a `/code-review` checkbox the human ticks, and `cape pr create` already
+  refuses a body with an unticked box. The SHIP chain is finish-epic then pr. `agents/code-reviewer`
+  stays — it reviews against the epic contract, a different job.
 - Skills and commands: analyze-tests, design-an-interface, explain, find-test-gaps, refactor.
 - Skills and commands: challenge and task-refinement.
 - Skills and commands: replaced beads with tracker.
@@ -135,13 +140,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
-- CLI: `cape pr create` and `cape pr validate` now strip the `CAPE_ORCHESTRATE` and
-  `CAPE_HARD_GATE_OVERRIDE` hook override markers from the title and body before validation and
-  `gh pr create`, so both subcommands judge the same text. The markers are input signals for the
-  PreToolUse skill gate, but AFK runs carried them into the PR body verbatim (PR #42 shipped with a
-  trailing `CAPE_ORCHESTRATE` line); the SKILL.md prose rule alone did not hold, so the CLI now
-  enforces it. The marker list is shared with the skill-gate hook, superstrings like
-  `CAPE_ORCHESTRATE_TIMEOUT` are left alone, and marker-free text ships byte-identical. (ABU-228)
 - CLI: `cape workspace phase` now reads the tracker cache without the 30-minute TTL check, so the
   herdr workspace label keeps the epic title in long sessions. The TTL-checked read dropped the
   title once the cache went stale, relabeling the workspace to a bare phase icon plus Linear ID.
@@ -163,13 +161,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Hooks: per-worktree state (the epic stamp and workflow flags) now lives in its own file per
   repository and worktree instead of a single shared `state.json`. Because `cape` is a symlinked
   binary, `pluginRoot` resolved to one install directory, so every repo, worktree, and herdr
-  workspace overwrote one stamp -- a stale `reviewedAt` from repo A could satisfy the
-  review-before-pr gate in repo B. Each worktree now gets `state-<sha256(resolved git-dir)>.json`
-  under the same context directory (the resolved git-dir is unique per repo and per worktree);
-  non-git callers use `state-no-repo.json`, never the legacy `state.json`, so pre-upgrade leftovers
-  are inert. A git error (timeout, missing binary) is distinguished from not-a-repo and skips state
-  IO instead of writing to the fallback file. Existing stamps reset once on upgrade;
-  `cape state reset` also removes the legacy pre-namespacing files. The tracker cache stays global.
+  workspace overwrote one stamp -- a stale stamp from repo A could satisfy a gate in repo B. Each
+  worktree now gets `state-<sha256(resolved git-dir)>.json` under the same context directory (the
+  resolved git-dir is unique per repo and per worktree); non-git callers use `state-no-repo.json`,
+  never the legacy `state.json`, so pre-upgrade leftovers are inert. A git error (timeout, missing
+  binary) is distinguished from not-a-repo and skips state IO instead of writing to the fallback
+  file. Existing stamps reset once on upgrade; `cape state reset` also removes the legacy
+  pre-namespacing files. The tracker cache stays global.
 - Hooks: the push gate now resolves the current branch from the hook payload's `cwd` instead of the
   hook process cwd, so a `git push` from a feature-branch worktree is no longer blocked when the
   session sits on the default branch. The branch-vs-default-branch check now lives in one shared

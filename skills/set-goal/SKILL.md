@@ -89,16 +89,19 @@ can accept all at once:
    stated default, not part of this choice); word both options so neither implies TDD is
    claude-only.
 2. **Review** -- who reviews each task, chosen independently of the builder: `codex` reviews
-   (default) / `claude` reviews / self-review only (no separate reviewer, the run self-reviews via
-   `cape:review`). A separate reviewer runs up to 2 fix-cycles.
+   (default) / `claude` reviews / self-review only (no separate reviewer). A separate reviewer runs
+   up to 2 fix-cycles. Self-review means the worker's own judgment plus the automated gates:
+   `/code-review` is a human-typed command an AFK run cannot invoke. Prefer a separate reviewer for
+   anything non-trivial. Either way the SHIP phase runs a `cape:code-reviewer` pass over the branch,
+   which is what lets an unattended run tick the PR's review box.
 3. **Run instructions** -- open free-text for anything that shapes the run: guardrails ("no schema
    changes", "no new deps"), workflow ("one PR per task"), review focus, areas to avoid. Empty =
    defaults only.
 
 Everything else is a stated default, surfaced in the draft's header but not asked: TDD on, one grove
-epic worktree, sequential tasks, SHIP = finish-epic then review then AFK pr then bounded PR-watch,
-and a turn cap computed from the task count (about `2 x ready tasks + SHIP overhead`). The user
-changes a default by editing the draft in the editor (Step 4), not with another question.
+epic worktree, sequential tasks, SHIP = finish-epic then AFK pr then bounded PR-watch, and a turn
+cap computed from the task count (about `2 x ready tasks + SHIP overhead`). The user changes a
+default by editing the draft in the editor (Step 4), not with another question.
 
 ---
 
@@ -122,7 +125,7 @@ written to the draft file in Step 4 -- do not dump it into the conversation. The
 | Review   | separate (codex), <=2 cycles                          |
 | Worktree | 1 grove epic worktree, sequential tasks               |
 | Turn cap | <N>                                                   |
-| SHIP     | finish -> review -> AFK pr -> watch                    |
+| SHIP     | finish -> AFK pr -> watch                             |
 
 :wq launches the run · :cq cancels · edit anything below first
 
@@ -172,15 +175,14 @@ never touches the workspace label.
    (`cape git context`). herdr agent_status: done means the pane stopped, not that it committed; done
    with no new commit is a stall, not success. Check the commit message too: conventional format and
    the task id (e.g. "(ABU-123)"); a malformed message is a fix-cycle, not a pass.
-4. Gate, then review: run `cape conform` yourself and treat its convention findings as a task gate --
-   unaddressed violations are a fix-cycle, same as a reviewer FAIL. Then add the codex reviewer as a
-   pane in the SAME task tab: `herdr pane split <root_pane> --direction down` (capture the new pane
-   id), `herdr pane run <reviewer-pane> "<reviewer>"`, `herdr pane rename <reviewer-pane> "🔍 review"`.
-   Have it judge logic and the success criteria only (tests, typecheck, fallow, and conform are
-   already gated). The reviewer writes its verdict to `.cape/review/<task-id>.json`; read the file,
-   never grep the pane. (Self-review mode: skip the reviewer pane and review via `cape:review`
-   instead.)
-5. On FAIL (reviewer verdict or unresolved conform findings): bounded fix cycles (<= 2), then park.
+4. Review: add the codex reviewer as a pane in the SAME task tab:
+   `herdr pane split <root_pane> --direction down` (capture the new pane id),
+   `herdr pane run <reviewer-pane> "<reviewer>"`, `herdr pane rename <reviewer-pane> "🔍 review"`.
+   Have it judge logic and the success criteria only (tests, typecheck, and fallow are already
+   gated). The reviewer writes its verdict to `.cape/review/<task-id>.json`; read the file, never
+   grep the pane. (Self-review mode: no reviewer pane and no builtin review path -- the worker's own
+   judgment plus the automated gates are the whole check.)
+5. On FAIL (reviewer verdict): bounded fix cycles (<= 2), then park.
    On PASS: close the task (cape:tracker), close the task's tab (`herdr tab close <task-tab>`, which
    reaps its panes), refresh the cache, and move to the next task (lazy mode: create it one ahead
    first).
@@ -199,9 +201,10 @@ Omit this whole section when the field was empty.>
   `cape workspace phase blocked`, then stop.
 
 ## Finishing
-- When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic -> cape:review
-  -> cape:pr (AFK: print the description, skip the confirmation, open the PR with "Fixes ABU-123",
-  using the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+- When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic
+  -> cape:pr (tell it this run is unattended with no human to confirm, so it takes the AFK branch:
+  print the description, skip the confirmation, open the PR with "Fixes ABU-123") -> bounded
+  PR-watch.
 - Bounded PR-watch: poll CI; once green, poll the PR's review threads. For a valid one, fix it (spawn
   a worker, verify the commit, re-review, push), then resolve that thread with a reply citing the fix
   commit. For an invalid / out-of-scope one, reply with a one-line reason and leave it unresolved. An
@@ -217,10 +220,10 @@ Omit this whole section when the field was empty.>
 The decisions table and the `## Prompt` per-task loop reflect the interview choices and the derived
 task source: render the builder and reviewer from their own answers (they are chosen independently
 -- the reviewer is not derived from the builder); for self-review, drop the separate reviewer from
-the loop and review via `cape:review`; for lazy mode, use the one-ahead variants in steps 1 and 5;
-and omit `## Run instructions` when the free-text field was empty. The table is a read-only summary
--- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the table alone
-changes nothing.
+the loop with no review step in its place; for lazy mode, use the one-ahead variants in steps 1 and
+5; and omit `## Run instructions` when the free-text field was empty. The table is a read-only
+summary -- to flip a decision, edit the `## Prompt` body (or re-run set-goal); editing the table
+alone changes nothing.
 
 ---
 
@@ -343,8 +346,8 @@ set-goal never arms `/goal` or launches itself. </example>
 **Wrong:** Render a draft that still names a codex reviewer in the per-task loop.
 
 **Right:** Render the draft with the codex reviewer dropped from the loop -- the decisions table
-reads `Review: self-review`, and the `## Prompt` reviews via `cape:review` -- then open it for
-`:wq`. </example>
+reads `Review: self-review`, and the `## Prompt` per-task loop has no review step -- then open it
+for `:wq`. </example>
 
 </examples>
 

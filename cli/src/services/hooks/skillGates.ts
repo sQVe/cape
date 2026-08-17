@@ -9,7 +9,6 @@ import {
   isReadyTask,
   readFlowPhaseContext,
   readState,
-  readStateKey,
   readTrackerCache,
   resolveBranchInfo,
 } from './state';
@@ -25,11 +24,6 @@ export const denyWith = (reason: string) => ({
 });
 
 const contextWith = (additionalContext: string) => ({ additionalContext });
-
-const REVIEW_BEFORE_PR_TTL_MS = 60 * 60 * 1000;
-const CONFORM_BEFORE_REVIEW_TTL_MS = 60 * 60 * 1000;
-export const HARD_GATE_OVERRIDE = 'CAPE_HARD_GATE_OVERRIDE';
-export const ORCHESTRATE_OVERRIDE = 'CAPE_ORCHESTRATE';
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
@@ -56,24 +50,6 @@ export const preToolUseBash = () =>
       return denyWith(entry.message);
     }
 
-    // conform-before-review: cape:review must run `cape conform` before it can
-    // stamp the reviewedAt completion marker. ponytail: any-scope match, not
-    // per-scope — tighten to scope-equality if cross-scope stamping shows up.
-    if (/\bcape\s+state\s+set\s+reviewedAt\b/.test(stripped)) {
-      if (stripped.includes(HARD_GATE_OVERRIDE)) {
-        return contextWith(
-          'conform-before-review override accepted: stamping review without a fresh `cape conform` run.',
-        );
-      }
-      const conformed = yield* readStateKey('conformedAt', CONFORM_BEFORE_REVIEW_TTL_MS);
-      if (conformed == null) {
-        const message =
-          'conform-before-review blocked: no fresh `cape conform` run found. Run `cape conform <scope>` and fold its convention findings into the review before stamping reviewedAt. To override explicitly, append CAPE_HARD_GATE_OVERRIDE to the command.';
-        logEvent('hook.PreToolUse.Bash', message);
-        return denyWith(message);
-      }
-    }
-
     if (/\bgit\s+push\b/.test(stripped)) {
       const cwd = parseCwd(input) ?? undefined;
       const { branch, defaultBranch } = yield* resolveBranchInfo(cwd);
@@ -89,7 +65,7 @@ export const preToolUseBash = () =>
     return null;
   });
 
-const gatedSkills = new Set(['execute-plan', 'finish-epic', 'pr', 'test-driven-development']);
+const gatedSkills = new Set(['execute-plan', 'finish-epic', 'test-driven-development']);
 
 interface ContextResult {
   additionalContext: string;
@@ -161,52 +137,12 @@ const gateInternalSkill = () =>
     return null;
   });
 
-const hasReviewBeforePrOverride = (args: string | null) =>
-  args?.includes(HARD_GATE_OVERRIDE) ?? false;
-
-const hasOrchestrateOverride = (args: string | null) =>
-  args?.includes(ORCHESTRATE_OVERRIDE) ?? false;
-
-const gatePr = (args: string | null) =>
-  Effect.gen(function* () {
-    const state = yield* readState();
-    const reviewedAt = state.reviewedAt;
-    const missingOrStale = (() => {
-      if (reviewedAt == null || typeof reviewedAt.timestamp !== 'number') {
-        return 'missing';
-      }
-      return Date.now() - reviewedAt.timestamp > REVIEW_BEFORE_PR_TTL_MS ? 'stale' : null;
-    })();
-
-    if (missingOrStale == null) {
-      return null;
-    }
-
-    const reason =
-      missingOrStale === 'stale' ? 'the review stamp is stale' : 'no fresh review stamp exists';
-    const proceeding = `proceeding without a fresh review stamp (${reason}).`;
-
-    if (hasOrchestrateOverride(args)) {
-      return contextWith(`review-before-pr override accepted (orchestrate): ${proceeding}`);
-    }
-
-    if (hasReviewBeforePrOverride(args)) {
-      return contextWith(`review-before-pr override accepted: ${proceeding}`);
-    }
-
-    const denyMessage =
-      `review-before-pr blocked: ${reason}. Run cape:review before cape:pr. ` +
-      `To override explicitly, invoke cape:pr with ${HARD_GATE_OVERRIDE}.`;
-    return denyWith(denyMessage);
-  });
-
 const skillGates: Record<
   string,
   (args: string | null) => Effect.Effect<GateResult, never, HookService>
 > = {
   'execute-plan': () => gateExecutePlan(),
   'finish-epic': (args) => gateFinishEpic(args),
-  pr: (args) => gatePr(args),
   'test-driven-development': () => gateInternalSkill(),
 };
 

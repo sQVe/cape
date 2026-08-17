@@ -9,7 +9,6 @@ import { GitService } from '../services/git';
 import {
   stubCheckLayer,
   stubCommitLayer,
-  stubConformLayer,
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
@@ -81,7 +80,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('git create-branch command', () => {

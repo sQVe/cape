@@ -17,7 +17,6 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
-  stubConformLayer,
   stubValidateLayer,
   stubHerdrLayer,
 } from '../testStubs';
@@ -60,7 +59,6 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     stubCommitLayer,
     stubHookLayer,
     stubValidateLayer,
-    stubConformLayer,
     prLayer,
   );
 
@@ -109,18 +107,21 @@ describe('extractUncheckedBoxes', () => {
 describe('validatePrBody', () => {
   it('returns valid when all sections present and all boxes checked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
-    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
     expect(validatePrBody(template, body)).toEqual({
       valid: true,
       missing: [],
       extra: [],
       unchecked: [],
+      missingReviewItem: false,
     });
   });
 
   it('returns invalid when checkboxes are unchecked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
-    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works';
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['works']);
@@ -135,11 +136,159 @@ describe('validatePrBody', () => {
   });
 
   it('reports extra sections', () => {
-    const template = ['Motivation'];
-    const body = '#### Motivation\nwhy\n#### Bonus\nextra stuff';
+    const template = ['Motivation', 'Test plan'];
+    const body =
+      '#### Motivation\nwhy\n#### Test plan\n- [x] /code-review run\n#### Bonus\nextra stuff';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(true);
     expect(result.extra).toEqual(['Bonus']);
+  });
+});
+
+describe('validatePrBody review item requirement', () => {
+  const template = ['Motivation', 'Changes', 'Test plan'];
+  const withTestPlan = (items: string) =>
+    `#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n${items}`;
+
+  it('returns invalid when the test plan has no checkboxes at all', () => {
+    const result = validatePrBody(template, withTestPlan('ran the tests, all good'));
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when other boxes are checked but no /code-review item exists', () => {
+    const result = validatePrBody(template, withTestPlan('- [x] pnpm test\n- [x] pnpm build'));
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the /code-review item is unchecked', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [ ] /code-review run on this branch, findings addressed'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['/code-review run on this branch, findings addressed']);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns valid when the /code-review item is checked and all sections are present', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review run on this branch, findings addressed\n- [x] pnpm test'),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the /code-review item is checked but another box is not', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review run on this branch\n- [ ] pnpm test'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['pnpm test']);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('ignores a checked /code-review item outside the test plan section', () => {
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n' +
+      '#### Test plan\nran it manually\n' +
+      '#### Verification performed\n- [x] /code-review run earlier on another branch';
+    const result = validatePrBody([...template, 'Verification performed'], body);
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('ignores a checked /code-review item inside a fenced code block', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('```\n- [x] /code-review run on this branch\n```\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('ignores a checked /code-review item inside a tilde-fenced code block', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('~~~\n- [x] /code-review run on this branch\n~~~\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('ignores a checked /code-review item inside an HTML comment', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('<!--\n- [x] /code-review run on this branch\n-->\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('does not mistake a section whose name merely contains "test" for the test plan', () => {
+    const body =
+      '#### Latest changes\nstuff\n#### Test plan\n- [x] /code-review run on this branch';
+    const result = validatePrBody(['Latest changes', 'Test plan'], body);
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('does not count an unchecked box that is only quoted inside a fence', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('```\n- [ ] example line in a snippet\n```\n- [x] /code-review run'),
+    );
+    expect(result.unchecked).toEqual([]);
+    expect(result.valid).toBe(true);
+  });
+
+  it('keeps the section open past a fenced block whose content looks like a heading', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '```bash\n# run the tests\npnpm test\n```\n- [x] /code-review run on this branch',
+      ),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('ignores a review item quoted inside a longer outer fence', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('````\nouter\n```\n- [x] /code-review run on this branch\n```\n````'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('finds the review item under a template that names the section Testing', () => {
+    const body = '#### Summary\nwhy\n#### Testing\n- [x] /code-review run on this branch';
+    const result = validatePrBody(['Summary', 'Testing'], body);
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('still requires a review item when the template names no test section', () => {
+    const withItem = validatePrBody(
+      ['Summary'],
+      '#### Summary\nwhy\n- [x] /code-review run on this branch',
+    );
+    expect(withItem.missingReviewItem).toBe(false);
+    const without = validatePrBody(['Summary'], '#### Summary\nwhy');
+    expect(without.missingReviewItem).toBe(true);
+  });
+
+  it('stops the test plan section at a heading of any level', () => {
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\nran it manually\n' +
+      '##### Notes\n- [x] /code-review run on some other branch';
+    const result = validatePrBody(template, body);
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 });
 
@@ -230,7 +379,9 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
+        ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -239,7 +390,13 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 
@@ -248,7 +405,9 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works'),
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works',
+        ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -291,26 +450,8 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.fail(new Error('should not read file')),
       readStdin: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
-      gitRoot: () => Effect.succeed('/repo'),
-      spawnGh: () => Effect.fail(new Error('no gh')),
-    });
-    await Effect.runPromise(
-      run(['pr', 'validate', '--stdin']).pipe(Effect.provide(makeCommandLayers(prLayer))),
-    );
-    const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
-    console_.restore();
-  });
-
-  it('validates the stripped body so validate agrees with create on marker input', async () => {
-    const console_ = spyConsole();
-    const prLayer = Layer.succeed(PrService)({
-      fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.fail(new Error('should not read file')),
-      readStdin: () =>
         Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan CAPE_ORCHESTRATE\n- [x] works',
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
         ),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -319,7 +460,13 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '--stdin']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 
@@ -338,7 +485,9 @@ describe('pr validate command', () => {
       readFile: (path) =>
         path === '/repo/.github/pull_request_template.md'
           ? Effect.succeed(repoTemplate)
-          : Effect.succeed('#### Summary\nhere\n#### Test plan\n- [x] works'),
+          : Effect.succeed(
+              '#### Summary\nhere\n#### Test plan\n- [x] /code-review run\n- [x] works',
+            ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -347,12 +496,19 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 });
 
-const validBody = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
+const validBody =
+  '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
 
 const makeCreateHookLayer = (
   overrides: {
@@ -409,7 +565,6 @@ const makeCreateLayers = (hookLayer = makeCreateHookLayer(), prLayer = makeCreat
     hookLayer,
     prLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('pr create command', () => {
@@ -546,121 +701,6 @@ describe('pr create command', () => {
       ),
     );
     expect(pushCalled).toBe(false);
-    console_.restore();
-  });
-
-  it('strips override markers from title and body before creating the PR', async () => {
-    const console_ = spyConsole();
-    let capturedGhArgs: readonly string[] = [];
-    const prLayer = Layer.succeed(PrService)({
-      fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.fail(new Error('no file')),
-      readStdin: () => Effect.succeed(''),
-      gitRoot: () => Effect.succeed('/repo'),
-      spawnGh: (args) => {
-        capturedGhArgs = args;
-        return Effect.succeed('https://github.com/owner/repo/pull/3');
-      },
-    });
-    await Effect.runPromise(
-      run([
-        'pr',
-        'create',
-        '--title',
-        'My PR CAPE_ORCHESTRATE',
-        '--body',
-        `${validBody}\n\nCAPE_ORCHESTRATE\nCAPE_HARD_GATE_OVERRIDE`,
-      ]).pipe(Effect.provide(makeCreateLayers(undefined, prLayer))),
-    );
-    expect(capturedGhArgs[capturedGhArgs.indexOf('--title') + 1]).toBe('My PR');
-    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(validBody);
-    console_.restore();
-  });
-
-  it('strips an inline marker without gluing the surrounding words', async () => {
-    const console_ = spyConsole();
-    let capturedGhArgs: readonly string[] = [];
-    const prLayer = Layer.succeed(PrService)({
-      fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.fail(new Error('no file')),
-      readStdin: () => Effect.succeed(''),
-      gitRoot: () => Effect.succeed('/repo'),
-      spawnGh: (args) => {
-        capturedGhArgs = args;
-        return Effect.succeed('https://github.com/owner/repo/pull/4');
-      },
-    });
-    await Effect.runPromise(
-      run([
-        'pr',
-        'create',
-        '--title',
-        'My PR',
-        '--body',
-        validBody.replace('why', 'opened with the CAPE_ORCHESTRATE override'),
-      ]).pipe(Effect.provide(makeCreateLayers(undefined, prLayer))),
-    );
-    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(
-      validBody.replace('why', 'opened with the override'),
-    );
-    console_.restore();
-  });
-
-  it('rejects a title that is empty after stripping override markers', async () => {
-    const console_ = spyConsole();
-    await expect(
-      Effect.runPromise(
-        run(['pr', 'create', '--title', 'CAPE_ORCHESTRATE', '--body', validBody]).pipe(
-          Effect.provide(makeCreateLayers()),
-        ),
-      ),
-    ).rejects.toThrow('PR title is empty after stripping override markers');
-    console_.restore();
-  });
-
-  it('ships a marker-free body byte-identical, preserving whitespace', async () => {
-    const console_ = spyConsole();
-    let capturedGhArgs: readonly string[] = [];
-    const prLayer = Layer.succeed(PrService)({
-      fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.fail(new Error('no file')),
-      readStdin: () => Effect.succeed(''),
-      gitRoot: () => Effect.succeed('/repo'),
-      spawnGh: (args) => {
-        capturedGhArgs = args;
-        return Effect.succeed('https://github.com/owner/repo/pull/5');
-      },
-    });
-    const body = `${validBody.replace('why', 'hard break  \nnext line')}\n\`\`\`\nout\n\n\n\nput\n\`\`\``;
-    await Effect.runPromise(
-      run(['pr', 'create', '--title', 'My PR', '--body', body]).pipe(
-        Effect.provide(makeCreateLayers(undefined, prLayer)),
-      ),
-    );
-    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(body);
-    console_.restore();
-  });
-
-  it('leaves marker superstrings like CAPE_ORCHESTRATE_TIMEOUT intact', async () => {
-    const console_ = spyConsole();
-    let capturedGhArgs: readonly string[] = [];
-    const prLayer = Layer.succeed(PrService)({
-      fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.fail(new Error('no file')),
-      readStdin: () => Effect.succeed(''),
-      gitRoot: () => Effect.succeed('/repo'),
-      spawnGh: (args) => {
-        capturedGhArgs = args;
-        return Effect.succeed('https://github.com/owner/repo/pull/6');
-      },
-    });
-    const body = validBody.replace('why', 'see CAPE_ORCHESTRATE_TIMEOUT and MY_CAPE_ORCHESTRATE');
-    await Effect.runPromise(
-      run(['pr', 'create', '--title', 'My PR', '--body', body]).pipe(
-        Effect.provide(makeCreateLayers(undefined, prLayer)),
-      ),
-    );
-    expect(capturedGhArgs[capturedGhArgs.indexOf('--body') + 1]).toBe(body);
     console_.restore();
   });
 

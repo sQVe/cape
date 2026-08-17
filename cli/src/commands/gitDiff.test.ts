@@ -12,7 +12,6 @@ import {
   stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
-  stubConformLayer,
   stubValidateLayer,
   stubHerdrLayer,
 } from '../testStubs';
@@ -77,7 +76,6 @@ const testLayers = (gitLayer: Layer.Layer<GitService>) =>
     stubHookLayer,
     stubPrLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('git diff command', () => {
