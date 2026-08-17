@@ -36,7 +36,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Commands: added `cape workspace phase <phase>`, which relabels the current herdr workspace and tab
   with the workflow-phase icon (📋 plan, 🔨 build, 🔍 review, 🚀 pr, ⛔ blocked, ✅ done) for the
   active epic. Best-effort and a safe no-op outside a herdr workspace or with no stamped epic. The
-  workflow skills (worktree, execute-plan, fix-bug, review, pr, finish-epic) call it at each phase
+  workflow skills (worktree, execute-plan, fix-bug, pr, finish-epic) call it at each phase
   transition, and a set-goal run labels its per-task worker and reviewer tabs with role icons.
 - Commands: added `plan`, `build`, and `ship` phase-entry wrappers.
 - CLI: added `cape tracker` cache-write commands for Linear MCP results.
@@ -83,8 +83,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills: rewired write-plan, execute-plan, fix-bug, and finish-epic to use Linear via the tracker
   protocol instead of local issue-tracking commands.
 - Skills: added stop-slop prose gates before finalizing prose-emitting skill output.
-- Pr: added an AFK branch that opens a PR unattended under the `CAPE_ORCHESTRATE` marker, skipping
-  the interactive approval while preserving human review of the opened PR.
+- Pr: added an AFK branch that opens a PR unattended when the invoking run states no human is
+  present to confirm, skipping the interactive approval while preserving human review of the opened
+  PR.
 - Hooks: moved execute-plan, finish-epic, and fix-bug gates from br shell-outs to the local tracker
   cache.
 - Hooks: softened execute-plan, finish-epic, and direct test-driven-development gates to contextual
@@ -111,11 +112,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Skills, commands, and hooks: dropped cape's own review skill in favor of Claude Code's builtin
   `/code-review`. Gone with it: the `review` skill and its slash command, the whole `conform`
   subsystem (command, service, and skill gate), the review-before-pr and conform-before-review hard
-  gates, the `CAPE_HARD_GATE_OVERRIDE` and `CAPE_ORCHESTRATE` override markers, the `reviewedAt` and
-  `conformedAt` state keys, and the optional hunk inline-comment integration. The requirement now
-  rides on the PR test plan: `skills/pr` ships a `/code-review` checkbox the human ticks, and
-  `cape pr create` already refuses a body with an unticked box. The SHIP chain is finish-epic then
-  pr. `agents/code-reviewer` stays — it reviews against the epic contract, a different job.
+  gates, both hook override markers (the human escape and the orchestrator one) along with the CLI
+  code that stripped them out of PR titles and bodies, the `reviewedAt` and `conformedAt` state
+  keys, and the optional hunk inline-comment integration. The requirement now rides on the PR test
+  plan: `skills/pr` ships a `/code-review` checkbox the human ticks, and `cape pr create` already
+  refuses a body with an unticked box. The SHIP chain is finish-epic then pr. `agents/code-reviewer`
+  stays — it reviews against the epic contract, a different job.
 - Skills and commands: analyze-tests, design-an-interface, explain, find-test-gaps, refactor.
 - Skills and commands: challenge and task-refinement.
 - Skills and commands: replaced beads with tracker.

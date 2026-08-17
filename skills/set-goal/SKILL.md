@@ -202,8 +202,9 @@ Omit this whole section when the field was empty.>
 
 ## Finishing
 - When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic
-  -> cape:pr (AFK: print the description, skip the confirmation, open the PR with "Fixes ABU-123",
-  using the CAPE_ORCHESTRATE marker) -> bounded PR-watch.
+  -> cape:pr (tell it this run is unattended with no human to confirm, so it takes the AFK branch:
+  print the description, skip the confirmation, open the PR with "Fixes ABU-123") -> bounded
+  PR-watch.
 - Bounded PR-watch: poll CI; once green, poll the PR's review threads. For a valid one, fix it (spawn
   a worker, verify the commit, re-review, push), then resolve that thread with a reply citing the fix
   commit. For an invalid / out-of-scope one, reply with a one-line reason and leave it unresolved. An

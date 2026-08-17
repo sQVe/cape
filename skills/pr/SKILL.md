@@ -166,16 +166,18 @@ Run the description prose through the global `stop-slop` skill before presenting
 
 **You MUST stop here and get user approval before running tests or creating the PR.**
 
-**AFK branch:** when `cape:pr` is invoked with the `CAPE_ORCHESTRATE` marker, there is no human to
-approve. Print the full PR (title, description, automatable items) to the transcript so the opened
-PR is on record, skip `AskUserQuestion`, then run the test-plan gate and `cape pr create` as on
-approval below. The interactive path below is unchanged when the marker is absent.
+**AFK branch:** when the invoking run states it is unattended — an autonomous run with no human
+present to confirm — there is nobody to approve. Print the full PR (title, description, automatable
+items) to the transcript so the opened PR is on record, skip `AskUserQuestion`, then run the
+test-plan gate and `cape pr create` as on approval below. Take this branch only on an explicit
+statement that the run is unattended; when in doubt, a human is present and the interactive path
+below applies unchanged.
 
 No human edits an AFK body before it ships, so the step 5 quality bar and stop-slop apply in full.
 Two AFK-only rules on top:
 
-- **Never write the `CAPE_ORCHESTRATE` marker, or any robot signature/emoji, into the PR title or
-  body** — it is an input/hook signal only.
+- **Never write a robot signature or emoji into the PR title or body** — the PR must read as if a
+  human wrote it.
 - **Do not narrate the run** — describe the change, not the orchestration that produced it.
 
 Output the full PR:
