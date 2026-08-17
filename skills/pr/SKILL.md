@@ -5,14 +5,14 @@ description: >
   to open a PR — explicit requests ("create a PR", "open a pull request", "let's PR this",
   "/cape:pr") and implicit ones ("ship it", "ready for review", "push this up"). Also use when
   finish-epic completes and the user wants to publish their work. Runs automatable test plan items
-  before creating the PR. Do NOT use for reviewing someone else's PR (use cape:review) or committing
-  (use cape:commit).
+  before creating the PR. Do NOT use for reviewing someone else's PR or committing (use
+  cape:commit).
 ---
 
 <skill_overview> Create a pull request with conventional title, structured description, and verified
-test plan. Detects repo PR templates, validates the branch, confirms a fresh `cape:review` stamp,
-runs automatable test plan items, then creates the PR via `gh`. The review-before-pr hook and test
-plan act as gates before the PR is created. </skill_overview>
+test plan. Detects repo PR templates, validates the branch, runs the test plan items, then creates
+the PR via `gh`. The test plan is the gate before the PR is created — including its `/code-review`
+checkbox, which the human runs. </skill_overview>
 
 <rigidity_level> MEDIUM FREEDOM — Follow the process exactly as written. Every step must execute in
 order. Gates are non-negotiable. The description format comes from the detected template or the
@@ -38,9 +38,9 @@ bundled template — never invent sections. </rigidity_level>
    user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
    The one exception is the AFK branch (step 6).
 2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
-3. **NEVER skip review-before-pr** — a fresh `reviewedAt` stamp from `cape:review` is required. The
-   escape is explicit only: invoke `cape:pr` with `CAPE_HARD_GATE_OVERRIDE` (human escape) or
-   `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6) to downgrade the hook deny to a warning.
+3. **NEVER tick the `/code-review` box yourself** — the human runs the builtin `/code-review` and
+   reports back. Never invoke it, never replicate a review in its place. If the box is unticked,
+   stop and ask the user to run it.
 4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
    (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
 5. **Use `cape pr create`** — not the GitHub API directly
@@ -76,9 +76,6 @@ Use `mainBranch` from the context output as `<default-branch>` throughout.
 
 - Current branch is not the default branch
 - All changes are committed
-- `reviewedAt` is fresh; if absent or stale, stop and run `cape:review` before continuing. Proceed
-  without review only when `cape:pr` is invoked with an explicit override: `CAPE_HARD_GATE_OVERRIDE`
-  (human escape) or `CAPE_ORCHESTRATE` (orchestrator AFK run, step 6).
 
 ---
 
@@ -139,8 +136,9 @@ this branch. Write to that reader:
 
 - **Motivation:** why this change, why now (1-3 sentences)
 - **Changes:** what the change does, in reviewer terms — behavior and scope, not an identifier list
-- **Test plan (checkboxes):** commands to run NOW, before PR creation (e.g., `npm test`,
-  `curl localhost:3000/api`) — these are the gate
+- **Test plan (checkboxes):** what must pass NOW, before PR creation — commands you run (e.g.,
+  `npm test`, `curl localhost:3000/api`) plus the `/code-review` box the human runs. These are the
+  gate
 - **Verification performed:** tests already run during development — evidence, not promises
 - **Deployment notes:** post-merge operational steps (migrations, cache flushes) — optional, omit if
   none
@@ -197,12 +195,14 @@ options:
 Do not announce next steps or say "Let me..." after the separator. Present the plan, then ask. Do
 not call any tools between outputting the description and calling `AskUserQuestion`.
 
-**On approval (Create PR or Create draft):** run every test-plan checkbox in order, mark each
-`- [x]` on pass, keep `- [ ]` on fail. On any failure, stop, report details, ask **Fix and retry**
-or **Cancel**. After all pass, validate the rewritten description with `cape pr validate --stdin`
-(rejects missing sections AND unchecked boxes — loop back if any `- [ ]` remains), then call
-`cape pr create` with the rewritten body. Add `--draft` for the draft option. On creation failure
-(push rejected, conflicts): auto-fix if trivial, re-attempt up to 3 times, then ask the user.
+**On approval (Create PR or Create draft):** run every test-plan checkbox you can run, in order,
+mark each `- [x]` on pass, keep `- [ ]` on fail. The `/code-review` box is not yours to run — tick
+it only when the user confirms they ran it and handled the findings. On any failure, stop, report
+details, ask **Fix and retry** or **Cancel**. After all pass, validate the rewritten description
+with `cape pr validate --stdin` (rejects missing sections AND unchecked boxes — loop back if any
+`- [ ]` remains), then call `cape pr create` with the rewritten body. Add `--draft` for the draft
+option. On creation failure (push rejected, conflicts): auto-fix if trivial, re-attempt up to 3
+times, then ask the user.
 
 ```bash
 cape pr create --title "the title" --body "$(cat <<'EOF'

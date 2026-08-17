@@ -5,13 +5,13 @@ description: >
   "finish the epic", "we're done", "close out the epic", all tasks are done and the user wants to
   close it, or execute-plan detects all acceptance criteria appear met. Runs final verification,
   checks acceptance criteria with evidence, optionally writes a minimal outcome summary to Linear,
-  and hands off to review/PR. Linear's GitHub integration closes the epic when the PR merges; cape
+  and hands off to the PR. Linear's GitHub integration closes the epic when the PR merges; cape
   never sets Linear status.
 ---
 
 <skill_overview> The final step in the build chain. Verify every acceptance criterion, run project
-checks, hand off to review/PR, and report what shipped. cape never sets Linear status: Linear's
-GitHub integration moves the epic to `Done` when the PR (referencing it with `Fixes ABU-XX`) merges.
+checks, hand off to the PR, and report what shipped. cape never sets Linear status: Linear's GitHub
+integration moves the epic to `Done` when the PR (referencing it with `Fixes ABU-XX`) merges.
 
 Core contract: only hand off when every acceptance criterion has evidence. </skill_overview>
 
@@ -117,7 +117,7 @@ uncommitted implementation changes.
 
 Do not set Linear status. The epic reaches `Done` automatically when the PR (referencing it with
 `Fixes ABU-XX`) merges, via Linear's GitHub integration. finish-epic only verifies acceptance
-criteria with evidence, runs final verification, and hands off to review/PR.
+criteria with evidence, runs final verification, and hands off to the PR.
 
 Optionally write a minimal outcome summary to the Linear epic DESCRIPTION through MCP Linear
 `save_issue` (description-only; this is not a status change):
@@ -150,8 +150,7 @@ Verification: <commands passed>
 Epic verified and ready for PR; Linear will close it on merge.
 ```
 
-Then load `cape:review` for the review-before-pr gate. Do not load `cape:pr` until review completes
-and the user explicitly asks to create the PR.
+Do not load `cape:pr` until the user explicitly asks to create the PR.
 
 </the_process>
 
@@ -177,10 +176,6 @@ and the user explicitly asks to create the PR.
 
 - Verified implementation changes remain uncommitted before hand off
 
-## Load `cape:review` with the Skill tool when:
-
-- The epic is verified and the branch is ready for the review-before-pr gate
-
 </skill_references>
 
 <examples>
@@ -191,7 +186,7 @@ and the user explicitly asks to create the PR.
 **Wrong:** Hand off based only on task count, or set the Linear epic to `Done`.
 
 **Right:** Audit each acceptance criterion with evidence, run final checks, leave Linear status
-alone, and hand off to review/PR. Linear closes the epic when the PR merges. </example>
+alone, and hand off to the PR. Linear closes the epic when the PR merges. </example>
 
 <example>
 <scenario>An acceptance criterion is not met</scenario>

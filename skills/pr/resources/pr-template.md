@@ -17,8 +17,9 @@
 
 #### Test plan
 
-<!-- Automatable items — run these before PR creation. All must pass. -->
+<!-- Run these before PR creation, by command or by hand. All must pass. -->
 
+- [ ] /code-review run on this branch, findings addressed or dismissed
 - [ ] [Command or verifiable behavior]
 - [ ] [Command or verifiable behavior]
 
@@ -53,7 +54,8 @@ Fixes ABU-XX
 
 - **Motivation**: Problem or opportunity driving the change (1-3 sentences)
 - **Changes**: Focus on "what" was implemented with technical details
-- **Test plan**: Automatable commands and assertions — checkboxes that must all be `[x]` before PR
+- **Test plan**: Commands, assertions, and the `/code-review` pass — checkboxes that must all be
+  `[x]` before PR
 - **Verification performed**: Evidence of testing already done during development
 - **Deployment notes**: Operational steps for deployers (optional, omit if none)
 - **Manual verification**: Subjective human judgment only (optional, often omitted)

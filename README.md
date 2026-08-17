@@ -27,24 +27,6 @@ pnpm install && pnpm build
 ln -s "$PWD/cli/dist/index.mjs" ~/.local/bin/cape
 ```
 
-## Inline review with hunk (optional)
-
-`cape:review` can post its findings into [hunk](https://github.com/modem-dev/hunk), a terminal diff
-viewer, so they show up inline in the diff you are reading. Skip this and the review stays
-text-only.
-
-Install hunk and open a session before you review:
-
-```bash
-npm i -g hunkdiff       # binary: hunk (Node 18+)
-hunk diff --watch       # run in a separate pane; reloads as changes land
-```
-
-When a session is open, `cape:review` finds it and adds inline comments under the author
-`cape:review`. Run the review again and it replaces those comments instead of stacking them. Cape
-ships no config for hunk; tune hunk through its own `~/.config/hunk/config.toml` or a per-repo
-`.hunk/config.toml`.
-
 ## Workflow
 
 The `don-cape` router loads at session start and matches each request to a skill. Skills run in four
@@ -54,24 +36,22 @@ chains:
 | ----- | ----------------------------------------------- | -------- |
 | PLAN  | brainstorm → write-plan                         | `/plan`  |
 | BUILD | execute-plan → test-driven-development → commit | `/build` |
-| SHIP  | finish-epic → review → pr                       | `/ship`  |
+| SHIP  | finish-epic → pr                                | `/ship`  |
 | BUG   | fix-bug → test-driven-development → commit      | —        |
 
 `/plan`, `/build`, and `/ship` are the user-invoked entry points. The steps inside each chain run on
 their own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each
 task so you can review.
 
-Two gates are hard and block the next step:
+Code review is Claude Code's builtin `/code-review`, not a cape skill. You run it; the `pr` skill
+carries the requirement as a test-plan checkbox, and `cape pr create` refuses a body with an
+unticked box.
 
-- TDD red-before-green: write a failing test before the production code that passes it.
-- Review-before-pr: a review must run before `pr` opens a pull request.
-
-Set `CAPE_HARD_GATE_OVERRIDE` to bypass either one. Every other gate is a contextual warning you can
-ignore.
+Every gate is a contextual warning you can ignore.
 
 ## Skills
 
-Cape ships 13 workflow skills plus the `don-cape` router.
+Cape ships 12 workflow skills plus the `don-cape` router.
 
 | Skill                     | Role                                                  |
 | ------------------------- | ----------------------------------------------------- |
@@ -82,15 +62,14 @@ Cape ships 13 workflow skills plus the `don-cape` router.
 | `test-driven-development` | Drive each change RED → GREEN → REFACTOR              |
 | `commit`                  | Stage selectively and write a conventional commit     |
 | `finish-epic`             | Verify acceptance criteria and hand off the epic      |
-| `review`                  | Review changes for bugs, logic, and conventions       |
 | `pr`                      | Open a pull request with a verified test plan         |
 | `pr-feedback`             | Triage inbound PR review comments and resolve threads |
 | `fix-bug`                 | Diagnose to root cause, then patch test-first         |
 | `worktree`                | Create a per-epic grove worktree                      |
 | `tracker`                 | Write Linear results into the local cache             |
 
-Skills that emit prose (commit messages, PR descriptions, epic text, review write-ups) run their
-output through the `stop-slop` skill before finalizing.
+Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
+`stop-slop` skill before finalizing.
 
 ## Agents
 

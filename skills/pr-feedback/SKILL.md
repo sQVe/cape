@@ -6,9 +6,8 @@ description: >
   and commit referencing the review. Use whenever the user wants to act on review feedback: "fetch
   comments on PR, are they valid?", "resolve threads that are fixed", "push and resolve threads we
   fixed", "resolve the comment threads that are fixed or ignored", "fix the valid issues and
-  resolve", "/cape:pr-feedback". Do NOT use for reviewing your own pre-PR diff (use cape:review),
-  fixing a single diagnosed defect with no PR thread (use cape:fix-bug), or creating a PR (use
-  cape:pr).
+  resolve", "/cape:pr-feedback". Do NOT use for fixing a single diagnosed defect with no PR thread
+  (use cape:fix-bug), or creating a PR (use cape:pr).
 ---
 
 <skill_overview> Drive the inbound review loop for a pull request: fetch every open review thread
@@ -35,7 +34,7 @@ is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_
 
 **Don't use for:**
 
-- Reviewing your own staged or uncommitted code (use cape:review)
+- Reviewing your own staged or uncommitted code (use the builtin `/code-review`)
 - Fixing one diagnosed defect with no PR thread behind it (use cape:fix-bug)
 - Creating or describing a PR (use cape:pr)
 - Committing unrelated work (use cape:commit directly)
