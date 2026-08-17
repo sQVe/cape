@@ -17,6 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
+  '- [ ] /code-review run on this branch, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 
@@ -32,16 +33,23 @@ export const extractUncheckedBoxes = (body: string) =>
     .filter((line) => /^\s*- \[ \]/.test(line))
     .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
 
+// The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
+// that simply omits the box must fail rather than pass for having no unticked boxes.
+const hasReviewItem = (body: string) =>
+  body.split('\n').some((line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'));
+
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);
   const missing = templateSections.filter((s) => !bodySections.includes(s));
   const extra = bodySections.filter((s) => !templateSections.includes(s));
   const unchecked = extractUncheckedBoxes(body);
+  const missingReviewItem = !hasReviewItem(body);
   return {
-    valid: missing.length === 0 && unchecked.length === 0,
+    valid: missing.length === 0 && unchecked.length === 0 && !missingReviewItem,
     missing,
     extra,
     unchecked,
+    missingReviewItem,
   };
 };
 

@@ -52,6 +52,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- CLI: `cape pr create` and `cape pr validate` now require a checked `/code-review` item in the test
+  plan. The old check only rejected unticked boxes, which passed vacuously for a body with no
+  checkboxes at all, so the gate could be skipped by omitting the box.
 - Tooling: bumped `@types/node` (25 to 26), `fallow`, `oxfmt`, `oxlint`, `smol-toml`, and `tsdown`
   to their latest releases.
 - Skills: rewrote step headings to sentence case across six skills (don-cape, execute-plan,

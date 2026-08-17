@@ -312,6 +312,8 @@ describe('cape pr', () => {
       spawnSync('rm', ['-rf', tmpDir]);
     });
 
+    const checkedReviewItem = '- [x] /code-review run on this branch, findings addressed';
+
     it('exits 1 when no file or --stdin provided', async () => {
       const result = await inProcess(['pr', 'validate']);
       expect(result.status).toBe(1);
@@ -320,7 +322,9 @@ describe('cape pr', () => {
     it('validates a PR body file with all sections present', async () => {
       const template = await inProcess(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
-      const body = parsed.sections.map((s: string) => `#### ${s}\n\nContent here.\n`).join('\n');
+      const body = `${parsed.sections
+        .map((s: string) => `#### ${s}\n\nContent here.\n`)
+        .join('\n')}\n${checkedReviewItem}\n`;
       const bodyFile = join(tmpDir, 'pr-body.md');
       writeFileSync(bodyFile, body);
 
@@ -348,6 +352,7 @@ describe('cape pr', () => {
       const body = [
         ...parsed.sections.map((s: string) => `#### ${s}\n\nContent.\n`),
         '#### Bonus section\n\nExtra.\n',
+        `${checkedReviewItem}\n`,
       ].join('\n');
       const bodyFile = join(tmpDir, 'extra-pr.md');
       writeFileSync(bodyFile, body);

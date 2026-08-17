@@ -14,6 +14,11 @@ const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
   if (result.unchecked.length > 0) {
     parts.push(`unchecked test plan items: ${result.unchecked.join(', ')}`);
   }
+  if (result.missingReviewItem) {
+    parts.push(
+      'test plan has no /code-review item: run /code-review on this branch, then add a checked "- [x] /code-review run on this branch, findings addressed or dismissed" item to the test plan',
+    );
+  }
   return parts.join('; ');
 };
 

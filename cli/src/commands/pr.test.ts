@@ -107,18 +107,21 @@ describe('extractUncheckedBoxes', () => {
 describe('validatePrBody', () => {
   it('returns valid when all sections present and all boxes checked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
-    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
     expect(validatePrBody(template, body)).toEqual({
       valid: true,
       missing: [],
       extra: [],
       unchecked: [],
+      missingReviewItem: false,
     });
   });
 
   it('returns invalid when checkboxes are unchecked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
-    const body = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works';
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['works']);
@@ -134,10 +137,57 @@ describe('validatePrBody', () => {
 
   it('reports extra sections', () => {
     const template = ['Motivation'];
-    const body = '#### Motivation\nwhy\n#### Bonus\nextra stuff';
+    const body = '#### Motivation\nwhy\n#### Bonus\nextra stuff\n- [x] /code-review run';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(true);
     expect(result.extra).toEqual(['Bonus']);
+  });
+});
+
+describe('validatePrBody review item requirement', () => {
+  const template = ['Motivation', 'Changes', 'Test plan'];
+  const withTestPlan = (items: string) =>
+    `#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n${items}`;
+
+  it('returns invalid when the test plan has no checkboxes at all', () => {
+    const result = validatePrBody(template, withTestPlan('ran the tests, all good'));
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when other boxes are checked but no /code-review item exists', () => {
+    const result = validatePrBody(template, withTestPlan('- [x] pnpm test\n- [x] pnpm build'));
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the /code-review item is unchecked', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [ ] /code-review run on this branch, findings addressed'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['/code-review run on this branch, findings addressed']);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns valid when the /code-review item is checked and all sections are present', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review run on this branch, findings addressed\n- [x] pnpm test'),
+    );
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the /code-review item is checked but another box is not', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review run on this branch\n- [ ] pnpm test'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.unchecked).toEqual(['pnpm test']);
+    expect(result.missingReviewItem).toBe(false);
   });
 });
 
@@ -228,7 +278,9 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
+        ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -237,7 +289,13 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 
@@ -246,7 +304,9 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [ ] works'),
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works',
+        ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -289,7 +349,9 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.fail(new Error('should not read file')),
       readStdin: () =>
-        Effect.succeed('#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works'),
+        Effect.succeed(
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
+        ),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
     });
@@ -297,7 +359,13 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '--stdin']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 
@@ -316,7 +384,9 @@ describe('pr validate command', () => {
       readFile: (path) =>
         path === '/repo/.github/pull_request_template.md'
           ? Effect.succeed(repoTemplate)
-          : Effect.succeed('#### Summary\nhere\n#### Test plan\n- [x] works'),
+          : Effect.succeed(
+              '#### Summary\nhere\n#### Test plan\n- [x] /code-review run\n- [x] works',
+            ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -325,12 +395,19 @@ describe('pr validate command', () => {
       run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
     );
     const result = JSON.parse(console_.output());
-    expect(result).toEqual({ valid: true, missing: [], extra: [], unchecked: [] });
+    expect(result).toEqual({
+      valid: true,
+      missing: [],
+      extra: [],
+      unchecked: [],
+      missingReviewItem: false,
+    });
     console_.restore();
   });
 });
 
-const validBody = '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] works';
+const validBody =
+  '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
 
 const makeCreateHookLayer = (
   overrides: {
