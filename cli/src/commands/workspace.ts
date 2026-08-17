@@ -6,21 +6,26 @@ import { composeLabels, HerdrService } from '../services/herdr';
 import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
 import { PrService } from '../services/pr';
 
-// gh emits '{"number":123}'. Anything else — no PR for the branch, an error message,
-// a payload without a usable number — means there is nothing to label with. Safe
-// integers only: JSON.parse rounds anything larger, so the label would name a
-// different PR than the payload did.
+// gh emits '{"number":123,"state":"OPEN"}'. Anything else — no PR for the branch, an
+// error message, a payload without a usable number — means there is nothing to label
+// with. Safe integers only: JSON.parse rounds anything larger, so the label would name
+// a different PR than the payload did. The state is load-bearing: 'gh pr view' with no
+// argument falls back to the branch's most recent merged or closed PR, and a dead PR
+// number is worse than the issue id.
 const parsePrNumber = (raw: string): number | null => {
   try {
-    const { number } = JSON.parse(raw) as { number?: unknown };
+    const { number, state } = JSON.parse(raw) as { number?: unknown; state?: unknown };
+    if (state !== 'OPEN') {
+      return null;
+    }
     return typeof number === 'number' && Number.isSafeInteger(number) && number > 0 ? number : null;
   } catch {
     return null;
   }
 };
 
-// Looked up live rather than stamped at 'cape pr create' time: a PR can be opened
-// outside cape, and a stamp goes stale the moment one closes. Best-effort like
+// Looked up live rather than stamped at 'cape pr create' time, because a PR can be
+// opened outside cape and a stamp never learns about it. Best-effort like
 // HerdrService.rename — a missing gh or a failed lookup degrades to the issue id.
 // Only the pr phase labels with a PR number, so every other phase skips the gh
 // subprocess instead of waiting on a number it will not use. Normalized the same
@@ -32,7 +37,7 @@ const lookupPrNumber = (phase: string) =>
     }
 
     const pr = yield* PrService;
-    const raw = yield* pr.spawnGh(['pr', 'view', '--json', 'number']);
+    const raw = yield* pr.spawnGh(['pr', 'view', '--json', 'number,state']);
     return parsePrNumber(raw);
   }).pipe(Effect.orElseSucceed(() => null));
 

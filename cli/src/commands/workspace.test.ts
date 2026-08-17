@@ -120,13 +120,28 @@ describe('composeLabels', () => {
     });
   });
 
-  it('truncates the description on a word boundary to the 32 character herdr sidebar budget', () => {
+  it('truncates the description on a word boundary to fit the 40 character herdr sidebar budget', () => {
     expect(
       composeLabels('build', 'ABU-134', 'Surface cape workflow phase in labels', 'cape'),
     ).toEqual({
       workspace: 'cape: 🔨 surface cape workflow phase in',
       tab: '🔨 abu-134',
     });
+  });
+
+  it('budgets the composed label, so a long repo name shortens the description', () => {
+    const labels = composeLabels(
+      'build',
+      'ABU-134',
+      'Surface cape workflow phase in labels',
+      'claude-code-plugins',
+    );
+
+    expect(labels).toEqual({
+      workspace: 'claude-code-plugins: 🔨 surface cape',
+      tab: '🔨 abu-134',
+    });
+    expect([...(labels?.workspace ?? '')].length).toBeLessThanOrEqual(40);
   });
 
   it('counts the budget in code points so a non-BMP character is never split', () => {
@@ -237,14 +252,14 @@ describe('cape workspace phase', () => {
       [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
     });
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
-    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
     await Effect.runPromise(
       run(['workspace', 'phase', 'pr']).pipe(
         Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
       ),
     );
-    expect(calls).toEqual([['pr', 'view', '--json', 'number']]);
+    expect(calls).toEqual([['pr', 'view', '--json', 'number,state']]);
     expect(JSON.parse(console_.output())).toEqual({
       renamed: true,
       workspace: 'cape: 🚀 surface cape workflow phase in',
@@ -263,14 +278,14 @@ describe('cape workspace phase', () => {
       [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
     });
     const { layer: herdrLayer } = makeHerdrLayer('ws1', 'tab1');
-    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
     await Effect.runPromise(
       run(['workspace', 'phase', ' PR ']).pipe(
         Effect.provide(makeLayers(hookLayer, herdrLayer, stubGitLayer, prLayer)),
       ),
     );
-    expect(calls).toEqual([['pr', 'view', '--json', 'number']]);
+    expect(calls).toEqual([['pr', 'view', '--json', 'number,state']]);
     expect(JSON.parse(console_.output())).toMatchObject({ tab: '🚀 #123' });
     console_.restore();
   });
@@ -281,7 +296,7 @@ describe('cape workspace phase', () => {
       [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
     });
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
-    const { layer: prLayer, calls } = makePrLayer('{"number":123}');
+    const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
     await Effect.runPromise(
       run(['workspace', 'phase', 'build']).pipe(
@@ -307,6 +322,9 @@ describe('cape workspace phase', () => {
     ['output that is not json', 'no pull requests found'],
     ['a payload without a usable number', '{"number":"123"}'],
     ['a number past the safe integer range', '{"number":9007199254740993}'],
+    ['a payload without a state', '{"number":123}'],
+    ['a merged pr for the branch', '{"number":123,"state":"MERGED"}'],
+    ['a closed pr for the branch', '{"number":123,"state":"CLOSED"}'],
   ])('degrades to the issue id on %s', async (_case, ghResult) => {
     const hookLayer = makeHookLayer({
       [statePath]: stateFile('ABU-134'),

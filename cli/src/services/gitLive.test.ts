@@ -370,19 +370,34 @@ describe('GitServiceLive', () => {
       expect(await runRepoName()).toBe('cape');
     });
 
-    it('falls back to the parent directory of the worktree when there is no origin remote', async () => {
+    it('falls back to the workspace root of a linked worktree when there is no origin remote', async () => {
       mockExecFileSync.mockImplementation(((...args: unknown[]) => {
         const key = (args[1] as string[]).join(' ');
         if (key.includes('remote get-url')) {
           throw new Error('no such remote');
         }
-        if (key.includes('rev-parse --show-toplevel')) {
-          return '/home/me/cape/abu-238-rework-labels';
+        if (key.includes('--git-common-dir')) {
+          return '/home/me/cape/.bare';
         }
         throw new Error(`unmocked: ${key}`);
       }) as typeof execFileSync);
 
       expect(await runRepoName()).toBe('cape');
+    });
+
+    it('falls back to the repository directory of a plain checkout, not its parent', async () => {
+      mockExecFileSync.mockImplementation(((...args: unknown[]) => {
+        const key = (args[1] as string[]).join(' ');
+        if (key.includes('remote get-url')) {
+          throw new Error('no such remote');
+        }
+        if (key.includes('--git-common-dir')) {
+          return '/home/me/code/myproject/.git';
+        }
+        throw new Error(`unmocked: ${key}`);
+      }) as typeof execFileSync);
+
+      expect(await runRepoName()).toBe('myproject');
     });
 
     it('returns null outside a git repository', async () => {

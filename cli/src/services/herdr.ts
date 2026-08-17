@@ -15,19 +15,25 @@ const phaseIcons: Record<WorkspacePhase, string> = {
 export const phaseIcon = (phase: string): string | null =>
   phaseIcons[phase.trim().toLowerCase() as WorkspacePhase] ?? null;
 
-const descriptionBudget = 32;
+// Budgets the whole composed label, not the description alone: the prefix is part
+// of what herdr has to fit, so budgeting the tail lets a long repo name push the
+// label past the sidebar and hand herdr the hard truncation this cut avoids.
+const labelBudget = 40;
 
-const describeTitle = (title: string) => {
+const describeTitle = (title: string, budget: number) => {
   const text = title.trim().toLowerCase().replace(/\s+/g, ' ');
+  if (budget <= 0) {
+    return '';
+  }
   // Budget in code points, not code units: slicing units splits a non-BMP
   // character into an unpaired surrogate at the boundary.
   const points = [...text];
-  if (points.length <= descriptionBudget) {
+  if (points.length <= budget) {
     return text;
   }
-  const head = points.slice(0, descriptionBudget + 1).join('');
+  const head = points.slice(0, budget + 1).join('');
   const boundary = head.lastIndexOf(' ');
-  return boundary === -1 ? points.slice(0, descriptionBudget).join('') : head.slice(0, boundary);
+  return boundary === -1 ? points.slice(0, budget).join('') : head.slice(0, boundary);
 };
 
 export interface WorkspaceLabels {
@@ -52,19 +58,20 @@ export const composeLabels = (
   }
 
   const id = issueId.trim().toLowerCase();
-  const description = title == null ? '' : describeTitle(title);
   const repoName = repo == null ? '' : repo.trim().toLowerCase();
   const tab = `${icon} ${prNumber == null ? id : `#${prNumber}`}`;
+  const prefix = repoName.length === 0 ? `${icon} ${id} ` : `${repoName}: ${icon} `;
+  const description = title == null ? '' : describeTitle(title, labelBudget - [...prefix].length);
 
   if (repoName.length === 0) {
     return {
-      workspace: description.length > 0 ? `${icon} ${id} ${description}` : `${icon} ${id}`,
+      workspace: description.length > 0 ? `${prefix}${description}` : `${icon} ${id}`,
       tab,
     };
   }
 
   return {
-    workspace: `${repoName}: ${icon} ${description.length > 0 ? description : id}`,
+    workspace: `${prefix}${description.length > 0 ? description : id}`,
     tab,
   };
 };
