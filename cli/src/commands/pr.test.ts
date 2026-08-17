@@ -136,8 +136,9 @@ describe('validatePrBody', () => {
   });
 
   it('reports extra sections', () => {
-    const template = ['Motivation'];
-    const body = '#### Motivation\nwhy\n#### Bonus\nextra stuff\n- [x] /code-review run';
+    const template = ['Motivation', 'Test plan'];
+    const body =
+      '#### Motivation\nwhy\n#### Test plan\n- [x] /code-review run\n#### Bonus\nextra stuff';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(true);
     expect(result.extra).toEqual(['Bonus']);
@@ -188,6 +189,25 @@ describe('validatePrBody review item requirement', () => {
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['pnpm test']);
     expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('ignores a checked /code-review item outside the test plan section', () => {
+    const body =
+      '#### Motivation\nwhy\n#### Changes\nwhat\n' +
+      '#### Test plan\nran it manually\n' +
+      '#### Verification performed\n- [x] /code-review run earlier on another branch';
+    const result = validatePrBody([...template, 'Verification performed'], body);
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('ignores a checked /code-review item inside a fenced code block', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('```\n- [x] /code-review run on this branch\n```\nnot actually run'),
+    );
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 });
 

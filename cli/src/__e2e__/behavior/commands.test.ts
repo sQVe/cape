@@ -350,9 +350,10 @@ describe('cape pr', () => {
       const template = await inProcess(['pr', 'template']);
       const parsed = JSON.parse(template.stdout);
       const body = [
-        ...parsed.sections.map((s: string) => `#### ${s}\n\nContent.\n`),
+        ...parsed.sections.map((s: string) =>
+          s === 'Test plan' ? `#### ${s}\n\n${checkedReviewItem}\n` : `#### ${s}\n\nContent.\n`,
+        ),
         '#### Bonus section\n\nExtra.\n',
-        `${checkedReviewItem}\n`,
       ].join('\n');
       const bodyFile = join(tmpDir, 'extra-pr.md');
       writeFileSync(bodyFile, body);

@@ -34,9 +34,29 @@ export const extractUncheckedBoxes = (body: string) =>
     .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
-// that simply omits the box must fail rather than pass for having no unticked boxes.
+// that simply omits the box must fail rather than pass for having no unticked boxes. Scoped to the
+// Test plan section with code fences dropped, so a review line quoted elsewhere cannot satisfy it.
+const testPlanLines = (body: string) => {
+  const lines = body.split('\n');
+  const start = lines.findIndex((line) => /^#{2,4}\s+Test plan\s*$/i.test(line));
+  if (start === -1) {
+    return [];
+  }
+  const rest = lines.slice(start + 1);
+  const end = rest.findIndex((line) => /^#{2,4}\s/.test(line));
+  const section = end === -1 ? rest : rest.slice(0, end);
+  let inFence = false;
+  return section.filter((line) => {
+    if (/^\s*```/.test(line)) {
+      inFence = !inFence;
+      return false;
+    }
+    return !inFence;
+  });
+};
+
 const hasReviewItem = (body: string) =>
-  body.split('\n').some((line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'));
+  testPlanLines(body).some((line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'));
 
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);
