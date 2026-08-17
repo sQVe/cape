@@ -19,12 +19,15 @@ const descriptionBudget = 32;
 
 const describeTitle = (title: string) => {
   const text = title.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (text.length <= descriptionBudget) {
+  // Budget in code points, not code units: slicing units splits a non-BMP
+  // character into an unpaired surrogate at the boundary.
+  const points = [...text];
+  if (points.length <= descriptionBudget) {
     return text;
   }
-  const head = text.slice(0, descriptionBudget + 1);
+  const head = points.slice(0, descriptionBudget + 1).join('');
   const boundary = head.lastIndexOf(' ');
-  return boundary === -1 ? text.slice(0, descriptionBudget) : head.slice(0, boundary);
+  return boundary === -1 ? points.slice(0, descriptionBudget).join('') : head.slice(0, boundary);
 };
 
 export interface WorkspaceLabels {

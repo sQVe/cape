@@ -352,6 +352,24 @@ describe('GitServiceLive', () => {
       expect(await runRepoName()).toBe('cape');
     });
 
+    it('drops a query string and fragment before taking the basename', async () => {
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'https://github.example.com/sQVe/cape.git?token=x',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+
+      mockExecFileSync.mockImplementation(
+        gitRouter({
+          'remote get-url origin': 'https://github.example.com/sQVe/cape.git#readme',
+        }) as typeof execFileSync,
+      );
+
+      expect(await runRepoName()).toBe('cape');
+    });
+
     it('falls back to the parent directory of the worktree when there is no origin remote', async () => {
       mockExecFileSync.mockImplementation(((...args: unknown[]) => {
         const key = (args[1] as string[]).join(' ');

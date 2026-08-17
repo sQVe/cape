@@ -130,7 +130,8 @@ const repoName = () =>
   Effect.sync(() => {
     const origin = tryGit(['remote', 'get-url', 'origin']);
     if (origin != null) {
-      const name = (origin.replace(/\/+$/, '').split(/[/:]/).pop() ?? '').replace(/\.git$/, '');
+      const path = origin.replace(/[?#].*$/, '').replace(/\/+$/, '');
+      const name = (path.split(/[/:]/).pop() ?? '').replace(/\.git$/, '');
       if (name.length > 0) {
         return name;
       }

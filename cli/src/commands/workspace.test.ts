@@ -112,6 +112,13 @@ describe('composeLabels', () => {
     });
   });
 
+  it('counts the budget in code points so a non-BMP character is never split', () => {
+    expect(composeLabels('build', 'ABU-134', `${'a'.repeat(31)}\u{1F600}suffix`, 'cape')).toEqual({
+      workspace: `cape: 🔨 ${'a'.repeat(31)}\u{1F600}`,
+      tab: '🔨 abu-134',
+    });
+  });
+
   it('falls back to the issue id as the description when the title is missing', () => {
     expect(composeLabels('review', 'ABU-134', null, 'cape')).toEqual({
       workspace: 'cape: 🔍 abu-134',
