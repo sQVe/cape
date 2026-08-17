@@ -2,7 +2,6 @@ import { Command } from 'effect/unstable/cli';
 
 import { check } from './commands/check';
 import { commit } from './commands/commit';
-import { conform } from './commands/conform';
 import { git } from './commands/git';
 import { hook } from './commands/hook';
 import { pr } from './commands/pr';
@@ -17,7 +16,6 @@ export const main = Command.make('cape').pipe(
   Command.withSubcommands([
     check,
     commit,
-    conform,
     git,
     hook,
     pr,

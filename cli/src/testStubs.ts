@@ -2,7 +2,6 @@ import { Effect, Layer } from 'effect';
 
 import { CheckService } from './services/check';
 import { CommitService } from './services/commit';
-import { ConformService } from './services/conform';
 import { DetectService } from './services/detect';
 import { GitService } from './services/git';
 import { HerdrService } from './services/herdr';
@@ -62,11 +61,6 @@ export const stubValidateLayer = Layer.succeed(ValidateService)({
   globFiles: () => Effect.succeed([]),
   readFile: () => Effect.succeed(''),
   gitRoot: () => Effect.succeed('/repo'),
-});
-
-export const stubConformLayer = Layer.succeed(ConformService)({
-  discoverRules: () => Effect.succeed([]),
-  readFiles: () => Effect.succeed([]),
 });
 
 export const stubHerdrLayer = Layer.succeed(HerdrService)({

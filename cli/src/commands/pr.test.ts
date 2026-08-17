@@ -17,7 +17,6 @@ import {
   stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
-  stubConformLayer,
   stubValidateLayer,
   stubHerdrLayer,
 } from '../testStubs';
@@ -60,7 +59,6 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     stubCommitLayer,
     stubHookLayer,
     stubValidateLayer,
-    stubConformLayer,
     prLayer,
   );
 
@@ -409,7 +407,6 @@ const makeCreateLayers = (hookLayer = makeCreateHookLayer(), prLayer = makeCreat
     hookLayer,
     prLayer,
     stubValidateLayer,
-    stubConformLayer,
   );
 
 describe('pr create command', () => {
