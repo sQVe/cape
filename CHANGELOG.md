@@ -52,6 +52,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- CLI: `cape workspace phase` now labels the workspace `<repo>: <emoji> <description>` instead of
+  `<emoji> <ABU-ID> <Title>`, so workspaces from different repositories no longer read as
+  near-identical strings in the herdr sidebar. The repo name comes from the `origin` remote
+  basename, falling back to the directory holding the shared git data — a grove worktree is named
+  after its branch, so the worktree basename would have named the branch. Labels are lowercase apart
+  from the emoji, and the description is cut on a word boundary to keep the whole label inside a 40
+  character budget. The tab shows `<emoji> <id>`, switching to `<emoji> #<pr-number>` in the `pr`
+  phase when the branch has an open PR; a missing `gh`, a failed lookup, or a merged or closed PR
+  degrades to the issue id and never fails the command.
 - CLI: `cape pr create` and `cape pr validate` now require a checked `/code-review` item in the test
   plan. The old check only rejected unticked boxes, which passed vacuously for a body with no
   checkboxes at all, so the gate could be skipped by omitting the box. The item is located in
@@ -172,18 +181,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   hook process cwd, so a `git push` from a feature-branch worktree is no longer blocked when the
   session sits on the default branch. The branch-vs-default-branch check now lives in one shared
   `resolveBranchInfo` helper used by the push gate, the execute-plan nudge, and `cape pr`.
-
-### Changed
-
-- CLI: `cape workspace phase` now labels the workspace `<repo>: <emoji> <description>` instead of
-  `<emoji> <ABU-ID> <Title>`, so workspaces from different repositories no longer read as
-  near-identical strings in the herdr sidebar. The repo name comes from the `origin` remote
-  basename, falling back to the directory holding the shared git data — a grove worktree is named
-  after its branch, so the worktree basename would have named the branch. Labels are lowercase apart
-  from the emoji, and the description is cut on a word boundary to keep the whole label inside a 40
-  character budget. The tab shows `<emoji> <id>`, switching to `<emoji> #<pr-number>` in the `pr`
-  phase when the branch has an open PR; a missing `gh`, a failed lookup, or a merged or closed PR
-  degrades to the issue id and never fails the command.
 
 ## [1.3.0] - 2026-03-26
 
