@@ -124,6 +124,10 @@ Apply the fixes marked Fix and respond to the rest?
 **STOP. Wait for approval.** The user may overrule any verdict, drop a fix, or add one. Apply their
 edits to the table exactly before proceeding.
 
+**AFK branch.** Take this branch only when the invoking run explicitly states it is unattended; when
+in doubt, a human is present and the stop above applies unchanged. Print the triage table to the
+transcript so the calls are on record, then continue as if the triage were approved.
+
 ### 4. Apply accepted fixes
 
 Run `cape state set workflowActive`, then `cape workspace phase build`. The flag lets an accepted

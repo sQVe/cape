@@ -181,6 +181,8 @@ Omit this whole section when the field was empty.>
   description, skip the confirmation, open the PR with "Fixes ABU-123"), then a bounded PR watch.
 - Bounded PR watch: poll CI; once green, load cape:pr-feedback and follow its contract for the
   review threads (judge validity, fix, reply, resolve), spawning a worker for each accepted fix.
+  Tell it this run is unattended so it takes its AFK branch: print the triage table instead of
+  stopping for approval.
   An unresolved thread must mean still open: never leave a thread you fixed unresolved, never
   resolve one you did not fix.
 - On a clean ship, run `cape workspace phase done`, then print exactly one line:
