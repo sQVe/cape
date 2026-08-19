@@ -306,6 +306,7 @@ it — leaving the PR scoped. </example>
 - **Every comment lands somewhere** — applied with a pushed change or dismissed with a reason; the
   table proves it
 - **Resolve follows a pushed action** — never close a thread on an unverified or unpushed fix
-- **Replies stay simple and clear** — short plain sentences, one point each, run through unslop
+- **Replies stay simple and clear** — short plain sentences, one point each, run through
+  `cape:unslop`
 
 </key_principles>

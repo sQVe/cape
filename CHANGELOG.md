@@ -56,10 +56,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- CLI: `cape validate` now checks skills on frontmatter only (`name`, `description`), dropping the
-  required XML tag structure so skills can be written as clean markdown. The unknown-agent check
-  matches ``Dispatch `cape:agent` `` references anywhere in the body instead of an
-  `agent_references` section.
+- CLI: `cape validate` now checks skills on frontmatter (`name`, `description`) plus a non-empty
+  body, dropping the required XML tag structure so skills can be written as clean markdown. Every
+  backticked `cape:<name>` reference in a skill body is validated against the known skills and
+  agents together, replacing the old `agent_references`-scoped unknown-agent check.
 - Skills: every prose gate now points at `cape:unslop` instead of the global `stop-slop` plugin, so
   the external plugin dependency can be dropped.
 - CLI: `cape workspace phase` now labels the workspace `<repo>: <emoji> <description>` instead of
