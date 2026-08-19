@@ -16,11 +16,9 @@
 - [ ] Migrate the existing flat `pr-watcher` label into the `src` group as `src:pr-watcher`, then
       retag its about 19 issues.
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
-- [ ] Create the standalone `agent-ticket` label (no group): cape applies it to every task and bug
-      sub-issue it creates so humans can filter agent work tickets out with `-label:agent-ticket`.
-- [ ] Configure the GitHub-Linear integration with PR automation: PR opened sets status to In
-      Review; PR merged to the default branch sets status to Done. cape relies on this; it no longer
-      sets status itself.
+- [ ] Configure the GitHub-Linear integration with PR automation for the Aburaya team (automations
+      are per-team settings): PR opened sets status to In Review; PR merged to the default branch
+      sets status to Done. cape relies on this; it no longer sets status itself.
 - [x] Create epic, task, and bug team-level issue templates from
       [linear-templates.md](linear-templates.md), each defaulting to `src:human` and Medium
       priority. The Bug template prefills the title `Fix `.
@@ -35,3 +33,22 @@
 - [ ] Rename the team-named `Aburaya` project to a distinct product noun chosen by a human.
 - [ ] Run the one-time priority reset: bulk-clear inflated `High` issues to `Medium`, then re-raise
       only the true next about 5 issues.
+
+## Two-tier team setup (run in the Linear UI)
+
+Prerequisites for the two-tier contract in [SKILL.md](../SKILL.md): human tickets in `Aburaya`,
+agent plan issues and tasks in `Agents` (AI). A human runs these before the first paired epic.
+
+- [ ] Create the team `Agents` in Linear with the team key `AI` (issue ids like `AI-12`).
+- [ ] Enable the Agents team's PR automations (per-team settings): PR opened sets status to In
+      Review; PR merged to the default branch sets status to Done.
+- [ ] Move the `src` and `type` label groups to workspace level so both teams share them.
+- [ ] Retire the `agent-ticket` label; the team boundary replaces it (agent work tickets live in AI,
+      so humans filter by team instead of label).
+
+On the first paired epic, verify: AI PR automations fire from cape-repo PRs, and the cross-team
+closing line moves both issues to Done on merge (`Fixes ABU-x, AI-y` — Linear's own docs show a
+multi-team closing example).
+
+Free-plan caveat: `Agents` uses the second of the two free team slots; any third team needs a plan
+upgrade.
