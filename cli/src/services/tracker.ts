@@ -7,6 +7,7 @@ export interface TrackerTask {
   readonly type?: string;
   readonly status: string;
   readonly stateType: string;
+  readonly humanTicketId?: string;
 }
 
 export interface TrackerEpic {
@@ -36,6 +37,7 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
     readonly type?: unknown;
     readonly status?: unknown;
     readonly stateType?: unknown;
+    readonly humanTicketId?: unknown;
   };
   return (
     typeof task.id === 'string' &&
@@ -43,7 +45,8 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
     (task.project == null || typeof task.project === 'string') &&
     (task.type == null || typeof task.type === 'string') &&
     typeof task.status === 'string' &&
-    typeof task.stateType === 'string'
+    typeof task.stateType === 'string' &&
+    (task.humanTicketId == null || typeof task.humanTicketId === 'string')
   );
 };
 

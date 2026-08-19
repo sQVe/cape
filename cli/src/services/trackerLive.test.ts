@@ -199,7 +199,40 @@ describe('mergeTasks', () => {
   });
 });
 
+describe('mergeTasks', () => {
+  it('keeps a cached task humanTicketId when the incoming task has none', () => {
+    const cache = cacheWith(epic('AI-1', [task('AI-2', 'started', { humanTicketId: 'ABU-9' })]));
+
+    const merged = mergeTasks(cache, 'AI-1', [task('AI-2', 'started')], 2000);
+
+    expect(merged.epics['AI-1']?.tasks[0]?.humanTicketId).toBe('ABU-9');
+  });
+
+  it('lets an incoming task humanTicketId replace the cached one', () => {
+    const cache = cacheWith(epic('AI-1', [task('AI-2', 'started', { humanTicketId: 'ABU-9' })]));
+
+    const merged = mergeTasks(
+      cache,
+      'AI-1',
+      [task('AI-2', 'started', { humanTicketId: 'ABU-10' })],
+      2000,
+    );
+
+    expect(merged.epics['AI-1']?.tasks[0]?.humanTicketId).toBe('ABU-10');
+  });
+});
+
 describe('toEpic', () => {
+  it('reads a task humanTicketId from an explicit field in the child payload', () => {
+    const result = toEpic({
+      identifier: 'AI-1',
+      title: 'Epic',
+      children: { nodes: [{ identifier: 'AI-2', title: 'Bug', humanTicketId: 'ABU-9' }] },
+    });
+
+    expect(result?.tasks[0]?.humanTicketId).toBe('ABU-9');
+  });
+
   it('reads humanTicketId from an explicit field in the payload', () => {
     const result = toEpic({ identifier: 'AI-1', title: 'Epic', humanTicketId: 'ABU-9' });
 

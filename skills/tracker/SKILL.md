@@ -68,8 +68,10 @@ The cache file is `hooks/context/tracker.json`.
 
 The `epics` map is keyed by the AI plan issue; its tasks are the plan's sub-issues. `humanTicketId`
 carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache.
-The cache stores what banners and ready-work routing need: IDs, titles, statuses, state types,
-pairing, and plan-to-task membership. It stores no expanded plans or implementation transcripts.
+A task may carry its own `humanTicketId` when it has a per-ticket pair (for example a bug pair
+created under an epic). The cache stores what banners and ready-work routing need: IDs, titles,
+statuses, state types, pairing, and plan-to-task membership. It stores no expanded plans or
+implementation transcripts.
 
 ## Agent contract
 
@@ -121,7 +123,8 @@ After creation, refresh the cache from the MCP plan-issue result:
 
 1. Use MCP Linear `get_issue` for the plan issue with children included.
 2. Stamp the pair into the JSON: add a top-level `"humanTicketId": "<human-ticket-id>"` field (the
-   Linear payload does not carry it). The cache preserves it across later refreshes that omit it.
+   Linear payload does not carry it). Stamp paired child issues the same way inside `children`. The
+   cache preserves both across later refreshes that omit them.
 3. Cache it:
 
 ```bash

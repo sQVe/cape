@@ -101,6 +101,7 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
   }
   const project = issueProject(issue);
   const type = issueType(issue);
+  const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
   return {
     id,
     title: issueTitle(issue),
@@ -108,6 +109,7 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     stateType: issueStateType(issue),
+    ...(humanTicketId == null ? {} : { humanTicketId }),
   };
 };
 
@@ -198,9 +200,11 @@ const mergeTaskLists = (
   const cachedById = new Map((cached ?? []).map((task) => [task.id, task]));
   const merged = incoming.map((task) => {
     const existing = cachedById.get(task.id);
-    return existing != null && stateRank(existing.stateType) > stateRank(task.stateType)
-      ? existing
-      : task;
+    if (existing != null && stateRank(existing.stateType) > stateRank(task.stateType)) {
+      return existing;
+    }
+    const humanTicketId = task.humanTicketId ?? existing?.humanTicketId;
+    return humanTicketId == null ? task : { ...task, humanTicketId };
   });
   const incomingIds = new Set(incoming.map((task) => task.id));
   // An authoritative refresh (cache-epic, full child list) prunes cache-only tasks that never

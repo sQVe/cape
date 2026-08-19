@@ -166,12 +166,12 @@ cape workspace phase pr
 1. Identify the active epic from the tracker cache or flow context and confirm the description
    carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>` — the
    epic entry's `humanTicketId` (the human ticket), the AI plan issue, and every child task the
-   cache marks completed; incomplete and canceled children excluded. This is what catches Linear up
-   on the cache-only build statuses. Use the non-closing `Related to` with the same set ONLY when
-   this PR does not complete the epic (more PRs or a live cutover still pending). Linear's GitHub
-   integration moves the listed issues to In Review on open and Done when a `Fixes` PR merges; cape
-   never sets status manually. This requires the GitHub-Linear integration (see tracker
-   workspace-setup).
+   cache marks completed, plus any completed task's own `humanTicketId`; incomplete and canceled
+   children excluded. This is what catches Linear up on the cache-only build statuses. Use the
+   non-closing `Related to` with the same set ONLY when this PR does not complete the epic (more PRs
+   or a live cutover still pending). Linear's GitHub integration moves the listed issues to In
+   Review on open and Done when a `Fixes` PR merges; cape never sets status manually. This requires
+   the GitHub-Linear integration (see tracker workspace-setup).
 2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
    conventions or the user named any.
 3. Report:
