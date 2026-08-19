@@ -12,17 +12,20 @@ export interface ValidateResult {
 const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
-const checkAgentReferences = (content: string, knownAgents: Set<string>, errors: string[]) => {
-  for (const match of content.matchAll(/[Dd]ispatch `cape:([a-z][-a-z]*)`/g)) {
-    const agentName = match[1];
-    if (agentName != null && !knownAgents.has(agentName)) {
-      errors.push(`References unknown agent: cape:${agentName}`);
+const checkCapeReferences = (content: string, knownNames: Set<string>, errors: string[]) => {
+  for (const match of content.matchAll(/`cape:([a-z][-a-z]*)`/g)) {
+    const name = match[1];
+    if (name != null && !knownNames.has(name)) {
+      errors.push(`References unknown skill or agent: cape:${name}`);
     }
   }
 };
 
+const bodyAfterFrontmatter = (content: string): string =>
+  content.replace(/^---\n[\s\S]*?\n---\n?/, '').trim();
+
 interface SkillValidateOptions {
-  readonly knownAgents?: Set<string>;
+  readonly knownNames?: Set<string>;
 }
 
 export const validateSkillContent = (
@@ -44,8 +47,12 @@ export const validateSkillContent = (
     }
   }
 
-  if (options.knownAgents != null) {
-    checkAgentReferences(content, options.knownAgents, errors);
+  if (bodyAfterFrontmatter(content).length === 0) {
+    errors.push('Skill body is empty');
+  }
+
+  if (options.knownNames != null) {
+    checkCapeReferences(content, options.knownNames, errors);
   }
 
   return { file, valid: errors.length === 0, errors };

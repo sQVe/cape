@@ -19,12 +19,6 @@ description: A test skill
 
 # Test skill
 
-## When to use
-
-Use when testing.
-
-## Process
-
 Process here.
 `;
 
@@ -75,17 +69,23 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Missing frontmatter field: description');
   });
 
-  it('detects reference to nonexistent agent', () => {
-    const knownAgents = new Set(['code-reviewer', 'test-runner']);
-    const content = validSkill + '\nDispatch `cape:nonexistent-agent` when investigating.\n';
-    const result = validateSkillContent('test.md', content, { knownAgents });
-    expect(result.errors).toContain('References unknown agent: cape:nonexistent-agent');
+  it('detects empty body', () => {
+    const result = validateSkillContent('test.md', '---\nname: x\ndescription: x\n---\n');
+    expect(result.errors).toContain('Skill body is empty');
   });
 
-  it('allows dispatch references to known agents', () => {
-    const knownAgents = new Set(['code-reviewer']);
-    const content = validSkill + '\nDispatch `cape:code-reviewer` after each step.\n';
-    const result = validateSkillContent('test.md', content, { knownAgents });
+  it('detects reference to nonexistent skill or agent', () => {
+    const knownNames = new Set(['code-reviewer', 'commit']);
+    const content = validSkill + '\nDispatch `cape:nonexistent-agent` when investigating.\n';
+    const result = validateSkillContent('test.md', content, { knownNames });
+    expect(result.errors).toContain('References unknown skill or agent: cape:nonexistent-agent');
+  });
+
+  it('allows references to known skills and agents', () => {
+    const knownNames = new Set(['code-reviewer', 'unslop']);
+    const content =
+      validSkill + '\nDispatch `cape:code-reviewer`, then run prose through `cape:unslop`.\n';
+    const result = validateSkillContent('test.md', content, { knownNames });
     expect(result.valid).toBe(true);
   });
 });
@@ -236,7 +236,7 @@ describe('validate command wiring', () => {
   it('reports failures in JSON output', async () => {
     const console_ = spyConsole();
     const layer = makeTestValidateLayer({
-      '/repo/skills/bad/SKILL.md': '---\nname: bad\n---\nno tags',
+      '/repo/skills/bad/SKILL.md': '---\nname: bad\n---\n',
     });
 
     await expect(
