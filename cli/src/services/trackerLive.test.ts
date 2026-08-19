@@ -84,6 +84,17 @@ describe('mergeTasks', () => {
     ]);
   });
 
+  it('keeps unadvanced cache-only tasks on a partial tasks refresh', () => {
+    const cache = cacheWith(epic('ABU-1', [task('ABU-2', 'unstarted')]));
+
+    const merged = mergeTasks(cache, 'ABU-1', [task('ABU-3', 'unstarted')], 2000);
+
+    expect(merged.epics['ABU-1']?.tasks).toEqual([
+      task('ABU-3', 'unstarted'),
+      task('ABU-2', 'unstarted'),
+    ]);
+  });
+
   it('replaces the timestamp and preserves other epics', () => {
     const other = epic('ABU-9', [task('ABU-10', 'started')]);
     const cache: TrackerCache = {
@@ -131,6 +142,25 @@ describe('mergeEpic', () => {
     expect(merged.epics['ABU-1']?.tasks).toEqual([
       task('ABU-3', 'unstarted'),
       task('ABU-2', 'completed'),
+    ]);
+  });
+
+  it('drops cache-only tasks that never advanced on a full epic refresh', () => {
+    const cache = cacheWith(epic('AI-1', [task('AI-2', 'unstarted'), task('AI-3', 'backlog')]));
+
+    const merged = mergeEpic(cache, epic('AI-1', [task('AI-4', 'unstarted')]), 2000);
+
+    expect(merged.epics['AI-1']?.tasks).toEqual([task('AI-4', 'unstarted')]);
+  });
+
+  it('keeps advanced cache-only tasks on a full epic refresh', () => {
+    const cache = cacheWith(epic('AI-1', [task('AI-2', 'started'), task('AI-3', 'completed')]));
+
+    const merged = mergeEpic(cache, epic('AI-1', []), 2000);
+
+    expect(merged.epics['AI-1']?.tasks).toEqual([
+      task('AI-2', 'started'),
+      task('AI-3', 'completed'),
     ]);
   });
 

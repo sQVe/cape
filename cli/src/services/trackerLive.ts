@@ -193,6 +193,7 @@ const stateRank = (stateType: string) => {
 const mergeTaskLists = (
   cached: readonly TrackerTask[] | undefined,
   incoming: readonly TrackerTask[],
+  options?: { readonly authoritative: boolean },
 ): readonly TrackerTask[] => {
   const cachedById = new Map((cached ?? []).map((task) => [task.id, task]));
   const merged = incoming.map((task) => {
@@ -202,7 +203,13 @@ const mergeTaskLists = (
       : task;
   });
   const incomingIds = new Set(incoming.map((task) => task.id));
-  const cacheOnly = (cached ?? []).filter((task) => !incomingIds.has(task.id));
+  // An authoritative refresh (cache-epic, full child list) prunes cache-only tasks that never
+  // advanced — they were deleted or reparented in Linear. Advanced tasks survive stale refreshes.
+  const cacheOnly = (cached ?? []).filter(
+    (task) =>
+      !incomingIds.has(task.id) &&
+      (options?.authoritative !== true || stateRank(task.stateType) > 0),
+  );
   return [...merged, ...cacheOnly];
 };
 
@@ -220,7 +227,7 @@ export const mergeEpic = (
       [epic.id]: {
         ...epic,
         ...(humanTicketId == null ? {} : { humanTicketId }),
-        tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks),
+        tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks, { authoritative: true }),
       },
     },
   };
