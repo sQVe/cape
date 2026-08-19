@@ -1,54 +1,45 @@
 ---
 name: don-cape
 description: >
-  Meta-skill that activates cape's workflow system. Injected at session start; always active and
-  never manually triggered. Routes every task to the right cape skill and enforces workflow chains:
+  Meta-skill that activates cape's workflow system. Injected at session start, always active, never
+  manually triggered. Routes every task to the right cape skill and enforces workflow chains:
   brainstorm before planning, plan before coding, TDD during implementation, diagnosis before
   fixing. If a cape skill matches the user request, using it is mandatory.
 ---
 
-<skill_overview> Route every task to the right cape skill and enforce the order skills run in. Cape
-skills form PLAN (brainstorm -> write-plan), BUILD (execute-plan -> TDD -> commit loop), SHIP
-(finish-epic -> pr), and BUG (fix-bug -> TDD -> commit) chains.
+# Don cape
 
-Core contract: before acting on any user request, check the routing table. If a cape skill matches,
-load it with the Skill tool and follow it. </skill_overview>
+Route every task to the right cape skill and enforce the order skills run in. Before acting on any
+user request, check the routing table. If a cape skill matches, load it with the Skill tool and
+follow it.
 
-<rigidity_level> MEDIUM FREEDOM -- The meta-process is immutable: check routing, load the matching
-skill, and follow chain order. Each skill defines its own flexibility. </rigidity_level>
+The meta-process is fixed: check routing, load the matching skill, follow chain order. Each skill
+defines its own flexibility.
 
-<when_to_use>
+## Rules
 
-Always active. Injected at session start via hook. Applies to every user message.
+1. **Check the routing table before every task.** If a cape skill matches, use it.
+2. **Load skills with the Skill tool.** Never work from memory; skills change between sessions.
+3. **Follow chains in order.** PLAN before BUILD before SHIP.
+4. **Stop after write-plan and after each execute-plan task.** Wait for the user to continue. In a
+   declared-unattended (AFK) run, the staged run prompt owns continuation instead; when in doubt, a
+   human is present and the stops apply.
+5. **Use tracker for issue state.** Linear writes go through MCP, local reads through the tracker
+   cache.
 
-</when_to_use>
+## Routing
 
-<critical_rules>
+Short-circuit when the user has already chosen a skill or phase:
 
-1. **Check the routing table before every task** -- if a cape skill matches, use it
-2. **Use the Skill tool to load skills** -- never work from memory
-3. **Follow workflow chains in order** -- PLAN before BUILD before SHIP
-4. **Stop after write-plan and each execute-plan task** -- wait for user to explicitly continue
-5. **Use tracker for issue state** -- Linear writes through MCP, local reads from tracker cache
+- A direct `/cape:<name>` command loads that skill.
+- `/plan` loads `cape:brainstorm`, `/build` loads `cape:execute-plan`, `/ship` loads
+  `cape:finish-epic`.
+- A Linear issue ID, or a ready task in the tracker cache for the active epic, loads
+  `cape:execute-plan`.
 
-</critical_rules>
+Only these signals skip earlier chain links. Never infer skill choice from confidence or task size.
 
-<the_process>
-
-## Step 1: Route the request
-
-Short-circuit first when the user has already committed to a phase entry or specific skill:
-
-- Direct `/cape:<name>` command: load that skill directly.
-- Phase-entry command: `/plan` loads `cape:brainstorm`, `/build` loads `cape:execute-plan`, and
-  `/ship` loads `cape:finish-epic`.
-- Pre-existing tracker task: when the user references a Linear issue ID or the tracker cache shows a
-  ready task for the active epic, load `cape:execute-plan`.
-
-Only these signals short-circuit the build chain. Do not infer skill choice from confidence or task
-size.
-
-First matching row wins:
+Otherwise, first matching row wins:
 
 | User intent                                                       | Skill               | Notes                      |
 | ----------------------------------------------------------------- | ------------------- | -------------------------- |
@@ -57,8 +48,7 @@ First matching row wins:
 | Formalize a design into an epic                                   | `cape:write-plan`   | Requires brainstorm output |
 | "Continue", "next task", "work on the plan", Linear task ID       | `cape:execute-plan` | Orient from tracker cache  |
 | Set up an autonomous run, draft a `/goal`, prep an AFK run        | `cape:set-goal`     | Stages a run draft         |
-| Something broken, error, stack trace, "doesn't work"              | `cape:fix-bug`      | Diagnose then patch        |
-| Fix a diagnosed Linear bug issue                                  | `cape:fix-bug`      | Diagnose then patch        |
+| Something broken, error, stack trace, or a diagnosed Linear bug   | `cape:fix-bug`      | Diagnose then patch        |
 | Start work in an epic worktree, create/enter per-epic worktree    | `cape:worktree`     | Standalone                 |
 | Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`  | End of build chain         |
 | Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
@@ -67,33 +57,20 @@ First matching row wins:
 | Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
 
-Internal skills:
+`cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
+any production code, and hook safety nets cover resumed sessions.
 
-- `cape:test-driven-development` -- mandatory before production code. Loaded by execute-plan and
-  fix-bug; hook safety nets cover resumed sessions.
-
-Code review is the builtin `/code-review`, not a cape skill. The user runs it; `cape:pr` carries the
-requirement as a test-plan checkbox.
-
-Invocation split:
-
-- Phase entries (`plan`, `build`, `ship`) are user-invoked commands with no new skills.
-- Chain steps and disciplines (`brainstorm`, `write-plan`, `execute-plan`, `finish-epic`,
-  `test-driven-development`, `pr`, `commit`) remain model-invoked through routing and keep their
-  trigger prose.
+Code review is the builtin `/code-review`, not a cape skill. The user runs it; `cape:pr` carries it
+as a test-plan checkbox.
 
 If nothing matches, proceed without a cape skill.
 
-**Continue / next task pre-check:** Before loading `cape:execute-plan`, read
-`hooks/context/tracker.json`. If ready tasks exist, execute-plan handles them. If no ready tasks
-remain but an active epic exists, suggest `cape:finish-epic`. If the cache is empty or corrupt, say
-that tracker cache needs a refresh from the latest Linear MCP result.
+Before loading `cape:execute-plan` for "continue" or "next task", read `hooks/context/tracker.json`.
+If ready tasks exist, execute-plan handles them. If none remain but an active epic exists, suggest
+`cape:finish-epic`. A missing or stale cache follows the `cape:tracker` cache rule: treat it as
+empty and say it needs a refresh from the latest MCP result.
 
----
-
-## Step 2: Follow the chain
-
-Phase chains:
+## Chains
 
 ```text
 PLAN   brainstorm -> write-plan -> STOP for epic approval
@@ -102,29 +79,13 @@ SHIP   finish-epic -> STOP for PR approval -> pr
 BUG    fix-bug -> test-driven-development -> commit, then rejoin BUILD tail
 ```
 
-Each link's contract lives in its own skill; load it and follow it. The STOP points above are
-load-bearing: honor them.
+Each link's contract lives in its own skill; load it and follow it. The STOP points are mandatory.
+Vague feature requests enter at brainstorm. Direct skill invocation or a ready tracker task is the
+user's explicit choice to skip earlier links.
 
-Vague feature requests go through the build chain. Direct skill invocation or a ready tracker task
-is the user's explicit choice to skip earlier links.
+## Examples
 
----
+**Wrong:** User asks to build a feature; start writing code immediately.
 
-## Step 3: Use skills correctly
-
-Load matching skills with the Skill tool and follow their instructions. Skills evolve between
-sessions; do not work from memory.
-
-</the_process>
-
-<examples>
-
-<example>
-<scenario>User asks to build a feature</scenario>
-
-**Wrong:** Start writing code immediately.
-
-**Right:** Route to `cape:brainstorm`, research the codebase, discuss design, then use
-`cape:write-plan` to create the Linear epic and first task. </example>
-
-</examples>
+**Right:** Route to `cape:brainstorm`, research the codebase and discuss design, then
+`cape:write-plan` creates the Linear epic and first task.
