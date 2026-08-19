@@ -166,6 +166,14 @@ cape tracker cache-status <issue-id> Done completed
 Content updates (bodies, titles, new sub-issues) still go to Linear first; only status stays local
 until PR time.
 
+Reopening: the forward-only merge keeps a completed task completed through every refresh, even when
+Linear reopens it. To put a task back in play, write the downgrade explicitly — `cache-status`
+bypasses the ranking:
+
+```bash
+cape tracker cache-status <issue-id> Todo unstarted
+```
+
 ## Close work
 
 Never close issues through MCP. Linear catches up when the PR merges, via the PR closing line:
