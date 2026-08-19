@@ -1,6 +1,5 @@
 import { Effect } from 'effect';
 
-import { logEvent } from '../../eventLog';
 import { denyTable } from './denyTable';
 import { parseCommand, parseCwd, parseSkillInput, stripQuotedContent } from './parsing';
 import {
@@ -37,17 +36,9 @@ export const preToolUseBash = () =>
     const stripped = stripQuotedContent(command);
 
     for (const entry of denyTable) {
-      if (!entry.pattern.test(stripped)) {
-        continue;
+      if (entry.pattern.test(stripped)) {
+        return denyWith(entry.message);
       }
-
-      if (entry.tier === 'warn') {
-        logEvent('hook.PreToolUse.Bash', 'inject');
-        return { additionalContext: entry.message };
-      }
-
-      logEvent('hook.PreToolUse.Bash', entry.message);
-      return denyWith(entry.message);
     }
 
     if (/\bgit\s+push\b/.test(stripped)) {
@@ -55,9 +46,9 @@ export const preToolUseBash = () =>
       const { branch, defaultBranch } = yield* resolveBranchInfo(cwd);
       if (branch != null) {
         if (branch === defaultBranch) {
-          const message = `Push from \`${branch}\` is blocked. Reason: direct pushes to the default branch bypass review. Run \`cape git create-branch --help\` to start a feature branch first.`;
-          logEvent('hook.PreToolUse.Bash', message);
-          return denyWith(message);
+          return denyWith(
+            `Push from \`${branch}\` is blocked. Reason: direct pushes to the default branch bypass review. Run \`cape git create-branch --help\` to start a feature branch first.`,
+          );
         }
       }
     }
@@ -98,7 +89,7 @@ const gateExecutePlan = () =>
           additionalContext: [
             `You are on \`${branch}\` (the default branch).`,
             'Ask the user whether to start or enter the epic worktree before starting work.',
-            'Use cape:worktree if they agree.',
+            'Use the grove skill if they agree.',
           ].join(' '),
         };
       }
@@ -162,11 +153,7 @@ export const preToolUseSkill = () =>
 
     const gate = skillGates[name];
     if (gate != null) {
-      const result = yield* gate(skill.args);
-      if (result != null && 'hookSpecificOutput' in result) {
-        logEvent('hook.PreToolUse.Skill', result.hookSpecificOutput.permissionDecisionReason);
-      }
-      return result;
+      return yield* gate(skill.args);
     }
 
     return null;
