@@ -1,7 +1,7 @@
 import type { Effect } from 'effect';
 import { ServiceMap } from 'effect';
 
-import { parseFrontmatter } from '../utils/frontmatter';
+import { parseFrontmatter, splitFrontmatter } from '../utils/frontmatter';
 
 export interface ValidateResult {
   readonly file: string;
@@ -9,74 +9,20 @@ export interface ValidateResult {
   readonly errors: string[];
 }
 
-const hasTag = (content: string, tag: string): boolean =>
-  content.includes(`<${tag}>`) && content.includes(`</${tag}>`);
-
-const tagHasContent = (content: string, tag: string): boolean => {
-  const open = content.indexOf(`<${tag}>`);
-  const close = content.indexOf(`</${tag}>`, open);
-  if (open === -1 || close === -1) {
-    return false;
-  }
-  const inner = content.slice(open + tag.length + 2, close).trim();
-  return inner.length > 0;
-};
-
 const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
-const skillRequiredTags = [
-  'skill_overview',
-  'rigidity_level',
-  'when_to_use',
-  'critical_rules',
-  'the_process',
-];
-
-const skillAllKnownTags = [
-  ...skillRequiredTags,
-  'examples',
-  'key_principles',
-  'agent_references',
-  'skill_references',
-  'anti_batching',
-];
-
-const checkTagOrdering = (content: string, errors: string[]) => {
-  const criticalRulesPos = content.indexOf('<critical_rules>');
-  const theProcessPos = content.indexOf('<the_process>');
-  if (criticalRulesPos !== -1 && theProcessPos !== -1 && criticalRulesPos > theProcessPos) {
-    errors.push('<critical_rules> must appear before <the_process>');
-  }
-};
-
-const checkDuplicateTags = (content: string, tags: string[], errors: string[]) => {
-  for (const tag of tags) {
-    const openTag = `<${tag}>`;
-    if (content.indexOf(openTag) !== content.lastIndexOf(openTag)) {
-      errors.push(`Duplicate tag: <${tag}>`);
-    }
-  }
-};
-
-const checkAgentReferences = (content: string, knownAgents: Set<string>, errors: string[]) => {
-  if (!hasTag(content, 'agent_references')) {
-    return;
-  }
-  const agentSection = content.slice(
-    content.indexOf('<agent_references>'),
-    content.indexOf('</agent_references>'),
-  );
-  for (const match of agentSection.matchAll(/cape:([a-z][-a-z]*)/g)) {
-    const agentName = match[1];
-    if (agentName != null && !knownAgents.has(agentName)) {
-      errors.push(`References unknown agent: cape:${agentName}`);
+const checkCapeReferences = (content: string, knownNames: Set<string>, errors: string[]) => {
+  for (const match of content.matchAll(/`cape:([a-z][a-z0-9-]*)`/g)) {
+    const name = match[1];
+    if (name != null && !knownNames.has(name)) {
+      errors.push(`References unknown skill or agent: cape:${name}`);
     }
   }
 };
 
 interface SkillValidateOptions {
-  readonly knownAgents?: Set<string>;
+  readonly knownNames?: Set<string>;
 }
 
 export const validateSkillContent = (
@@ -98,19 +44,12 @@ export const validateSkillContent = (
     }
   }
 
-  for (const tag of skillRequiredTags) {
-    if (!hasTag(content, tag)) {
-      errors.push(`Missing required tag: <${tag}>`);
-    } else if (!tagHasContent(content, tag)) {
-      errors.push(`Empty tag: <${tag}>`);
-    }
+  if (splitFrontmatter(content).body.trim().length === 0) {
+    errors.push('Skill body is empty');
   }
 
-  checkTagOrdering(content, errors);
-  checkDuplicateTags(content, skillAllKnownTags, errors);
-
-  if (options.knownAgents != null) {
-    checkAgentReferences(content, options.knownAgents, errors);
+  if (options.knownNames != null) {
+    checkCapeReferences(content, options.knownNames, errors);
   }
 
   return { file, valid: errors.length === 0, errors };
@@ -179,7 +118,7 @@ export const validateCommandContent = (
   }
 
   if (options.knownSkills != null) {
-    const skillRef = content.match(/Use the cape:([a-z-]+)/);
+    const skillRef = content.match(/Use the cape:([a-z][a-z0-9-]*)/);
     if (skillRef?.[1] != null && !options.knownSkills.has(skillRef[1])) {
       errors.push(`References unknown skill: cape:${skillRef[1]}`);
     }

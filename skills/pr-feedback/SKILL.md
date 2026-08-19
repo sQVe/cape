@@ -68,7 +68,7 @@ is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_
    never resolve it.
 9. **Replies use simple language and clear structure** — short, plain sentences; lead with a capital
    letter; one point per reply; no filler, hedging, or emoji padding. Run reply prose through the
-   global `stop-slop` skill before posting.
+   `cape:unslop` skill before posting.
 
 </critical_rules>
 
@@ -137,7 +137,7 @@ Surface scope creep here: if a comment asks for a refactor or feature beyond the
 it out of scope rather than silently expanding the work. A polite or confident comment is not
 evidence.
 
-Run the triage rationales through the global `stop-slop` skill before presenting.
+Run the triage rationales through the `cape:unslop` skill before presenting.
 
 Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
 non-empty bodies from the same reviewer stay distinct), with the decided action per comment:
@@ -258,7 +258,7 @@ Summary points:       <count>  (fixed / replied / no action — no thread to res
 
 - The accepted fixes are ready to commit referencing the review
 
-## Load the global `stop-slop` skill with the Skill tool when:
+## Load the `cape:unslop` skill with the Skill tool when:
 
 - Writing triage rationales or thread replies that a human will read
 
@@ -306,6 +306,7 @@ it — leaving the PR scoped. </example>
 - **Every comment lands somewhere** — applied with a pushed change or dismissed with a reason; the
   table proves it
 - **Resolve follows a pushed action** — never close a thread on an unverified or unpushed fix
-- **Replies stay simple and clear** — short plain sentences, one point each, run through stop-slop
+- **Replies stay simple and clear** — short plain sentences, one point each, run through
+  `cape:unslop`
 
 </key_principles>

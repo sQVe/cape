@@ -30,19 +30,23 @@ const validateByType = (type: string, root: string) =>
     const service = yield* ValidateService;
     const results: ValidateResult[] = [];
 
-    const knownSkills =
-      type === 'all' || type === 'commands'
-        ? yield* collectDefinitionNames(service, join(root, 'skills/*/SKILL.md'), skillNameFromPath)
-        : new Set<string>();
+    const knownSkills = yield* collectDefinitionNames(
+      service,
+      join(root, 'skills/*/SKILL.md'),
+      skillNameFromPath,
+    );
 
-    const knownAgents =
-      type === 'all' || type === 'skills'
-        ? yield* collectDefinitionNames(service, join(root, 'agents/*.md'), agentNameFromPath)
-        : new Set<string>();
+    const knownAgents = yield* collectDefinitionNames(
+      service,
+      join(root, 'agents/*.md'),
+      agentNameFromPath,
+    );
+
+    const knownNames = new Set([...knownSkills, ...knownAgents]);
 
     if (type === 'all' || type === 'skills') {
       const r = yield* loadDefinitions(service, join(root, 'skills/*/SKILL.md'), (file, content) =>
-        validateSkillContent(relative(root, file), content, { knownAgents }),
+        validateSkillContent(relative(root, file), content, { knownNames }),
       );
       results.push(...r);
     }
@@ -94,15 +98,26 @@ export const validate = Command.make(
       }
 
       const content = yield* service.readFile(absPath).pipe(catchAndDie);
-      let validator: (file: string, content: string) => ValidateResult;
       if (fileType === 'skill') {
-        validator = validateSkillContent;
+        const knownNames = new Set([
+          ...(yield* collectDefinitionNames(
+            service,
+            join(root, 'skills/*/SKILL.md'),
+            skillNameFromPath,
+          )),
+          ...(yield* collectDefinitionNames(service, join(root, 'agents/*.md'), agentNameFromPath)),
+        ]);
+        results = [validateSkillContent(relPath, content, { knownNames })];
       } else if (fileType === 'agent') {
-        validator = validateAgentContent;
+        results = [validateAgentContent(relPath, content)];
       } else {
-        validator = validateCommandContent;
+        const knownSkills = yield* collectDefinitionNames(
+          service,
+          join(root, 'skills/*/SKILL.md'),
+          skillNameFromPath,
+        );
+        results = [validateCommandContent(relPath, content, { knownSkills })];
       }
-      results = [validator(relPath, content)];
     }
 
     const passed = results.filter((r) => r.valid).length;

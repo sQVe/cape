@@ -65,6 +65,7 @@ First matching row wins:
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |
 | Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`  | Inbound review loop        |
 | Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
+| Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
 
 Internal skills:
 

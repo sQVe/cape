@@ -112,7 +112,7 @@ Apply the Agent contract above, then create an epic with MCP Linear `save_issue`
 epic contract in the Linear issue description. Then create child task issues with MCP Linear
 `save_issue` using the epic as parent.
 
-Run user-facing issue descriptions through the global `stop-slop` skill before creating them.
+Run user-facing issue descriptions through the `cape:unslop` skill before creating them.
 
 After creation, refresh cache from the MCP epic result. Preferred:
 

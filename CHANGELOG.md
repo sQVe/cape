@@ -9,6 +9,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Skills: added `cape:unslop`, adapted from Cursor's pstack unslop skill: 31 AI-tell patterns, an
+  adding-soul pass, and a self-audit for any human-facing prose. Written as plain markdown — the
+  first skill under the relaxed validation — and it replaces the external `stop-slop` plugin as
+  cape's prose gate.
 - Skills: added `cape:pr-feedback`, which drives the inbound PR review-comment loop end to end:
   fetch every open review thread with its node ID, triage each comment as valid, invalid, or out of
   scope with `file:line` evidence, fix the accepted ones (a nit is a direct edit; behavioral changes
@@ -52,6 +56,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- CLI: `cape validate` now checks skills on frontmatter (`name`, `description`) plus a non-empty
+  body, dropping the required XML tag structure so skills can be written as clean markdown. Every
+  backticked `cape:<name>` reference in a skill body is validated against the known skills and
+  agents together, replacing the old `agent_references`-scoped unknown-agent check.
+- Skills: every prose gate now points at `cape:unslop` instead of the global `stop-slop` plugin, so
+  the external plugin dependency can be dropped.
 - CLI: `cape workspace phase` now labels the workspace `<repo>: <emoji> <description>` instead of
   `<emoji> <ABU-ID> <Title>`, so workspaces from different repositories no longer read as
   near-identical strings in the herdr sidebar. The repo name comes from the `origin` remote
