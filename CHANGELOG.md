@@ -13,8 +13,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
   `cape:execute-plan`. The `cape worktree` CLI command is unchanged.
 - Commands: removed `commands/tracker.md`, the last wrapper duplicating a skill. The tracker skill
-  is `user-invocable: false` by design and works as model-loaded plumbing; it was typed twice in
-  four months of history.
+  is `user-invocable: false` by design and works as model-loaded plumbing; it was almost never typed
+  as a command.
 - CLI: removed the event log (`eventLog.ts` and its `events.jsonl` output). It was write-only —
   nothing in the repo, any skill, or any settings file read it.
 - Hooks: removed the `warn` deny tier (`git reset --hard`, `git checkout --`, `git clean -f`) and

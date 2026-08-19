@@ -219,7 +219,7 @@ describe('skill gate: non-gated skills pass through', () => {
     'cape:commit',
     'cape:pr',
     'cape:tracker',
-    'cape:worktree',
+    'cape:fix-bug',
     'cape:brainstorm',
     'cape:write-plan',
   ])('allows non-gated skill %s', (skill) => {
