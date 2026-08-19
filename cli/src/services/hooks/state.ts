@@ -5,7 +5,7 @@ import { Effect, ServiceMap } from 'effect';
 
 import { logEvent } from '../../eventLog';
 import { safeParseJson } from '../../utils/json';
-import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
+import { TRACKER_CACHE_TTL_MS, findEpic, isTrackerCache } from '../tracker';
 import type { TrackerEpic, TrackerTask } from '../tracker';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
@@ -305,7 +305,7 @@ const readSessionBanner = () =>
     if (cache == null) {
       return null;
     }
-    const epic = cache.epics[flowPhase.issueId];
+    const epic = findEpic(cache, flowPhase.issueId);
     if (epic == null) {
       return null;
     }

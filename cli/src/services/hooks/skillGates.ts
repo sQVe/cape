@@ -1,6 +1,7 @@
 import { Effect } from 'effect';
 
 import { logEvent } from '../../eventLog';
+import { findEpic } from '../tracker';
 import { denyTable } from './denyTable';
 import { parseCommand, parseCwd, parseSkillInput, stripQuotedContent } from './parsing';
 import {
@@ -84,7 +85,7 @@ const gateExecutePlan = () =>
       );
     }
     const flowPhase = yield* readFlowPhaseContext();
-    const activeEpic = flowPhase == null ? null : cache.epics[flowPhase.issueId];
+    const activeEpic = flowPhase == null ? null : findEpic(cache, flowPhase.issueId);
     const readyTask = activeEpic?.tasks.find(isReadyTask);
     if (readyTask == null) {
       return contextWith(

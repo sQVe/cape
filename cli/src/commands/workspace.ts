@@ -5,6 +5,7 @@ import { GitService } from '../services/git';
 import { composeLabels, HerdrService } from '../services/herdr';
 import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
 import { PrService } from '../services/pr';
+import { findEpic } from '../services/tracker';
 
 // gh emits '{"number":123,"state":"OPEN"}'. Anything else — no PR for the branch, an
 // error message, a payload without a usable number — means there is nothing to label
@@ -67,7 +68,7 @@ const workspacePhase = Command.make(
     // Raw read on purpose: a stale cache still has the right epic title, and a
     // bare "icon + id" label is worse than a slightly old title.
     const cache = yield* readRawTrackerCache();
-    const epic = cache?.epics[context.issueId] ?? null;
+    const epic = cache == null ? null : findEpic(cache, context.issueId);
     const repo = yield* git.repoName();
     const prNumber = yield* lookupPrNumber(phase);
     const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo, prNumber);
