@@ -11,82 +11,52 @@ description: >
   (use cape:fix-bug), or creating a PR (use cape:pr).
 ---
 
-<skill_overview> Drive the inbound review loop for a pull request: fetch every open review thread
-with its node ID, triage each comment as valid or not with a file-line rationale, decide an action
-per comment (fix, reply and dismiss, or already handled), apply the accepted fixes, then reply,
-resolve the matching threads, and commit. Edits nits directly and escalates real changes to cape's
-TDD and fix-bug skills; commits through cape:commit.
+# PR feedback
 
-Core contract: every fetched comment ends in a tracked state — applied with a pushed code change, or
-dismissed with a stated reason — and a thread is resolved only after its action lands. Thread IDs
-are recovered once, up front, and carried per comment so resolution never depends on hand-pasted
-IDs. </skill_overview>
+Every fetched review comment ends in a tracked state: applied with a pushed code change, or
+dismissed with a stated reason. A thread is resolved only after its action lands, using the node ID
+recovered once from the `reviewThreads` query and carried per comment.
 
-<rigidity_level> MEDIUM FREEDOM — The fetch → triage → confirm → apply → respond/resolve order is
-fixed, thread node IDs come only from the `reviewThreads` query, and the per-comment tracking table
-is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_level>
+The fetch, triage, confirm, apply, respond order is fixed and the tracking table is mandatory;
+validity judgment and fix depth adapt to each comment.
 
-<when_to_use>
+## Arguments
 
-- User wants accepted PR review comments turned into code changes and the threads resolved
-- "Fetch comments on PR, are they valid?", "resolve threads that are fixed"
-- "Resolve the comment threads that are fixed or ignored", "push and resolve threads we fixed"
-- After a reviewer leaves inline comments and the author wants to respond and resolve
+- PR number or URL (optional): the PR to act on. Without it, resolve the current branch's PR.
 
-**Don't use for:**
+## Rules
 
-- Reviewing your own staged or uncommitted code (use the builtin `/code-review`)
-- Fixing one diagnosed defect with no PR thread behind it (use cape:fix-bug)
-- Creating or describing a PR (use cape:pr)
-- Committing unrelated work (use cape:commit directly)
+1. **Never change code before triage approval.** Present the table, wait for the user, apply their
+   edits to it exactly, then fix.
+2. **Thread IDs come only from `reviewThreads`.** The REST comments endpoint never exposes thread
+   node IDs (`PRRT_…`). Recover them once with the GraphQL query and carry each comment's thread ID
+   from that fetch. Never hand-paste or re-look-up IDs; that manual correlation is the failure mode
+   this skill exists to remove.
+3. **Fetch live threads with `gh`.** Never act on remembered or summarized comments.
+4. **Judge validity against the code, not the reviewer.** Each comment is valid, invalid, or out of
+   scope with a `file:line` rationale.
+5. **Edit nits directly.** A rename, typo, comment, null guard, import, or formatting fix is a
+   direct edit. Load `cape:test-driven-development` only for a behavioral change worth a test, and
+   `cape:fix-bug` only for a diagnosed defect. Never wrap a one-line nit in TDD ceremony.
+6. **Commit through `cape:commit`.** Never write the commit by hand.
+7. **Resolve only what landed.** A thread resolves after its fix is pushed or its dismissal reply is
+   posted, never silently or on an unpushed change. Skip threads already `isResolved`. A review
+   summary body has no thread node ID; reply with a top-level PR comment at most, never resolve it.
 
-</when_to_use>
+## Process
 
-<critical_rules>
+### 1. Fetch threads and review summaries
 
-1. **Thread IDs come only from `reviewThreads`** — the REST comments endpoint never exposes thread
-   node IDs (`PRRT_…`). Recover them once with the GraphQL `reviewThreads` query and carry each
-   comment's parent thread ID from that fetch. Never hand-paste or re-look-up IDs; that manual
-   correlation is the failure mode this skill exists to remove.
-2. **Fetch before judging** — pull the live threads with `gh`; never act on remembered or summarized
-   comments.
-3. **Judge validity with evidence** — each comment is valid, invalid, or out-of-scope with a
-   file-line rationale, not deference to the reviewer.
-4. **Track every comment** — maintain the triage table so applied vs dismissed is explicit and
-   re-verifiable.
-5. **Confirm the triage before fixing** — present validity calls and proposed actions, wait for
-   approval, then apply.
-6. **Edit directly by default; escalate only for real changes** — a nit (rename, typo, comment, null
-   guard, import, formatting) is a direct edit. Load `cape:test-driven-development` only when an
-   accepted comment demands a behavioral change worth a test, and `cape:fix-bug` only when it
-   diagnoses a specific defect that warrants diagnosis to closure. Never wrap a one-line nit in TDD
-   ceremony.
-7. **Commit through cape:commit** — never write the commit by hand.
-8. **Resolve only what landed** — resolve a thread after its fix is pushed, or after a reply states
-   why it was dismissed. Skip threads already `isResolved`. Never resolve silently or on an unpushed
-   change. A review summary body has no thread node ID; reply via a top-level PR comment at most,
-   never resolve it.
-9. **Replies use simple language and clear structure** — short, plain sentences; lead with a capital
-   letter; one point per reply; no filler, hedging, or emoji padding. Run reply prose through the
-   `cape:unslop` skill before posting.
-
-</critical_rules>
-
-<the_process>
-
-## Step 1: Resolve the PR and fetch threads and review summaries
-
-Identify the PR. If the user gave a number or URL use it; otherwise resolve the current branch's PR:
+If the user gave a number or URL, use it. Otherwise resolve the current branch's PR:
 
 ```bash
 gh repo view --json owner,name
 gh pr status --json number,headRefName,url
 ```
 
-A review has two parts and they live in two places. **Inline thread comments** ("shards") are in
-`reviewThreads`. The **top-level review summary body** — the main message a reviewer types when
-hitting Approve / Request changes / Comment — is in `reviews.nodes.body`, a separate field. Fetch
-both in one call, or the summary is silently dropped:
+A review lives in two places. Inline thread comments are in `reviewThreads`. The top-level summary
+body, the message a reviewer types when hitting Approve, Request changes, or Comment, is in
+`reviews.nodes.body`. Fetch both in one call, or the summary is silently dropped:
 
 ```bash
 gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
@@ -109,41 +79,34 @@ gh api graphql -F owner=<owner> -F repo=<repo> -F pr=<number> -f query='
   }'
 ```
 
-Keep only `isResolved: false` threads, and only `reviews` nodes with a non-empty `body` (most are
-empty — a reviewer who only left inline comments produces a bodyless review; bots emit boilerplate).
-If neither remains, report that and stop. Both connections paginate independently: if
-`reviewThreads.pageInfo.hasNextPage` is true, repeat with `-F after=<threads endCursor>`; if
-`reviews.pageInfo.hasNextPage` is true, repeat with `-F reviewsAfter=<reviews endCursor>`. Keep
-paging each until its `hasNextPage` is false so no thread or summary body is dropped on long-lived
-PRs.
+Keep only `isResolved: false` threads and `reviews` nodes with a non-empty `body` (a reviewer who
+only left inline comments produces a bodyless review; bots emit boilerplate). If neither remains,
+report that and stop. The two connections paginate independently: while
+`reviewThreads.pageInfo.hasNextPage` is true, repeat with `-F after=<threads endCursor>`; while
+`reviews.pageInfo.hasNextPage` is true, repeat with `-F reviewsAfter=<reviews endCursor>`.
 
----
+### 2. Triage validity
 
-## Step 2: Triage validity
+For each open thread and each non-empty summary body, read the cited code and judge it:
 
-For each open thread and each non-empty review summary, read the cited code and judge it:
+- Valid: a real bug, regression, convention violation, or correctness issue; cite the `file:line`
+  evidence
+- Invalid: the concern does not hold; state why against the current code
+- Out of scope: legitimate but belongs in a separate change
 
-- **Valid** — a real bug, regression, convention violation, or correctness issue; cite the
-  `file:line` evidence
-- **Invalid** — the concern does not hold; state why against the current code
-- **Out of scope** — legitimate but belongs in a separate change; note it
+A summary often restates points already raised inline. Fold those into the matching thread row and
+triage only the summary's net-new points. A summary's only outcomes are a fix plus an optional
+top-level reply, or no action.
 
-A review summary often restates points already raised inline. Fold those into the matching thread
-row rather than triaging them twice; triage only the summary's net-new points. A summary has no
-thread node ID, so it can never be resolved — its only outcomes are a fix plus an optional top-level
-reply, or no action.
+Flag scope creep: a comment asking for a refactor or feature beyond the PR's intent is out of scope,
+not extra work. A polite or confident comment is not evidence.
 
-Surface scope creep here: if a comment asks for a refactor or feature beyond the PR's intent, flag
-it out of scope rather than silently expanding the work. A polite or confident comment is not
-evidence.
-
-Run the triage rationales through the `cape:unslop` skill before presenting.
-
-Present the tracking table, keyed by source (thread ID, or `summary:<author>@<submittedAt>` so two
-non-empty bodies from the same reviewer stay distinct), with the decided action per comment:
+Run the rationales through the `cape:unslop` skill, then present the table. Key each row by source:
+the thread node ID, or `summary:<author>@<submittedAt>` so two non-empty bodies from one reviewer
+stay distinct.
 
 ```text
-PR #<number> — review feedback triage
+PR #<number> review feedback triage
 
 | # | source       | file:line   | comment (short)     | verdict      | action         |
 |---|--------------|-------------|---------------------|--------------|----------------|
@@ -151,59 +114,45 @@ PR #<number> — review feedback triage
 | 2 | PRRT_b…      | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
 | 3 | PRRT_c…      | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
 | 4 | PRRT_d…      | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
-| 5 | summary:alice@2026-06-30T07:24:25Z | — | missing rollback | Valid | Fix (edit) |
+| 5 | summary:alice@2026-06-30T07:24:25Z | (none) | missing rollback | Valid | Fix (edit) |
 
 Apply the fixes marked Fix and respond to the rest?
 ```
 
-The `source` column carries the thread node ID for inline comments, or
-`summary:<author>@<submittedAt>` for a review summary body (no thread ID exists for it; the
-timestamp keeps multiple bodies from one author unambiguous).
+### 3. STOP: confirm the triage
 
----
+**STOP. Wait for approval.** The user may overrule any verdict, drop a fix, or add one. Apply their
+edits to the table exactly before proceeding.
 
-## STOP — Step 3: Confirm
+**AFK branch.** Take this branch only when the invoking run explicitly states it is unattended; when
+in doubt, a human is present and the stop above applies unchanged. Print the triage table to the
+transcript so the calls are on record, then continue as if the triage were approved.
 
-Wait for approval. The user may overrule any verdict, drop a fix, or add one. Apply their edits to
-the table exactly before proceeding. Do not change code until the user approves the triage.
+### 4. Apply accepted fixes
 
----
+Run `cape state set workflowActive`, then `cape workspace phase build`. The flag lets an accepted
+comment hand off to `cape:test-driven-development`; the internal-skill gate blocks TDD without it.
+Once set, clear it with `cape state clear workflowActive` on any exit past this point, whether
+completion, abort, or stop, so the flag never leaks past the skill.
 
-## Step 4: Apply accepted fixes
+For each row marked Fix, apply the change at the right weight per rule 5: edit nits directly, load
+`cape:test-driven-development` with the comment's concern as the test target for behavioral changes,
+load `cape:fix-bug` for diagnosed defects.
 
-Signal the build phase and workflow state: `cape state set workflowActive` then
-`cape workspace phase build`. The `workflowActive` flag is what lets an accepted comment hand off to
-`cape:test-driven-development` — the internal-skill gate blocks TDD without it. Once set, always
-clear it before finishing: run `cape state clear workflowActive` on any exit after this point —
-normal completion (Step 5), abort, or stop — so the flag never leaks past the skill.
+Fix only what the accepted comment asks. Leave adjacent code and the out-of-scope items alone.
+Update each row to Applied (with the change or test reference) or Dismissed as you go, so the table
+stays the source of truth.
 
-For each comment marked **Fix**, apply the change at the right weight:
+### 5. Commit, respond, and resolve
 
-- **Default — edit directly.** A nit (rename, typo, comment, null guard, import, formatting, a small
-  local change) is just an edit. Do not invoke a sub-skill for it.
-- **Behavioral change worth a test** → load `cape:test-driven-development` and drive
-  RED-GREEN-REFACTOR with the comment's concern as the test target.
-- **A diagnosed defect** (bug, regression, broken behavior the comment pins down) → load
-  `cape:fix-bug` and let it run diagnosis to closure.
+Load `cape:commit` to commit the fixes referencing the review; let it split unrelated concerns into
+atomic commits. If the user asked to push, push after the commit lands. A thread is not eligible to
+resolve until its fix is on the remote.
 
-Scope guard: fix only what the accepted comment asks. Do not refactor adjacent code or fold in the
-out-of-scope items.
-
-Update each row's action to **Applied** (with the change or test reference) or **Dismissed** as you
-go, so the table stays the source of truth.
-
----
-
-## Step 5: Commit, respond, and resolve
-
-Load `cape:commit` to commit the fixes, referencing the review. Let cape:commit split into atomic
-commits if the fixes span unrelated concerns. If the user asked to push, push after the commit lands
-— a thread is not eligible to resolve until its fix is on the remote.
-
-Reply on GitHub, then loop the resolve mutation over exactly the threads whose fix is pushed or
-whose dismissal reply is posted. Keep each reply simple and clearly structured per critical rule 9 —
-a fixed thread gets a one-line "Fixed in `<sha>`"; a dismissal states the reason plainly. Each
-`threadId` is the `id` carried from Step 1 — no re-lookup:
+Reply, then resolve, over exactly the threads whose fix is pushed or whose dismissal reply is
+posted. Run replies through the `cape:unslop` skill: short plain sentences, one point per reply, no
+filler or emoji. A fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason. Each
+`threadId` is the `id` carried from step 1, no re-lookup:
 
 ```bash
 # Reply in a thread (dismissed or out-of-scope, with the reason, or "Fixed in <sha>")
@@ -221,16 +170,14 @@ gh api graphql -F threadId=<PRRT_id> -f query='
   }'
 ```
 
-A review summary has no thread to reply into or resolve. When a summary point warrants a reply, post
-it once as a top-level PR comment — never resolve it:
+A summary point that warrants a reply gets one top-level PR comment, never a resolve:
 
 ```bash
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Clear the workflow flag once the fixes are
-committed: `cape state clear workflowActive`. Present the final table so applied vs dismissed vs
-left-open is recorded for later verification:
+Confirm each resolve response shows `isResolved: true`. Run `cape state clear workflowActive`.
+Present the final table so applied vs dismissed vs left-open is recorded:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>
@@ -238,75 +185,37 @@ Resolved <K>/<N> threads on PR #<number>
 Fixed + resolved:     <count>  (<paths>)
 Dismissed + resolved: <count>  (<paths>, reason)
 Left open:            <count>  (<paths>, needs your call)
-Summary points:       <count>  (fixed / replied / no action — no thread to resolve)
+Summary points:       <count>  (fixed / replied / no action; no thread to resolve)
 ```
 
-</the_process>
+## Skills
 
-<skill_references>
+Load `cape:test-driven-development` when:
 
-## Load `cape:test-driven-development` with the Skill tool when:
+- An accepted comment requires a behavioral change worth a test
 
-- An accepted comment requires a behavioral code change worth a test (not a nit)
+Load `cape:fix-bug` when:
 
-## Load `cape:fix-bug` with the Skill tool when:
+- An accepted comment diagnoses a defect that warrants diagnosis to closure
 
-- An accepted comment diagnoses a specific defect that warrants the full diagnose-to-closure
-  workflow
-
-## Load `cape:commit` with the Skill tool when:
+Load `cape:commit` when:
 
 - The accepted fixes are ready to commit referencing the review
 
-## Load the `cape:unslop` skill with the Skill tool when:
+Load `cape:unslop` when:
 
-- Writing triage rationales or thread replies that a human will read
+- Writing triage rationales, thread replies, or PR comments
 
-</skill_references>
-
-<examples>
-
-<example>
-<scenario>User says "push and resolve the threads we fixed" on the current branch's PR</scenario>
+## Examples
 
 **Wrong:** Pull comments from the REST endpoint, hand-paste `PRRT_` IDs into a one-off resolve loop,
-and resolve threads whose fixes are still uncommitted locally.
+and resolve threads whose fixes are still uncommitted.
 
-**Right:** Fetch threads via the `reviewThreads` GraphQL query (the only source of thread IDs),
-triage each in a table keyed by source, fix the valid ones (nits edited directly, behavioral changes
-through TDD), commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes
-are now on the remote. </example>
+**Right:** Fetch threads via the `reviewThreads` query, triage each in the table, fix the valid
+ones, commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes are on
+the remote.
 
-<example>
-<scenario>A reviewer leaves a one-line "rename `data` to `rows` for clarity"</scenario>
+**Wrong:** Spin up `cape:test-driven-development` and write a RED test for a one-line rename.
 
-**Wrong:** Spin up `cape:test-driven-development` and write a RED test for a rename.
-
-**Right:** Mark it Valid / Fix (edit), rename directly, commit through cape:commit, reply "Fixed in
-`<sha>`", and resolve the thread. </example>
-
-<example>
-<scenario>A reviewer comment asks for a broad refactor the PR never intended</scenario>
-
-**Wrong:** Expand the change to satisfy it and balloon the diff.
-
-**Right:** Mark it out of scope in the table, reply on the thread proposing a follow-up, and resolve
-it — leaving the PR scoped. </example>
-
-</examples>
-
-<key_principles>
-
-- **IDs from the right endpoint** — thread node IDs live in `reviewThreads`, never in REST comments;
-  recover them once and carry them
-- **Triage is judgment, not deference** — a reviewer comment is a hypothesis until the code confirms
-  it
-- **Fix at the right weight** — edit nits directly; reserve TDD and fix-bug for real behavioral
-  changes and diagnosed defects
-- **Every comment lands somewhere** — applied with a pushed change or dismissed with a reason; the
-  table proves it
-- **Resolve follows a pushed action** — never close a thread on an unverified or unpushed fix
-- **Replies stay simple and clear** — short plain sentences, one point each, run through
-  `cape:unslop`
-
-</key_principles>
+**Right:** Mark it Valid, Fix (edit); rename directly, commit through `cape:commit`, reply "Fixed in
+`<sha>`", resolve the thread.

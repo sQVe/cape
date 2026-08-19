@@ -2,104 +2,71 @@
 name: commit
 description: >
   Create atomic git commits with conventional commit format and selective staging. Use whenever the
-  user wants to commit changes — explicit requests ("commit this", "make a commit", "let's commit",
-  "/cape:commit") and implicit ones ("we're done, save this", "wrap this up"). Also use when another
-  cape skill finishes a unit of work and needs to commit. Covers staging decisions, splitting large
-  diffs into separate logical commits, and writing thorough commit messages that explain the change.
-  Do NOT use for pushing, creating PRs, or branch operations.
+  user wants to commit changes, both explicit requests ("commit this", "make a commit", "let's
+  commit", "/cape:commit") and implicit ones ("we're done, save this", "wrap this up"). Also use
+  when another cape skill finishes a unit of work and needs to commit. Covers staging decisions,
+  splitting large diffs into separate logical commits, and writing commit messages that explain the
+  change. Do NOT use for pushing, creating PRs, or branch operations.
 ---
 
-<skill_overview> Stage selectively and commit one logical change at a time using conventional commit
-format. Reads the diff, groups changes by concern, proposes staging and a message, then commits
-after approval. </skill_overview>
+# Commit
 
-<rigidity_level> MEDIUM FREEDOM — Adapt message style and body depth to project conventions. The
-staging plan, conventional format, and user confirmation before committing are non-negotiable.
-</rigidity_level>
+Stage selectively and commit one logical change at a time in conventional commit format. Read the
+diff, group changes by concern, propose staging and a message, and commit only after approval.
 
-<when_to_use>
+Message style and body depth adapt to project conventions. The staging plan, the conventional
+format, and the approval gate do not.
 
-- User says "commit", "commit this", "let's commit", "wrap this up"
-- After completing a unit of work that should be saved
-- Another cape skill finishes and needs to persist changes
+## Arguments
 
-**Don't use for:**
-
-- Pushing to remote
-- Creating pull requests
-- Branch operations </when_to_use>
-
-<arguments>
-
-- **--no-confirm** (optional): Skip confirmation (step 4). Useful when other cape skills call
+- `--no-confirm` (optional): skip the confirmation in step 4. For other cape skills that call
   commit.
-- **commit-message** (optional): Use this message instead of generating one. Still present the
-  staging plan for review unless `--no-confirm` is also passed.
+- `commit-message` (optional): use this message instead of generating one. Still present the staging
+  plan unless `--no-confirm` is also passed.
 
-</arguments>
+## Rules
 
-<critical_rules>
+1. **Never commit without approval.** Present the staging plan and message, then wait. Only
+   `--no-confirm` waives this.
+2. **Never skip hooks.** No `--no-verify` unless the user explicitly asks.
+3. **One logical change per commit.** Split mixed concerns into separate commits.
+4. **Stage files by name.** Never `git add .` or `git add -A`.
+5. **Never amend.** Create new commits unless the user asks to amend.
 
-1. **NEVER commit without user approval** — present the staging plan and message first, then wait
-   for confirmation. This is the most important rule.
-2. **Never skip hooks** — no `--no-verify` unless the user explicitly asks
-3. **One logical change per commit** — if the diff has mixed concerns, split
-4. **Conventional commit format** — `type(scope): subject` matching project conventions
-5. **Never amend without being asked** — always create new commits
+## Process
 
-</critical_rules>
-
-<the_process>
-
-## Step 1: Gather context
+### 1. Gather context
 
 ```bash
 cape git context
 git diff HEAD
 ```
 
-From `recentLog`, note the project's commit conventions — type prefixes used, whether scope is
-common, subject line style, whether bodies are used.
+From `recentLog`, note the project's conventions: which types appear, whether scopes are used,
+subject style, whether bodies are common. If there are no changes, tell the user and stop.
 
-If there are no changes to commit, tell the user and stop.
+### 2. Group the diff
 
----
+Split the changes into logical groups, each a set of files serving one concern: a function and its
+tests, a config change across files, a rename, a bug fix. Split into separate commits when files are
+unrelated, when a fix mixes with a cleanup, or when the groups take different commit types.
 
-## Step 2: Analyze the diff
+One group proceeds alone. Multiple groups each get their own cycle of steps 3 to 5, most
+foundational first.
 
-Read through all changes and identify **logical groups** — sets of changes that belong to a single
-concern. A logical group might be:
-
-- A new function and its tests
-- A config change across several files
-- A rename or move
-- A bug fix touching one or two files
-
-Signs that changes should be **separate commits**:
-
-- Unrelated files changed (e.g., a feature file and an unrelated config tweak)
-- Mixed concerns (e.g., a bug fix and a formatting cleanup)
-- Different types of work (e.g., `feat` and `chore` mixed together)
-
-If everything belongs to one logical change, proceed to step 3 with a single group. If multiple
-groups exist, present them and handle each as a separate commit cycle (steps 3-5), starting with the
-most foundational change.
-
----
-
-## Step 3: Propose staging and message
+### 3. Propose staging and message
 
 Present the plan:
 
 ```
-Staging: path/to/file.ts, path/to/other.ts
-Message: type(scope): subject line
+Staging: src/cache.ts, src/config.ts
+Message: refactor(cache): replace LRU with TTL-based eviction
 
-Optional body explaining why this change was made,
-not what it does (the diff shows the what).
+LRU eviction caused stale entries to persist when access patterns
+were uniform. TTL guarantees freshness regardless of access frequency.
 ```
 
-**Conventional commit format:**
+Pick the type:
 
 | Type       | When to use                                |
 | ---------- | ------------------------------------------ |
@@ -112,133 +79,47 @@ not what it does (the diff shows the what).
 | `style`    | Formatting, whitespace (no logic change)   |
 | `perf`     | Performance improvement                    |
 
-**Subject line rules:**
+Subject: imperative mood, lowercase, no period, under 72 characters. Describe the change, not the
+file. Scope: follow the pattern in recent commits; omit if the project doesn't use scopes.
 
-- Imperative mood, lowercase, no period
-- Under 72 characters
-- Describe the change, not the file
+Add a body only when the subject alone doesn't carry the reasoning: a non-obvious design decision,
+or implications beyond the diff. The body explains why, never what; the diff shows the what. Run the
+body through `cape:unslop` before presenting.
 
-**Scope** is optional. Use it when the change is clearly scoped to a module, feature, or directory.
-Derive scope from the project's recent commits — if the project uses scopes, follow the pattern; if
-it doesn't, omit.
+Staging: exclude files outside this group. Warn about untracked files that look like they belong,
+and about anything sensitive (`.env`, credentials, secrets).
 
-**Body** is warranted when:
+### 4. STOP: confirm
 
-- The subject alone doesn't explain the reasoning
-- There's a non-obvious design decision
-- The change has implications beyond the obvious
+**Do not call `git commit` until the user approves.**
 
-When writing the body, explain **why** the change was made, not what it does. The diff already shows
-the what.
+Wait. If the user edits the message or staging, apply their changes exactly. If they reject, ask
+what they'd prefer. Skip this step only when `--no-confirm` was passed.
 
-Run the commit message body through the `cape:unslop` skill before presenting or committing.
-
-**Staging rules:**
-
-- Stage specific files by name — never `git add .` or `git add -A`
-- Exclude files that don't belong to this logical change
-- Warn about untracked files that look like they should be included
-- Warn about files that look sensitive (`.env`, credentials, secrets)
-
----
-
-## STOP — Step 4: Confirm
-
-**You MUST stop here and get user approval before committing.**
-
-Wait for user approval. If the user edits the message or staging, apply their changes exactly. If
-they reject entirely, ask what they'd prefer. Do not call `git commit` until the user approves.
-
----
-
-## Step 5: Execute
-
-Stage and commit using the CLI:
+### 5. Execute
 
 ```bash
-cape commit path/to/file.ts path/to/other.ts -m "$(cat <<'EOF'
-type(scope): subject line
+cape commit src/cache.ts src/config.ts -m "$(cat <<'EOF'
+refactor(cache): replace LRU with TTL-based eviction
 
 Body if warranted.
 EOF
 )"
 ```
 
-The CLI validates the message format, detects sensitive files, and stages + commits in one
+The CLI validates the message format, detects sensitive files, and stages and commits in one
 operation.
 
-If the commit **fails** (pre-commit hook, lint error):
+If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can
+(formatting, lint), and retry. After 3 failures, report the issues and ask the user to fix manually.
 
-1. Analyze the failure output
-2. Auto-fix if possible (formatting, lint issues)
-3. Re-attempt the commit
-4. After 3 failures: report the issues and ask the user to fix manually
+After success, show the commit hash, `git status --short`, and any remaining uncommitted changes. If
+another group remains, loop back to step 3.
 
-After a successful commit, show:
+## Examples
 
-- Commit hash and message summary
-- `git status --short` to confirm state
-- Remaining uncommitted changes, if any
+**Wrong:** `git add -A` then `chore: various updates` covering a new auth middleware and a readme
+typo fix. Two concerns in one blob, and the message says nothing.
 
-If there are remaining changes from another logical group, loop back to step 3 for the next commit.
-
-</the_process>
-
-<examples>
-
-<example>
-<scenario>Single logical change, no scope needed</scenario>
-
-```
-$ git diff HEAD
- - changes to .gitignore and plugin.json
-
-Staging: .gitignore, plugin.json
-Message: chore: add gitignore and update plugin config
-```
-
-Two files, one concern (project setup), no scope needed. </example>
-
-<example>
-<scenario>Mixed concerns requiring split</scenario>
-
-```
-$ git diff HEAD
- - new auth middleware (src/auth.ts, tests/auth.test.ts)
- - unrelated typo fix in README.md
-
-Group 1 (commit first):
-  Staging: src/auth.ts, tests/auth.test.ts
-  Message: feat(auth): add authentication middleware
-
-Group 2:
-  Staging: README.md
-  Message: docs: fix typo in readme
-```
-
-Two unrelated changes split into two commits. </example>
-
-<example>
-<scenario>Change that warrants a body</scenario>
-
-```
-Staging: src/cache.ts, src/config.ts
-Message: refactor(cache): replace LRU with TTL-based eviction
-
-LRU eviction caused stale entries to persist when access patterns
-were uniform. TTL guarantees freshness regardless of access frequency.
-```
-
-The subject says what changed; the body explains why. </example>
-
-</examples>
-
-<key_principles>
-
-- **One logical change per commit** — split unrelated changes into separate commits
-- **Selective staging** — name files explicitly, never bulk-add
-- **Explain the why** — subjects describe the change, bodies explain the reasoning
-- **Match project style** — read `recentLog` from context and follow existing conventions
-- **Confirm before committing** — always present the plan and wait for approval
-
-</key_principles>
+**Right:** two commits. First `feat(auth): add authentication middleware` staging `src/auth.ts` and
+`tests/auth.test.ts`, then `docs: fix typo in readme` staging `README.md`.

@@ -1,233 +1,148 @@
 ---
 name: execute-plan
 description: >
-  Build from a Linear tracker epic, one task at a time. The counterpart to cape:write-plan:
-  write-plan creates the epic and first sub-issue, execute-plan implements it. Triggers on:
-  "continue", "next task", "resume", "let's go", "work on the plan", a Linear issue ID, or
-  transitioning after planning is complete. Uses the local tracker cache for orientation and
-  refreshes that cache after every Linear write. Do NOT use for bug fixes (use cape:fix-bug),
-  exploratory design (use cape:brainstorm), or acting on inbound PR review comments (use
-  cape:pr-feedback).
+  Build from a Linear tracker epic, one task at a time. cape:write-plan creates the epic and first
+  sub-issue, execute-plan implements it. Triggers on: "continue", "next task", "resume", "let's go",
+  "work on the plan", a Linear issue ID, or transitioning after planning is complete. Uses the local
+  tracker cache for orientation and refreshes that cache after every Linear write. Do NOT use for
+  bug fixes (use cape:fix-bug), exploratory design (use cape:brainstorm), or acting on inbound PR
+  review comments (use cape:pr-feedback).
 ---
 
-<skill_overview> Implement one tracker task, verify it, close it in Linear, create or identify the
-next task, refresh the cache, and stop for review.
+# Execute plan
 
-Core contract: one task per invocation in HITL mode; all fine-grained plans and reflections stay in
-session, not on the Linear board. </skill_overview>
+Implement one tracker task, verify it, close it in Linear, line up the next task, refresh the cache,
+and stop for review. One task per invocation in HITL mode, and all fine-grained plans and
+reflections stay in session, never on the Linear board.
 
-<rigidity_level> MEDIUM FREEDOM -- The one-task loop, TDD requirement, verification before close,
-and cache refresh after writes are fixed. Implementation tactics adapt to the task.
-</rigidity_level>
+The one-task loop, TDD, verification before close, and cache refresh after every Linear write are
+fixed. Implementation tactics adapt to the task.
 
-<when_to_use>
+## Rules
 
-- A tracker epic exists with ready or in-progress tasks
-- User wants to implement the next task in a plan
-- Resuming planned work after context was cleared
+1. **STOP after each task in HITL mode.** Present the checkpoint and wait for the user.
+2. **Close only after verification.** Tests and the task's success criteria must pass first.
+3. **Orient from the cache.** Use `hooks/context/tracker.json` and active worktree state to pick
+   work. No network reads to pick work; once a task is chosen, fetching its description with MCP
+   `get_issue` is fine. Never invent task state.
+4. **Write Linear first, then refresh the cache.** Every Linear write is followed immediately by the
+   matching `cape tracker` command.
+5. **Test before code.** Load `cape:test-driven-development` before any production edit.
+6. **Keep expansion in session.** No expanded plans, divergence notes, or close-out ceremony go to
+   Linear. The board tracks issues, not implementation transcripts.
 
-**Don't use for:**
+## Process
 
-- No epic exists yet (use `cape:brainstorm` then `cape:write-plan`)
-- Diagnosing or fixing a defect (use `cape:fix-bug`)
-- Requirements still unclear (use `cape:brainstorm`)
+### 1. Orient from the tracker cache
 
-</when_to_use>
+Read `hooks/context/tracker.json` (shape documented in `cape:tracker`). Pick work in this order:
 
-<critical_rules>
+1. The in-progress task under the active epic.
+2. A ready task: `stateType` of `unstarted`, or a status such as `Todo`.
+3. None left and the epic's success criteria look met: load `cape:finish-epic`.
 
-1. **Orient from cache** -- use `hooks/context/tracker.json` and active worktree state for ready
-   tasks; do not use network reads for orientation
-2. **Mark status through Linear MCP** -- update status in Linear first, then run `cape tracker`
-3. **Test before code** -- load `cape:test-driven-development` before production edits
-4. **Keep expansion in session** -- no expanded-plan, divergence, close-check, or outcome ceremony
-   is written to Linear
-5. **Close only after verification** -- tests and task success criteria must pass first
-6. **Stop after each task in HITL mode** -- present checkpoint and wait for user input
+If multiple epics are active, ask the user which one to continue. A missing or stale cache follows
+the `cape:tracker` cache rule: treat it as empty and refresh from an MCP result already in session.
 
-</critical_rules>
+### 2. Expand in session
 
-<the_process>
+Load the epic contract and task details from session context. If the task's Linear description is
+not in the session, fetch it with MCP `get_issue`; if MCP is unavailable, ask the user for the
+description instead.
 
-## Step 1: Orient from tracker cache
-
-Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`.
-
-Pick work in this order:
-
-- In-progress task under the active epic
-- Ready task with `stateType` of `unstarted` or a status such as `Todo`
-- If no ready tasks remain and success criteria appear met, route to `cape:finish-epic`
-- If multiple epics are active, ask the user which one to continue
-
-If the cache is missing, corrupt, or stale for the work the user requested, use `cape:tracker` to
-refresh it from the current MCP result available in the session. Do not invent task state.
-
----
-
-## Step 2: Expand in session
-
-Load the epic contract and task details from the active session context. If the detailed Linear
-description is not present in the session, use the cache to identify the task and ask the user to
-provide the current task description or re-run the chain step that created it.
-
-Before coding, build an in-session implementation breakdown:
+Build an in-session breakdown before coding:
 
 - Task goal and success criteria
-- Relevant epic R-IDs (required behavior) and required constraints
-- Files and patterns verified by `cape:codebase-investigator` or manual search
+- Epic R-IDs and required constraints that apply
+- Files and patterns, verified by `cape:codebase-investigator` or manual search
 - TDD slices, each with one behavior and one verification command
 - Risks, assumptions, and explicit out-of-scope items
 
-Do not persist this expanded breakdown to Linear. If the task is too large, stop and recommend a
-split; create split tasks only after the user agrees.
+**STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
+only after the user agrees.
 
-Then update Linear status to in-progress using MCP Linear `save_issue` or the available state-update
-operation. Immediately refresh the local cache:
+Mark the task in progress in Linear (`save_issue`), then refresh the cache and signal workflow
+state:
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
-```
-
-Signal workflow state and label the herdr workspace:
-
-```bash
 cape state set workflowActive
 cape workspace phase build
 ```
 
-Load `cape:test-driven-development` with the Skill tool before production edits.
+Load `cape:test-driven-development` with the Skill tool.
 
----
+### 3. Implement and verify
 
-## Step 3: Implement and verify
+Execute the breakdown one slice at a time: write the smallest failing test, confirm it fails for the
+expected reason, make the minimum production change, re-run the focused test and the affected suite,
+clean up only when it clearly improves the result, then run the slice's verification command.
 
-Execute the in-session breakdown one slice at a time:
+If an R-ID or required constraint forces a change of approach, explain the divergence in
+conversation and continue only when the new approach still satisfies the epic contract. The
+divergence stays in session.
 
-1. Write the smallest failing test for the current behavior.
-2. Confirm the failure is for the expected reason.
-3. Implement the minimum production change.
-4. Re-run the focused test and affected broader suite.
-5. Clean up only when it clearly improves the result.
-6. Run the slice verification command before moving on.
+Before closing, confirm:
 
-When obstacles appear, re-read the epic contract from the session. If an R-ID or a required
-constraint forces a change of approach, explain the divergence in the conversation and continue only
-when the new approach still satisfies the contract. Keep the divergence in session.
-
-Before closing, run the chain's own verification:
-
-- All task success criteria satisfied with evidence
+- Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- `cape check` or the repository's expected verification command passes
+- `cape check` (or the repository's verification command) passes
 - Critical code-review findings are addressed
 
-Dispatch `cape:code-reviewer` for non-trivial changes. Dispatch `cape:fact-checker` when the
-implementation depends on claims about codebase structure or APIs.
+### 4. Close and plan next
 
----
-
-## Step 4: Close task and plan next
-
-Close the task in Linear through MCP. Then update the local cache:
+Close the task in Linear through MCP, then:
 
 ```bash
 cape tracker cache-status <task-id> Done completed
 cape state clear workflowActive
 ```
 
-Reflect in session:
-
-- What was built
-- What changed from the original assumption
-- Whether the epic approach still holds
-- What the next smallest vertical slice should be
+Reflect in session: what was built, what changed from the original assumption, whether the epic
+approach still holds, and the next smallest vertical slice. The next task comes from what execution
+revealed, not from what planning assumed.
 
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
-a Linear sub-issue through MCP. Load `cape:tracker` and apply its Agent contract for create-time
-rules, including dedupe, labels, priority, naming, and `Done when:`. Then refresh the epic cache
-from an MCP `get_issue` result:
+a Linear sub-issue through MCP: load `cape:tracker`, apply its agent contract, and run the issue
+text through `cape:unslop` before posting. Then refresh the epic cache per `cape:tracker`'s
+create-work recipe: a fresh `get_issue` result piped to `cape tracker cache-epic`.
 
-```bash
-cape tracker cache-epic '<linear-epic-json-with-children>'
-```
+If no work remains, load `cape:finish-epic`.
 
-If no more work remains, load `cape:finish-epic`.
-
----
-
-## Step 5: Checkpoint and stop
+### 5. Checkpoint and stop
 
 Present:
 
 ```text
-Checkpoint - <task-id> complete
+Checkpoint: <task-id> complete
 
 Done: <what changed and what was verified>
 Next: <next-id or finish-epic>
 Verification: <commands and results>
 ```
 
-In HITL mode, stop and wait for user input. In AFK mode, load `cape:commit`, then continue only if
-the next task is already clear and within the same approved scope.
+**STOP in HITL mode.** Wait for user input. In AFK mode, load `cape:commit`, then continue only if
+the next task is already clear and within the approved scope.
 
-</the_process>
+## Agents
 
-<agent_references>
-
-## Dispatch `cape:codebase-investigator` when:
+Dispatch `cape:codebase-investigator` when:
 
 - The task references files, APIs, or patterns that need verification
-- A failure suggests the original plan misunderstood the codebase
+- A failure suggests the plan misunderstood the codebase
 
-## Dispatch `cape:code-reviewer` when:
+Dispatch `cape:code-reviewer` when:
 
-- A task changes behavior across modules or public interfaces
-- You need an implementation review against the epic contract
+- A change is non-trivial: it crosses modules or touches public interfaces
 
-## Dispatch `cape:fact-checker` when:
+Dispatch `cape:fact-checker` when:
 
-- The plan or outcome depends on claims about codebase structure, API behavior, or dependencies
+- The implementation depends on claims about codebase structure, API behavior, or dependencies
 
-</agent_references>
+## Examples
 
-<skill_references>
-
-## Load `cape:test-driven-development` with the Skill tool when:
-
-- Step 2 completes and before any production code is written
-
-## Load `cape:tracker` with the Skill tool when:
-
-- You need to create, update, close, list ready work, or refresh the cache
-
-</skill_references>
-
-<examples>
-
-<example>
-<scenario>First task reveals the next planned slice is unnecessary</scenario>
-
-**Wrong:** Create and implement the next task anyway because it sounded plausible during planning.
+**Wrong:** The first task reveals the next planned slice is unnecessary, but you create and
+implement it anyway because it sounded plausible during planning.
 
 **Right:** Explain the discovery in session, close the completed task in Linear, refresh the cache,
-and create the next sub-issue that reflects current reality. </example>
-
-<example>
-<scenario>Expanded plan would take more than one implementation cycle</scenario>
-
-**Wrong:** Write a huge expanded plan into the issue description and try to complete it all.
-
-**Right:** Keep the breakdown in session, recommend a split, and wait for user approval before
-creating smaller Linear sub-issues. </example>
-
-</examples>
-
-<key_principles>
-
-- **Learn forward** -- each next task is based on what execution revealed
-- **Cache follows writes** -- Linear is written first; local cache is refreshed immediately after
-- **Session detail stays session-local** -- the board tracks issues, not implementation transcripts
-- **Verification replaces ceremony** -- tests and success criteria decide closure
-
-</key_principles>
+and create the next sub-issue that reflects current reality.
