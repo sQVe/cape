@@ -108,13 +108,13 @@ The first task must be a vertical slice with:
 
 Run the epic contract and first-task prose through the `cape:unslop` skill before creating issues.
 
-Load `cape:tracker` and apply its Agent contract for create-time rules, including dedupe, project
-routing, `src:cape`, `Medium`, naming, and `Done when:`. Confirm with the user before creating a new
-Linear project. Use MCP Linear `save_issue` for the epic. Put the epic contract in the Linear
-description using the chosen variant's shape: at-a-glance card, the R-ID required-behavior table,
-required constraints, proposed approach, and acceptance criteria (Full adds before/after, user
-journey, release/observability, dependencies/risks, and a work-breakdown sketch). Keep it scannable.
-The epic itself stays an untyped parent.
+Load `cape:tracker` and apply its `resources/agent-contract.md` for create-time rules, including
+dedupe, project routing, `src:cape`, `Medium`, naming, and `Done when:`. Confirm with the user
+before creating a new Linear project. Use MCP Linear `save_issue` for the epic. Put the epic
+contract in the Linear description using the chosen variant's shape: at-a-glance card, the R-ID
+required-behavior table, required constraints, proposed approach, and acceptance criteria (Full adds
+before/after, user journey, release/observability, dependencies/risks, and a work-breakdown sketch).
+Keep it scannable. The epic itself stays an untyped parent.
 
 Use MCP Linear `save_issue` again to create exactly one child/sub-issue under the epic for the first
 task. Apply the sub-issue labels from the tracker contract: exactly one `type:*` label plus
