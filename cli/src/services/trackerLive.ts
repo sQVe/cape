@@ -246,12 +246,8 @@ export const mergeTasks = (
     epics: {
       ...cache?.epics,
       [epicId]: {
+        ...(existing ?? { title: '', status: '' }),
         id: epicId,
-        title: existing?.title ?? '',
-        ...(existing?.project == null ? {} : { project: existing.project }),
-        ...(existing?.type == null ? {} : { type: existing.type }),
-        status: existing?.status ?? '',
-        ...(existing?.humanTicketId == null ? {} : { humanTicketId: existing.humanTicketId }),
         tasks: mergeTaskLists(existing?.tasks, tasks),
       },
     },
