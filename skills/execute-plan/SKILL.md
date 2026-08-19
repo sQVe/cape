@@ -49,6 +49,19 @@ and cache refresh after writes are fixed. Implementation tactics adapt to the ta
 
 <the_process>
 
+## Step 0: Enter the epic worktree
+
+Skip this step when already on the epic's branch. When starting BUILD work from the default branch,
+set up the per-epic worktree first — one epic, one worktree:
+
+1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
+2. Use the grove skill: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the
+   conventional-commit prefix). If the worktree exists, enter it instead of creating another.
+3. From inside it, stamp cape context: `cape worktree start <epic-id>`, then
+   `cape workspace phase build` (safe no-op outside herdr).
+
+---
+
 ## Step 1: Orient from tracker cache
 
 Read `hooks/context/tracker.json`. The cache shape is documented in `cape:tracker`.

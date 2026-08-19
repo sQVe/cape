@@ -59,7 +59,6 @@ First matching row wins:
 | Set up an autonomous run, draft a `/goal`, prep an AFK run        | `cape:set-goal`     | Stages a run draft         |
 | Something broken, error, stack trace, "doesn't work"              | `cape:fix-bug`      | Diagnose then patch        |
 | Fix a diagnosed Linear bug issue                                  | `cape:fix-bug`      | Diagnose then patch        |
-| Start work in an epic worktree, create/enter per-epic worktree    | `cape:worktree`     | Standalone                 |
 | Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`  | End of build chain         |
 | Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |
