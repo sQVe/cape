@@ -19,7 +19,7 @@ interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
-  readonly humanId?: unknown;
+  readonly humanTicketId?: unknown;
   readonly project?: unknown;
   readonly labels?:
     | readonly LinearLabel[]
@@ -129,7 +129,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
   });
   const project = issueProject(issue);
   const type = issueType(issue);
-  const humanId = typeof issue.humanId === 'string' ? issue.humanId : undefined;
+  const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
 
   return {
     id,
@@ -137,7 +137,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     ...(project == null ? {} : { project }),
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
-    ...(humanId == null ? {} : { humanId }),
+    ...(humanTicketId == null ? {} : { humanTicketId }),
     tasks,
   };
 };
@@ -190,7 +190,7 @@ export const mergeEpic = (
   epic: TrackerEpic,
   timestamp: number,
 ): TrackerCache => {
-  const humanId = epic.humanId ?? cache?.epics[epic.id]?.humanId;
+  const humanTicketId = epic.humanTicketId ?? cache?.epics[epic.id]?.humanTicketId;
   return {
     version: 1,
     timestamp,
@@ -198,7 +198,7 @@ export const mergeEpic = (
       ...cache?.epics,
       [epic.id]: {
         ...epic,
-        ...(humanId == null ? {} : { humanId }),
+        ...(humanTicketId == null ? {} : { humanTicketId }),
         tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks),
       },
     },
@@ -223,7 +223,7 @@ export const mergeTasks = (
         ...(existing?.project == null ? {} : { project: existing.project }),
         ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
-        ...(existing?.humanId == null ? {} : { humanId: existing.humanId }),
+        ...(existing?.humanTicketId == null ? {} : { humanTicketId: existing.humanTicketId }),
         tasks: mergeTaskLists(existing?.tasks, tasks),
       },
     },

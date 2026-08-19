@@ -15,7 +15,7 @@ export interface TrackerEpic {
   readonly project?: string;
   readonly type?: string;
   readonly status: string;
-  readonly humanId?: string;
+  readonly humanTicketId?: string;
   readonly tasks: readonly TrackerTask[];
 }
 
@@ -57,7 +57,7 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
     readonly project?: unknown;
     readonly type?: unknown;
     readonly status?: unknown;
-    readonly humanId?: unknown;
+    readonly humanTicketId?: unknown;
     readonly tasks?: unknown;
   };
   return (
@@ -66,7 +66,7 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
     (epic.project == null || typeof epic.project === 'string') &&
     (epic.type == null || typeof epic.type === 'string') &&
     typeof epic.status === 'string' &&
-    (epic.humanId == null || typeof epic.humanId === 'string') &&
+    (epic.humanTicketId == null || typeof epic.humanTicketId === 'string') &&
     Array.isArray(epic.tasks) &&
     epic.tasks.every(isTrackerTask)
   );

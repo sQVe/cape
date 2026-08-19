@@ -142,44 +142,44 @@ describe('mergeEpic', () => {
     expect(merged).toEqual({ version: 1, timestamp: 2000, epics: { 'ABU-1': incoming } });
   });
 
-  it('keeps the cached humanId when the incoming epic has none', () => {
-    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+  it('keeps the cached humanTicketId when the incoming epic has none', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanTicketId: 'ABU-9' });
 
     const merged = mergeEpic(cache, epic('AI-1', []), 2000);
 
-    expect(merged.epics['AI-1']?.humanId).toBe('ABU-9');
+    expect(merged.epics['AI-1']?.humanTicketId).toBe('ABU-9');
   });
 
-  it('lets an incoming humanId replace the cached one', () => {
-    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+  it('lets an incoming humanTicketId replace the cached one', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanTicketId: 'ABU-9' });
 
-    const merged = mergeEpic(cache, { ...epic('AI-1', []), humanId: 'ABU-10' }, 2000);
+    const merged = mergeEpic(cache, { ...epic('AI-1', []), humanTicketId: 'ABU-10' }, 2000);
 
-    expect(merged.epics['AI-1']?.humanId).toBe('ABU-10');
+    expect(merged.epics['AI-1']?.humanTicketId).toBe('ABU-10');
   });
 });
 
 describe('mergeTasks', () => {
-  it('preserves the epic humanId across a tasks-only refresh', () => {
-    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+  it('preserves the epic humanTicketId across a tasks-only refresh', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanTicketId: 'ABU-9' });
 
     const merged = mergeTasks(cache, 'AI-1', [task('AI-2', 'unstarted')], 2000);
 
-    expect(merged.epics['AI-1']?.humanId).toBe('ABU-9');
+    expect(merged.epics['AI-1']?.humanTicketId).toBe('ABU-9');
   });
 });
 
 describe('toEpic', () => {
-  it('reads humanId from an explicit field in the payload', () => {
-    const result = toEpic({ identifier: 'AI-1', title: 'Epic', humanId: 'ABU-9' });
+  it('reads humanTicketId from an explicit field in the payload', () => {
+    const result = toEpic({ identifier: 'AI-1', title: 'Epic', humanTicketId: 'ABU-9' });
 
-    expect(result?.humanId).toBe('ABU-9');
+    expect(result?.humanTicketId).toBe('ABU-9');
   });
 
-  it('omits humanId when the payload has none', () => {
+  it('omits humanTicketId when the payload has none', () => {
     const result = toEpic({ identifier: 'AI-1', title: 'Epic' });
 
     expect(result).not.toBeNull();
-    expect(result?.humanId).toBeUndefined();
+    expect(result?.humanTicketId).toBeUndefined();
   });
 });
