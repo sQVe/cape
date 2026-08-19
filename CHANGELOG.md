@@ -85,6 +85,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Skills: rewrote all 13 remaining skills and the skill template from the XML tag structure to plain
+  markdown, applying the `cape:unslop` patterns throughout. The frontmatter description now carries
+  the triggers and the body starts at the contract, cutting the sections that restated them; the
+  skill set shrinks by about a third with every command, gate, and handoff kept. The migration also
+  fixed real defects: `cape:commit` names `--no-confirm` as the only approval waiver,
+  `cape:finish-epic` reports deferred criteria instead of "all met", `cape:pr` gains the missing
+  Deferred verification template section and scopes `Fixes` vs `Related to`, and five divergent
+  cache-staleness paraphrases now point at `cape:tracker`'s canonical rule.
 - CLI: `cape validate` now checks skills on frontmatter (`name`, `description`) plus a non-empty
   body, dropping the required XML tag structure so skills can be written as clean markdown. Every
   backticked `cape:<name>` reference in a skill body is validated against the known skills and

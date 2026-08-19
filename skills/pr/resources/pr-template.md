@@ -42,30 +42,39 @@
 
 - [Subjective item requiring human judgment]
 
+#### Deferred verification
+
+<!-- OPTIONAL. Acceptance checks that need a deployed env and could not run pre-merge. Plain
+     bullets, never checkboxes, never marked done. Verify post-merge. -->
+
+- [Check to run after deploy]
+
 ---
 
 <!-- DEFAULT: `Fixes ABU-XX` so the epic auto-closes on merge. Use `Related to ABU-XX`
      ONLY when this PR does not complete the epic (more PRs or a live cutover still pending).
-     Pick one keyword per issue — never both on the same id. -->
+     Pick one keyword per issue, never both on the same id. -->
 
 Fixes ABU-XX
 ```
 
 ## Section guidelines
 
-- **Motivation**: Problem or opportunity driving the change (1-3 sentences)
-- **Changes**: Focus on "what" was implemented with technical details
-- **Test plan**: Commands, assertions, and the `/code-review` pass — checkboxes that must all be
-  `[x]` before PR
+- **Motivation**: The problem or opportunity driving the change (1-3 sentences)
+- **Changes**: What was implemented, with technical details
+- **Test plan**: Commands, assertions, and the `/code-review` pass. Every checkbox must be `[x]`
+  before the PR exists.
 - **Verification performed**: Evidence of testing already done during development
 - **Deployment notes**: Operational steps for deployers (optional, omit if none)
 - **Manual verification**: Subjective human judgment only (optional, often omitted)
-- **Issues**: Reference the Linear epic by its identifier. **Default to a closing keyword**
+- **Deferred verification**: Checks that need a deployed environment (optional, plain bullets, never
+  marked done)
+- **Issues**: Reference the Linear epic by its identifier. Default to a closing keyword
   (`Fixes ABU-XX`) so the epic auto-closes on merge. Use a non-closing keyword (`Related to ABU-XX`)
-  ONLY when this PR does not complete the epic — more PRs or a live cutover still pending. A
-  non-closing link still moves the issue through pre-merge statuses but never closes it, which is
-  the most common reason an epic stays open after its PR merges. Closing keywords: `close`, `fix`,
-  `resolve`, `complete`, `implement` (and their tenses). Linear links and closes by Linear
+  ONLY when this PR does not complete the epic, meaning more PRs or a live cutover are still
+  pending. A non-closing link still moves the issue through pre-merge statuses but never closes it,
+  which is the most common reason an epic stays open after its PR merges. Closing keywords: `close`,
+  `fix`, `resolve`, `complete`, `implement` (and their tenses). Linear links and closes by Linear
   identifier, not GitHub issue number.
 
 ## Test plan format
@@ -103,5 +112,6 @@ Fixes ABU-XX
 - Deployment actions (cache flush, migrations)
 - Anything with deterministic output
 
-If output is deterministic, it's a checkbox. If it's a deployment action, it's a deployment note.
-Manual = subjective human judgment only. Most backend PRs have no manual verification.
+If output is deterministic, it belongs in a checkbox. If it is a deployment action, it belongs in
+deployment notes. Manual verification means subjective human judgment only; most backend PRs have
+none.

@@ -28,8 +28,9 @@ cape validate skills    # skills only
   Add one only when it earns its keep: a different name than the skill (`build` → `execute-plan`) or
   a skill marked `user-invocable: false`. A command named after its own skill duplicates the
   `/cape:name` entry in the slash-command menu.
-- Skills place `<critical_rules>` before `<the_process>`. `cape validate` is the source of truth for
-  required structure.
+- Skills are plain markdown: no XML tags, sentence case headings. The frontmatter description
+  carries the triggers; the body starts at the contract. Write skill prose with the `cape:unslop`
+  skill. `cape validate` is the source of truth for required structure.
 - Agents use "Investigation approach" as the section header.
 - Tests co-located with source in `cli/src/`. E2E tests in `cli/src/__e2e__/`.
 - Effect service pattern: interface in `services/<name>.ts`, live implementation in

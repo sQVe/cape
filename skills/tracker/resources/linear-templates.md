@@ -23,7 +23,7 @@ Pick a variant per epic. Default to **Light**. Use **Full** when a user journey 
 or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
 
-## Epic — Light (default)
+## Light epic (default)
 
 Untyped parent. No `type:*` label. Set `src:*` and Medium priority as template defaults.
 
@@ -62,7 +62,7 @@ and data flow. Mermaid for flows over ~3 steps.]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
-## Epic — Full
+## Full epic
 
 Light plus the alignment sections. Same untyped-parent rules.
 
@@ -175,7 +175,7 @@ Done when: [load-bearing completion condition]
 
 ## References
 
-- [file:line — verified pattern or helper]
+- [file:line, verified pattern or helper]
 ```
 
 ## Bug
@@ -185,7 +185,7 @@ Set `type:bug`, `src:*`, and Medium priority as template defaults. Title as `Fix
 ```markdown
 ## Root cause
 
-[file:line — mechanism]
+[file:line, mechanism]
 
 ## Evidence
 

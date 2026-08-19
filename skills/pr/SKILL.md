@@ -1,69 +1,50 @@
 ---
 name: pr
 description: >
-  Create a pull request with clear description and actionable test plan. Use whenever the user wants
-  to open a PR — explicit requests ("create a PR", "open a pull request", "let's PR this",
+  Create a pull request with a clear description and an actionable test plan. Use whenever the user
+  wants to open a PR: explicit requests ("create a PR", "open a pull request", "let's PR this",
   "/cape:pr") and implicit ones ("ship it", "ready for review", "push this up"). Also use when
-  finish-epic completes and the user wants to publish their work. Runs automatable test plan items
+  finish-epic completes and the user wants to publish the work. Runs automatable test plan items
   before creating the PR. Do NOT use for reviewing someone else's PR or committing (use
   cape:commit).
 ---
 
-<skill_overview> Create a pull request with conventional title, structured description, and verified
-test plan. Detects repo PR templates, validates the branch, runs the test plan items, then creates
-the PR via `gh`. The test plan is the gate before the PR is created — including its `/code-review`
-checkbox, which the human runs. </skill_overview>
+# PR
 
-<rigidity_level> MEDIUM FREEDOM — Follow the process exactly as written. Every step must execute in
-order. Gates are non-negotiable. The description format comes from the detected template or the
-bundled template — never invent sections. </rigidity_level>
+Create a pull request with a conventional title, a template-driven description, and a test plan that
+gates creation. Nothing ships until every test plan checkbox passes, including the `/code-review`
+box the human runs.
 
-<when_to_use>
+Every step runs in order and the gates are non-negotiable; only the description content adapts to
+the change.
 
-- User says "create a PR", "open a pull request", "let's PR this", "ship it", "ready for review"
-- After finishing an epic and wanting to publish the work
-- After committing changes and wanting to open a PR
+## Rules
 
-**Don't use for:**
+1. **Never call `cape pr create` without approval.** Present the full description, then use
+   `AskUserQuestion` for explicit confirmation. The only exception is the AFK branch in step 4.
+2. **Never skip the test plan gate.** Every checkbox must be `[x]` before `cape pr create` runs.
+3. **Never tick the `/code-review` box yourself.** The human runs the builtin `/code-review` and
+   reports back. Never invoke it or replicate a review in its place; if the box is unticked, stop
+   and ask the user to run it. On the AFK branch a `cape:code-reviewer` pass stands in for it.
+4. **Never invent description sections.** Use the repo template or the bundled template exactly. No
+   ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
+   section from step 3.
+5. **Use `cape pr create`**, not the GitHub API directly.
+6. **Stop on failure.** Report what failed instead of pushing through.
 
-- Reviewing someone else's PR
-- Committing changes (use cape:commit)
-- Worktree setup or epic context stamping (use the grove skill and `cape worktree start`)
+## Process
 
-</when_to_use>
-
-<critical_rules>
-
-1. **NEVER call `cape pr create` without user confirmation** — present the full description to the
-   user first, then use `AskUserQuestion` to get explicit approval. This is the most important rule.
-   The one exception is the AFK branch (step 6).
-2. **NEVER skip the test plan gate** — all checkboxes must be `[x]` before `cape pr create` runs
-3. **NEVER tick the `/code-review` box yourself** — the human runs the builtin `/code-review` and
-   reports back. Never invoke it, never replicate a review in its place. If the box is unticked,
-   stop and ask the user to run it. The one exception is the AFK branch (step 6), where a
-   `cape:code-reviewer` verdict stands in for it.
-4. **NEVER invent description sections** — use the repo template (step 1) or the bundled template
-   (step 5) exactly. Do not create ad-hoc sections like "Summary", "Root cause", etc.
-5. **Use `cape pr create`** — not the GitHub API directly
-6. **Stop on failure** — report what failed, don't push through
-
-</critical_rules>
-
-<the_process>
-
-## Step 1: Detect PR template
+### 1. Detect the PR template
 
 ```bash
 cape pr template
 ```
 
-This returns JSON with `source` ("repo" or "default"), `content` (raw template text), and `sections`
-(heading names). If `source` is "repo", use that template's section structure and heading levels for
-the description. If "default", use the bundled template in step 5.
+Returns JSON with `source` ("repo" or "default"), `content`, and `sections`. When `source` is
+"repo", follow that template's section structure and heading levels. Otherwise use the bundled
+template in step 3.
 
----
-
-## Step 2: Validate prerequisites
+### 2. Validate and prepare the branch
 
 ```bash
 cape git context
@@ -71,122 +52,61 @@ git diff <default-branch>...HEAD --stat
 cape state list
 ```
 
-Use `mainBranch` from the context output as `<default-branch>` throughout.
+Use `mainBranch` from the context output as `<default-branch>` throughout. Two gate checks: the
+current branch is not the default branch, and all changes are committed. On uncommitted changes,
+stop and point the user to `cape:commit`.
 
-**Gate checks:**
+Then sync the remote:
 
-- Current branch is not the default branch
-- All changes are committed
+1. `git rev-parse --abbrev-ref @{upstream} 2>/dev/null`. No upstream: `git push -u origin HEAD`.
+2. `git log @{upstream}..HEAD --oneline`. Ahead: `git push`.
+3. `git log HEAD..<default-branch> --oneline`. Behind: warn the user, never rebase automatically.
 
----
+Check contribution artifacts and act only on what exists: CONTRIBUTING.md (note any PR requirements
+relevant to the change), CHANGELOG.md with an "Unreleased" section (add an entry), `.changeset/`
+(run `npx changeset` interactively).
 
-## Step 3: Prepare branch
+### 3. Write the description
 
-1. Check if branch tracks a remote: `git rev-parse --abbrev-ref @{upstream} 2>/dev/null`
-2. If no upstream, push with tracking: `git push -u origin HEAD`
-3. If upstream exists, check if local is ahead: `git log @{upstream}..HEAD --oneline`
-4. If ahead, push: `git push`
-5. Check if branch is up-to-date with target: `git log HEAD..<default-branch> --oneline`
-6. If behind, warn the user — don't rebase automatically
-
----
-
-## Step 4: Check contribution requirements
-
-Auto-detect contribution artifacts by checking for these files. Act only on what exists:
-
-- **CONTRIBUTING.md** — if present, note any PR requirements relevant to the change
-- **CHANGELOG.md** — if present with an "Unreleased" section, add an entry for this change
-- **.changeset/** — if present, run `npx changeset` interactively
-
-If none exist, skip.
-
----
-
-## Step 5: Create PR description
-
-Read the full diff against the target branch:
+Read the full diff and commit list:
 
 ```bash
 cape git diff branch
 git log <default-branch>..HEAD --oneline
 ```
 
-Write the description following the detected template structure (step 1). If no repo template was
-found, use this bundled template — match the sections and heading levels exactly:
+Write the description following the detected template. If no repo template exists, match this
+bundled template's sections and heading levels exactly:
 
 !`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
 
-**Title:** conventional commit format — `type(scope): subject`
+The title uses conventional commit format: `type(scope): subject`.
 
-**Quality bar (every PR, not just AFK):** the body is for a reviewer who knows the domain but not
-this branch. Write to that reader:
+Whatever the template source, the test plan section must contain a checkbox whose text includes
+`/code-review` (the bundled template's "- [ ] /code-review run on this branch..." item). Repo
+templates rarely carry it; add it. `cape pr create` refuses a body without that box.
 
-- **Organize by what changed** — group by area / module / feature, in plain language. NEVER by how
-  the work was sharded: no `T0 (XYZ-1)` per-task or per-issue-id bullet structure, no per-task test
-  counts. The reviewer does not care how the work was split.
-- **Name behavior, not the diff** — say what the code now does, not which symbols moved. No dumps of
-  type signatures or function names (`FieldDescriptor<E,V,C>`, `compareByField`); those live in the
-  diff. Mention an identifier only when the reviewer needs that exact name to find something.
-- **Hyperlink tracker ids in prose** (`[ABU-12](https://linear.app/...)`), matching repo PR style.
-  Leave the closing `Fixes ABU-XX` / `Related to ABU-XX` line plain — the integration parses the
-  bare id, and a link there can break the close.
-- **Be short.** A reviewer skims this before reading code. Cut exhaustive enumerations.
+Write the body for a reviewer who knows the domain but not this branch:
 
-**Section guidelines:**
+- Organize by what changed (area, module, feature), never by how the work was sharded. No per-task
+  or per-issue-id bullet structure, no per-task test counts.
+- Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
+  identifier only when the reviewer needs that exact name to find something.
+- Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing
+  `Fixes ABU-XX` line plain; the integration parses the bare id, and a link there can break the
+  close.
+- Be short. A reviewer skims this before reading code, so cut exhaustive enumerations.
 
-- **Motivation:** why this change, why now (1-3 sentences)
-- **Changes:** what the change does, in reviewer terms — behavior and scope, not an identifier list
-- **Test plan (checkboxes):** what must pass NOW, before PR creation — commands you run (e.g.,
-  `npm test`, `curl localhost:3000/api`) plus the `/code-review` box the human runs. These are the
-  gate
-- **Verification performed:** tests already run during development — evidence, not promises
-- **Deployment notes:** post-merge operational steps (migrations, cache flushes) — optional, omit if
-  none
-- **Manual verification:** subjective judgment only (visual design, UX feel) — optional, omit for
-  backend changes
-- **Deferred verification:** acceptance checks that need a deployed env and could not run pre-merge
-  (see `cape:finish-epic` `[~]`) — list explicitly as not-yet-done, verify post-merge. Distinct from
-  Manual verification; never mark these done.
-- **Issues:** default to a closing keyword + Linear identifier (`Fixes ABU-XX`) so Linear's GitHub
-  integration links AND closes the epic on merge. Use `Related to ABU-XX` (non-closing) ONLY when
-  this PR does not complete the epic — more PRs or a live cutover still pending. A non-closing link
-  moves the issue through pre-merge statuses but never closes it; that is the usual reason an epic
-  stays open after its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`,
-  `implement` (and their tenses). Never put both keywords on the same id.
+When acceptance checks need a deployed environment and could not run pre-merge (see
+`cape:finish-epic` `[~]`), list them under Deferred verification as plain bullets, never as
+checkboxes and never marked done.
 
-If no subjective items exist, omit manual verification entirely. If no deployment steps, omit
-deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
-gaps found, add missing test plan items.
+Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
+items for any gaps. Run the title and description through the `cape:unslop` skill before presenting.
 
-Run the description prose through the `cape:unslop` skill before presenting or creating the PR.
+### 4. STOP: present and get approval (output gate)
 
----
-
-## STOP — Step 6: Present, approve, execute, create (OUTPUT GATE)
-
-**You MUST stop here and get user approval before running tests or creating the PR.**
-
-**AFK branch:** when the invoking run states it is unattended — an autonomous run with no human
-present to confirm — there is nobody to approve. Print the full PR (title, description, automatable
-items) to the transcript so the opened PR is on record, skip `AskUserQuestion`, then run the
-test-plan gate and `cape pr create` as on approval below. Take this branch only on an explicit
-statement that the run is unattended; when in doubt, a human is present and the interactive path
-below applies unchanged.
-
-**The review box on the AFK branch:** the builtin `/code-review` is not model-invocable, so an
-unattended run satisfies the review item with a `cape:code-reviewer` pass instead. Dispatch it over
-the branch diff and read its verdict; tick the box only on a pass, and only because the box admits
-"an equivalent agent review". On a fail, fix the findings and re-review, or stop with the box
-unticked — `cape pr create` will refuse the body either way. Never tick it because no human was
-available.
-
-No human edits an AFK body before it ships, so the step 5 quality bar and unslop apply in full. Two
-AFK-only rules on top:
-
-- **Never write a robot signature or emoji into the PR title or body** — the PR must read as if a
-  human wrote it.
-- **Do not narrate the run** — describe the change, not the orchestration that produced it.
+**Stop here. Get user approval before running tests or creating the PR.**
 
 Output the full PR:
 
@@ -194,25 +114,36 @@ Output the full PR:
 2. Full description with test plan (render `- [ ]` checkboxes verbatim, not as bullet points)
 3. Which test plan items are automatable (backticked commands, URLs, assertions)
 
-End output with `---` separator. After the separator, immediately use `AskUserQuestion` with
-options:
+End with a `---` separator, then immediately use `AskUserQuestion` with options:
 
-- **Create PR** — run tests and publish
-- **Create draft** — run tests and publish as draft
-- **Edit** — revise title or description
-- **Cancel** — abort
+- **Create PR**: run tests and publish
+- **Create draft**: run tests and publish as draft
+- **Edit**: revise title or description
+- **Cancel**: abort
 
-Do not announce next steps or say "Let me..." after the separator. Present the plan, then ask. Do
-not call any tools between outputting the description and calling `AskUserQuestion`.
+Do not announce next steps or say "Let me..." after the separator, and do not call any tools between
+outputting the description and calling `AskUserQuestion`.
 
-**On approval (Create PR or Create draft):** run every test-plan checkbox you can run, in order,
-mark each `- [x]` on pass, keep `- [ ]` on fail. The `/code-review` box is not yours to run — tick
-it only when the user confirms they ran it and handled the findings (on the AFK branch, on a
-`cape:code-reviewer` pass instead). On any failure, stop, report details, ask **Fix and retry** or
-**Cancel**. After all pass, validate the rewritten description with `cape pr validate --stdin`
-(rejects missing sections AND unchecked boxes — loop back if any `- [ ]` remains), then call
-`cape pr create` with the rewritten body. Add `--draft` for the draft option. On creation failure
-(push rejected, conflicts): auto-fix if trivial, re-attempt up to 3 times, then ask the user.
+**AFK branch.** Take this branch only when the invoking run explicitly states it is unattended; when
+in doubt, a human is present and the interactive path applies unchanged. Print the full PR (title,
+description, automatable items) to the transcript so the opened PR is on record, skip
+`AskUserQuestion`, and continue to step 5 as if approved. The builtin `/code-review` is not
+model-invocable, so satisfy the review item with a `cape:code-reviewer` pass over the branch diff
+instead: tick the box only on a pass. On a fail, fix the findings and re-review, or stop with the
+box unticked; `cape pr create` refuses the body either way. Never tick it because no human was
+available. No human edits an AFK body before it ships, so the step 3 quality bar and unslop apply in
+full, plus two AFK-only rules: never write a robot signature or emoji into the title or body, and
+describe the change, not the orchestration that produced it.
+
+### 5. Run the gate and create
+
+On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
+pass, keep `[ ]` on fail. Tick the `/code-review` box only when the user confirms they ran it and
+handled the findings (on the AFK branch, on a `cape:code-reviewer` pass instead). On any failure,
+stop, report details, and ask **Fix and retry** or **Cancel**.
+
+After all pass, validate the rewritten description with `cape pr validate --stdin`. It rejects
+missing sections and unchecked boxes; loop back if any `- [ ]` remains. Then create:
 
 ```bash
 cape pr create --title "the title" --body "$(cat <<'EOF'
@@ -221,24 +152,25 @@ EOF
 )"
 ```
 
----
+Add `--draft` for the draft option. On creation failure (push rejected, conflicts): auto-fix if
+trivial, re-attempt up to 3 times, then ask the user.
 
-## Step 7: Finalize
+### 6. Finalize
 
-After successful creation, label the herdr workspace, then finalize:
+Label the herdr workspace:
 
 ```bash
 cape workspace phase pr
 ```
 
-1. Identify the active epic from tracker cache or flow context.
-2. Ensure the PR description references the epic with a closing keyword (`Fixes ABU-XX`). Linear's
-   GitHub integration then moves the epic to `In Review` on open and `Done` on merge — cape does not
-   set status manually. This requires the GitHub↔Linear integration to be configured (see tracker
-   workspace-setup).
-3. Add labels: `gh pr edit <number> --add-label <label>` (if project uses label conventions)
-4. Add reviewers if the user mentioned any or the project has conventions
-5. Report:
+1. Identify the active epic from the tracker cache or flow context and confirm the description
+   references it: `Fixes ABU-XX` when this PR completes the epic, the non-closing
+   `Related to ABU-XX` when more PRs are coming. Linear's GitHub integration moves the epic to In
+   Review on open and Done when a `Fixes` PR merges; cape never sets status manually. This requires
+   the GitHub-Linear integration (see tracker workspace-setup).
+2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
+   conventions or the user named any.
+3. Report:
 
 ```
 PR created: <url>
@@ -247,52 +179,3 @@ PR created: <url>
 
 Test plan: <passed>/<total> checks passed
 ```
-
-</the_process>
-
-<examples>
-
-<example>
-<scenario>Standard feature PR</scenario>
-
-Branch has 3 commits adding a caching layer. No repo PR template found.
-
-1. `cape pr template` → `source: "default"`, sections: Motivation, Changes, Test plan
-2. Validate — on `feat/add-cache`, all committed, pushed
-3. Write description using bundled template sections (Motivation, Changes, Test plan, Verification)
-4. **STOP** — present full PR to user, `AskUserQuestion` → user picks "Create PR"
-5. Run test plan: `[x] npm test`, `[x] verify cache hit returns 200`, `[x] verify TTL expiry`
-6. `cape pr validate --stdin` passes → `cape pr create` — success
-7. Report URL and summary </example>
-
-<example>
-<scenario>Repo has its own PR template</scenario>
-
-`cape pr template` → `source: "repo"`, sections: Summary, Testing, Screenshots.
-
-1. Write description matching the repo template's section structure and heading levels exactly
-2. Fill in Summary, Testing, Screenshots (include if visual, omit if backend)
-3. **STOP** — present to user, get confirmation
-4. `cape pr validate --stdin` before `cape pr create`
-5. Test plan items still execute as a gate regardless of template structure </example>
-
-<example>
-<scenario>Uncommitted changes</scenario>
-
-User says "create a PR" but `git status` shows modified files.
-
-**Right:** "Uncommitted changes detected. Load `cape:commit` first." **Wrong:** Silently commit and
-proceed. </example>
-
-</examples>
-
-<key_principles>
-
-- **Present before acting** — show the full PR and get approval before running tests or creating
-- **Test plan is the gate** — all checkboxes pass before the PR exists
-- **Detect, don't assume** — check for repo templates before falling back
-- **Follow the template** — use detected or bundled template sections, never invent your own
-- **Evidence over promises** — verification performed records what happened, not what should happen
-- **Conventional titles** — `type(scope): subject` matching project conventions
-
-</key_principles>

@@ -2,53 +2,36 @@
 name: tracker
 user-invocable: false
 description: >
-  Reference for cape's tracker seam: Linear MCP writes plus local cache refreshes. Use whenever a
-  cape skill needs to create, list, update, close, or cache tracker work. Triggers on: issue
-  tracking, Linear epic/task/bug workflow, tracker cache, ready work, closing tracked work, and
-  rewiring skills that previously used local issue tracking. Do NOT use for implementation planning
-  itself; use the chain skill and load this only for tracker protocol details.
+  Reference for cape's tracker protocol: Linear MCP writes plus local cache refreshes. Use whenever
+  a cape skill needs to create, list, update, close, or cache tracker work. Triggers on: issue
+  tracking, Linear epic/task/bug workflow, tracker cache, ready work, closing tracked work. Do NOT
+  use for implementation planning itself; use the chain skill and load this only for tracker
+  protocol details.
 ---
 
-<skill_overview> Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read
-cache. Skills write to Linear through MCP, then refresh the local cache with `cape tracker`.
+# Tracker
 
-Core contract: Linear is the source of truth for writes; cache is the source of truth for reads.
-</skill_overview>
+Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read cache. Skills
+write to Linear through MCP, then refresh the cache with `cape tracker`. Linear is the source of
+truth for writes; the cache is the source of truth for reads.
 
-<rigidity_level> HIGH FREEDOM -- Operation names and cache-write rules are fixed. Issue titles and
-descriptions adapt to the chain using the tracker. </rigidity_level>
+Operation names and cache-write rules are fixed. Issue titles and descriptions adapt to the chain
+using the tracker.
 
-<when_to_use>
+## Rules
 
-- A cape skill needs to create an epic, task, or bug issue
-- A cape skill needs to list ready work from cache
-- A cape skill needs to update status or close work
-- A Linear MCP result must be written into `hooks/context/tracker.json`
-- A skill needs the tracker cache shape
+1. **Use only five operations.** createEpic, createTasks, listReady, updateStatus, close.
+2. **Write to Linear first.** Use MCP Linear `save_issue` for create, update, and close.
+3. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
+   never Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read,
+   not orientation, and is allowed.
+4. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
+5. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
+   entries.
+6. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
+   close-check records to Linear.
 
-**Don't use for:**
-
-- Writing implementation code (use the active chain skill)
-- Creating detailed expanded plans or validation transcripts
-- General Linear administration outside cape's five operations
-
-</when_to_use>
-
-<critical_rules>
-
-1. **Use only five operations** -- createEpic, createTasks, listReady, updateStatus, close
-2. **Writes go to Linear first** -- use MCP Linear `save_issue` for create/update/close
-3. **Reads come from cache** -- list ready and orientation read `hooks/context/tracker.json`
-4. **Refresh cache after every write** -- pipe MCP JSON or status details to `cape tracker`
-5. **No network in the CLI** -- `cape tracker` only transforms provided MCP results into cache
-6. **Keep fine-grained plans in session** -- do not write expanded plans, divergence logs, or
-   close-check records to Linear
-
-</critical_rules>
-
-<the_process>
-
-## The cache
+## Cache shape
 
 The cache file is `hooks/context/tracker.json`.
 
@@ -74,12 +57,11 @@ The cache file is `hooks/context/tracker.json`.
 }
 ```
 
-The cache stores enough for banners and ready-work routing: IDs, titles, statuses, state types, and
-epic-to-task membership. Ready-task behavior is canonical in
-`cli/src/services/hooks/state.ts:isReadyTask`. If cache is missing or corrupt, treat it as empty and
-refresh from an MCP result already obtained in the session.
-
----
+The cache stores what banners and ready-work routing need: IDs, titles, statuses, state types, and
+epic-to-task membership. It stores no expanded plans or implementation transcripts. Ready-task
+behavior is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that definition
+instead of restating statuses. Treat a missing or corrupt cache as empty and refresh it from an MCP
+result already obtained in the session.
 
 ## Write to Linear, then refresh the cache
 
@@ -98,37 +80,19 @@ cape tracker cache-status <issue-id> "In Progress" started
 Prefer `cache-epic` with a full children-included `get_issue` result so task membership stays
 current.
 
-Never close the epic yourself: Linear's GitHub integration moves it to `Done` when the PR
-(referencing it with `Fixes ABU-XX`) merges. Mirror that into the cache afterward with
-`cache-status <epic-id> Done completed`.
+Never close the epic yourself. Linear's GitHub integration moves it to `Done` when the PR
+(referencing it with `Fixes ABU-XX`) merges. To mirror that status into the cache after a merge, run
+`cape tracker cache-status <epic-id> Done completed`, or `cache-epic` if you have the full epic
+response with children.
 
-</the_process>
+## Examples
 
-<examples>
+**Wrong:** write-plan creates local issue files or hand-rolls a cache object.
 
-<example>
-<scenario>write-plan creates an epic and first task</scenario>
+**Right:** write-plan uses MCP Linear `save_issue` for the epic and child task, gets the full epic
+JSON, then runs `cape tracker cache-epic '<json>'`.
 
-**Wrong:** Create local issue files or write a hand-rolled cache object.
+**Wrong:** execute-plan marks the local cache done before Linear accepts the close.
 
-**Right:** Use MCP Linear `save_issue` for the epic and child task, get the full epic JSON, then run
-`cape tracker cache-epic '<json>'`. </example>
-
-<example>
-<scenario>execute-plan closes a completed task</scenario>
-
-**Wrong:** Mark local cache done before Linear accepts the close.
-
-**Right:** Close the issue in Linear first. After success, run
-`cape tracker cache-status <task-id> Done completed`. </example>
-
-</examples>
-
-<key_principles>
-
-- **Linear first, cache second** -- local state mirrors successful MCP writes
-- **Cache powers reads** -- banner and ready-work orientation stay fast and offline-safe
-- **Small seam** -- cape only needs create, list ready, update status, and close
-- **Clean board** -- implementation breakdowns stay in the active session
-
-</key_principles>
+**Right:** execute-plan closes the issue in Linear first, then runs
+`cape tracker cache-status <task-id> Done completed`.
