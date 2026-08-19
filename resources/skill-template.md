@@ -2,116 +2,72 @@
 name: skill-name
 description: >
   Use whenever [trigger condition]. Triggers on: [explicit triggers like user phrases, commands,
-  situations]. Also triggers on: [implicit triggers]. Do NOT use for [negative triggers -- things
-  that sound similar but need a different skill].
+  situations]. Also triggers on: [implicit triggers]. Do NOT use for [negative triggers, things that
+  sound similar but need a different skill].
 ---
 
-<skill_overview> [1-2 sentences: what this skill does and what it produces. State the core contract
--- the non-negotiable guarantee this skill makes.] </skill_overview>
+# Skill name
 
-<rigidity_level> [HIGH, MEDIUM, or LOW] FREEDOM -- [What's rigid and what adapts to context. One
-sentence.] </rigidity_level>
+[1-2 sentences: what this skill does and what it produces. State the core contract, the guarantee
+this skill makes.]
 
-<when_to_use>
+[One sentence on rigidity: what is fixed and what adapts to context.]
 
-- [Positive trigger: situation or user phrase]
-- [Positive trigger]
-- [Positive trigger]
+[The description frontmatter carries the triggers. Do not repeat them in a "when to use" section;
+the body starts at the contract.]
 
-**Don't use for:**
+## Arguments
 
-- [Negative trigger -- redirect to correct skill if applicable]
-- [Negative trigger]
+[Only when the skill takes arguments.]
 
-</when_to_use>
+- `--flag` (optional): [what it changes]
 
-<critical_rules>
+## Rules
 
-1. **[Bold phrase]** -- [rule that has no exceptions]
-2. **[Bold phrase]** -- [rule]
-3. **[Bold phrase]** -- [rule]
-4. **[Bold phrase]** -- [rule]
+1. **[Bold phrase.]** [Rule with no exceptions. Hard gates like "never commit without approval" go
+   first.]
+2. **[Bold phrase.]** [Rule.]
 
-</critical_rules>
+## Process
 
-<the_process>
+### 1. [Title]
 
-## Step 1: [Title]
+[What to do. Include tool commands, agent dispatches, or user interactions. 3-5 steps total, each
+with a clear deliverable.]
 
-[What to do in this step. Include tool commands, agent dispatches, or user interactions.]
+### 2. [Title]
 
----
+[If this step makes design or implementation decisions, add a short assumption checkpoint: surface
+scope creep, ambiguous terms, or over-engineering before committing. Keep it inline.]
 
-## Step 2: [Title]
+### 3. [Title]
 
-[Steps use `## Step N: Title` headings separated by `---` rules.]
+[Any step that emits human-facing prose (commit messages, PR or epic text, review write-ups, issue
+descriptions, replies) runs that prose through the `cape:unslop` skill before presenting or posting.
+Skip only for pure code or mechanical output. State this as a one-line reminder at the emitting
+step; do not repeat the full convention.]
 
-[Convention: if this step makes design or implementation decisions, consider adding a lightweight
-assumption checkpoint -- surface scope creep, ambiguous terms, or over-engineering before
-committing. Keep it inline and focused.]
+## Agents
 
----
+[Only when the skill dispatches cape agents.]
 
-## Step 3: [Title]
-
-[3-5 steps total. Each step is a discrete phase with a clear deliverable.]
-
-[Convention -- prose output: any step that emits human-facing prose (commit messages, PR or epic
-text, review write-ups, issue descriptions, replies) runs that prose through the `cape:unslop` skill
-before presenting or posting; skip only for pure code or mechanical output, and write in simple
-language with clear, scannable structure. State this as a one-line reminder at the emitting step --
-do not repeat the full convention.]
-
-</the_process>
-
-<agent_references>
-
-[Include this section only when the skill dispatches cape agents.]
-
-## Dispatch `cape:agent-name` when:
+Dispatch `cape:agent-name` when:
 
 - [Condition that warrants dispatching this agent]
-- [Condition]
 
-</agent_references>
+## Skills
 
-<skill_references>
+[Only when the skill loads other cape skills via the Skill tool.]
 
-[Include this section only when the skill loads other cape skills via the Skill tool.]
-
-## Load `cape:skill-name` with the Skill tool when:
+Load `cape:skill-name` when:
 
 - [Condition that warrants loading this skill]
-- [Condition]
 
-</skill_references>
+## Examples
 
-<examples>
+[Optional. Two contrasting wrong/right examples at most; omit the section when the process is
+self-evident. Never add a principles section that restates the rules.]
 
-[Optional. Two contrasting examples at most; omit the section when the process is self-evident.]
+**Wrong:** [What happens when skipping steps, and the consequence.]
 
-<example>
-<scenario>[Setup: what the user did or what state exists]</scenario>
-
-**Wrong:** [What happens without the skill or when skipping steps. Explain the consequence.]
-
-**Right:** [Correct approach following the process. Show the key actions and outcome.] </example>
-
-<example>
-<scenario>[A different situation exercising another part of the process]</scenario>
-
-**Wrong:** [Common mistake or shortcut.]
-
-**Right:** [Correct approach.] </example>
-
-</examples>
-
-<key_principles>
-
-[Optional. Include only principles not already stated in critical_rules or the process; cap at 4.
-Omit the section rather than restating rules.]
-
-- **[Bold phrase]** -- [explanation of the principle]
-- **[Bold phrase]** -- [explanation]
-
-</key_principles>
+**Right:** [The correct approach: key actions and outcome.]
