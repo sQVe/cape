@@ -17,33 +17,15 @@ name: test-skill
 description: A test skill
 ---
 
-<skill_overview>
-Overview content here.
-</skill_overview>
+# Test skill
 
-<rigidity_level>
-High
-</rigidity_level>
+## When to use
 
-<when_to_use>
 Use when testing.
-</when_to_use>
 
-<critical_rules>
-Always test.
-</critical_rules>
+## Process
 
-<the_process>
 Process here.
-</the_process>
-
-<examples>
-Example content here.
-</examples>
-
-<key_principles>
-Principle content here.
-</key_principles>
 `;
 
 const validAgent = `---
@@ -93,94 +75,18 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('Missing frontmatter field: description');
   });
 
-  it('detects missing XML tags', () => {
-    const content = validSkill.replace(/<skill_overview>[\s\S]*?<\/skill_overview>/, '');
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('Missing required tag: <skill_overview>');
-  });
-
-  it('detects empty XML tags', () => {
-    const content = validSkill.replace(
-      /<skill_overview>[\s\S]*?<\/skill_overview>/,
-      '<skill_overview>\n</skill_overview>',
-    );
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('Empty tag: <skill_overview>');
-  });
-
-  it('requires the five core tags', () => {
-    const content = '---\nname: x\ndescription: x\n---\n';
-    const result = validateSkillContent('test.md', content);
-    expect(result.valid).toBe(false);
-    expect(result.errors).toContain('Missing required tag: <skill_overview>');
-    expect(result.errors).toContain('Missing required tag: <rigidity_level>');
-    expect(result.errors).toContain('Missing required tag: <when_to_use>');
-    expect(result.errors).toContain('Missing required tag: <critical_rules>');
-    expect(result.errors).toContain('Missing required tag: <the_process>');
-  });
-
-  it('treats examples and key_principles as optional', () => {
-    const content = '---\nname: x\ndescription: x\n---\n';
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).not.toContain('Missing required tag: <examples>');
-    expect(result.errors).not.toContain('Missing required tag: <key_principles>');
-  });
-
-  it('detects missing the_process tag', () => {
-    const skillWithoutTheProcess = validSkill.replace(
-      /<the_process>[\s\S]*?<\/the_process>\n*/,
-      '',
-    );
-    const result = validateSkillContent('test.md', skillWithoutTheProcess);
-    expect(result.errors).toContain('Missing required tag: <the_process>');
-  });
-
-  it('allows a skill without an examples tag', () => {
-    const content = validSkill.replace(/<examples>[\s\S]*?<\/examples>\n*/, '');
-    const result = validateSkillContent('test.md', content);
-    expect(result.valid).toBe(true);
-  });
-
-  it('detects critical_rules after the_process', () => {
-    const content = `---
-name: test
-description: test
----
-
-<skill_overview>Overview.</skill_overview>
-<rigidity_level>High</rigidity_level>
-<when_to_use>Use here.</when_to_use>
-<the_process>Process.</the_process>
-<critical_rules>Rules.</critical_rules>
-<examples>Examples.</examples>
-<key_principles>Principles.</key_principles>
-`;
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('<critical_rules> must appear before <the_process>');
-  });
-
-  it('detects duplicate XML tags', () => {
-    const content = validSkill + '\n<critical_rules>\nDuplicate rules.\n</critical_rules>\n';
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('Duplicate tag: <critical_rules>');
-  });
-
-  it('detects whitespace-only tag as empty', () => {
-    const content = validSkill.replace(
-      /<skill_overview>[\s\S]*?<\/skill_overview>/,
-      '<skill_overview>   </skill_overview>',
-    );
-    const result = validateSkillContent('test.md', content);
-    expect(result.errors).toContain('Empty tag: <skill_overview>');
-  });
-
   it('detects reference to nonexistent agent', () => {
     const knownAgents = new Set(['code-reviewer', 'test-runner']);
-    const content =
-      validSkill +
-      '\n<agent_references>\n## `cape:nonexistent-agent` protocol:\nDispatch details.\n</agent_references>\n';
+    const content = validSkill + '\nDispatch `cape:nonexistent-agent` when investigating.\n';
     const result = validateSkillContent('test.md', content, { knownAgents });
     expect(result.errors).toContain('References unknown agent: cape:nonexistent-agent');
+  });
+
+  it('allows dispatch references to known agents', () => {
+    const knownAgents = new Set(['code-reviewer']);
+    const content = validSkill + '\nDispatch `cape:code-reviewer` after each step.\n';
+    const result = validateSkillContent('test.md', content, { knownAgents });
+    expect(result.valid).toBe(true);
   });
 });
 
