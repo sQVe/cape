@@ -89,7 +89,7 @@ const gateExecutePlan = () =>
           additionalContext: [
             `You are on \`${branch}\` (the default branch).`,
             'Ask the user whether to start or enter the epic worktree before starting work.',
-            'Use the grove skill if they agree.',
+            'Use grove if they agree.',
           ].join(' '),
         };
       }
