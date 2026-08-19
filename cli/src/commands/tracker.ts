@@ -101,7 +101,7 @@ const cacheTasks = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Refresh cached tasks for an epic from Linear list_issues JSON. This replaces the cached task list for that epic.',
+    'Refresh cached tasks for an epic from Linear list_issues JSON. Merges forward-only per task: the more advanced of cached vs incoming state wins.',
   ),
 );
 

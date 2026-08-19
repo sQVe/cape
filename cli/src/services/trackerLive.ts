@@ -154,6 +154,34 @@ export const toTasks = (value: unknown): readonly TrackerTask[] => {
   });
 };
 
+const stateRank = (stateType: string) => {
+  switch (stateType.toLowerCase()) {
+    case 'started':
+      return 1;
+    case 'completed':
+    case 'canceled':
+      return 2;
+    default:
+      return 0;
+  }
+};
+
+const mergeTaskLists = (
+  cached: readonly TrackerTask[] | undefined,
+  incoming: readonly TrackerTask[],
+): readonly TrackerTask[] => {
+  const cachedById = new Map((cached ?? []).map((task) => [task.id, task]));
+  const merged = incoming.map((task) => {
+    const existing = cachedById.get(task.id);
+    return existing != null && stateRank(existing.stateType) > stateRank(task.stateType)
+      ? existing
+      : task;
+  });
+  const incomingIds = new Set(incoming.map((task) => task.id));
+  const cacheOnly = (cached ?? []).filter((task) => !incomingIds.has(task.id));
+  return [...merged, ...cacheOnly];
+};
+
 export const mergeEpic = (
   cache: TrackerCache | null,
   epic: TrackerEpic,
@@ -163,7 +191,10 @@ export const mergeEpic = (
   timestamp,
   epics: {
     ...cache?.epics,
-    [epic.id]: epic,
+    [epic.id]: {
+      ...epic,
+      tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks),
+    },
   },
 });
 
@@ -185,7 +216,7 @@ export const mergeTasks = (
         ...(existing?.project == null ? {} : { project: existing.project }),
         ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
-        tasks,
+        tasks: mergeTaskLists(existing?.tasks, tasks),
       },
     },
   };
