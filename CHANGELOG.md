@@ -7,6 +7,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- Skills: removed `cape:worktree`. Grove owns worktree creation; the cape-specific tail (stamp
+  `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
+  `cape:execute-plan`. The `cape worktree` CLI command is unchanged.
+- Commands: removed `commands/tracker.md`, the last wrapper duplicating a skill. The tracker skill
+  is `user-invocable: false` by design and works as model-loaded plumbing; it was typed twice in
+  four months of history.
+- CLI: removed the event log (`eventLog.ts` and its `events.jsonl` output). It was write-only —
+  nothing in the repo, any skill, or any settings file read it.
+- Hooks: removed the `warn` deny tier (`git reset --hard`, `git checkout --`, `git clean -f`) and
+  the force-push block from the Bash deny table. The cc-safety-net plugin owns destructive-command
+  policy globally; cape keeps only its own rules (amend, `gh pr merge|close`, and the
+  commit/pr/branch redirects).
+- Resources: removed `resources/skill-template.md` and `resources/agent-template.md`.
+  `cape validate` is the executable source of truth for definition structure; two markdown mirrors
+  of the same schema drifted.
+- Agents: removed the dead `notebox-researcher` mode from `codebase-investigator`. The notebox
+  plugin is no longer installed, so the mode instructed searches against a tool that does not exist.
+
+### Changed
+
+- Skills: `cape:tracker` slimmed from five steps to the cache shape plus the write-and-refresh
+  protocol. Steps that restated `cape tracker --help` are gone; the Linear agent contract (dedupe,
+  labels, priority, titles) moved to `skills/tracker/resources/agent-contract.md` so write-plan,
+  execute-plan, and fix-bug can load it directly.
+- CI: the check job now builds the CLI and runs `cape validate`, so definition lint is enforced
+  instead of advisory.
+
 ### Added
 
 - Skills: added `cape:unslop`, adapted from Cursor's pstack unslop skill: 31 AI-tell patterns, an
