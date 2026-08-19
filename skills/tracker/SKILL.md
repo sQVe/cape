@@ -4,31 +4,39 @@ user-invocable: false
 description: >
   Reference for cape's tracker protocol: Linear MCP writes plus local cache refreshes. Use whenever
   a cape skill needs to create, list, update, close, or cache tracker work. Triggers on: issue
-  tracking, Linear epic/task/bug workflow, tracker cache, ready work, closing tracked work. Do NOT
-  use for implementation planning itself; use the chain skill and load this only for tracker
-  protocol details.
+  tracking, Linear ticket/plan/task/bug workflow, team routing between human and agent issues,
+  tracker cache, ready work, closing tracked work. Do NOT use for implementation planning itself;
+  use the chain skill and load this only for tracker protocol details.
 ---
 
 # Tracker
 
-Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read cache. Skills
-write to Linear through MCP, then refresh the cache with `cape tracker`. Linear is the source of
-truth for writes; the cache is the source of truth for reads.
+Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read cache. Work is
+two-tier: human-facing tickets live in the Aburaya team; agent-facing plan issues and tasks live in
+the Agents team (AI). Skills write to Linear through MCP, then refresh the cache with
+`cape tracker`. Linear is the source of truth for issue content; the cache is the source of truth
+for reads — and for task status during build.
 
-Operation names and cache-write rules are fixed. Issue titles and descriptions adapt to the chain
-using the tracker.
+Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
+to the chain using the tracker.
 
 ## Rules
 
 1. **Use only five operations.** createEpic, createTasks, listReady, updateStatus, close.
-2. **Write to Linear first.** Use MCP Linear `save_issue` for create, update, and close.
-3. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
+2. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the team
+   `Agents`; human-facing issues go to `Aburaya`. Team routing is a `save_issue` parameter — no
+   config layer.
+3. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
+4. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
    never Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read,
    not orientation, and is allowed.
-4. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
-5. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
+5. **Build-time status is cache-only.** Track task status with `cape tracker cache-status` during
+   build; no MCP `save_issue` status writes mid-build. The PR closing line catches Linear up at
+   merge.
+6. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
+7. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
    entries.
-6. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
+8. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
    close-check records to Linear.
 
 ## Cache shape
@@ -40,13 +48,14 @@ The cache file is `hooks/context/tracker.json`.
   "version": 1,
   "timestamp": 1700000000000,
   "epics": {
-    "ABU-15": {
-      "id": "ABU-15",
+    "AI-15": {
+      "id": "AI-15",
       "title": "Cape V2",
       "status": "In Progress",
+      "humanId": "ABU-14",
       "tasks": [
         {
-          "id": "ABU-56",
+          "id": "AI-56",
           "title": "Tracker cache CLI",
           "status": "Todo",
           "stateType": "unstarted"
@@ -57,26 +66,28 @@ The cache file is `hooks/context/tracker.json`.
 }
 ```
 
-The cache stores what banners and ready-work routing need: IDs, titles, statuses, state types, and
-epic-to-task membership. It stores no expanded plans or implementation transcripts.
+The `epics` map is keyed by the AI plan issue; its tasks are the plan's sub-issues. `humanId`
+carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache.
+The cache stores what banners and ready-work routing need: IDs, titles, statuses, state types,
+pairing, and plan-to-task membership. It stores no expanded plans or implementation transcripts.
 
 ## Agent contract
 
 Apply before every issue create or update.
 
+- **Team.** Route by audience. Agent-facing issues (plans, contracts, task sub-issues) go to the
+  team `Agents` (AI); human-facing issues go to `Aburaya`. Pass the team as a `save_issue`
+  parameter.
 - **Dedupe first.** Search open issues in the target project by title keywords. On a match, comment
   instead of creating a duplicate; the comment states what cape would have created and links the
   match.
 - **Project.** Route work to a matching named project. Use `Inbox` when no project matches. Never
   create project-less issues. Confirm a new project with the user before creating it.
 - **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label on tasks
-  and bugs (`type:bug`, `type:feature`, `type:chore`); epics stay untyped parents. Also apply
-  `agent-ticket` to every task and bug sub-issue cape creates, never to epics or to human-created
-  issues cape only updates. It marks the issue as an agent work ticket whose review surface is the
-  PR, not the issue, so humans can filter these out (`-label:agent-ticket`) and review only epics
-  and human-created work. The workspace bootstrap creates these labels; until a given label exists,
-  apply it best-effort and skip what is missing. See
-  [resources/workspace-setup.md](resources/workspace-setup.md).
+  and bugs (`type:bug`, `type:feature`, `type:chore`); human tickets and plan issues stay untyped
+  parents. The team boundary marks agent work — the retired `agent-ticket` label is never applied.
+  The workspace bootstrap creates these labels; until a given label exists, apply it best-effort and
+  skip what is missing. See [resources/workspace-setup.md](resources/workspace-setup.md).
 - **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never
   use `High`. It is reserved for the human-curated `Next` view, and cape-created `High` issues
   inflate it.
@@ -87,31 +98,46 @@ Apply before every issue create or update.
 
 ## Create work
 
-Apply the agent contract, then create the epic with MCP Linear `save_issue`. Put the durable epic
-contract in the Linear issue description. Create child task issues with `save_issue` using the epic
-as parent.
+Apply the agent contract, then create the pair with MCP Linear `save_issue`, using the shapes in
+[resources/linear-templates.md](resources/linear-templates.md):
+
+1. Human ticket in `Aburaya`: a concise, scannable description — no agent contract material.
+2. Plan issue in `Agents`: the full agent contract (required behavior, constraints, approach,
+   acceptance criteria).
+3. Link the two bidirectionally: a `relatedTo` relation plus a markdown link to the counterpart in
+   each body.
+4. Create the first task with `save_issue` as a sub-issue of the AI plan issue.
+
+Pairing rules:
+
+- AI-only exception: work with no user-informational value (internal chores) gets an AI-only issue,
+  no human ticket.
+- Pairing is per ticket, not per tree: any human ticket, including human sub-issues, can carry its
+  own AI pair.
 
 Run user-facing issue descriptions through the `cape:unslop` skill before creating them.
 
-After creation, refresh the cache from the epic result:
+After creation, refresh the cache from the MCP plan-issue result:
 
-1. Use MCP Linear `get_issue` for the epic with children included.
-2. Cache it:
+1. Use MCP Linear `get_issue` for the plan issue with children included.
+2. Stamp the pair into the JSON: add a top-level `"humanId": "<human-ticket-id>"` field (the Linear
+   payload does not carry it). The cache preserves it across later refreshes that omit it.
+3. Cache it:
 
 ```bash
-cape tracker cache-epic '<linear-epic-json-with-children>'
+cape tracker cache-epic '<linear-plan-issue-json-with-children>'
 ```
 
 Stdin form is equivalent:
 
 ```bash
-printf '%s' '<linear-epic-json-with-children>' | cape tracker cache-epic
+printf '%s' '<linear-plan-issue-json-with-children>' | cape tracker cache-epic
 ```
 
-If you have a Linear list result for tasks only, cache it under the epic:
+If you have a Linear list result for tasks only, cache it under the plan issue:
 
 ```bash
-cape tracker cache-tasks <epic-id> '<linear-task-array-json>'
+cape tracker cache-tasks <plan-id> '<linear-task-array-json>'
 ```
 
 ## List ready work
@@ -126,37 +152,39 @@ refresh it from an MCP result already obtained in the session before continuing.
 
 ## Update status
 
-Update Linear first through MCP. Then refresh the matching cached issue:
+Task status is cache-only during build. Update the cache directly; do not write status to Linear
+with MCP `save_issue` mid-build:
 
 ```bash
 cape tracker cache-status <issue-id> "In Progress" started
 cape tracker cache-status <issue-id> Done completed
 ```
 
-If the MCP response includes a full refreshed epic with children, prefer `cache-epic` so task
-membership stays current.
+Content updates (bodies, titles, new sub-issues) still go to Linear first; only status stays local
+until PR time.
 
 ## Close work
 
-Close a task or bug in Linear through MCP. Then update the cache:
+Never close issues through MCP. Linear catches up when the PR merges, via the PR closing line:
 
-```bash
-cape tracker cache-status <issue-id> Done completed
+```text
+Fixes <human-id>, <plan-id>, <completed task ids>
 ```
 
-Never close the epic yourself. Linear's GitHub integration moves it to `Done` when the PR
-(referencing it with `Fixes ABU-XX`) merges. To mirror that status into the cache after a merge, run
-`cape tracker cache-status <epic-id> Done completed`, or `cache-epic` if you have the full epic
-response with children.
+Linear's GitHub integration moves every listed issue to `Done` on merge. To mirror that into the
+cache afterwards, run `cape tracker cache-status <issue-id> Done completed` per issue, or
+`cache-epic` if you have the full refreshed plan issue with children.
 
 ## Examples
 
-**Wrong:** write-plan creates local issue files or hand-rolls a cache object.
+**Wrong:** write-plan puts the full agent contract (R-tables, constraints, acceptance criteria) in
+the Aburaya ticket, or creates everything in one team.
 
-**Right:** write-plan uses MCP Linear `save_issue` for the epic and child task, gets the full epic
-JSON, then runs `cape tracker cache-epic '<json>'`.
+**Right:** write-plan creates a concise human ticket in `Aburaya` and a plan issue in `Agents`
+holding the full contract, links them via `relatedTo` plus a markdown link in each body, creates the
+first task as a sub-issue of the plan issue, then runs `cape tracker cache-epic '<json>'`.
 
-**Wrong:** execute-plan marks the local cache done before Linear accepts the close.
+**Wrong:** execute-plan writes a task's `Done` status to Linear with MCP `save_issue` mid-build.
 
-**Right:** execute-plan closes the issue in Linear first, then runs
-`cape tracker cache-status <task-id> Done completed`.
+**Right:** execute-plan runs `cape tracker cache-status <task-id> Done completed`. The PR closing
+line (`Fixes <human-id>, <plan-id>, <completed task ids>`) updates Linear at merge.

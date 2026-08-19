@@ -6,11 +6,31 @@ them itself: the Linear MCP server's `save_issue` takes raw markdown and exposes
 The agent contract in [SKILL.md](../SKILL.md) enforces the shape; these templates are a human-side
 convenience.
 
-These templates are the canonical epic and task shapes. The authoring sources mirror them: epic and
-task are produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery stay
-in session, not on the board.
+The shapes split by audience. The human ticket (Aburaya team) is a scannable description and nothing
+more; the plan issue (Agents team, AI) carries the full agent contract. SKILL.md documents the
+pairing protocol. The authoring sources mirror these shapes: human ticket, plan issue, and task are
+produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery stay in
+session, not on the board.
 
-The epic body separates four questions that must never blend:
+## Human ticket
+
+Aburaya team. Description only — no R-tables, no constraints, no acceptance criteria; the human tier
+exists to be scannable. Untyped parent. Set `src:*` and Medium priority as template defaults.
+
+```markdown
+[What changes and why — 2-4 sentences a human can scan in ten seconds.]
+
+Done when: [one concrete completion statement]
+
+Agent plan: [AI-XX](url)
+```
+
+## Plan issue
+
+Agents team. Untyped parent of the task sub-issues. Set `src:*` and Medium priority as template
+defaults.
+
+The plan-issue body separates four questions that must never blend:
 
 | Section                  | Answers                                                      |
 | ------------------------ | ------------------------------------------------------------ |
@@ -19,13 +39,11 @@ The epic body separates four questions that must never blend:
 | **Proposed approach**    | A recommendation the agent may improve                       |
 | **Acceptance criteria**  | Evidence the work is done                                    |
 
-Pick a variant per epic. Default to **Light**. Use **Full** when a user journey changes, a new state
-or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
+Pick a variant per plan issue. Default to **Light**. Use **Full** when a user journey changes, a new
+state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
 
-## Light epic (default)
-
-Untyped parent. No `type:*` label. Set `src:*` and Medium priority as template defaults.
+### Plan issue — Light (default)
 
 ```markdown
 ## 🧭 At a glance
@@ -35,6 +53,7 @@ Untyped parent. No `type:*` label. Set `src:*` and Medium priority as template d
 | **Outcome**       | [What is true after this]           |
 | **Problem**       | [What is wrong or missing]          |
 | **User / system** | [Who benefits]                      |
+| **Human ticket**  | [ABU-XX](url) — or AI-only          |
 | **Variant**       | Light                               |
 | **Done when**     | [One concrete completion statement] |
 
@@ -62,7 +81,7 @@ and data flow. Mermaid for flows over ~3 steps.]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
-## Full epic
+### Plan issue — Full
 
 Light plus the alignment sections. Same untyped-parent rules.
 
@@ -74,6 +93,7 @@ Light plus the alignment sections. Same untyped-parent rules.
 | **Outcome**      | [What is true after this]           |
 | **Problem**      | [What is wrong or missing]          |
 | **Primary user** | [User, persona, or system]          |
+| **Human ticket** | [ABU-XX](url) — or AI-only          |
 | **Risk**         | Low / Medium / High                 |
 | **Variant**      | Full                                |
 | **Done when**    | [One concrete completion statement] |
@@ -148,7 +168,8 @@ The work breakdown is a non-binding sketch; do not pre-create these as sub-issue
 
 ## Task
 
-Set exactly one `type:*`, `src:*`, and Medium priority as template defaults.
+Sub-issue of the plan issue, Agents team. Set exactly one `type:*`, `src:*`, and Medium priority as
+template defaults.
 
 ```markdown
 ## Goal
