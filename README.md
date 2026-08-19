@@ -72,7 +72,7 @@ Cape ships 12 workflow skills plus the `don-cape` router.
 | `tracker`                 | Write Linear results into the local cache             |
 
 Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
-`stop-slop` skill before finalizing.
+`cape:unslop` skill before finalizing.
 
 ## Agents
 

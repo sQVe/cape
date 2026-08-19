@@ -128,7 +128,7 @@ Verification: <commands passed>
 Tasks completed: <N>
 ```
 
-Run the outcome summary through the global `stop-slop` skill before posting.
+Run the outcome summary through the `cape:unslop` skill before posting.
 
 Keep detailed reflections in the conversation. Do not write validation transcripts or expanded
 implementation notes to Linear.

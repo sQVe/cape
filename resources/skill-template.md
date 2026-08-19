@@ -57,10 +57,10 @@ committing. Keep it inline and focused.]
 [3-5 steps total. Each step is a discrete phase with a clear deliverable.]
 
 [Convention -- prose output: any step that emits human-facing prose (commit messages, PR or epic
-text, review write-ups, issue descriptions, replies) runs that prose through the global `stop-slop`
-skill before presenting or posting; skip only for pure code or mechanical output, and write in
-simple language with clear, scannable structure. State this as a one-line reminder at the emitting
-step -- do not repeat the full convention.]
+text, review write-ups, issue descriptions, replies) runs that prose through the `cape:unslop` skill
+before presenting or posting; skip only for pure code or mechanical output, and write in simple
+language with clear, scannable structure. State this as a one-line reminder at the emitting step --
+do not repeat the full convention.]
 
 </the_process>
 

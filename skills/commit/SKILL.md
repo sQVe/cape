@@ -131,7 +131,7 @@ it doesn't, omit.
 When writing the body, explain **why** the change was made, not what it does. The diff already shows
 the what.
 
-Run the commit message body through the global `stop-slop` skill before presenting or committing.
+Run the commit message body through the `cape:unslop` skill before presenting or committing.
 
 **Staging rules:**
 

@@ -61,7 +61,7 @@ If no bug issue exists, run the diagnosis gate before changing code:
 - Trace the symptom to a root cause
 - Record dead ends in the conversation
 
-Run the root-cause and reproduction text through the global `stop-slop` skill before presenting or
+Run the root-cause and reproduction text through the `cape:unslop` skill before presenting or
 creating bug issue prose.
 
 Present the investigation summary and ask for approval before creating a Linear bug:

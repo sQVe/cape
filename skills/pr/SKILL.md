@@ -159,7 +159,7 @@ If no subjective items exist, omit manual verification entirely. If no deploymen
 deployment notes. Check coverage: happy path, edge cases, integration points, regression risks. If
 gaps found, add missing test plan items.
 
-Run the description prose through the global `stop-slop` skill before presenting or creating the PR.
+Run the description prose through the `cape:unslop` skill before presenting or creating the PR.
 
 ---
 
@@ -181,8 +181,8 @@ the branch diff and read its verdict; tick the box only on a pass, and only beca
 unticked — `cape pr create` will refuse the body either way. Never tick it because no human was
 available.
 
-No human edits an AFK body before it ships, so the step 5 quality bar and stop-slop apply in full.
-Two AFK-only rules on top:
+No human edits an AFK body before it ships, so the step 5 quality bar and unslop apply in full. Two
+AFK-only rules on top:
 
 - **Never write a robot signature or emoji into the PR title or body** — the PR must read as if a
   human wrote it.
