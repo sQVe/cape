@@ -178,7 +178,8 @@ Omit this whole section when the field was empty.>
 ## Finishing
 - When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic, then cape:pr
   (tell it this run is unattended with no human to confirm, so it takes the AFK branch: print the
-  description, skip the confirmation, open the PR with "Fixes ABU-123"), then a bounded PR watch.
+  description, skip the confirmation, open the PR with the cache-built closing line per the
+  cape:pr contract), then a bounded PR watch.
 - Bounded PR watch: poll CI; once green, load cape:pr-feedback and follow its contract for the
   review threads (judge validity, fix, reply, resolve), spawning a worker for each accepted fix.
   Tell it this run is unattended so it takes its AFK branch: print the triage table instead of

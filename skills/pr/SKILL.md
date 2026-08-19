@@ -92,8 +92,8 @@ Write the body for a reviewer who knows the domain but not this branch:
   or per-issue-id bullet structure, no per-task test counts.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
-- Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing
-  `Fixes ABU-XX` line plain; the integration parses the bare id, and a link there can break the
+- Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
+  `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
 - Be short. A reviewer skims this before reading code, so cut exhaustive enumerations.
 
@@ -164,10 +164,14 @@ cape workspace phase pr
 ```
 
 1. Identify the active epic from the tracker cache or flow context and confirm the description
-   references it: `Fixes ABU-XX` when this PR completes the epic, the non-closing
-   `Related to ABU-XX` when more PRs are coming. Linear's GitHub integration moves the epic to In
-   Review on open and Done when a `Fixes` PR merges; cape never sets status manually. This requires
-   the GitHub-Linear integration (see tracker workspace-setup).
+   carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>` — the
+   epic entry's `humanId` (the human ticket), the AI plan issue, and every child task the cache
+   marks completed; incomplete and canceled children excluded. This is what catches Linear up on the
+   cache-only build statuses. Use the non-closing `Related to` with the same set ONLY when this PR
+   does not complete the epic (more PRs or a live cutover still pending). Linear's GitHub
+   integration moves the listed issues to In Review on open and Done when a `Fixes` PR merges; cape
+   never sets status manually. This requires the GitHub-Linear integration (see tracker
+   workspace-setup).
 2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
    conventions or the user named any.
 3. Report:

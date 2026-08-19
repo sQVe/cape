@@ -20,8 +20,9 @@ The evidence gate and automated checks are fixed; verification details adapt to 
 
 ## Rules
 
-1. **Never set Linear status.** Linear's GitHub integration moves the epic to `Done` when the PR
-   (referencing it with `Fixes ABU-XX`) merges.
+1. **Never set Linear status.** Linear's GitHub integration moves the whole set to `Done` when the
+   PR merges, via the closing line `cape:pr` builds from the tracker cache
+   (`Fixes <human-id>, <plan-id>, <completed task ids>`).
 2. **Every acceptance criterion needs evidence.** Cite tests, files, or demonstrated behavior.
 3. **All tasks complete, all checks pass.** Do not skip open tasks or failing checks to hand off.
 4. **Stop on failure.** Report missing evidence or the failing command instead of handing off.
