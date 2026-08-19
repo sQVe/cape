@@ -81,6 +81,13 @@ describe('validateSkillContent', () => {
     expect(result.errors).toContain('References unknown skill or agent: cape:nonexistent-agent');
   });
 
+  it('detects unknown references containing digits', () => {
+    const knownNames = new Set(['code-reviewer']);
+    const content = validSkill + '\nDispatch `cape:oauth2-helper` when needed.\n';
+    const result = validateSkillContent('test.md', content, { knownNames });
+    expect(result.errors).toContain('References unknown skill or agent: cape:oauth2-helper');
+  });
+
   it('allows references to known skills and agents', () => {
     const knownNames = new Set(['code-reviewer', 'unslop']);
     const content =

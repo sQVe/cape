@@ -1,7 +1,7 @@
 import type { Effect } from 'effect';
 import { ServiceMap } from 'effect';
 
-import { parseFrontmatter } from '../utils/frontmatter';
+import { parseFrontmatter, splitFrontmatter } from '../utils/frontmatter';
 
 export interface ValidateResult {
   readonly file: string;
@@ -13,16 +13,13 @@ const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
 const checkCapeReferences = (content: string, knownNames: Set<string>, errors: string[]) => {
-  for (const match of content.matchAll(/`cape:([a-z][-a-z]*)`/g)) {
+  for (const match of content.matchAll(/`cape:([a-z][a-z0-9-]*)`/g)) {
     const name = match[1];
     if (name != null && !knownNames.has(name)) {
       errors.push(`References unknown skill or agent: cape:${name}`);
     }
   }
 };
-
-const bodyAfterFrontmatter = (content: string): string =>
-  content.replace(/^---\n[\s\S]*?\n---\n?/, '').trim();
 
 interface SkillValidateOptions {
   readonly knownNames?: Set<string>;
@@ -47,7 +44,7 @@ export const validateSkillContent = (
     }
   }
 
-  if (bodyAfterFrontmatter(content).length === 0) {
+  if (splitFrontmatter(content).body.trim().length === 0) {
     errors.push('Skill body is empty');
   }
 
@@ -121,7 +118,7 @@ export const validateCommandContent = (
   }
 
   if (options.knownSkills != null) {
-    const skillRef = content.match(/Use the cape:([a-z-]+)/);
+    const skillRef = content.match(/Use the cape:([a-z][a-z0-9-]*)/);
     if (skillRef?.[1] != null && !options.knownSkills.has(skillRef[1])) {
       errors.push(`References unknown skill: cape:${skillRef[1]}`);
     }
