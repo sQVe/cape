@@ -1,5 +1,6 @@
 ---
 name: set-goal
+argument-hint: '[epic id or description]'
 description: >
   Interview-first front end for an autonomous epic run. Asks how to achieve the goal -- worker
   agent, how to split tasks, review strategy -- then STAGES a reviewable draft: a `/goal` completion
