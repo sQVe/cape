@@ -27,6 +27,14 @@ pnpm install && pnpm build
 ln -s "$PWD/cli/dist/index.mjs" ~/.local/bin/cape
 ```
 
+Cape's hook denies only workflow-specific commands. Install cc-safety-net alongside it for
+destructive-command policy (force push, `git reset --hard`, `git clean -f`); without it those run
+unblocked on feature branches.
+
+```bash
+claude plugin add cc-safety-net@kenryu42/cc-marketplace
+```
+
 ## Workflow
 
 The `don-cape` router loads at session start and matches each request to a skill. Skills run in four
@@ -51,7 +59,7 @@ Skill gates are contextual warnings you can ignore. Some Bash commands are still
 pushing to the default branch, `git commit --amend`, `gh pr merge`, `gh pr close`, and raw commands
 that have a cape equivalent (`git commit`, `gh pr create`), which are redirected rather than
 blocked. Broader destructive-command policy (force push, `git reset --hard`, `git clean -f`) is
-owned by the cc-safety-net plugin, not cape.
+owned by the cc-safety-net plugin, not cape — see [Installation](#installation).
 
 ## Skills
 
