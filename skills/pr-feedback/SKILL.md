@@ -68,7 +68,7 @@ is mandatory. Validity judgment and fix depth adapt to each comment. </rigidity_
    never resolve it.
 9. **Replies use simple language and clear structure** — short, plain sentences; lead with a capital
    letter; one point per reply; no filler, hedging, or emoji padding. Run reply prose through the
-   global `cape:unslop` skill before posting.
+   `cape:unslop` skill before posting.
 
 </critical_rules>
 

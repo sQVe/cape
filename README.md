@@ -54,7 +54,7 @@ pushing to the default branch, destructive git and `gh` commands (`git push --fo
 
 ## Skills
 
-Cape ships 12 workflow skills plus the `don-cape` router.
+Cape ships 13 workflow skills plus the `don-cape` router.
 
 | Skill                     | Role                                                  |
 | ------------------------- | ----------------------------------------------------- |
@@ -70,6 +70,7 @@ Cape ships 12 workflow skills plus the `don-cape` router.
 | `fix-bug`                 | Diagnose to root cause, then patch test-first         |
 | `worktree`                | Create a per-epic grove worktree                      |
 | `tracker`                 | Write Linear results into the local cache             |
+| `unslop`                  | Cut AI tells from prose and add human voice           |
 
 Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
 `cape:unslop` skill before finalizing.
