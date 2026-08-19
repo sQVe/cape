@@ -435,6 +435,44 @@ describe('cape tracker cache-status', () => {
     console_.restore();
   });
 
+  it('derives the state type from the status when the argument is omitted', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(
+      trackerPath(root),
+      JSON.stringify({
+        version: 1,
+        timestamp: 1,
+        epics: {
+          'AI-15': {
+            id: 'AI-15',
+            title: 'Cape V2',
+            status: 'In Progress',
+            tasks: [
+              { id: 'AI-56', title: 'Tracker cache CLI', status: 'Todo', stateType: 'unstarted' },
+            ],
+          },
+        },
+      }),
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run(['tracker', 'cache-status', 'AI-56', 'Done']).pipe(
+        Effect.provide(makeTestCommandLayers()),
+      ),
+    );
+
+    const cache = readCache(root);
+    expect(cache.epics['AI-15'].tasks[0]).toEqual({
+      id: 'AI-56',
+      title: 'Tracker cache CLI',
+      status: 'Done',
+      stateType: 'completed',
+    });
+    console_.restore();
+  });
+
   it('does not create a cache when the target issue is absent locally', async () => {
     const root = makeRoot();
     const console_ = spyConsole();

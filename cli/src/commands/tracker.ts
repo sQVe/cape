@@ -8,6 +8,7 @@ import {
   mergeEpic,
   mergeTasks,
   readCacheFile,
+  stateTypeFromStatus,
   toEpic,
   toTasks,
   updateCachedIssueStatus,
@@ -134,7 +135,7 @@ const cacheStatus = Command.make(
       cache,
       targetIssueId: trimmedIssueId,
       status: trimmedStatus,
-      stateType: Option.isSome(stateType) ? stateType.value : null,
+      stateType: Option.isSome(stateType) ? stateType.value : stateTypeFromStatus(trimmedStatus),
       timestamp: Date.now(),
     });
 

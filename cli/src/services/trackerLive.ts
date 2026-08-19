@@ -157,6 +157,27 @@ export const toTasks = (value: unknown): readonly TrackerTask[] => {
   });
 };
 
+export const stateTypeFromStatus = (status: string): string | null => {
+  switch (status.trim().toLowerCase()) {
+    case 'done':
+    case 'completed':
+    case 'closed':
+      return 'completed';
+    case 'canceled':
+    case 'cancelled':
+      return 'canceled';
+    case 'in progress':
+    case 'in review':
+      return 'started';
+    case 'todo':
+      return 'unstarted';
+    case 'backlog':
+      return 'backlog';
+    default:
+      return null;
+  }
+};
+
 const stateRank = (stateType: string) => {
   switch (stateType.toLowerCase()) {
     case 'started':

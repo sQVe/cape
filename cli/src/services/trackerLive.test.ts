@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
-import { mergeEpic, mergeTasks, toEpic } from './trackerLive';
+import { mergeEpic, mergeTasks, stateTypeFromStatus, toEpic } from './trackerLive';
 
 const task = (id: string, stateType: string, overrides?: Partial<TrackerTask>): TrackerTask => ({
   id,
@@ -181,5 +181,22 @@ describe('toEpic', () => {
 
     expect(result).not.toBeNull();
     expect(result?.humanTicketId).toBeUndefined();
+  });
+});
+
+describe('stateTypeFromStatus', () => {
+  it('maps well-known status names to their state type', () => {
+    expect(stateTypeFromStatus('Done')).toBe('completed');
+    expect(stateTypeFromStatus('closed')).toBe('completed');
+    expect(stateTypeFromStatus('Canceled')).toBe('canceled');
+    expect(stateTypeFromStatus('In Progress')).toBe('started');
+    expect(stateTypeFromStatus('In Review')).toBe('started');
+    expect(stateTypeFromStatus('Todo')).toBe('unstarted');
+    expect(stateTypeFromStatus('Backlog')).toBe('backlog');
+  });
+
+  it('returns null for unknown status names', () => {
+    expect(stateTypeFromStatus('Blocked on vendor')).toBeNull();
+    expect(stateTypeFromStatus('')).toBeNull();
   });
 });
