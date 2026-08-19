@@ -139,17 +139,14 @@ const cacheStatus = Command.make(
       timestamp: Date.now(),
     });
 
-    if (updatedCache != null) {
-      yield* writeCacheFile(updatedCache).pipe(catchAndDie);
+    if (updatedCache == null) {
+      return yield* dieWithError(
+        `issue ${trimmedIssueId} not found in tracker cache; refresh with cache-epic or cache-tasks first`,
+      );
     }
 
-    yield* Console.log(
-      JSON.stringify({
-        cached: updatedCache != null,
-        issueId: trimmedIssueId,
-        changed: updatedCache != null,
-      }),
-    );
+    yield* writeCacheFile(updatedCache).pipe(catchAndDie);
+    yield* Console.log(JSON.stringify({ cached: true, issueId: trimmedIssueId, changed: true }));
   }),
 ).pipe(
   Command.withDescription('Refresh one cached issue status after an MCP Linear state update.'),

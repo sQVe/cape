@@ -473,38 +473,36 @@ describe('cape tracker cache-status', () => {
     console_.restore();
   });
 
-  it('does not create a cache when the target issue is absent locally', async () => {
+  it('fails when the target issue is absent locally without creating a cache', async () => {
     const root = makeRoot();
     const console_ = spyConsole();
 
-    await Effect.runPromise(
-      run(['tracker', 'cache-status', 'ABU-99', 'Done', 'completed']).pipe(
-        Effect.provide(makeTestCommandLayers()),
+    await expect(
+      Effect.runPromise(
+        run(['tracker', 'cache-status', 'ABU-99', 'Done', 'completed']).pipe(
+          Effect.provide(makeTestCommandLayers()),
+        ),
       ),
-    );
+    ).rejects.toThrow();
 
-    expect(console_.output()).toBe(
-      JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }),
-    );
     expect(() => readFileSync(trackerPath(root), 'utf-8')).toThrow();
     console_.restore();
   });
 
-  it('leaves a corrupt cache untouched when the target issue is absent locally', async () => {
+  it('fails on a corrupt cache without touching it', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });
     writeFileSync(trackerPath(root), 'not json');
     const console_ = spyConsole();
 
-    await Effect.runPromise(
-      run(['tracker', 'cache-status', 'ABU-99', 'Done', 'completed']).pipe(
-        Effect.provide(makeTestCommandLayers()),
+    await expect(
+      Effect.runPromise(
+        run(['tracker', 'cache-status', 'ABU-99', 'Done', 'completed']).pipe(
+          Effect.provide(makeTestCommandLayers()),
+        ),
       ),
-    );
+    ).rejects.toThrow();
 
-    expect(console_.output()).toBe(
-      JSON.stringify({ cached: false, issueId: 'ABU-99', changed: false }),
-    );
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe('not json');
     console_.restore();
   });
