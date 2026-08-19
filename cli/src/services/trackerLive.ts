@@ -19,6 +19,7 @@ interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
+  readonly humanId?: unknown;
   readonly project?: unknown;
   readonly labels?:
     | readonly LinearLabel[]
@@ -128,6 +129,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
   });
   const project = issueProject(issue);
   const type = issueType(issue);
+  const humanId = typeof issue.humanId === 'string' ? issue.humanId : undefined;
 
   return {
     id,
@@ -135,6 +137,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     ...(project == null ? {} : { project }),
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
+    ...(humanId == null ? {} : { humanId }),
     tasks,
   };
 };
@@ -186,17 +189,21 @@ export const mergeEpic = (
   cache: TrackerCache | null,
   epic: TrackerEpic,
   timestamp: number,
-): TrackerCache => ({
-  version: 1,
-  timestamp,
-  epics: {
-    ...cache?.epics,
-    [epic.id]: {
-      ...epic,
-      tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks),
+): TrackerCache => {
+  const humanId = epic.humanId ?? cache?.epics[epic.id]?.humanId;
+  return {
+    version: 1,
+    timestamp,
+    epics: {
+      ...cache?.epics,
+      [epic.id]: {
+        ...epic,
+        ...(humanId == null ? {} : { humanId }),
+        tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks),
+      },
     },
-  },
-});
+  };
+};
 
 export const mergeTasks = (
   cache: TrackerCache | null,
@@ -216,6 +223,7 @@ export const mergeTasks = (
         ...(existing?.project == null ? {} : { project: existing.project }),
         ...(existing?.type == null ? {} : { type: existing.type }),
         status: existing?.status ?? '',
+        ...(existing?.humanId == null ? {} : { humanId: existing.humanId }),
         tasks: mergeTaskLists(existing?.tasks, tasks),
       },
     },

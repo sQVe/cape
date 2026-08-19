@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
-import { mergeEpic, mergeTasks } from './trackerLive';
+import { mergeEpic, mergeTasks, toEpic } from './trackerLive';
 
 const task = (id: string, stateType: string, overrides?: Partial<TrackerTask>): TrackerTask => ({
   id,
@@ -140,5 +140,46 @@ describe('mergeEpic', () => {
     const merged = mergeEpic(null, incoming, 2000);
 
     expect(merged).toEqual({ version: 1, timestamp: 2000, epics: { 'ABU-1': incoming } });
+  });
+
+  it('keeps the cached humanId when the incoming epic has none', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+
+    const merged = mergeEpic(cache, epic('AI-1', []), 2000);
+
+    expect(merged.epics['AI-1']?.humanId).toBe('ABU-9');
+  });
+
+  it('lets an incoming humanId replace the cached one', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+
+    const merged = mergeEpic(cache, { ...epic('AI-1', []), humanId: 'ABU-10' }, 2000);
+
+    expect(merged.epics['AI-1']?.humanId).toBe('ABU-10');
+  });
+});
+
+describe('mergeTasks', () => {
+  it('preserves the epic humanId across a tasks-only refresh', () => {
+    const cache = cacheWith({ ...epic('AI-1', []), humanId: 'ABU-9' });
+
+    const merged = mergeTasks(cache, 'AI-1', [task('AI-2', 'unstarted')], 2000);
+
+    expect(merged.epics['AI-1']?.humanId).toBe('ABU-9');
+  });
+});
+
+describe('toEpic', () => {
+  it('reads humanId from an explicit field in the payload', () => {
+    const result = toEpic({ identifier: 'AI-1', title: 'Epic', humanId: 'ABU-9' });
+
+    expect(result?.humanId).toBe('ABU-9');
+  });
+
+  it('omits humanId when the payload has none', () => {
+    const result = toEpic({ identifier: 'AI-1', title: 'Epic' });
+
+    expect(result).not.toBeNull();
+    expect(result?.humanId).toBeUndefined();
   });
 });
