@@ -85,18 +85,20 @@ bundled template's sections and heading levels exactly:
 The title uses conventional commit format: `type(scope): subject`.
 
 Whatever the template source, the test plan section must contain a review checkbox that opens with
-the review token and attributes the review. Name the model first, since that is the part a reader
-outside this repo can weigh, then the reviewer, then the commit reviewed:
+the review token and attributes the review. The shape is
+`Code review by <model> (<reviewer>) on <sha>`: the model first, since that is the part a reader
+outside this repo can weigh, then the reviewer that ran it, then the commit reviewed. A human
+reviewer is their own name, with no parenthetical.
 
 ```text
 - [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
-- [x] Code review by /code-review (Claude Opus 5) on 59a9a3a, findings addressed
+- [x] Code review by Claude Opus 5 (/code-review) on 59a9a3a, findings addressed
 - [x] Code review by @sQVe on 59a9a3a, findings addressed
 ```
 
 Write the model you actually ran, never a version you are guessing at. Naming who reviewed is what
-separates a review from a checklist item that mentions one, and `cape pr create` rejects the latter.
-Repo templates rarely carry the box; add it.
+separates a review from a checklist item that mentions one, and `cape pr create` rejects the latter
+along with an unfilled `<model>` placeholder. Repo templates rarely carry the box; add it.
 
 Write the body for a reviewer who knows the domain but not this branch:
 

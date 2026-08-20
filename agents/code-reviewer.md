@@ -55,8 +55,8 @@ A worked finding:
 ```
 
 Rank most severe first. Correctness outranks reuse, conventions, and efficiency whenever the cut is
-close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and put the
-rest in `dropped`.
+close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and set
+`dropped` to how many you cut.
 
 ## Finding bar
 

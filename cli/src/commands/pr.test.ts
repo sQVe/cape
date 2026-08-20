@@ -213,6 +213,36 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('returns invalid when the review box is ticked but still holds placeholders', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by <model> (<reviewer>) on <sha>, findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the bracketed template placeholder is merely ticked', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by [model and reviewer] on [sha], findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('accepts the past-tense phrasing a human is likely to type', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code reviewed by Priya on abc1234, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
     const result = validatePrBody(
       template,

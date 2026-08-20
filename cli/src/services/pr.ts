@@ -17,7 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
-  '- [ ] Code review by /code-review or cape:code-reviewer on <sha>, findings addressed or dismissed',
+  '- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 
@@ -87,11 +87,12 @@ export const extractUncheckedBoxes = (body: string) =>
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
 // that simply omits the box must fail rather than pass for having no unticked boxes. The item names
-// whichever reviewer ran, so the token spans "Code review" and "/code-review". The item must open
-// with that token AND attribute the review ("by <reviewer>" or "run on ..."), because anchoring
-// alone still lets a checklist item claim the gate: "Code review checklist updated" starts with the
-// token, and a docs PR is exactly where that phrasing shows up.
-const reviewItemPattern = /^\s*- \[[ xX]\]\s*\/?code[- ]review\s+(by|run)\b/i;
+// whichever reviewer ran, so the token spans "Code review", "code reviewed", and "/code-review".
+// Three things have to hold, each closing a leak this gate has actually had. The token opens the
+// item, or "Update the code review checklist" counts. An attribution follows it ("by <who>", "run
+// on <branch>"), or "Code review checklist updated" counts. And the attribution names something
+// real instead of an unfilled placeholder, or ticking the template line verbatim counts.
+const reviewItemPattern = /^\s*- \[[ xX]\]\s*\/?code[- ]review(ed)?\s+(by|run)\b(?!\s*[[<])/i;
 
 const hasReviewItem = (templateSections: string[], body: string) =>
   sectionLines(body, testSectionName(templateSections)).some((line) =>

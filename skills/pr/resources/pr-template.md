@@ -19,7 +19,7 @@
 
 <!-- Run these before PR creation, by command or by hand. All must pass. -->
 
-- [ ] Code review by [model and reviewer] on [sha], findings addressed or dismissed
+- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed
 - [ ] [Command or verifiable behavior]
 - [ ] [Command or verifiable behavior]
 
