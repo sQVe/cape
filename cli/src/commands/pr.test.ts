@@ -12,9 +12,7 @@ import {
   validatePrBody,
 } from '../services/pr';
 import {
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
   stubValidateLayer,
@@ -54,8 +52,6 @@ const makeCommandLayers = (prLayer = makeStubPrLayer()) =>
     NodeServices.layer,
     stubHerdrLayer,
     stubGitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
     stubCommitLayer,
     stubHookLayer,
     stubValidateLayer,
@@ -678,8 +674,6 @@ const makeCreateLayers = (hookLayer = makeCreateHookLayer(), prLayer = makeCreat
     NodeServices.layer,
     stubHerdrLayer,
     stubGitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
     stubCommitLayer,
     hookLayer,
     prLayer,

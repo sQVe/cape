@@ -99,6 +99,27 @@ describe('cape tracker cache-epic', () => {
     console_.restore();
   });
 
+  it('stores the epic gitBranchName for branch matching', async () => {
+    const root = makeRoot();
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-epic',
+        JSON.stringify({
+          identifier: 'ABU-15',
+          title: 'Cape V2',
+          gitBranchName: 'abu-15-cape-v2',
+          state: { name: 'In Progress', type: 'started' },
+        }),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    expect(readCache(root).epics['ABU-15'].gitBranchName).toBe('abu-15-cape-v2');
+    console_.restore();
+  });
+
   it('treats a corrupt cache as empty before writing the epic', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });
@@ -308,6 +329,46 @@ describe('cape tracker cache-tasks', () => {
         },
       ],
     });
+    console_.restore();
+  });
+
+  it('preserves the cached epic gitBranchName when replacing tasks', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(
+      trackerPath(root),
+      JSON.stringify({
+        version: 1,
+        timestamp: 1,
+        epics: {
+          'ABU-15': {
+            id: 'ABU-15',
+            title: 'Cape V2',
+            status: 'In Progress',
+            gitBranchName: 'abu-15-cape-v2',
+            tasks: [],
+          },
+        },
+      }),
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-tasks',
+        'ABU-15',
+        JSON.stringify([
+          {
+            identifier: 'ABU-57',
+            title: 'Rewire chains',
+            state: { name: 'Todo', type: 'unstarted' },
+          },
+        ]),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    expect(readCache(root).epics['ABU-15'].gitBranchName).toBe('abu-15-cape-v2');
     console_.restore();
   });
 

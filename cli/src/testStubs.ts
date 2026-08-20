@@ -1,8 +1,6 @@
 import { Effect, Layer } from 'effect';
 
-import { CheckService } from './services/check';
 import { CommitService } from './services/commit';
-import { DetectService } from './services/detect';
 import { GitService } from './services/git';
 import { HerdrService } from './services/herdr';
 import { HookService } from './services/hook';
@@ -26,15 +24,6 @@ export const makeStubGitLayer = (repoName: string | null = 'cape') =>
   });
 
 export const stubGitLayer = makeStubGitLayer();
-
-export const stubDetectLayer = Layer.succeed(DetectService)({
-  detect: () => Effect.succeed([]),
-  mapDirectory: () => Effect.succeed({}),
-});
-
-export const stubCheckLayer = Layer.succeed(CheckService)({
-  runChecks: () => Effect.succeed([]),
-});
 
 export const stubCommitLayer = Layer.succeed(CommitService)({
   stageAndCommit: () => Effect.succeed(undefined),

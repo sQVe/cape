@@ -5,7 +5,6 @@ import {
   normalizeEventName,
   postToolUseLinearWrite,
   preToolUseBash,
-  preToolUseSkill,
   sessionStart,
   userPromptSubmit,
 } from '../services/hook';
@@ -20,7 +19,7 @@ const hookRun = Command.make(
     ),
     matcher: Flag.string('matcher').pipe(
       Flag.withDescription(
-        'Tool matcher: PreToolUse accepts Bash | Skill; PostToolUse accepts linear-write',
+        'Tool matcher: PreToolUse accepts Bash; PostToolUse accepts linear-write',
       ),
       Flag.withDefault(''),
     ),
@@ -43,11 +42,9 @@ const hookRun = Command.make(
         let result;
         if (matcher === 'Bash') {
           result = yield* preToolUseBash();
-        } else if (matcher === 'Skill') {
-          result = yield* preToolUseSkill();
         } else {
           yield* Console.error(
-            `cape hook: unknown PreToolUse matcher "${matcher}". Expected Bash | Skill. Check hooks.json.`,
+            `cape hook: unknown PreToolUse matcher "${matcher}". Expected Bash. Check hooks.json.`,
           );
         }
         if (result != null) {

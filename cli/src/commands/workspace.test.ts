@@ -9,9 +9,7 @@ import { HookService } from '../services/hook';
 import { PrService } from '../services/pr';
 import {
   makeStubGitLayer,
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -19,20 +17,31 @@ import {
 import { spyConsole } from '../testUtils';
 
 const run = Command.runWith(main, { version: '0.1.0' });
-const statePath = '/test/hooks/context/state-no-repo.json';
 const trackerPath = '/test/hooks/context/tracker.json';
 
-const stateFile = (issueId: string) =>
-  JSON.stringify({ flowPhase: { phase: 'BUILD', issueId, timestamp: Date.now() } });
-
-const trackerFile = (issueId: string, title: string, timestamp = Date.now()) =>
+const trackerFile = (
+  issueId: string,
+  title: string,
+  timestamp = Date.now(),
+  status = 'In Progress',
+) =>
   JSON.stringify({
     version: 1,
     timestamp,
-    epics: { [issueId]: { id: issueId, title, status: 'In Progress', tasks: [] } },
+    epics: {
+      [issueId]: {
+        id: issueId,
+        title,
+        status,
+        gitBranchName: `${issueId.toLowerCase()}-epic`,
+        tasks: [],
+      },
+    },
   });
 
-const makeHookLayer = (files: Record<string, string> = {}) =>
+const epicBranch = (issueId: string) => `feat/${issueId.toLowerCase()}-epic`;
+
+const makeHookLayer = (files: Record<string, string> = {}, branch: string | null = null) =>
   Layer.succeed(HookService)({
     pluginRoot: () => '/test',
     readFile: (path) => Effect.succeed(files[path] ?? null),
@@ -40,7 +49,7 @@ const makeHookLayer = (files: Record<string, string> = {}) =>
     removeFile: () => Effect.succeed(undefined),
     ensureDir: () => Effect.succeed(undefined),
     readStdin: () => Effect.succeed(''),
-    spawnGit: () => Effect.succeed(null),
+    spawnGit: (args) => Effect.succeed(args.join(' ') === 'branch --show-current' ? branch : null),
     spawnGitChecked: () => Effect.succeed({ kind: 'exit-nonzero' as const }),
     fileExists: (path) => Effect.succeed(files[path] != null),
   });
@@ -82,8 +91,6 @@ const makeLayers = (
   Layer.mergeAll(
     NodeServices.layer,
     gitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
     stubCommitLayer,
     hookLayer,
     herdrLayer,
@@ -198,11 +205,11 @@ describe('composeLabels', () => {
 });
 
 describe('cape workspace phase', () => {
-  it('renames the workspace and tab when in herdr with a stamped epic', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+  it('renames the workspace and tab when the branch matches a cached epic', async () => {
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -221,10 +228,10 @@ describe('cape workspace phase', () => {
   });
 
   it('falls back to the id-led label when the repo name is unresolvable', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -245,10 +252,10 @@ describe('cape workspace phase', () => {
   });
 
   it('labels the tab with the pr number when gh reports an open pr', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
@@ -271,10 +278,10 @@ describe('cape workspace phase', () => {
   });
 
   it('still looks the pr number up when the phase name is not already normalized', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer } = makeHerdrLayer('ws1', 'tab1');
     const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
@@ -289,10 +296,10 @@ describe('cape workspace phase', () => {
   });
 
   it('keeps the issue id and never calls gh outside the pr phase', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const { layer: prLayer, calls } = makePrLayer('{"number":123,"state":"OPEN"}');
     const console_ = spyConsole();
@@ -324,10 +331,10 @@ describe('cape workspace phase', () => {
     ['a merged pr for the branch', '{"number":123,"state":"MERGED"}'],
     ['a closed pr for the branch', '{"number":123,"state":"CLOSED"}'],
   ])('degrades to the issue id on %s', async (_case, ghResult) => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const { layer: prLayer } = makePrLayer(ghResult);
     const console_ = spyConsole();
@@ -350,14 +357,16 @@ describe('cape workspace phase', () => {
 
   it('keeps the epic title when the tracker cache is stale', async () => {
     const staleTimestamp = Date.now() - 2 * 60 * 60 * 1000;
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile(
-        'ABU-134',
-        'Surface cape workflow phase in labels',
-        staleTimestamp,
-      ),
-    });
+    const hookLayer = makeHookLayer(
+      {
+        [trackerPath]: trackerFile(
+          'ABU-134',
+          'Surface cape workflow phase in labels',
+          staleTimestamp,
+        ),
+      },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -376,10 +385,10 @@ describe('cape workspace phase', () => {
   });
 
   it('skips and does not rename outside a herdr workspace', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer(null, null);
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -393,23 +402,70 @@ describe('cape workspace phase', () => {
     console_.restore();
   });
 
-  it('skips when no epic is stamped', async () => {
-    const hookLayer = makeHookLayer({});
+  it('labels a done epic so the finish-epic phase transition still lands', async () => {
+    const hookLayer = makeHookLayer(
+      {
+        [trackerPath]: trackerFile(
+          'ABU-134',
+          'Surface cape workflow phase in labels',
+          Date.now(),
+          'Done',
+        ),
+      },
+      epicBranch('ABU-134'),
+    );
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'done']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: 'cape: ✅ surface cape workflow phase in',
+      tab: '✅ abu-134',
+    });
+    expect(renames.length).toBe(2);
+    console_.restore();
+  });
+
+  it('skips when the branch matches no cached epic', async () => {
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      'feat/unrelated-work',
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();
     await Effect.runPromise(
       run(['workspace', 'phase', 'build']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
     );
-    expect(JSON.parse(console_.output())).toEqual({ skipped: true, reason: 'no epic stamped' });
+    expect(JSON.parse(console_.output())).toEqual({
+      skipped: true,
+      reason: 'no cached epic matches the current branch',
+    });
+    expect(renames).toEqual([]);
+    console_.restore();
+  });
+
+  it('skips when there is no tracker cache', async () => {
+    const hookLayer = makeHookLayer({}, epicBranch('ABU-134'));
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'build']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      skipped: true,
+      reason: 'no cached epic matches the current branch',
+    });
     expect(renames).toEqual([]);
     console_.restore();
   });
 
   it('skips on an unknown phase', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -424,10 +480,10 @@ describe('cape workspace phase', () => {
   });
 
   it('reports renamed false when the herdr rename fails', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1', false);
     const console_ = spyConsole();
     await Effect.runPromise(
@@ -446,10 +502,10 @@ describe('cape workspace phase', () => {
   });
 
   it('renames only the workspace when there is no tab id', async () => {
-    const hookLayer = makeHookLayer({
-      [statePath]: stateFile('ABU-134'),
-      [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels'),
-    });
+    const hookLayer = makeHookLayer(
+      { [trackerPath]: trackerFile('ABU-134', 'Surface cape workflow phase in labels') },
+      epicBranch('ABU-134'),
+    );
     const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', null);
     const console_ = spyConsole();
     await Effect.runPromise(

@@ -20,6 +20,8 @@ interface LinearIssue {
   readonly identifier?: unknown;
   readonly title?: unknown;
   readonly humanTicketId?: unknown;
+  readonly parentId?: unknown;
+  readonly gitBranchName?: unknown;
   readonly project?: unknown;
   readonly labels?:
     | readonly LinearLabel[]
@@ -113,6 +115,15 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
   };
 };
 
+// A plan issue's parent is the human ticket it satisfies, so the pair is readable straight from
+// Linear. Tasks derive nothing: their parent is the plan issue, not a human ticket.
+const epicHumanTicketId = (issue: LinearIssue) => {
+  if (typeof issue.humanTicketId === 'string') {
+    return issue.humanTicketId;
+  }
+  return typeof issue.parentId === 'string' ? issue.parentId : undefined;
+};
+
 export const toEpic = (value: unknown): TrackerEpic | null => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
     return null;
@@ -131,7 +142,8 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
   });
   const project = issueProject(issue);
   const type = issueType(issue);
-  const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
+  const humanTicketId = epicHumanTicketId(issue);
+  const gitBranchName = typeof issue.gitBranchName === 'string' ? issue.gitBranchName : undefined;
 
   return {
     id,
@@ -140,6 +152,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     ...(humanTicketId == null ? {} : { humanTicketId }),
+    ...(gitBranchName == null ? {} : { gitBranchName }),
     tasks,
   };
 };

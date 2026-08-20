@@ -1,12 +1,8 @@
 ---
 name: commit
 description: >
-  Create atomic git commits with conventional commit format and selective staging. Use whenever the
-  user wants to commit changes, both explicit requests ("commit this", "make a commit", "let's
-  commit", "/cape:commit") and implicit ones ("we're done, save this", "wrap this up"). Also use
-  when another cape skill finishes a unit of work and needs to commit. Covers staging decisions,
-  splitting large diffs into separate logical commits, and writing commit messages that explain the
-  change. Do NOT use for pushing, creating PRs, or branch operations.
+  Create atomic git commits with conventional messages and selective staging. Use whenever changes
+  need committing. Not for pushing, PRs, or branch operations.
 ---
 
 # Commit

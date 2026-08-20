@@ -2,13 +2,8 @@
 name: pr-feedback
 argument-hint: '[pr number or url]'
 description: >
-  Resolve inbound PR review comments end to end: fetch the threads with their node IDs, judge each
-  comment's validity, fix the accepted ones, then reply, resolve the matching threads via GraphQL,
-  and commit referencing the review. Use whenever the user wants to act on review feedback: "fetch
-  comments on PR, are they valid?", "resolve threads that are fixed", "push and resolve threads we
-  fixed", "resolve the comment threads that are fixed or ignored", "fix the valid issues and
-  resolve", "/cape:pr-feedback". Do NOT use for fixing a single diagnosed defect with no PR thread
-  (use cape:fix-bug), or creating a PR (use cape:pr).
+  Act on inbound PR review comments: judge validity, fix what's accepted, reply, resolve threads,
+  commit. Use whenever the user wants review feedback handled. Not for creating a PR (cape:pr).
 ---
 
 # PR feedback
@@ -130,10 +125,7 @@ transcript so the calls are on record, then continue as if the triage were appro
 
 ### 4. Apply accepted fixes
 
-Run `cape state set workflowActive`, then `cape workspace phase build`. The flag lets an accepted
-comment hand off to `cape:test-driven-development`; the internal-skill gate blocks TDD without it.
-Once set, clear it with `cape state clear workflowActive` on any exit past this point, whether
-completion, abort, or stop, so the flag never leaks past the skill.
+Run `cape workspace phase build`.
 
 For each row marked Fix, apply the change at the right weight per rule 5: edit nits directly, load
 `cape:test-driven-development` with the comment's concern as the test target for behavioral changes,
@@ -176,8 +168,8 @@ A summary point that warrants a reply gets one top-level PR comment, never a res
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Run `cape state clear workflowActive`.
-Present the final table so applied vs dismissed vs left-open is recorded:
+Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
+dismissed vs left-open is recorded:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>

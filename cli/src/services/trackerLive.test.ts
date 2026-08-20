@@ -233,6 +233,14 @@ describe('trackerLive', () => {
       expect(merged.epics['AI-1']?.humanTicketId).toBe('ABU-9');
     });
 
+    it('fills in a humanTicketId the cached epic never had', () => {
+      const cache = cacheWith(epic('AI-3', []));
+
+      const merged = mergeEpic(cache, { ...epic('AI-3', []), humanTicketId: 'ABU-252' }, 2000);
+
+      expect(merged.epics['AI-3']?.humanTicketId).toBe('ABU-252');
+    });
+
     it('lets an incoming humanTicketId replace the cached one', () => {
       const cache = cacheWith({ ...epic('AI-1', []), humanTicketId: 'ABU-9' });
 
@@ -264,6 +272,33 @@ describe('trackerLive', () => {
 
       expect(result).not.toBeNull();
       expect(result?.humanTicketId).toBeUndefined();
+    });
+
+    it('reads humanTicketId from parentId when the payload has no explicit field', () => {
+      const result = toEpic({ identifier: 'AI-3', title: 'Plan', parentId: 'ABU-252' });
+
+      expect(result?.humanTicketId).toBe('ABU-252');
+    });
+
+    it('prefers an explicit humanTicketId over parentId', () => {
+      const result = toEpic({
+        identifier: 'AI-3',
+        title: 'Plan',
+        humanTicketId: 'ABU-9',
+        parentId: 'ABU-252',
+      });
+
+      expect(result?.humanTicketId).toBe('ABU-9');
+    });
+
+    it('never derives a task humanTicketId from its parent plan issue', () => {
+      const result = toEpic({
+        identifier: 'AI-3',
+        title: 'Plan',
+        children: { nodes: [{ identifier: 'AI-4', title: 'Task', parentId: 'AI-3' }] },
+      });
+
+      expect(result?.tasks[0]?.humanTicketId).toBeUndefined();
     });
   });
 

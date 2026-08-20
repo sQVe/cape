@@ -1,10 +1,8 @@
 ---
 name: don-cape
 description: >
-  Meta-skill that activates cape's workflow system. Injected at session start, always active, never
-  manually triggered. Routes every task to the right cape skill and enforces workflow chains:
-  brainstorm before planning, plan before coding, TDD during implementation, diagnosis before
-  fixing. If a cape skill matches the user request, using it is mandatory.
+  Meta-skill that routes every task to the right cape skill and enforces the workflow chain.
+  Injected at session start, always active, never manually triggered.
 ---
 
 # Don cape
@@ -57,7 +55,7 @@ Otherwise, first matching row wins:
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
 
 `cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
-any production code, and hook safety nets cover resumed sessions.
+any production code.
 
 Code review has no cape skill. The user runs the builtin `/code-review`, or a skill dispatches
 `cape:code-reviewer`. That agent returns its findings as JSON, and whoever dispatched it relays them

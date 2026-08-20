@@ -1,11 +1,8 @@
 ---
 name: test-driven-development
 description: >
-  Drive behavioral changes with tests written before the production code they justify. Use this
-  skill whenever implementing a feature, fixing a bug, adding behavior, or changing logic that
-  automated tests can verify. Also use when another cape skill (fix-bug, execute-plan) says to
-  follow TDD. Do NOT use for: verification testing (manual run-the-app checks), documentation
-  changes, configuration changes, or refactoring that has no behavioral change.
+  Write the failing test before the production code that justifies it. Use for any feature, fix, or
+  logic change automated tests can verify. Not for docs, config, or behavior-preserving refactors.
 ---
 
 # Test-driven development
@@ -25,14 +22,14 @@ worth doing adapt to context.
    for future cases you can already imagine; let each change inform the next test.
 3. **Test behavior, not implementation.** Tests describe what changes for the caller, not which
    internal method ran.
-4. **Skip only with explicit user approval.** No hook enforces the cycle. Skip it only when the user
-   accepts doing so for a stated reason, and report that the TDD contract was overridden.
+4. **Skip only with explicit user approval.** Skip it only when the user accepts doing so for a
+   stated reason, and report that the TDD contract was overridden.
 
 ## Process
 
 ### 1. Confirm tests can run
 
-Run `cape check` or the project's test command. If tests cannot run, stop and tell the user; do not
+Run the project's documented check command. If tests cannot run, stop and tell the user; do not
 bootstrap a framework yourself. Read existing test files and match their file naming, assertion
 style, structure, and helpers exactly.
 

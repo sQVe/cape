@@ -7,11 +7,38 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Tracker: a plan issue is now a sub-issue of the human ticket it satisfies, and that parent is the
+  pair. The `relatedTo` relation and the counterpart markdown links in both bodies are gone, and
+  `cape tracker cache-epic` reads `humanTicketId` from `parentId` instead of a hand-stamped field.
+  Plans attach only to a leaf ticket, never to one that already has home-team children. Task-level
+  pairs still carry an explicit stamp, since a task's parent is the plan issue.
+
+- Hooks: the SessionStart banner is now derived entirely from the current git branch and the tracker
+  cache. The epic is matched from the branch against each cached epic's `gitBranchName`, and the
+  phase from ready-task counts plus open-PR state (ready tasks = build; none and no PR = ship; PR
+  open = pr). Done epics stay silent. `cape workspace phase` derives its epic the same way.
+
+### Fixed
+
+- Tracker: the refresh recipe told skills to pipe a `get_issue` result straight into
+  `cape tracker cache-epic`. `get_issue` returns no children and `cache-epic` prunes unstarted tasks
+  the payload omits, so following it deleted them. Children now come from `list_issues`.
+- Tracker: the agent contract required a project on every issue, which the `AI` team cannot satisfy
+  because projects belong to teams. Agent-side issues stay project-less.
+
 ### Removed
 
-- Skills: removed `cape:worktree`. Grove owns worktree creation; the cape-specific tail (stamp
-  `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
-  `cape:execute-plan`. The `cape worktree` CLI command is unchanged.
+- CLI: removed the `cape state` and `cape worktree` commands, the per-worktree `state-*.json` files,
+  and the Skill-matcher PreToolUse gates. Git and the tracker cache already carry the flow context
+  the state files duplicated. The Bash deny gate stays.
+- CLI: removed `cape check` and the ecosystem detect service. Every repo documents its check command
+  in CLAUDE.md; skills now point there instead of guessing across six ecosystems.
+
+- Skills: removed `cape:worktree`. Grove owns worktree creation; the relabel via
+  `cape workspace phase` now lives as Step 0 in `cape:execute-plan`. The `cape worktree` CLI command
+  went in this round's shave (above).
 - Commands: removed `commands/tracker.md`, the last wrapper duplicating a skill. The tracker skill
   is `user-invocable: false` by design and works as model-loaded plumbing; it was almost never typed
   as a command.
@@ -112,6 +139,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Skills: shortened every remaining frontmatter description to the pstack style `cape:unslop`
+  already used — what the skill does, the strongest trigger, one disambiguation — replacing the long
+  trigger-phrase enumerations, which routed worse than short descriptions.
 - Docs: ran `cape:unslop` over the prose the skill migration left behind, so the whole repo now
   reads the same way: the README, `CLAUDE.md`, all five agents, and the tracker and PR resource
   files. Em dashes are gone, the last XML tag (`<example_calibration>` in `code-reviewer`) is plain

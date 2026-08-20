@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,7 +13,7 @@ describe('cape --help', () => {
   it('lists all subcommands', async () => {
     const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
-    for (const sub of ['check', 'commit', 'git', 'hook', 'pr', 'validate']) {
+    for (const sub of ['commit', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
     }
   });
@@ -261,25 +261,6 @@ describe('cape commit', () => {
   });
 });
 
-describe('cape check', () => {
-  it('cape --help lists check subcommand', async () => {
-    const result = await inProcess(['--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('check');
-  });
-
-  it('exits 1 in a repo with no detected ecosystem', async () => {
-    const emptyDir = initTestRepo('cape-check');
-
-    try {
-      const result = await inProcess(['check'], { cwd: emptyDir });
-      expect(result.status).not.toBe(0);
-    } finally {
-      cleanupTestRepo(emptyDir);
-    }
-  });
-});
-
 describe('cape pr', () => {
   describe('template', () => {
     it('returns JSON with sections array', async () => {
@@ -366,43 +347,6 @@ describe('cape pr', () => {
       expect(validated.valid).toBe(true);
       expect(validated.extra).toContain('Bonus section');
     });
-  });
-});
-
-describe('cape state', () => {
-  const stateJsonPath = join(REPO_ROOT, 'hooks', 'context', 'state.json');
-
-  const cleanState = () => {
-    try {
-      unlinkSync(stateJsonPath);
-    } catch {
-      /* cleanup */
-    }
-  };
-
-  beforeEach(cleanState);
-  afterEach(cleanState);
-
-  it('set writes a key to state.json', async () => {
-    const result = await inProcess(['state', 'set', 'testKey', '{"foo":"bar"}']);
-    expect(result.status).toBe(0);
-  });
-
-  it('list shows available keys when state.json is absent', async () => {
-    const result = await inProcess(['state', 'list']);
-    expect(result.status).toBe(0);
-    expect(result.stdout.length).toBeGreaterThan(0);
-  });
-
-  it('clear is a no-op when key is absent', async () => {
-    const result = await inProcess(['state', 'clear', 'nonExistent']);
-    expect(result.status).toBe(0);
-  });
-
-  it('reset removes state.json', async () => {
-    await inProcess(['state', 'set', 'testKey']);
-    const result = await inProcess(['state', 'reset']);
-    expect(result.status).toBe(0);
   });
 });
 

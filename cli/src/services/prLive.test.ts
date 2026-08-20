@@ -200,6 +200,22 @@ describe('PrServiceLive', () => {
       });
     });
 
+    it('forwards a caller-provided timeout to gh', async () => {
+      mockExecFileSync.mockReturnValue('{"state":"OPEN"}');
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* PrService;
+          return yield* service.spawnGh(['pr', 'view', '--json', 'state'], 3000);
+        }),
+      );
+
+      expect(mockExecFileSync).toHaveBeenCalledWith('gh', ['pr', 'view', '--json', 'state'], {
+        encoding: 'utf-8',
+        timeout: 3000,
+      });
+    });
+
     it('surfaces gh stderr as the error message', async () => {
       mockExecFileSync.mockImplementation(() => {
         throw { stderr: ' authentication required \n' };
