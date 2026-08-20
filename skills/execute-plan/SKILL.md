@@ -22,7 +22,7 @@ fixed. Implementation tactics adapt to the task.
 
 1. **STOP after each task in HITL mode.** Present the checkpoint and wait for the user.
 2. **Close only after verification.** Tests and the task's success criteria must pass first.
-3. **Orient from the cache.** Use `hooks/context/tracker.json` and active worktree state to pick
+3. **Orient from the cache.** Use `hooks/context/tracker.json` and the current git branch to pick
    work. No network reads to pick work; once a task is chosen, fetching its description with MCP
    `get_issue` is fine. Never invent task state.
 4. **Task status is cache-only during build.** Track it with `cape tracker cache-status`; no MCP
@@ -44,8 +44,7 @@ the wrong branch. One epic, one worktree:
 1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
 2. Use grove: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the
    conventional-commit prefix). If the worktree exists, enter it instead of creating another.
-3. From inside it, stamp cape context: `cape worktree start <epic-id>`, then
-   `cape workspace phase build` (safe no-op outside herdr).
+3. From inside it, run `cape workspace phase build` (safe no-op outside herdr).
 
 ### 1. Orient from the tracker cache
 
@@ -76,11 +75,10 @@ Build an in-session breakdown before coding:
 only after the user agrees.
 
 Mark the task in progress in the cache only, with no MCP status writes during build, per the tracker
-contract. Then signal workflow state:
+contract. Then signal the phase:
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
-cape state set workflowActive
 cape workspace phase build
 ```
 
@@ -100,7 +98,7 @@ Before closing, confirm:
 
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- `cape check` (or the repository's verification command) passes
+- The repository's documented check command passes (for cape itself: `pnpm check`)
 - Critical code-review findings are addressed
 
 ### 4. Close and plan next
@@ -110,7 +108,6 @@ Linear at merge, per the tracker contract:
 
 ```bash
 cape tracker cache-status <task-id> Done completed
-cape state clear workflowActive
 ```
 
 Reflect in session: what was built, what changed from the original assumption, whether the epic

@@ -34,16 +34,9 @@ describe('flow 3: session-start', () => {
   });
 
   it('renders the ABU-15 banner from a seeded tracker cache with network disabled', () => {
-    writeFileSync(
-      join(contextDir, 'state-no-repo.json'),
-      JSON.stringify({
-        flowPhase: {
-          phase: 'BUILD',
-          issueId: 'ABU-15',
-          timestamp: Date.now(),
-        },
-      }),
-    );
+    // The banner derives the epic from the current branch, so the simulated
+    // plugin root doubles as a repo whose branch matches the cached slug.
+    execFileSync('git', ['init', '-b', 'feat/abu-15-cape-v2', tmpDir]);
     writeFileSync(
       join(contextDir, 'tracker.json'),
       JSON.stringify({
@@ -54,6 +47,7 @@ describe('flow 3: session-start', () => {
             id: 'ABU-15',
             title: 'Cape V2',
             status: 'In Progress',
+            gitBranchName: 'abu-15-cape-v2',
             tasks: [
               {
                 id: 'ABU-16',
@@ -83,9 +77,9 @@ describe('flow 3: session-start', () => {
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
     expect(parsed.additionalContext).toContain('| Epic   ABU-15  Cape V2');
-    expect(parsed.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(parsed.additionalContext).toContain('| Phase  build  (1/2 tasks done)');
     expect(parsed.additionalContext).toContain('| Next   ABU-17 - Session banner');
-    expect(parsed.additionalContext).toContain('| Branch ');
+    expect(parsed.additionalContext).toContain('| Branch feat/abu-15-cape-v2');
   });
 });
 

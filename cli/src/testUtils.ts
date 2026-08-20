@@ -4,9 +4,7 @@ import { Layer } from 'effect';
 import { vi } from 'vitest';
 
 import {
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubGitLayer,
   stubHookLayer,
   stubPrLayer,
@@ -16,8 +14,6 @@ import {
 const baseCommandLayers = Layer.mergeAll(
   NodeServices.layer,
   stubGitLayer,
-  stubDetectLayer,
-  stubCheckLayer,
   stubCommitLayer,
   stubHookLayer,
   stubPrLayer,

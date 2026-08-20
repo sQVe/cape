@@ -1,17 +1,8 @@
 import { Effect } from 'effect';
 
-import { findEpic } from '../tracker';
 import { denyTable } from './denyTable';
-import { parseCommand, parseCwd, parseSkillInput, stripQuotedContent } from './parsing';
-import {
-  HookService,
-  isDoneTask,
-  isReadyTask,
-  readFlowPhaseContext,
-  readState,
-  readTrackerCache,
-  resolveBranchInfo,
-} from './state';
+import { parseCommand, parseCwd, stripQuotedContent } from './parsing';
+import { HookService, resolveBranchInfo } from './state';
 
 export { denyTable } from './denyTable';
 
@@ -22,8 +13,6 @@ export const denyWith = (reason: string) => ({
     permissionDecisionReason: reason,
   },
 });
-
-const contextWith = (additionalContext: string) => ({ additionalContext });
 
 export const preToolUseBash = () =>
   Effect.gen(function* () {
@@ -52,109 +41,6 @@ export const preToolUseBash = () =>
           );
         }
       }
-    }
-
-    return null;
-  });
-
-const gatedSkills = new Set(['execute-plan', 'finish-epic', 'test-driven-development']);
-
-interface ContextResult {
-  additionalContext: string;
-}
-type GateResult = ReturnType<typeof denyWith> | ContextResult | null;
-
-const gateExecutePlan = () =>
-  Effect.gen(function* () {
-    const cache = yield* readTrackerCache();
-    if (cache === null) {
-      return null;
-    }
-    if (Object.keys(cache.epics).length === 0) {
-      return contextWith(
-        'No open epic exists. Load cape:brainstorm to explore the problem, then cape:write-plan to create an epic.',
-      );
-    }
-    const flowPhase = yield* readFlowPhaseContext();
-    const activeEpic = flowPhase == null ? null : findEpic(cache, flowPhase.issueId);
-    const readyTask = activeEpic?.tasks.find(isReadyTask);
-    if (readyTask == null) {
-      return contextWith(
-        'No ready tasks. All tasks under the open epic are either in-progress or blocked. Task expansion runs inside cape:execute-plan; create a new Linear task with cape:tracker if more work remains.',
-      );
-    }
-    const { branch, defaultBranch } = yield* resolveBranchInfo();
-    if (branch != null) {
-      if (branch === defaultBranch) {
-        return {
-          additionalContext: [
-            `You are on \`${branch}\` (the default branch).`,
-            'Ask the user whether to start or enter the epic worktree before starting work.',
-            'Use grove if they agree.',
-          ].join(' '),
-        };
-      }
-    }
-    return null;
-  });
-
-const gateFinishEpic = (targetEpicId: string | null) =>
-  Effect.gen(function* () {
-    const cache = yield* readTrackerCache();
-    if (cache === null) {
-      return null;
-    }
-    for (const epic of Object.values(cache.epics)) {
-      if (targetEpicId != null && epic.id !== targetEpicId && epic.humanTicketId !== targetEpicId) {
-        continue;
-      }
-      const openCount = epic.tasks.filter((task) => !isDoneTask(task)).length;
-      if (openCount > 0) {
-        return contextWith(
-          `Epic ${epic.id} still has ${openCount} open task(s). Close each task through Linear via cape:tracker (or run cape:execute-plan to finish them) before running cape:finish-epic.`,
-        );
-      }
-    }
-    return null;
-  });
-
-const gateInternalSkill = () =>
-  Effect.gen(function* () {
-    const state = yield* readState();
-    if (!state.workflowActive) {
-      return contextWith(
-        'This skill is internal to cape:execute-plan / cape:fix-bug and cannot be invoked directly. Load cape:execute-plan or cape:fix-bug to drive it.',
-      );
-    }
-    return null;
-  });
-
-const skillGates: Record<
-  string,
-  (args: string | null) => Effect.Effect<GateResult, never, HookService>
-> = {
-  'execute-plan': () => gateExecutePlan(),
-  'finish-epic': (args) => gateFinishEpic(args),
-  'test-driven-development': () => gateInternalSkill(),
-};
-
-export const preToolUseSkill = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const input = yield* service.readStdin();
-    const skill = parseSkillInput(input);
-    if (!skill) {
-      return null;
-    }
-
-    const name = skill.name.replace(/^cape:/, '');
-    if (!gatedSkills.has(name)) {
-      return null;
-    }
-
-    const gate = skillGates[name];
-    if (gate != null) {
-      return yield* gate(skill.args);
     }
 
     return null;

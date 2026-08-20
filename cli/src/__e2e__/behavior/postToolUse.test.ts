@@ -24,7 +24,6 @@ afterEach(() => {
   spawnSync('rm', ['-rf', tmpDir]);
 });
 
-// All Edit E2E tests hit the early-return path because no flowPhase exists in state.json.
 // The TDD reminder output path is only testable at the unit level (in hook.test.ts).
 describe('PostToolUse/Edit', () => {
   it('skips .test.ts files', () => {

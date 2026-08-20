@@ -7,9 +7,7 @@ import { main } from '../main';
 import { GitService, getGitContext } from '../services/git';
 import type { GitContext } from '../services/git';
 import {
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubHookLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -48,8 +46,6 @@ const testLayers = Layer.mergeAll(
   NodeServices.layer,
   stubHerdrLayer,
   makeTestGitLayer(),
-  stubDetectLayer,
-  stubCheckLayer,
   stubCommitLayer,
   stubHookLayer,
   stubPrLayer,

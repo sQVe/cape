@@ -17,6 +17,7 @@ export interface TrackerEpic {
   readonly type?: string;
   readonly status: string;
   readonly humanTicketId?: string;
+  readonly gitBranchName?: string;
   readonly tasks: readonly TrackerTask[];
 }
 
@@ -30,6 +31,8 @@ export const findEpic = (cache: TrackerCache, issueId: string): TrackerEpic | nu
   cache.epics[issueId] ??
   Object.values(cache.epics).find((epic) => epic.humanTicketId === issueId) ??
   null;
+
+const isOptionalString = (value: unknown) => value == null || typeof value === 'string';
 
 const isTrackerTask = (value: unknown): value is TrackerTask => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
@@ -47,8 +50,8 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
   return (
     typeof task.id === 'string' &&
     typeof task.title === 'string' &&
-    (task.project == null || typeof task.project === 'string') &&
-    (task.type == null || typeof task.type === 'string') &&
+    isOptionalString(task.project) &&
+    isOptionalString(task.type) &&
     typeof task.status === 'string' &&
     typeof task.stateType === 'string' &&
     (task.humanTicketId == null || typeof task.humanTicketId === 'string')
@@ -66,15 +69,17 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
     readonly type?: unknown;
     readonly status?: unknown;
     readonly humanTicketId?: unknown;
+    readonly gitBranchName?: unknown;
     readonly tasks?: unknown;
   };
   return (
     typeof epic.id === 'string' &&
     typeof epic.title === 'string' &&
-    (epic.project == null || typeof epic.project === 'string') &&
-    (epic.type == null || typeof epic.type === 'string') &&
+    isOptionalString(epic.project) &&
+    isOptionalString(epic.type) &&
     typeof epic.status === 'string' &&
-    (epic.humanTicketId == null || typeof epic.humanTicketId === 'string') &&
+    isOptionalString(epic.humanTicketId) &&
+    isOptionalString(epic.gitBranchName) &&
     Array.isArray(epic.tasks) &&
     epic.tasks.every(isTrackerTask)
   );

@@ -20,6 +20,7 @@ interface LinearIssue {
   readonly identifier?: unknown;
   readonly title?: unknown;
   readonly humanTicketId?: unknown;
+  readonly gitBranchName?: unknown;
   readonly project?: unknown;
   readonly labels?:
     | readonly LinearLabel[]
@@ -132,6 +133,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
   const project = issueProject(issue);
   const type = issueType(issue);
   const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
+  const gitBranchName = typeof issue.gitBranchName === 'string' ? issue.gitBranchName : undefined;
 
   return {
     id,
@@ -140,6 +142,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     ...(humanTicketId == null ? {} : { humanTicketId }),
+    ...(gitBranchName == null ? {} : { gitBranchName }),
     tasks,
   };
 };

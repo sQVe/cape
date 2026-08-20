@@ -88,7 +88,6 @@ contract:
 
 ```bash
 cape tracker cache-status <bug-id> "In Progress" started
-cape state set workflowActive
 ```
 
 ### 3. Fix with TDD
@@ -125,7 +124,6 @@ contract. Mirror the closure into the cache:
 
 ```bash
 cape tracker cache-status <bug-id> Done completed
-cape state clear workflowActive
 ```
 
 Load `cape:commit` to commit the fix.

@@ -70,21 +70,3 @@ export const parseCwd = (input: string): string | null => {
     return null;
   }
 };
-
-export interface SkillInput {
-  readonly name: string;
-  readonly args: string | null;
-}
-
-export const parseSkillInput = (input: string): SkillInput | null => {
-  try {
-    const data = JSON.parse(input);
-    const name = parseString(data.tool_input?.skill);
-    if (!name) {
-      return null;
-    }
-    return { name, args: parseString(data.tool_input?.args) };
-  } catch {
-    return null;
-  }
-};

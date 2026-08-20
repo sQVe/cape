@@ -40,15 +40,6 @@
             "command": "cape hook pre-tool-use --matcher Bash"
           }
         ]
-      },
-      {
-        "matcher": "Skill",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "cape hook pre-tool-use --matcher Skill"
-          }
-        ]
       }
     ],
     "PostToolUse": [
