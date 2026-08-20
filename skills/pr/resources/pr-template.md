@@ -52,9 +52,10 @@
 ---
 
 <!-- DEFAULT: list the human ticket, the AI plan issue, and every completed task from the
-     tracker cache — incomplete and canceled children excluded. Use `Related to` with the same
-     set ONLY when this PR does not complete the epic (more PRs or a live cutover still pending).
-     Pick one keyword per issue, never both on the same id. -->
+     tracker cache — incomplete and canceled children excluded, and only ids that exist (AI-only
+     work has no human ticket). Use `Related to` with the same set ONLY when this PR does not
+     complete the epic (more PRs or a live cutover still pending). Pick one keyword per issue,
+     never both on the same id. -->
 
 Fixes ABU-XX, AI-XX, AI-XX
 ```
@@ -73,12 +74,12 @@ Fixes ABU-XX, AI-XX, AI-XX
 - **Issues**: Build the closing line from the tracker cache:
   `Fixes <human-id>, <plan-id>, <completed task ids>` — the human ticket, the AI plan issue, and
   every completed child task plus any completed task's own `humanTicketId`; incomplete and canceled
-  children excluded. Use a non-closing keyword (`Related to`) with the same set ONLY when this PR
-  does not complete the epic, meaning more PRs or a live cutover are still pending. A non-closing
-  link still moves the issues through pre-merge statuses but never closes them, which is the most
-  common reason an epic stays open after its PR merges. Closing keywords: `close`, `fix`, `resolve`,
-  `complete`, `implement` (and their tenses). Linear links and closes by Linear identifier, not
-  GitHub issue number.
+  children excluded, and ids that do not exist omitted (AI-only work has no human ticket). Use a
+  non-closing keyword (`Related to`) with the same set ONLY when this PR does not complete the epic,
+  meaning more PRs or a live cutover are still pending. A non-closing link still moves the issues
+  through pre-merge statuses but never closes them, which is the most common reason an epic stays
+  open after its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`, `implement`
+  (and their tenses). Linear links and closes by Linear identifier, not GitHub issue number.
 
 ## Test plan format
 

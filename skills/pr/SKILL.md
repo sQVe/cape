@@ -95,9 +95,11 @@ Write the body for a reviewer who knows the domain but not this branch:
 - End the description with the cache-built closing line, whatever the template source:
   `Fixes <human-id>, <plan-id>, <completed task ids>` from `hooks/context/tracker.json` — the epic
   entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
-  task's own `humanTicketId`; incomplete and canceled children excluded. Use `Related to` with the
-  same set ONLY when this PR does not complete the epic. Build it now, before approval — this is
-  what catches Linear up on the cache-only build statuses; step 6 only confirms it.
+  task's own `humanTicketId`; incomplete and canceled children excluded. List only ids that exist:
+  AI-only work has no `humanTicketId`, so its line starts at the plan issue — never invent a
+  placeholder. Use `Related to` with the same set ONLY when this PR does not complete the epic.
+  Build it now, before approval — this is what catches Linear up on the cache-only build statuses;
+  step 6 only confirms it.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
@@ -173,11 +175,12 @@ cape workspace phase pr
    carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>` — the
    epic entry's `humanTicketId` (the human ticket), the AI plan issue, and every child task the
    cache marks completed, plus any completed task's own `humanTicketId`; incomplete and canceled
-   children excluded. This is what catches Linear up on the cache-only build statuses. Use the
-   non-closing `Related to` with the same set ONLY when this PR does not complete the epic (more PRs
-   or a live cutover still pending). Linear's GitHub integration moves the listed issues to In
-   Review on open and Done when a `Fixes` PR merges; cape never sets status manually. This requires
-   the GitHub-Linear integration (see tracker workspace-setup).
+   children excluded, and ids that do not exist omitted (AI-only work has no human ticket). This is
+   what catches Linear up on the cache-only build statuses. Use the non-closing `Related to` with
+   the same set ONLY when this PR does not complete the epic (more PRs or a live cutover still
+   pending). Linear's GitHub integration moves the listed issues to In Review on open and Done when
+   a `Fixes` PR merges; cape never sets status manually. This requires the GitHub-Linear integration
+   (see tracker workspace-setup).
 2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
    conventions or the user named any.
 3. Report:
