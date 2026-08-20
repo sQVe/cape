@@ -36,3 +36,5 @@ cape validate skills    # skills only
 - Tests co-located with source in `cli/src/`. E2E tests in `cli/src/__e2e__/`.
 - Effect service pattern: interface in `services/<name>.ts`, live implementation in
   `services/<name>Live.ts`.
+- Tracker: this repo's Linear home team is `Aburaya`; agent plans and tasks go to the `AI` team (see
+  `skills/tracker`).

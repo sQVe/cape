@@ -37,10 +37,10 @@ If a Linear bug issue already exists in the session or request, adopt it. Use th
 cache for orientation and status. If the issue details are not in session, fetch them with MCP
 `get_issue`; if MCP is unavailable, ask the user for the description instead.
 
-An adopted human ticket (Aburaya) with no AI counterpart is an incomplete pair: locate the linked AI
-bug issue, or create and link one per the tracker contract's pairing protocol, and refresh the cache
-before proceeding — build-time status tracks the AI-side id, and the PR closing line needs an AI
-issue to close.
+An adopted human ticket (home team) with no AI counterpart is an incomplete pair: locate the linked
+AI bug issue, or create and link one per the tracker contract's pairing protocol, and refresh the
+cache before proceeding — build-time status tracks the AI-side id, and the PR closing line needs an
+AI issue to close.
 
 If no issue exists, diagnose before touching code:
 

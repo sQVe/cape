@@ -36,12 +36,14 @@
 
 ## Two-tier team setup (run in the Linear UI)
 
-Prerequisites for the two-tier contract in [SKILL.md](../SKILL.md): human tickets in `Aburaya`,
-agent plan issues and tasks in `Agents` (AI). A human runs these before the first paired epic.
+Prerequisites for the two-tier contract in [SKILL.md](../SKILL.md): human tickets in the repo's home
+team (`Aburaya` here), agent plan issues and tasks in the workspace's `AI` team. A human runs these
+once per Linear workspace before its first paired epic — a separate workspace (for example the work
+one) needs its own `AI` team and automations.
 
-- [ ] Create the team `Agents` in Linear with the team key `AI` (issue ids like `AI-12`).
-- [ ] Enable the Agents team's PR automations (per-team settings): PR opened sets status to In
-      Review; PR merged to the default branch sets status to Done.
+- [x] Create the team `AI` in Linear (issue ids like `AI-12`).
+- [ ] Enable the AI team's PR automations (per-team settings): PR opened sets status to In Review;
+      PR merged to the default branch sets status to Done.
 - [ ] Move the `src` and `type` label groups to workspace level so both teams share them.
 - [ ] Retire the `agent-ticket` label; the team boundary replaces it (agent work tickets live in AI,
       so humans filter by team instead of label).
@@ -50,5 +52,5 @@ On the first paired epic, verify: AI PR automations fire from cape-repo PRs, and
 closing line moves both issues to Done on merge (`Fixes ABU-x, AI-y` — Linear's own docs show a
 multi-team closing example).
 
-Free-plan caveat: `Agents` uses the second of the two free team slots; any third team needs a plan
+Free-plan caveat: `AI` uses the second of the two free team slots; any third team needs a plan
 upgrade.

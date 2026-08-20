@@ -3,8 +3,11 @@
 Apply before every issue create or update.
 
 - **Team.** Route by audience. Agent-facing issues (plans, contracts, task sub-issues) go to the
-  team `Agents` (AI); human-facing issues go to `Aburaya`. Pass the team as a `save_issue` parameter
-  — no config layer.
+  workspace's agent team, named `AI`; human-facing issues go to the repo's home team — the team
+  where that repo's tracked work already lives. Resolve the home team in order: the active epic or
+  pair's team, the team of the repo's issues in the tracker cache, the team named in the repo's
+  CLAUDE.md, then ask the user. Never guess, and never route across workspaces. Pass the team as a
+  `save_issue` parameter — no config layer.
 - **Dedupe first.** Search open issues in the target project by title keywords. On a match, comment
   instead of creating a duplicate; the comment states what cape would have created and links the
   match.

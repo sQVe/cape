@@ -12,10 +12,10 @@ description: >
 # Tracker
 
 Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read cache. Work is
-two-tier: human-facing tickets live in the Aburaya team; agent-facing plan issues and tasks live in
-the Agents team (AI). Skills write to Linear through MCP, then refresh the cache with
-`cape tracker`. Linear is the source of truth for issue content; the cache is the source of truth
-for reads — and for task status during build.
+two-tier: human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan
+issues and tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh
+the cache with `cape tracker`. Linear is the source of truth for issue content; the cache is the
+source of truth for reads — and for task status during build.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -23,9 +23,10 @@ to the chain using the tracker.
 ## Rules
 
 1. **Use only five operations.** createEpic, createTasks, listReady, updateStatus, close.
-2. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the team
-   `Agents`; human-facing issues go to `Aburaya`. Team routing is a `save_issue` parameter — no
-   config layer.
+2. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the
+   workspace's `AI` team; human-facing issues go to the repo's home team, resolved per
+   [resources/agent-contract.md](resources/agent-contract.md). Team routing is a `save_issue`
+   parameter — no config layer.
 3. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
 4. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
    never Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read,
@@ -83,9 +84,10 @@ user-facing issue descriptions through the `cape:unslop` skill before creating t
 Create paired work with MCP Linear `save_issue`, using the shapes in
 [resources/linear-templates.md](resources/linear-templates.md):
 
-1. Human ticket in `Aburaya`: a concise, scannable description — no agent contract material.
-2. Plan issue in `Agents`: the full agent contract (required behavior, constraints, approach,
-   acceptance criteria).
+1. Human ticket in the repo's home team: a concise, scannable description — no agent contract
+   material.
+2. Plan issue in `AI`: the full agent contract (required behavior, constraints, approach, acceptance
+   criteria).
 3. Link the two bidirectionally: a `relatedTo` relation plus a markdown link to the counterpart in
    each body.
 4. Create the first task with `save_issue` as a sub-issue of the AI plan issue.
@@ -147,11 +149,12 @@ cache afterwards, run `cape tracker cache-status <issue-id> Done completed` per 
 ## Examples
 
 **Wrong:** write-plan puts the full agent contract (R-tables, constraints, acceptance criteria) in
-the Aburaya ticket, or creates everything in one team.
+the human ticket, or creates everything in one team.
 
-**Right:** write-plan creates a concise human ticket in `Aburaya` and a plan issue in `Agents`
-holding the full contract, links them via `relatedTo` plus a markdown link in each body, creates the
-first task as a sub-issue of the plan issue, then runs `cape tracker cache-epic '<json>'`.
+**Right:** write-plan creates a concise human ticket in the repo's home team (`Aburaya` in cape) and
+a plan issue in `AI` holding the full contract, links them via `relatedTo` plus a markdown link in
+each body, creates the first task as a sub-issue of the plan issue, then runs
+`cape tracker cache-epic '<json>'`.
 
 **Wrong:** execute-plan writes a task's `Done` status to Linear with MCP `save_issue` mid-build.
 

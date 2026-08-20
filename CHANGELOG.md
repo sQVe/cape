@@ -211,6 +211,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Tracker routing: the human tier is no longer hardcoded to Aburaya. Human-facing issues go to the
+  repo's home team, resolved from the active pair, the tracker cache, or the repo's CLAUDE.md; the
+  agent team is the workspace's `AI` team (matching the real team name), created once per Linear
+  workspace.
 - Tracker cache: refreshes are forward-only per task — the more advanced of cached vs incoming state
   wins — so a stale refresh cannot resurrect completed work. `cache-status` derives the state type
   from well-known status names when the argument is omitted and fails on unknown issue ids instead
