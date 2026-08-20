@@ -9,9 +9,9 @@ description: >
 
 # Fix bug
 
-Diagnose a defect to root cause, track it in Linear, fix it test-first, and verify the original
-symptom is gone before closing. Every fix ships with a regression test that fails before the fix and
-passes after.
+Diagnose a defect to root cause, adopt an existing Linear bug issue or create a human/AI bug pair,
+fix it test-first, and verify the original symptom is gone before closing. Every fix ships with a
+regression test that fails before the fix and passes after.
 
 Diagnosis before patching, test-first fixing, evidence-based closure, and cache refresh after Linear
 writes are fixed. Investigation depth adapts to the bug.
@@ -24,9 +24,10 @@ writes are fixed. Investigation depth adapts to the bug.
    diagnosed reason.
 3. **Verify the original symptom before close.** Reproduction, tests, and success criteria gate
    closure, never code inspection alone.
-4. **Track the bug in Linear.** Adopt an existing issue or create one through MCP Linear.
-5. **Refresh cache after every Linear write.** Every create, status update, or close is followed by
-   `cape tracker`.
+4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
+   Linear per the `cape:tracker` contract.
+5. **Refresh cache after every Linear write.** Every create or content update is followed by
+   `cape tracker`; status stays cache-only until the PR closing line.
 
 ## Process
 
@@ -35,6 +36,11 @@ writes are fixed. Investigation depth adapts to the bug.
 If a Linear bug issue already exists in the session or request, adopt it. Use the local tracker
 cache for orientation and status. If the issue details are not in session, fetch them with MCP
 `get_issue`; if MCP is unavailable, ask the user for the description instead.
+
+An adopted human ticket (Aburaya) with no AI counterpart is an incomplete pair: locate the linked AI
+bug issue, or create and link one per the tracker contract's pairing protocol, and refresh the cache
+before proceeding. Build-time status tracks the AI-side id, and the PR closing line needs an AI
+issue to close.
 
 If no issue exists, diagnose before touching code:
 
@@ -46,7 +52,8 @@ If no issue exists, diagnose before touching code:
 Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
 prose.
 
-**STOP. Present the investigation summary and wait for approval before creating a Linear issue.**
+**STOP. Present the investigation summary and wait for approval before creating the Linear bug
+pair.**
 
 ```text
 Investigation summary
@@ -56,15 +63,19 @@ Root cause: <file:line and mechanism>
 Evidence: <key observations>
 Reproduction: <exact steps>
 
-Create a Linear bug issue for this fix?
+Create a Linear bug pair for this fix?
 ```
 
-After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns dedupe,
-labels, priority, and the bug title shape. Create the issue with MCP Linear `save_issue`, including
-root cause, evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and
-success criteria. Then refresh the cache per `cape:tracker`: when the bug sits under an epic,
-refresh the parent with `cape tracker cache-epic`. If the bug is standalone and not yet in cache,
-create or refresh a containing parent issue first.
+After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
+routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
+Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
+symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
+reproduction steps, expected behavior, actual behavior, suggested fix, and success criteria. When
+the bug has no user-informational value, use the tracker contract's AI-only exception and skip the
+human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an epic, refresh
+the parent with `cape tracker cache-epic`, stamping the bug child's `humanTicketId` into the JSON so
+the PR closing line picks up the bug's own human ticket. If the bug is standalone and not yet in
+cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 
@@ -72,7 +83,8 @@ Run the reproduction steps and confirm the symptom locally. If reproduction fail
 already be fixed or the environment may differ; investigate and report that before editing
 production code.
 
-Mark the bug in progress through MCP Linear, then update local state:
+Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
+contract:
 
 ```bash
 cape tracker cache-status <bug-id> "In Progress" started
@@ -108,7 +120,8 @@ Status: FIXED | PARTIALLY_FIXED | BLOCKED
 **STOP and wait if the user asked to approve closure.** Otherwise close only when verification is
 green.
 
-Close the issue through MCP Linear, then:
+Never close through MCP. The PR closing line moves the issue to `Done` at merge, per the tracker
+contract. Mirror the closure into the cache:
 
 ```bash
 cape tracker cache-status <bug-id> Done completed

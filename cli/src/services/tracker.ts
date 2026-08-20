@@ -7,6 +7,7 @@ export interface TrackerTask {
   readonly type?: string;
   readonly status: string;
   readonly stateType: string;
+  readonly humanTicketId?: string;
 }
 
 export interface TrackerEpic {
@@ -15,6 +16,7 @@ export interface TrackerEpic {
   readonly project?: string;
   readonly type?: string;
   readonly status: string;
+  readonly humanTicketId?: string;
   readonly tasks: readonly TrackerTask[];
 }
 
@@ -23,6 +25,11 @@ export interface TrackerCache {
   readonly timestamp: number;
   readonly epics: Record<string, TrackerEpic>;
 }
+
+export const findEpic = (cache: TrackerCache, issueId: string): TrackerEpic | null =>
+  cache.epics[issueId] ??
+  Object.values(cache.epics).find((epic) => epic.humanTicketId === issueId) ??
+  null;
 
 const isTrackerTask = (value: unknown): value is TrackerTask => {
   if (typeof value !== 'object' || value == null || Array.isArray(value)) {
@@ -35,6 +42,7 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
     readonly type?: unknown;
     readonly status?: unknown;
     readonly stateType?: unknown;
+    readonly humanTicketId?: unknown;
   };
   return (
     typeof task.id === 'string' &&
@@ -42,7 +50,8 @@ const isTrackerTask = (value: unknown): value is TrackerTask => {
     (task.project == null || typeof task.project === 'string') &&
     (task.type == null || typeof task.type === 'string') &&
     typeof task.status === 'string' &&
-    typeof task.stateType === 'string'
+    typeof task.stateType === 'string' &&
+    (task.humanTicketId == null || typeof task.humanTicketId === 'string')
   );
 };
 
@@ -56,6 +65,7 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
     readonly project?: unknown;
     readonly type?: unknown;
     readonly status?: unknown;
+    readonly humanTicketId?: unknown;
     readonly tasks?: unknown;
   };
   return (
@@ -64,6 +74,7 @@ const isTrackerEpic = (value: unknown): value is TrackerEpic => {
     (epic.project == null || typeof epic.project === 'string') &&
     (epic.type == null || typeof epic.type === 'string') &&
     typeof epic.status === 'string' &&
+    (epic.humanTicketId == null || typeof epic.humanTicketId === 'string') &&
     Array.isArray(epic.tasks) &&
     epic.tasks.every(isTrackerTask)
   );

@@ -270,7 +270,7 @@ const epic = (id: string, tasks: readonly ReturnType<typeof task>[], title = 'My
 });
 
 const trackerGateFiles = (
-  epics: Record<string, ReturnType<typeof epic>>,
+  epics: Record<string, ReturnType<typeof epic> & { humanTicketId?: string }>,
   activeEpicId = 'cape-1',
 ) => ({
   ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', activeEpicId) }),
@@ -1055,6 +1055,39 @@ describe('preToolUseSkill', () => {
     });
     const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
     expect(result).toBeNull();
+  });
+
+  it('allows finish-epic when the remaining task is canceled', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic'),
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [
+          task('cape-1.1', 'Done', 'completed'),
+          task('cape-1.2', 'Canceled', 'canceled'),
+        ]),
+      }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
+  it('adds context for a target named by its human ticket id when open tasks remain', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic', 'ABU-14'),
+      files: trackerGateFiles(
+        {
+          'AI-15': {
+            ...epic('AI-15', [task('AI-15.1', 'Todo', 'unstarted')]),
+            humanTicketId: 'ABU-14',
+          },
+        },
+        'AI-15',
+      ),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('open task'),
+    });
   });
 
   it('allows finish-epic for target epic when other epics have open tasks', async () => {
