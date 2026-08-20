@@ -92,7 +92,7 @@ findings, external docs, key decisions) and designs under one constraint:
 
 | Agent | Constraint               | Tendency                                         |
 | ----- | ------------------------ | ------------------------------------------------ |
-| 1     | Minimize the interface   | Fewest moving parts, smallest API surface        |
+| 1     | Minimize the interface   | Fewest moving parts, smallest public API         |
 | 2     | Maximize flexibility     | Extension points, configuration, loose coupling  |
 | 3     | Optimize the common case | Fast path for the 80% case, pragmatic trade-offs |
 
@@ -133,8 +133,8 @@ If they accept:
 
 1. Review the chosen approach, prior decisions, and codebase findings. Dispatch
    `cape:codebase-investigator` in default mode (model: haiku) when codebase evidence could settle a
-   question. Resolve assumptions silently when evidence answers them; surface only those needing
-   human judgment.
+   question. Resolve assumptions silently when evidence answers them; show only those needing human
+   judgment.
 2. Scan for scope creep, implicit constraints, unstated requirements, hidden dependencies,
    over-engineering, and under-specification. Rank by impact and reversibility, high first. Skip
    low-risk items when the design is simple, never high-risk ones.
@@ -185,7 +185,7 @@ Compose the design summary internally. Do not present it yet.
 ### Approaches considered
 
 1. **[Chosen]** (selected): [why]
-2. **[Rejected]**: [why rejected, DO NOT REVISIT UNLESS]
+2. **[Rejected].** [why rejected, DO NOT REVISIT UNLESS]
 
 ### Dead ends
 

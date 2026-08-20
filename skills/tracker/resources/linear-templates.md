@@ -14,12 +14,12 @@ stay in session, not on the board.
 
 ## Human ticket
 
-The repo's home team. Description only — no R-tables, no constraints, no acceptance criteria; the
+The repo's home team. Description only: no R-tables, no constraints, no acceptance criteria. The
 human tier exists to be scannable. Untyped parent. Set `src:*` and Medium priority as template
 defaults.
 
 ```markdown
-[What changes and why — 2-4 sentences a human can scan in ten seconds.]
+[What changes and why, in 2-4 sentences a human can scan in ten seconds.]
 
 Done when: [one concrete completion statement]
 
@@ -44,17 +44,17 @@ Pick a variant per plan issue. Default to **Light**. Use **Full** when a user jo
 state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
 
-### Plan issue — Light (default)
+### Plan issue, Light (default)
 
 ```markdown
-## 🧭 At a glance
+## At a glance
 
 | Field             | Value                               |
 | ----------------- | ----------------------------------- |
 | **Outcome**       | [What is true after this]           |
 | **Problem**       | [What is wrong or missing]          |
 | **User / system** | [Who benefits]                      |
-| **Human ticket**  | [ABU-XX](url) — or AI-only          |
+| **Human ticket**  | [ABU-XX](url), or AI-only           |
 | **Variant**       | Light                               |
 | **Done when**     | [One concrete completion statement] |
 
@@ -82,19 +82,19 @@ and data flow. Mermaid for flows over ~3 steps.]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
-### Plan issue — Full
+### Plan issue, Full
 
 Light plus the alignment sections. Same untyped-parent rules.
 
 ````markdown
-## 🧭 At a glance
+## At a glance
 
 | Field            | Value                               |
 | ---------------- | ----------------------------------- |
 | **Outcome**      | [What is true after this]           |
 | **Problem**      | [What is wrong or missing]          |
 | **Primary user** | [User, persona, or system]          |
-| **Human ticket** | [ABU-XX](url) — or AI-only          |
+| **Human ticket** | [ABU-XX](url), or AI-only           |
 | **Risk**         | Low / Medium / High                 |
 | **Variant**      | Full                                |
 | **Done when**    | [One concrete completion statement] |

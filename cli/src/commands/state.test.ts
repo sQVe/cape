@@ -74,13 +74,13 @@ describe('cape state list', () => {
     expect(output).toContain('Available keys');
     expect(output).toContain('flowPhase');
     expect(output).toContain('workflowActive');
-    expect(output).toContain('executing | debugging | planning');
+    expect(output).toContain('PLAN | BUILD | SHIP');
     console_.restore();
   });
 
   it('shows active key under Active state and inactive keys under Available keys', async () => {
     const state = JSON.stringify({
-      flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() },
+      flowPhase: { phase: 'BUILD', issueId: 'bd-1', timestamp: Date.now() },
     });
     const console_ = spyConsole();
     await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(state))));
@@ -101,7 +101,7 @@ describe('cape state list', () => {
 
   it('shows expired TTL key under Active state with expired label', async () => {
     const state = JSON.stringify({
-      flowPhase: { phase: 'executing', issueId: 'bd-1', timestamp: Date.now() - 60 * 60 * 1000 },
+      flowPhase: { phase: 'BUILD', issueId: 'bd-1', timestamp: Date.now() - 60 * 60 * 1000 },
     });
     const console_ = spyConsole();
     await Effect.runPromise(run(['state', 'list']).pipe(Effect.provide(makeLayers(state))));
