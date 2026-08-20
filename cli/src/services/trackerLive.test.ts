@@ -233,6 +233,14 @@ describe('trackerLive', () => {
       expect(merged.epics['AI-1']?.humanTicketId).toBe('ABU-9');
     });
 
+    it('fills in a humanTicketId the cached epic never had', () => {
+      const cache = cacheWith(epic('AI-3', []));
+
+      const merged = mergeEpic(cache, { ...epic('AI-3', []), humanTicketId: 'ABU-252' }, 2000);
+
+      expect(merged.epics['AI-3']?.humanTicketId).toBe('ABU-252');
+    });
+
     it('lets an incoming humanTicketId replace the cached one', () => {
       const cache = cacheWith({ ...epic('AI-1', []), humanTicketId: 'ABU-9' });
 

@@ -98,8 +98,9 @@ Create exactly one sub-issue under the plan issue with `save_issue`, with only t
 its description.
 
 Then refresh the cache per `cape:tracker`'s create-work recipe: fetch the plan issue with
-`get_issue`, fill its `children.nodes` from `list_issues(parentId: <plan-id>)`, stamp
-`humanTicketId`, and pass the composed JSON to `cape tracker cache-epic`.
+`get_issue`, fill its `children.nodes` from `list_issues(parentId: <plan-id>)`, and pass the
+composed JSON to `cape tracker cache-epic`. The plan's `parentId` carries the pair, so it needs no
+stamp.
 
 ### 5. Present and STOP
 
