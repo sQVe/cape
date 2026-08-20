@@ -19,6 +19,7 @@ interface LinearIssue {
   readonly id?: unknown;
   readonly identifier?: unknown;
   readonly title?: unknown;
+  readonly humanTicketId?: unknown;
   readonly project?: unknown;
   readonly labels?:
     | readonly LinearLabel[]
@@ -100,6 +101,7 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
   }
   const project = issueProject(issue);
   const type = issueType(issue);
+  const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
   return {
     id,
     title: issueTitle(issue),
@@ -107,6 +109,7 @@ const toTask = (issue: LinearIssue): TrackerTask | null => {
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
     stateType: issueStateType(issue),
+    ...(humanTicketId == null ? {} : { humanTicketId }),
   };
 };
 
@@ -128,6 +131,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
   });
   const project = issueProject(issue);
   const type = issueType(issue);
+  const humanTicketId = typeof issue.humanTicketId === 'string' ? issue.humanTicketId : undefined;
 
   return {
     id,
@@ -135,6 +139,7 @@ export const toEpic = (value: unknown): TrackerEpic | null => {
     ...(project == null ? {} : { project }),
     ...(type == null ? {} : { type }),
     status: issueStatus(issue),
+    ...(humanTicketId == null ? {} : { humanTicketId }),
     tasks,
   };
 };
@@ -154,18 +159,85 @@ export const toTasks = (value: unknown): readonly TrackerTask[] => {
   });
 };
 
+export const stateTypeFromStatus = (status: string): string | null => {
+  switch (status.trim().toLowerCase()) {
+    case 'done':
+    case 'completed':
+    case 'closed':
+      return 'completed';
+    case 'canceled':
+    case 'cancelled':
+      return 'canceled';
+    case 'in progress':
+    case 'in review':
+      return 'started';
+    case 'todo':
+      return 'unstarted';
+    case 'backlog':
+      return 'backlog';
+    default:
+      return null;
+  }
+};
+
+const stateRank = (stateType: string) => {
+  switch (stateType.toLowerCase()) {
+    case 'started':
+      return 1;
+    case 'completed':
+    case 'canceled':
+      return 2;
+    default:
+      return 0;
+  }
+};
+
+const mergeTaskLists = (
+  cached: readonly TrackerTask[] | undefined,
+  incoming: readonly TrackerTask[],
+  options?: { readonly authoritative: boolean },
+): readonly TrackerTask[] => {
+  const cachedById = new Map((cached ?? []).map((task) => [task.id, task]));
+  const merged = incoming.map((task) => {
+    const existing = cachedById.get(task.id);
+    const humanTicketId = task.humanTicketId ?? existing?.humanTicketId;
+    const withPair = humanTicketId == null ? task : { ...task, humanTicketId };
+    // Advanced local state wins, but only the state: incoming metadata (title, project, type,
+    // pair) still applies, so refreshes never freeze a locally-advanced task's fields.
+    return existing != null && stateRank(existing.stateType) > stateRank(task.stateType)
+      ? { ...withPair, status: existing.status, stateType: existing.stateType }
+      : withPair;
+  });
+  const incomingIds = new Set(incoming.map((task) => task.id));
+  // An authoritative refresh (cache-epic, full child list) prunes cache-only tasks that never
+  // advanced — they were deleted or reparented in Linear. Advanced tasks survive stale refreshes.
+  const cacheOnly = (cached ?? []).filter(
+    (task) =>
+      !incomingIds.has(task.id) &&
+      (options?.authoritative !== true || stateRank(task.stateType) > 0),
+  );
+  return [...merged, ...cacheOnly];
+};
+
 export const mergeEpic = (
   cache: TrackerCache | null,
   epic: TrackerEpic,
   timestamp: number,
-): TrackerCache => ({
-  version: 1,
-  timestamp,
-  epics: {
-    ...cache?.epics,
-    [epic.id]: epic,
-  },
-});
+): TrackerCache => {
+  const humanTicketId = epic.humanTicketId ?? cache?.epics[epic.id]?.humanTicketId;
+  return {
+    version: 1,
+    timestamp,
+    epics: {
+      ...cache?.epics,
+      [epic.id]: {
+        ...epic,
+        ...(humanTicketId == null ? {} : { humanTicketId }),
+        tasks: mergeTaskLists(cache?.epics[epic.id]?.tasks, epic.tasks, { authoritative: true }),
+      },
+    },
+  };
+};
 
 export const mergeTasks = (
   cache: TrackerCache | null,
@@ -180,12 +252,9 @@ export const mergeTasks = (
     epics: {
       ...cache?.epics,
       [epicId]: {
+        ...(existing ?? { title: '', status: '' }),
         id: epicId,
-        title: existing?.title ?? '',
-        ...(existing?.project == null ? {} : { project: existing.project }),
-        ...(existing?.type == null ? {} : { type: existing.type }),
-        status: existing?.status ?? '',
-        tasks,
+        tasks: mergeTaskLists(existing?.tasks, tasks),
       },
     },
   };

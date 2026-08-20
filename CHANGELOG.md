@@ -38,6 +38,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Tracker: two-tier team routing. Human-facing tickets go to the Aburaya team; agent-facing plan
+  issues and task sub-issues go to the Agents team (AI), linked bidirectionally as pairs. The cache
+  carries the pair (`humanTicketId` on epics and, for per-ticket pairs like nested bugs, on tasks),
+  task status is cache-only during build, and `cape:pr` builds the closing line from the cache
+  (`Fixes <human-id>, <plan-id>, <completed task ids>`). Write-plan and fix-bug create the pairs;
+  execute-plan and the code-reviewer read the contract from the AI plan issue; a workspace-setup
+  checklist covers the Agents team, its PR automations, and retiring the `agent-ticket` label.
+
 - Skills: added `cape:unslop`, adapted from Cursor's pstack unslop skill: 31 AI-tell patterns, an
   adding-soul pass, and a self-audit for any human-facing prose. Written as plain markdown — the
   first skill under the relaxed validation — and it replaces the external `stop-slop` plugin as
@@ -202,6 +210,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tooling: removed Prettier in favor of oxfmt.
 
 ### Fixed
+
+- Tracker cache: refreshes are forward-only per task — the more advanced of cached vs incoming state
+  wins — so a stale refresh cannot resurrect completed work. `cache-status` derives the state type
+  from well-known status names when the argument is omitted and fails on unknown issue ids instead
+  of silently no-oping; a full `cache-epic` refresh prunes cache-only tasks that never advanced; and
+  the cache readers resolve human ticket ids to their AI plan entries.
 
 - CLI: `cape workspace phase` now reads the tracker cache without the 30-minute TTL check, so the
   herdr workspace label keeps the epic title in long sessions. The TTL-checked read dropped the

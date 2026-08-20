@@ -4,7 +4,7 @@ import { basename, resolve } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { safeParseJson } from '../../utils/json';
-import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
+import { TRACKER_CACHE_TTL_MS, findEpic, isTrackerCache } from '../tracker';
 import type { TrackerEpic, TrackerTask } from '../tracker';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
@@ -239,11 +239,18 @@ export const readTrackerCache = () =>
     return isStale ? null : cache;
   });
 
+// Canceled counts as done here: gates and banners ask "is this settled?", not "did it ship?".
+// The PR closing line answers the second question and excludes canceled children separately.
 export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return (
-    stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed'
+    stateType === 'completed' ||
+    stateType === 'canceled' ||
+    status === 'done' ||
+    status === 'closed' ||
+    status === 'completed' ||
+    status === 'canceled'
   );
 };
 
@@ -304,7 +311,7 @@ const readSessionBanner = () =>
     if (cache == null) {
       return null;
     }
-    const epic = cache.epics[flowPhase.issueId];
+    const epic = findEpic(cache, flowPhase.issueId);
     if (epic == null) {
       return null;
     }

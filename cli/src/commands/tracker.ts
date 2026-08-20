@@ -8,6 +8,7 @@ import {
   mergeEpic,
   mergeTasks,
   readCacheFile,
+  stateTypeFromStatus,
   toEpic,
   toTasks,
   updateCachedIssueStatus,
@@ -101,7 +102,7 @@ const cacheTasks = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Refresh cached tasks for an epic from Linear list_issues JSON. This replaces the cached task list for that epic.',
+    'Refresh cached tasks for an epic from Linear list_issues JSON. Merges forward-only per task: the more advanced of cached vs incoming state wins.',
   ),
 );
 
@@ -134,24 +135,23 @@ const cacheStatus = Command.make(
       cache,
       targetIssueId: trimmedIssueId,
       status: trimmedStatus,
-      stateType: Option.isSome(stateType) ? stateType.value : null,
+      stateType: Option.isSome(stateType) ? stateType.value : stateTypeFromStatus(trimmedStatus),
       timestamp: Date.now(),
     });
 
-    if (updatedCache != null) {
-      yield* writeCacheFile(updatedCache).pipe(catchAndDie);
+    if (updatedCache == null) {
+      return yield* dieWithError(
+        `issue ${trimmedIssueId} not found in tracker cache; refresh with cache-epic or cache-tasks first`,
+      );
     }
 
-    yield* Console.log(
-      JSON.stringify({
-        cached: updatedCache != null,
-        issueId: trimmedIssueId,
-        changed: updatedCache != null,
-      }),
-    );
+    yield* writeCacheFile(updatedCache).pipe(catchAndDie);
+    yield* Console.log(JSON.stringify({ cached: true, issueId: trimmedIssueId, changed: true }));
   }),
 ).pipe(
-  Command.withDescription('Refresh one cached issue status after an MCP Linear state update.'),
+  Command.withDescription(
+    'Update one cached issue status locally. Build-time status is cache-only; Linear catches up via the PR closing line.',
+  ),
 );
 
 export const tracker = Command.make('tracker').pipe(

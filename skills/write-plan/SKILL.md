@@ -1,27 +1,27 @@
 ---
 name: write-plan
 description: >
-  Formalize a brainstorm design into a Linear tracker epic with one first sub-issue task. Use after
-  cape:brainstorm has produced a design summary. Triggers on: user runs /cape:write-plan, "create
-  the epic", "formalize this design", "write the plan", transitioning from brainstorm to
-  implementation. Do NOT use for initial exploration (use cape:brainstorm), executing existing plans
-  (use cape:execute-plan), or bug diagnosis and fixes (use cape:fix-bug).
+  Formalize a brainstorm design into a Linear human-ticket/plan-issue pair with one first sub-issue
+  task. Use after cape:brainstorm has produced a design summary. Triggers on: user runs
+  /cape:write-plan, "create the epic", "formalize this design", "write the plan", transitioning from
+  brainstorm to implementation. Do NOT use for initial exploration (use cape:brainstorm), executing
+  existing plans (use cape:execute-plan), or bug diagnosis and fixes (use cape:fix-bug).
 ---
 
 # Write plan
 
-Turn a validated brainstorm design into a Linear epic and exactly one first sub-issue task, then
-stop. No epic without design context, no task without a parent epic, and every Linear write is
-followed by a local `cape tracker` cache refresh.
+Turn a validated brainstorm design into a Linear human-ticket/plan-issue pair and exactly one first
+sub-issue task, then stop. No pair without design context, no task without a parent plan issue, and
+every Linear write is followed by a local `cape tracker` cache refresh.
 
-The epic contract, first-task stress test, cache refresh, and stop after creation are fixed;
+The plan contract, first-task stress test, cache refresh, and stop after creation are fixed;
 validation depth adapts to the design's complexity.
 
 ## Rules
 
-1. **Require design context.** Never create an epic without a brainstorm design summary. If none
+1. **Require design context.** Never create the pair without a brainstorm design summary. If none
    exists, stop and route to `cape:brainstorm` or ask the user for it.
-2. **STOP after creation.** Present the epic and first task, then wait. Implementation belongs to
+2. **STOP after creation.** Present the pair and first task, then wait. Implementation belongs to
    `cape:execute-plan`.
 3. **Confirm before creating a new Linear project.** Routing to an existing project needs no
    approval; creating one does.
@@ -42,9 +42,9 @@ Confirm a design summary exists in conversation. Review it for blockers: vague r
 anti-patterns without reasoning, open questions that affect implementation, architecture claims
 without codebase evidence. Resolve blockers with the user before touching Linear.
 
-### 2. Write the epic contract
+### 2. Write the plan contract
 
-Shape the design into the canonical epic from `cape:tracker`'s
+Shape the design into the canonical plan-issue shape from `cape:tracker`'s
 [linear-templates.md](../tracker/resources/linear-templates.md). Pick **Light** by default; pick
 **Full** when a user journey changes, a new lifecycle or state exists, a migration runs,
 authorization matters, multiple systems or teams are involved, or rollout, observability, or
@@ -74,36 +74,46 @@ and file reads: file paths, APIs, test setup, helpers to reuse, similar implemen
 
 The first task is a vertical slice with:
 
-- Goal, with `Delivers: R1, R2` naming the epic R-IDs it covers
+- Goal, with `Delivers: R1, R2` naming the plan R-IDs it covers
 - Interface: inputs, outputs, side effects
 - Execution mode: HITL or AFK
 - Behaviors small enough for TDD cycles
 - References to verified files or patterns
 - Success criteria
 
-### 4. Create the epic and first task
+### 4. Create the pair and first task
 
-Run all epic and task prose through the `cape:unslop` skill before writing to Linear.
+Run all human-ticket, plan-issue, and task prose through the `cape:unslop` skill before writing to
+Linear.
 
-Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns dedupe, project routing,
-labels, priority, and naming. Create the epic with MCP Linear `save_issue`, putting the full
-contract from step 2 in the description. Create exactly one sub-issue under the epic with
-`save_issue`, with only task-level detail in its description.
+Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team routing, dedupe,
+project routing, labels, priority, and naming. Create the pair per the tracker contract's pairing
+protocol: a concise human ticket in `Aburaya` whose description a human can scan — no R-tables,
+constraints, or acceptance criteria — and a plan issue in `Agents` holding the full contract from
+step 2, linked bidirectionally. When the work has no user-informational value, use the tracker
+contract's AI-only exception and skip the human ticket. Both stay untyped parents.
 
-Then refresh the cache per `cape:tracker`'s create-work recipe: fetch the epic with `get_issue`
-(sub-issues included) and pass the JSON to `cape tracker cache-epic`.
+Create exactly one sub-issue under the plan issue with `save_issue`, with only task-level detail in
+its description.
+
+Then refresh the cache per `cape:tracker`'s create-work recipe: fetch the plan issue with
+`get_issue` (sub-issues included), stamp `humanTicketId`, and pass the JSON to
+`cape tracker cache-epic`.
 
 ### 5. Present and STOP
 
 ```text
-Epic <epic-id> created: <title>
+Human ticket <human-id> created: <title>
+Plan issue <plan-id> created: <title>
 First task <task-id> created: <title>
 
-The epic (<Light|Full>) has R1-R<N> required behaviors, <N> constraints, and <N> acceptance criteria.
+The plan issue (<Light|Full>) has R1-R<N> required behaviors, <N> constraints, and <N> acceptance criteria.
 The first task delivers <R-IDs> and was codebase-verified and stress-tested.
 
 Continue with cape:execute-plan to start building.
 ```
+
+Omit the human-ticket line for AI-only work.
 
 **STOP.** Do not start implementation in the same invocation.
 
@@ -126,4 +136,4 @@ Load `cape:tracker` when:
 It permits localStorage, sessionStorage, or cookies, and the builder picks one at random.
 
 **Right:** Tighten it first: "Tokens stored in httpOnly cookies; NO localStorage tokens (reason: XSS
-token theft)." Then create the epic and first task and refresh the cache.
+token theft)." Then create the human/AI pair and first task and refresh the cache.

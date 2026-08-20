@@ -11,9 +11,9 @@ description: >
 
 # Execute plan
 
-Implement one tracker task, verify it, close it in Linear, line up the next task, refresh the cache,
-and stop for review. One task per invocation in HITL mode, and all fine-grained plans and
-reflections stay in session, never on the Linear board.
+Implement one tracker task, verify it, mark it done in the cache, line up the next task, and stop
+for review. One task per invocation in HITL mode, and all fine-grained plans and reflections stay in
+session, never on the Linear board.
 
 The one-task loop, TDD, verification before close, and cache refresh after every Linear write are
 fixed. Implementation tactics adapt to the task.
@@ -25,8 +25,10 @@ fixed. Implementation tactics adapt to the task.
 3. **Orient from the cache.** Use `hooks/context/tracker.json` and active worktree state to pick
    work. No network reads to pick work; once a task is chosen, fetching its description with MCP
    `get_issue` is fine. Never invent task state.
-4. **Write Linear first, then refresh the cache.** Every Linear write is followed immediately by the
-   matching `cape tracker` command.
+4. **Task status is cache-only during build.** Track it with `cape tracker cache-status`; no MCP
+   status writes mid-build — the PR closing line catches Linear up at merge. Content writes
+   (descriptions, new sub-issues) still go to Linear first, followed immediately by the matching
+   `cape tracker` command.
 5. **Test before code.** Load `cape:test-driven-development` before any production edit.
 6. **Keep expansion in session.** No expanded plans, divergence notes, or close-out ceremony go to
    Linear. The board tracks issues, not implementation transcripts.
@@ -58,9 +60,9 @@ the `cape:tracker` cache rule: treat it as empty and refresh from an MCP result 
 
 ### 2. Expand in session
 
-Load the epic contract and task details from session context. If the task's Linear description is
-not in the session, fetch it with MCP `get_issue`; if MCP is unavailable, ask the user for the
-description instead.
+Load the epic contract from the AI plan issue — the contract lives there, never on the human ticket
+— and the task details from session context. If the task's Linear description is not in the session,
+fetch it with MCP `get_issue`; if MCP is unavailable, ask the user for the description instead.
 
 Build an in-session breakdown before coding:
 
@@ -73,8 +75,8 @@ Build an in-session breakdown before coding:
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
-Mark the task in progress in Linear (`save_issue`), then refresh the cache and signal workflow
-state:
+Mark the task in progress in the cache only — no MCP status writes during build, per the tracker
+contract — and signal workflow state:
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
@@ -103,7 +105,8 @@ Before closing, confirm:
 
 ### 4. Close and plan next
 
-Close the task in Linear through MCP, then:
+Mark the task done in the cache only — never through MCP. The PR closing line moves it to `Done` in
+Linear at merge, per the tracker contract:
 
 ```bash
 cape tracker cache-status <task-id> Done completed
@@ -115,9 +118,10 @@ approach still holds, and the next smallest vertical slice. The next task comes 
 revealed, not from what planning assumed.
 
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
-a Linear sub-issue through MCP: load `cape:tracker`, apply its `resources/agent-contract.md`, and
-run the issue text through `cape:unslop` before posting. Then refresh the epic cache per
-`cape:tracker`'s create-work recipe: a fresh `get_issue` result piped to `cape tracker cache-epic`.
+a sub-issue of the AI plan issue through MCP: load `cape:tracker`, apply its
+`resources/agent-contract.md`, and run the issue text through `cape:unslop` before posting. Then
+refresh the epic cache per `cape:tracker`'s create-work recipe: a fresh `get_issue` result piped to
+`cape tracker cache-epic`.
 
 If no work remains, load `cape:finish-epic`.
 
@@ -156,5 +160,5 @@ Dispatch `cape:fact-checker` when:
 **Wrong:** The first task reveals the next planned slice is unnecessary, but you create and
 implement it anyway because it sounded plausible during planning.
 
-**Right:** Explain the discovery in session, close the completed task in Linear, refresh the cache,
-and create the next sub-issue that reflects current reality.
+**Right:** Explain the discovery in session, mark the completed task done in the cache, and create
+the next sub-issue that reflects current reality.

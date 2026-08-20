@@ -2,18 +2,20 @@
 
 Apply before every issue create or update.
 
+- **Team.** Route by audience. Agent-facing issues (plans, contracts, task sub-issues) go to the
+  team `Agents` (AI); human-facing issues go to `Aburaya`. Pass the team as a `save_issue` parameter
+  — no config layer.
 - **Dedupe first.** Search open issues in the target project by title keywords. On a match, comment
   instead of creating a duplicate; the comment states what cape would have created and links the
   match.
 - **Project.** Route work to a matching named project. Use `Inbox` when no project matches. Never
   create project-less issues. Confirm a new project with the user before creating it.
-- **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label on tasks
-  and bugs (`type:bug`, `type:feature`, `type:chore`); epics stay untyped parents. Also apply
-  `agent-ticket` to every task and bug sub-issue cape creates, never to epics or to human-created
-  issues cape only updates. It marks the issue as an agent work ticket whose review surface is the
-  PR, not the issue, so humans can filter these out (`-label:agent-ticket`) and review only epics
-  and human-created work. The workspace bootstrap creates these labels; until a given label exists,
-  apply it best-effort and skip what is missing. See [workspace-setup.md](workspace-setup.md).
+- **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label
+  (`type:bug`, `type:feature`, `type:chore`) on the AI-side work issue: tasks and AI bug issues.
+  Human tickets — including the human half of a bug pair — and plan issues stay untyped parents. The
+  team boundary marks agent work — the retired `agent-ticket` label is never applied. The workspace
+  bootstrap creates these labels; until a given label exists, apply it best-effort and skip what is
+  missing. See [workspace-setup.md](workspace-setup.md).
 - **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never
   use `High`. It is reserved for the human-curated `Next` view, and cape-created `High` issues
   inflate it.
