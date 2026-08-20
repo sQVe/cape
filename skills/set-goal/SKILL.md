@@ -123,8 +123,9 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for
 a final CAPE-RUN status line; print it only at the true end.
 
-First, label this workspace so its prefix tracks overall progress: run
-`cape workspace phase build`. This renames your workspace and tab to `🔨 ABU-123 <title>`.
+First, label this workspace so its prefix tracks overall progress: from the epic worktree, run
+`cape workspace phase build`. It derives the epic from the current branch against the tracker
+cache and renames your workspace and tab to `🔨 ABU-123 <title>`; off the epic branch it skips.
 Advance the phase only at overall transitions, not per task: `pr` when SHIP starts, `done` on a
 clean ship, `blocked` on park. Per-task work happens in the task's own tab and never touches the
 workspace label.

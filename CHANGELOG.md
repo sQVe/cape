@@ -22,9 +22,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CLI: removed `cape check` and the ecosystem detect service. Every repo documents its check command
   in CLAUDE.md; skills now point there instead of guessing across six ecosystems.
 
-- Skills: removed `cape:worktree`. Grove owns worktree creation; the cape-specific tail (stamp
-  `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
-  `cape:execute-plan`. The `cape worktree` CLI command is unchanged.
+- Skills: removed `cape:worktree`. Grove owns worktree creation; the relabel via
+  `cape workspace phase` now lives as Step 0 in `cape:execute-plan`. The `cape worktree` CLI command
+  went in this round's shave (above).
 - Commands: removed `commands/tracker.md`, the last wrapper duplicating a skill. The tracker skill
   is `user-invocable: false` by design and works as model-loaded plumbing; it was almost never typed
   as a command.
