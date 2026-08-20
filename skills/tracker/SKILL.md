@@ -67,41 +67,20 @@ The cache file is `hooks/context/tracker.json`.
 ```
 
 The `epics` map is keyed by the AI plan issue; its tasks are the plan's sub-issues. `humanTicketId`
-carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache.
-A task may carry its own `humanTicketId` when it has a per-ticket pair (for example a bug pair
-created under an epic). The cache stores what banners and ready-work routing need: IDs, titles,
-statuses, state types, pairing, and plan-to-task membership. It stores no expanded plans or
-implementation transcripts.
+carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache;
+a task may carry its own for a per-ticket pair (for example a bug pair created under an epic). The
+cache stores what banners and ready-work routing need: IDs, titles, statuses, state types, pairing,
+and plan-to-task membership — no expanded plans or implementation transcripts. Ready-task behavior
+is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that definition instead of
+restating statuses. Treat a missing or corrupt cache as empty and refresh it from an MCP result
+already obtained in the session.
 
-## Agent contract
+## Write to Linear, then refresh the cache
 
-Apply before every issue create or update.
+Before any create or update, apply [resources/agent-contract.md](resources/agent-contract.md). Run
+user-facing issue descriptions through the `cape:unslop` skill before creating them.
 
-- **Team.** Route by audience. Agent-facing issues (plans, contracts, task sub-issues) go to the
-  team `Agents` (AI); human-facing issues go to `Aburaya`. Pass the team as a `save_issue`
-  parameter.
-- **Dedupe first.** Search open issues in the target project by title keywords. On a match, comment
-  instead of creating a duplicate; the comment states what cape would have created and links the
-  match.
-- **Project.** Route work to a matching named project. Use `Inbox` when no project matches. Never
-  create project-less issues. Confirm a new project with the user before creating it.
-- **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label
-  (`type:bug`, `type:feature`, `type:chore`) on the AI-side work issue: tasks and AI bug issues.
-  Human tickets — including the human half of a bug pair — and plan issues stay untyped parents. The
-  team boundary marks agent work — the retired `agent-ticket` label is never applied. The workspace
-  bootstrap creates these labels; until a given label exists, apply it best-effort and skip what is
-  missing. See [resources/workspace-setup.md](resources/workspace-setup.md).
-- **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never
-  use `High`. It is reserved for the human-curated `Next` view, and cape-created `High` issues
-  inflate it.
-- **Titles.** Use an imperative verb-object title in sentence case with no prefix, about 70
-  characters or less. Bug titles start with `Fix <symptom>`.
-- **Bodies.** Include a load-bearing `Done when:` line. Use a Mermaid block instead of prose for any
-  flow, state, or architecture description longer than about three steps.
-
-## Create work
-
-Apply the agent contract, then create the pair with MCP Linear `save_issue`, using the shapes in
+Create paired work with MCP Linear `save_issue`, using the shapes in
 [resources/linear-templates.md](resources/linear-templates.md):
 
 1. Human ticket in `Aburaya`: a concise, scannable description — no agent contract material.
@@ -118,43 +97,21 @@ Pairing rules:
 - Pairing is per ticket, not per tree: any human ticket, including human sub-issues, can carry its
   own AI pair.
 
-Run user-facing issue descriptions through the `cape:unslop` skill before creating them.
-
-After creation, refresh the cache from the MCP plan-issue result:
-
-1. Use MCP Linear `get_issue` for the plan issue with children included.
-2. Stamp the pair into the JSON: add a top-level `"humanTicketId": "<human-ticket-id>"` field (the
-   Linear payload does not carry it). Stamp paired child issues the same way inside `children`. The
-   cache preserves both across later refreshes that omit them.
-3. Cache it:
+After each Linear MCP write, refresh the matching cache slice (`cape tracker --help` documents each
+command):
 
 ```bash
 cape tracker cache-epic '<linear-plan-issue-json-with-children>'
-```
-
-Stdin form is equivalent:
-
-```bash
-printf '%s' '<linear-plan-issue-json-with-children>' | cape tracker cache-epic
-```
-
-If you have a Linear list result for tasks only, cache it under the plan issue:
-
-```bash
 cape tracker cache-tasks <plan-id> '<linear-task-array-json>'
 ```
 
-## List ready work
+Prefer `cache-epic` with a full children-included `get_issue` result so task membership stays
+current. Stamp the pair into the JSON before caching: add a top-level
+`"humanTicketId": "<human-ticket-id>"` field (the Linear payload does not carry it), and stamp
+paired child issues the same way inside `children`. The cache preserves both across later refreshes
+that omit them.
 
-Read `hooks/context/tracker.json`; never call Linear for ready-work reads.
-
-Ready-task behavior is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that
-definition instead of restating statuses here.
-
-Treat a missing or corrupt cache as empty. If the user expects work that is not in the cache,
-refresh it from an MCP result already obtained in the session before continuing.
-
-## Update status
+## Update status during build
 
 Task status is cache-only during build. Update the cache directly; do not write status to Linear
 with MCP `save_issue` mid-build:
@@ -175,7 +132,7 @@ bypasses the ranking:
 cape tracker cache-status <issue-id> Todo unstarted
 ```
 
-## Close work
+## Close work at PR time
 
 Never close issues through MCP. Linear catches up when the PR merges, via the PR closing line:
 

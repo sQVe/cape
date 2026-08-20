@@ -3,7 +3,7 @@
 Copy each body into a new Linear issue template in the UI (Settings → Templates). These mirror the
 shapes cape produces, so a human creating an issue by hand gets the same form. Cape cannot apply
 them itself: the Linear MCP server's `save_issue` takes raw markdown and exposes no template field.
-The agent contract in [SKILL.md](../SKILL.md) enforces the shape; these templates are a human-side
+The [agent contract](agent-contract.md) enforces the shape; these templates are a human-side
 convenience.
 
 The shapes split by audience. The human ticket (Aburaya team) is a scannable description and nothing

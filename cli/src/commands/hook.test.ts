@@ -1,9 +1,8 @@
 import { NodeServices } from '@effect/platform-node';
 import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { logEvent } from '../eventLog';
 import { main } from '../main';
 import {
   FLOW_PHASE_TTL_MS,
@@ -32,10 +31,6 @@ import {
   stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
-
-vi.mock('../eventLog', () => ({
-  logEvent: vi.fn(),
-}));
 
 describe('normalizeEventName', () => {
   it('converts kebab-case to PascalCase', () => {
@@ -737,7 +732,7 @@ describe('denyTable', () => {
     for (const entry of denyTable) {
       expect(entry.pattern).toBeInstanceOf(RegExp);
       expect(typeof entry.message).toBe('string');
-      expect(['redirect', 'block', 'warn']).toContain(entry.tier);
+      expect(['redirect', 'block']).toContain(entry.tier);
     }
   });
 
@@ -806,27 +801,6 @@ describe('preToolUseBash', () => {
   });
 
   describe('block tier', () => {
-    it('blocks git push --force', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git push --force origin main') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'Force push');
-    });
-
-    it('blocks git push -f', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git push -f origin main') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expectDeny(result, 'Force push');
-    });
-
-    it('allows git push --force-with-lease', async () => {
-      const layer = makeStubHookLayer({
-        stdin: bashStdin('git push --force-with-lease origin feat'),
-        gitResponses: { 'rev-parse': 'feat', 'symbolic-ref': 'refs/remotes/origin/main' },
-      });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toBeNull();
-    });
-
     it('blocks gh pr merge', async () => {
       const layer = makeStubHookLayer({ stdin: bashStdin('gh pr merge 42') });
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
@@ -843,29 +817,6 @@ describe('preToolUseBash', () => {
       const layer = makeStubHookLayer({ stdin: bashStdin('git commit --amend') });
       const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
       expectDeny(result, 'amend');
-    });
-  });
-
-  describe('warn tier', () => {
-    it('warns on git reset --hard', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git reset --hard HEAD~1') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toHaveProperty('additionalContext');
-      expect((result as { additionalContext: string }).additionalContext).toContain('reset --hard');
-    });
-
-    it('warns on git checkout --', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git checkout -- src/foo.ts') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toHaveProperty('additionalContext');
-      expect((result as { additionalContext: string }).additionalContext).toContain('checkout --');
-    });
-
-    it('warns on git clean -f', async () => {
-      const layer = makeStubHookLayer({ stdin: bashStdin('git clean -f') });
-      const result = await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-      expect(result).toHaveProperty('additionalContext');
-      expect((result as { additionalContext: string }).additionalContext).toContain('clean -f');
     });
   });
 
@@ -1008,7 +959,7 @@ describe('preToolUseSkill', () => {
     'cape:commit',
     'cape:pr',
     'cape:tracker',
-    'cape:worktree',
+    'cape:fix-bug',
     'cape:brainstorm',
     'cape:write-plan',
   ])('allows non-gated skill %s', async (skill) => {
@@ -1388,70 +1339,5 @@ describe('hook command - PostToolUse wiring', () => {
     expect(console_.errorOutput()).toContain('Unknown');
     expect(console_.errorOutput()).toContain('PostToolUse');
     console_.restore();
-  });
-});
-
-describe('event logging', () => {
-  beforeEach(() => {
-    vi.mocked(logEvent).mockClear();
-  });
-
-  it('logs deny event for preToolUseBash deny table match', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('git commit -m "feat: test"') });
-    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expect(logEvent).toHaveBeenCalledWith(
-      'hook.PreToolUse.Bash',
-      expect.stringContaining('cape commit'),
-    );
-  });
-
-  it('logs inject event for preToolUseBash warn tier', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('git reset --hard HEAD') });
-    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expect(logEvent).toHaveBeenCalledWith('hook.PreToolUse.Bash', 'inject');
-  });
-
-  it('does not log for preToolUseBash pass-through', async () => {
-    const layer = makeStubHookLayer({ stdin: bashStdin('echo hello') });
-    await Effect.runPromise(preToolUseBash().pipe(Effect.provide(layer)));
-    expect(logEvent).not.toHaveBeenCalled();
-  });
-
-  it('does not log for preToolUseSkill pass-through', async () => {
-    const layer = makeStubHookLayer({ stdin: skillStdin('cape:commit') });
-    await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(logEvent).not.toHaveBeenCalled();
-  });
-
-  it('logs inject event for userPromptSubmit skill detection', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
-    });
-    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(logEvent).toHaveBeenCalledWith(
-      'hook.UserPromptSubmit',
-      expect.stringContaining('cape:tracker'),
-    );
-  });
-
-  it('logs flow-context for userPromptSubmit when only flow context injected', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'hello' }),
-      files: flowPhaseFile('executing'),
-    });
-    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(logEvent).toHaveBeenCalledWith('hook.UserPromptSubmit', 'flow-context');
-  });
-
-  it('does not log for userPromptSubmit pass-through', async () => {
-    const layer = makeStubHookLayer({ stdin: JSON.stringify({ prompt: 'hello' }) });
-    await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(logEvent).not.toHaveBeenCalled();
-  });
-
-  it('does not log for sessionStart', async () => {
-    const layer = makeStubHookLayer();
-    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(logEvent).not.toHaveBeenCalled();
   });
 });
