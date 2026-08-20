@@ -72,6 +72,21 @@ describe('trackerLive', () => {
       ]);
     });
 
+    it('takes incoming metadata while keeping the more advanced cached state', () => {
+      const cache = cacheWith(epic('AI-1', [task('AI-2', 'completed', { status: 'Done' })]));
+
+      const merged = mergeTasks(
+        cache,
+        'AI-1',
+        [task('AI-2', 'unstarted', { title: 'New title', humanTicketId: 'ABU-9' })],
+        2000,
+      );
+
+      expect(merged.epics['AI-1']?.tasks).toEqual([
+        task('AI-2', 'completed', { status: 'Done', title: 'New title', humanTicketId: 'ABU-9' }),
+      ]);
+    });
+
     it('takes incoming data on equal rank', () => {
       const cache = cacheWith(epic('ABU-1', [task('ABU-2', 'started', { title: 'Old title' })]));
 

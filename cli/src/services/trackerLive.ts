@@ -200,11 +200,13 @@ const mergeTaskLists = (
   const cachedById = new Map((cached ?? []).map((task) => [task.id, task]));
   const merged = incoming.map((task) => {
     const existing = cachedById.get(task.id);
-    if (existing != null && stateRank(existing.stateType) > stateRank(task.stateType)) {
-      return existing;
-    }
     const humanTicketId = task.humanTicketId ?? existing?.humanTicketId;
-    return humanTicketId == null ? task : { ...task, humanTicketId };
+    const withPair = humanTicketId == null ? task : { ...task, humanTicketId };
+    // Advanced local state wins, but only the state: incoming metadata (title, project, type,
+    // pair) still applies, so refreshes never freeze a locally-advanced task's fields.
+    return existing != null && stateRank(existing.stateType) > stateRank(task.stateType)
+      ? { ...withPair, status: existing.status, stateType: existing.stateType }
+      : withPair;
   });
   const incomingIds = new Set(incoming.map((task) => task.id));
   // An authoritative refresh (cache-epic, full child list) prunes cache-only tasks that never
