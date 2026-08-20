@@ -198,6 +198,23 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('returns invalid when a checked box only mentions review in passing', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Update the code review checklist in CONTRIBUTING.md\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a checked box contains the token inside another word', () => {
+    const result = validatePrBody(template, withTestPlan('- [x] Re-encode review video assets'));
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
   it('returns invalid when the /code-review item is checked but another box is not', () => {
     const result = validatePrBody(
       template,
