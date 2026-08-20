@@ -93,13 +93,13 @@ Write the body for a reviewer who knows the domain but not this branch:
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
 - End the description with the cache-built closing line, whatever the template source:
-  `Fixes <human-id>, <plan-id>, <completed task ids>` from `hooks/context/tracker.json` — the epic
-  entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
+  `Fixes <human-id>, <plan-id>, <completed task ids>` from `hooks/context/tracker.json`, meaning the
+  epic entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
   task's own `humanTicketId`; incomplete and canceled children excluded. List only ids that exist:
-  AI-only work has no `humanTicketId`, so its line starts at the plan issue — never invent a
+  AI-only work has no `humanTicketId`, so its line starts at the plan issue. Never invent a
   placeholder. Use `Related to` with the same set ONLY when this PR does not complete the epic.
-  Build it now, before approval — this is what catches Linear up on the cache-only build statuses;
-  step 6 only confirms it.
+  Build it now, before approval. It is what catches Linear up on the cache-only build statuses; step
+  6 only confirms it.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
@@ -124,10 +124,10 @@ Output the full PR:
 
 End with a `---` separator, then immediately use `AskUserQuestion` with options:
 
-- **Create PR**: run tests and publish
-- **Create draft**: run tests and publish as draft
-- **Edit**: revise title or description
-- **Cancel**: abort
+- **Create PR.** Run tests and publish
+- **Create draft.** Run tests and publish as draft
+- **Edit.** Revise title or description
+- **Cancel.** Abort
 
 Do not announce next steps or say "Let me..." after the separator, and do not call any tools between
 outputting the description and calling `AskUserQuestion`.
@@ -172,8 +172,8 @@ cape workspace phase pr
 ```
 
 1. Identify the active epic from the tracker cache or flow context and confirm the description
-   carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>` — the
-   epic entry's `humanTicketId` (the human ticket), the AI plan issue, and every child task the
+   carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>`, built
+   from the epic entry's `humanTicketId` (the human ticket), the AI plan issue, and every task the
    cache marks completed, plus any completed task's own `humanTicketId`; incomplete and canceled
    children excluded, and ids that do not exist omitted (AI-only work has no human ticket). This is
    what catches Linear up on the cache-only build statuses. Use the non-closing `Related to` with

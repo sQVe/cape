@@ -39,7 +39,7 @@ cache for orientation and status. If the issue details are not in session, fetch
 
 An adopted human ticket (Aburaya) with no AI counterpart is an incomplete pair: locate the linked AI
 bug issue, or create and link one per the tracker contract's pairing protocol, and refresh the cache
-before proceeding — build-time status tracks the AI-side id, and the PR closing line needs an AI
+before proceeding. Build-time status tracks the AI-side id, and the PR closing line needs an AI
 issue to close.
 
 If no issue exists, diagnose before touching code:
@@ -69,7 +69,7 @@ Create a Linear bug pair for this fix?
 After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
 routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
 Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
-symptom and impact — nothing agent-facing — and an AI bug issue holding root cause, evidence,
+symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
 reproduction steps, expected behavior, actual behavior, suggested fix, and success criteria. When
 the bug has no user-informational value, use the tracker contract's AI-only exception and skip the
 human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an epic, refresh
@@ -83,7 +83,7 @@ Run the reproduction steps and confirm the symptom locally. If reproduction fail
 already be fixed or the environment may differ; investigate and report that before editing
 production code.
 
-Mark the bug in progress in the cache only — no MCP status writes during build, per the tracker
+Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
 contract:
 
 ```bash

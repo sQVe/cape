@@ -26,7 +26,7 @@ fixed. Implementation tactics adapt to the task.
    work. No network reads to pick work; once a task is chosen, fetching its description with MCP
    `get_issue` is fine. Never invent task state.
 4. **Task status is cache-only during build.** Track it with `cape tracker cache-status`; no MCP
-   status writes mid-build — the PR closing line catches Linear up at merge. Content writes
+   status writes mid-build; the PR closing line catches Linear up at merge. Content writes
    (descriptions, new sub-issues) still go to Linear first, followed immediately by the matching
    `cape tracker` command.
 5. **Test before code.** Load `cape:test-driven-development` before any production edit.
@@ -37,9 +37,9 @@ fixed. Implementation tactics adapt to the task.
 
 ### 0. Enter the epic worktree
 
-Skip this step only when already on the epic's branch. From any other branch — the default branch or
-an unrelated feature branch — set up the per-epic worktree first, so epic changes never land on the
-wrong branch. One epic, one worktree:
+Skip this step only when already on the epic's branch. From any other branch, the default branch or
+an unrelated feature branch alike, set up the per-epic worktree first, so epic changes never land on
+the wrong branch. One epic, one worktree:
 
 1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
 2. Use grove: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the
@@ -60,9 +60,9 @@ the `cape:tracker` cache rule: treat it as empty and refresh from an MCP result 
 
 ### 2. Expand in session
 
-Load the epic contract from the AI plan issue — the contract lives there, never on the human ticket
-— and the task details from session context. If the task's Linear description is not in the session,
-fetch it with MCP `get_issue`; if MCP is unavailable, ask the user for the description instead.
+Load the epic contract from the AI plan issue, where it lives and never on the human ticket, and the
+task details from session context. If the task's Linear description is not in the session, fetch it
+with MCP `get_issue`; if MCP is unavailable, ask the user for the description instead.
 
 Build an in-session breakdown before coding:
 
@@ -75,8 +75,8 @@ Build an in-session breakdown before coding:
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
-Mark the task in progress in the cache only — no MCP status writes during build, per the tracker
-contract — and signal workflow state:
+Mark the task in progress in the cache only, with no MCP status writes during build, per the tracker
+contract. Then signal workflow state:
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
@@ -105,7 +105,7 @@ Before closing, confirm:
 
 ### 4. Close and plan next
 
-Mark the task done in the cache only — never through MCP. The PR closing line moves it to `Done` in
+Mark the task done in the cache only, never through MCP. The PR closing line moves it to `Done` in
 Linear at merge, per the tracker contract:
 
 ```bash

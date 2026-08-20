@@ -93,6 +93,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Docs: ran `cape:unslop` over the prose the skill migration left behind, so the whole repo now
+  reads the same way: the README, `CLAUDE.md`, all five agents, and the tracker and PR resource
+  files. Em dashes are gone, the last XML tag (`<example_calibration>` in `code-reviewer`) is plain
+  markdown, citation format is `(URL, Tier N)` everywhere instead of two spellings, and the README
+  drops the directory table that repeated its own tree. `CLAUDE.md` now states the rule: every prose
+  file goes through `cape:unslop`, the CHANGELOG excepted.
+- CLI: the em dashes in user-facing strings are gone, in `cape --help`, the `flowPhase` entry of
+  `cape state list`, the session-start preamble that introduces the don-cape skill, and both unknown
+  matcher errors from `cape hook`. Code comments keep theirs.
 - Skills: rewrote all 13 remaining skills and the skill template from the XML tag structure to plain
   markdown, applying the `cape:unslop` patterns throughout. The frontmatter description now carries
   the triggers and the body starts at the contract, cutting the sections that restated them; the
@@ -211,12 +220,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- CLI: `cape state list` no longer describes `flowPhase` as "read by challenge". The challenge skill
+  folded into `cape:brainstorm` long ago; the key now says what actually reads it, the session-start
+  and user-prompt-submit context plus the `cape:execute-plan` gate.
 - Tracker cache: refreshes are forward-only per task — the more advanced of cached vs incoming state
   wins — so a stale refresh cannot resurrect completed work. `cache-status` derives the state type
   from well-known status names when the argument is omitted and fails on unknown issue ids instead
   of silently no-oping; a full `cache-epic` refresh prunes cache-only tasks that never advanced; and
   the cache readers resolve human ticket ids to their AI plan entries.
-
 - CLI: `cape workspace phase` now reads the tracker cache without the 30-minute TTL check, so the
   herdr workspace label keeps the epic title in long sessions. The TTL-checked read dropped the
   title once the cache went stale, relabeling the workspace to a bare phase icon plus Linear ID.

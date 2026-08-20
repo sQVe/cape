@@ -15,7 +15,7 @@ Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local re
 two-tier: human-facing tickets live in the Aburaya team; agent-facing plan issues and tasks live in
 the Agents team (AI). Skills write to Linear through MCP, then refresh the cache with
 `cape tracker`. Linear is the source of truth for issue content; the cache is the source of truth
-for reads — and for task status during build.
+for reads, and for task status during build.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -24,7 +24,7 @@ to the chain using the tracker.
 
 1. **Use only five operations.** createEpic, createTasks, listReady, updateStatus, close.
 2. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the team
-   `Agents`; human-facing issues go to `Aburaya`. Team routing is a `save_issue` parameter — no
+   `Agents`; human-facing issues go to `Aburaya`. Team routing is a `save_issue` parameter, with no
    config layer.
 3. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
 4. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
@@ -70,7 +70,7 @@ The `epics` map is keyed by the AI plan issue; its tasks are the plan's sub-issu
 carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache;
 a task may carry its own for a per-ticket pair (for example a bug pair created under an epic). The
 cache stores what banners and ready-work routing need: IDs, titles, statuses, state types, pairing,
-and plan-to-task membership — no expanded plans or implementation transcripts. Ready-task behavior
+and plan-to-task membership, never expanded plans or implementation transcripts. Ready-task behavior
 is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that definition instead of
 restating statuses. Treat a missing or corrupt cache as empty and refresh it from an MCP result
 already obtained in the session.
@@ -83,7 +83,7 @@ user-facing issue descriptions through the `cape:unslop` skill before creating t
 Create paired work with MCP Linear `save_issue`, using the shapes in
 [resources/linear-templates.md](resources/linear-templates.md):
 
-1. Human ticket in `Aburaya`: a concise, scannable description — no agent contract material.
+1. Human ticket in `Aburaya`: a concise, scannable description, no agent contract material.
 2. Plan issue in `Agents`: the full agent contract (required behavior, constraints, approach,
    acceptance criteria).
 3. Link the two bidirectionally: a `relatedTo` relation plus a markdown link to the counterpart in
@@ -125,7 +125,7 @@ Content updates (bodies, titles, new sub-issues) still go to Linear first; only 
 until PR time.
 
 Reopening: the forward-only merge keeps a completed task completed through every refresh, even when
-Linear reopens it. To put a task back in play, write the downgrade explicitly — `cache-status`
+Linear reopens it. To put a task back in play, write the downgrade explicitly. `cache-status`
 bypasses the ranking:
 
 ```bash

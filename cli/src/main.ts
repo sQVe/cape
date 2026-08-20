@@ -12,7 +12,7 @@ import { workspace } from './commands/workspace';
 import { worktree } from './commands/worktree';
 
 export const main = Command.make('cape').pipe(
-  Command.withDescription('Cape CLI — opinionated Claude Code workflow tools.'),
+  Command.withDescription('Cape CLI: opinionated Claude Code workflow tools.'),
   Command.withSubcommands([
     check,
     commit,

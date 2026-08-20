@@ -345,7 +345,7 @@ export const sessionStart = () =>
     }
     if (skill != null) {
       parts.push(
-        `The content below is from skills/don-cape/SKILL.md — cape's workflow system:\n\n${skill}`,
+        `The content below is cape's workflow system, from skills/don-cape/SKILL.md:\n\n${skill}`,
       );
     } else {
       parts.push('cape plugin loaded.');

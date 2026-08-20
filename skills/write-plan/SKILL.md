@@ -88,10 +88,10 @@ Linear.
 
 Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team routing, dedupe,
 project routing, labels, priority, and naming. Create the pair per the tracker contract's pairing
-protocol: a concise human ticket in `Aburaya` whose description a human can scan — no R-tables,
-constraints, or acceptance criteria — and a plan issue in `Agents` holding the full contract from
-step 2, linked bidirectionally. When the work has no user-informational value, use the tracker
-contract's AI-only exception and skip the human ticket. Both stay untyped parents.
+protocol: a concise human ticket in `Aburaya` whose description a human can scan, carrying no
+R-tables, constraints, or acceptance criteria, plus a plan issue in `Agents` holding the full
+contract from step 2, linked bidirectionally. When the work has no user-informational value, use the
+tracker contract's AI-only exception and skip the human ticket. Both stay untyped parents.
 
 Create exactly one sub-issue under the plan issue with `save_issue`, with only task-level detail in
 its description.

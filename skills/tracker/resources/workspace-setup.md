@@ -14,7 +14,7 @@
 - [ ] Delete ad-hoc labels `dx`, `infra`, and `tooling`.
 - [ ] Create grouped labels `type:bug` and `type:feature` under the `type` label group.
 - [ ] Migrate the existing flat `pr-watcher` label into the `src` group as `src:pr-watcher`, then
-      retag its about 19 issues.
+      retag the 19 or so issues carrying it.
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
 - [ ] Configure the GitHub-Linear integration with PR automation for the Aburaya team (automations
       are per-team settings): PR opened sets status to In Review; PR merged to the default branch
@@ -32,7 +32,7 @@
       `Done` and `Canceled`.
 - [ ] Rename the team-named `Aburaya` project to a distinct product noun chosen by a human.
 - [ ] Run the one-time priority reset: bulk-clear inflated `High` issues to `Medium`, then re-raise
-      only the true next about 5 issues.
+      only the five or so issues that really are next.
 
 ## Two-tier team setup (run in the Linear UI)
 
@@ -46,9 +46,9 @@ agent plan issues and tasks in `Agents` (AI). A human runs these before the firs
 - [ ] Retire the `agent-ticket` label; the team boundary replaces it (agent work tickets live in AI,
       so humans filter by team instead of label).
 
-On the first paired epic, verify: AI PR automations fire from cape-repo PRs, and the cross-team
-closing line moves both issues to Done on merge (`Fixes ABU-x, AI-y` — Linear's own docs show a
-multi-team closing example).
+On the first paired epic, verify two things: AI PR automations fire from cape-repo PRs, and the
+cross-team closing line moves both issues to Done on merge. Linear's own docs show the multi-team
+form, `Fixes ABU-x, AI-y`.
 
-Free-plan caveat: `Agents` uses the second of the two free team slots; any third team needs a plan
-upgrade.
+Free-plan caveat: `Agents` uses the second of the two free team slots, so any third team needs a
+plan upgrade.

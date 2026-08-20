@@ -47,7 +47,7 @@ const hookRun = Command.make(
           result = yield* preToolUseSkill();
         } else {
           yield* Console.error(
-            `cape hook: unknown PreToolUse matcher "${matcher}" — expected Bash | Skill. Check hooks.json.`,
+            `cape hook: unknown PreToolUse matcher "${matcher}". Expected Bash | Skill. Check hooks.json.`,
           );
         }
         if (result != null) {
@@ -61,7 +61,7 @@ const hookRun = Command.make(
           result = yield* postToolUseLinearWrite();
         } else {
           yield* Console.error(
-            `cape hook: unknown PostToolUse matcher "${matcher}" — expected linear-write. Check hooks.json.`,
+            `cape hook: unknown PostToolUse matcher "${matcher}". Expected linear-write. Check hooks.json.`,
           );
         }
         if (result != null) {
