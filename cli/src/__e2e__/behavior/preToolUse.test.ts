@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -8,9 +8,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cape, cleanupTestRepo, initTestRepo } from '../helpers';
 
 const bashInput = (command: string) => JSON.stringify({ tool_input: { command } });
-
-const skillInput = (skill: string, args?: string) =>
-  JSON.stringify({ tool_input: { skill, ...(args == null ? {} : { args }) } });
 
 const expectDeny = (result: { stdout: string; status: number }, reasonSubstring: string) => {
   expect(result.status).toBe(0);
@@ -23,13 +20,6 @@ const expectDeny = (result: { stdout: string; status: number }, reasonSubstring:
 const expectPassThrough = (result: { stdout: string; status: number }) => {
   expect(result.status).toBe(0);
   expect(result.stdout).toBe('');
-};
-
-const expectWarn = (result: { stdout: string; status: number }, contextSubstring: string) => {
-  expect(result.status).toBe(0);
-  const parsed = JSON.parse(result.stdout);
-  expect(parsed.additionalContext).toContain(contextSubstring);
-  return parsed;
 };
 
 let tmpDir: string;
@@ -208,44 +198,6 @@ describe('pass-through for benign commands', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
       bashInput('git branch -d old-branch'),
-      env,
-    );
-    expectPassThrough(result);
-  });
-});
-
-describe('skill gate: non-gated skills pass through', () => {
-  it.each([
-    'cape:commit',
-    'cape:pr',
-    'cape:tracker',
-    'cape:fix-bug',
-    'cape:brainstorm',
-    'cape:write-plan',
-  ])('allows non-gated skill %s', (skill) => {
-    const result = cape(['hook', 'pre-tool-use', '--matcher', 'Skill'], skillInput(skill), env);
-    expectPassThrough(result);
-  });
-});
-
-describe('skill gate: internal skills nudge direct invocation', () => {
-  it('warns test-driven-development when workflowActive is absent from state.json', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
-      skillInput('cape:test-driven-development'),
-      env,
-    );
-    expectWarn(result, 'internal');
-  });
-
-  it('allows test-driven-development when workflowActive exists in state.json', () => {
-    writeFileSync(
-      join(contextDir, 'state-no-repo.json'),
-      JSON.stringify({ workflowActive: { value: true, timestamp: Date.now() } }),
-    );
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Skill'],
-      skillInput('cape:test-driven-development'),
       env,
     );
     expectPassThrough(result);

@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -366,43 +366,6 @@ describe('cape pr', () => {
       expect(validated.valid).toBe(true);
       expect(validated.extra).toContain('Bonus section');
     });
-  });
-});
-
-describe('cape state', () => {
-  const stateJsonPath = join(REPO_ROOT, 'hooks', 'context', 'state.json');
-
-  const cleanState = () => {
-    try {
-      unlinkSync(stateJsonPath);
-    } catch {
-      /* cleanup */
-    }
-  };
-
-  beforeEach(cleanState);
-  afterEach(cleanState);
-
-  it('set writes a key to state.json', async () => {
-    const result = await inProcess(['state', 'set', 'testKey', '{"foo":"bar"}']);
-    expect(result.status).toBe(0);
-  });
-
-  it('list shows available keys when state.json is absent', async () => {
-    const result = await inProcess(['state', 'list']);
-    expect(result.status).toBe(0);
-    expect(result.stdout.length).toBeGreaterThan(0);
-  });
-
-  it('clear is a no-op when key is absent', async () => {
-    const result = await inProcess(['state', 'clear', 'nonExistent']);
-    expect(result.status).toBe(0);
-  });
-
-  it('reset removes state.json', async () => {
-    await inProcess(['state', 'set', 'testKey']);
-    const result = await inProcess(['state', 'reset']);
-    expect(result.status).toBe(0);
   });
 });
 

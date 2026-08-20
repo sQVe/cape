@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { basename, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 import { Effect, ServiceMap } from 'effect';
 
@@ -8,8 +7,6 @@ import { PrService } from '../pr';
 import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
-
-const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
 // Distinguishes "git ran and said no" from "git never answered": exit-nonzero
 // means not-a-repo, unavailable means timeout/missing binary. Conflating the
@@ -50,9 +47,6 @@ export const resolveBranchInfo = (cwd?: string) =>
     return { branch, defaultBranch };
   });
 
-type StateValue = Record<string, unknown> & { timestamp: number };
-type StateFile = Record<string, StateValue>;
-
 const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 type GitContext =
@@ -61,8 +55,8 @@ type GitContext =
   | { readonly kind: 'unavailable' };
 
 // One combined rev-parse answers both questions in a single spawn; the
-// resolved comparison is the single source of worktree identity for both the
-// state path and the session banner.
+// resolved comparison is the single source of worktree identity for the
+// session banner.
 const gitContext = (): Effect.Effect<GitContext, never, HookService> =>
   Effect.gen(function* () {
     const service = yield* HookService;
@@ -79,140 +73,6 @@ const gitContext = (): Effect.Effect<GitContext, never, HookService> =>
     }
     const gitDir = resolve(gitDirRaw);
     return { kind: 'repo' as const, gitDir, isLinkedWorktree: gitDir !== resolve(commonDirRaw) };
-  });
-
-// The resolved git-dir is unique per repo AND per worktree (main tree:
-// <repo>/.git; linked: <common>/worktrees/<name>), so one hash isolates both.
-export const stateFileName = (gitDir: string) =>
-  `state-${createHash('sha256').update(resolve(gitDir)).digest('hex')}.json`;
-
-// Invariant: git state is isolated by hashing the resolved git-dir under the
-// shared plugin root; non-git callers use state-no-repo.json (never the legacy
-// state.json, so pre-namespacing leftovers are inert); a git error yields null
-// and callers skip state IO rather than touch the wrong file.
-export const stateFilePath = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const contextDir = `${service.pluginRoot()}/hooks/context`;
-    const git = yield* gitContext();
-    if (git.kind === 'unavailable') {
-      return null;
-    }
-    if (git.kind === 'no-repo') {
-      return { dir: contextDir, path: `${contextDir}/state-no-repo.json` };
-    }
-    return { dir: contextDir, path: `${contextDir}/${stateFileName(git.gitDir)}` };
-  });
-
-// Everything `cape state reset` should remove: the current scheme's file plus
-// the pre-namespacing files (state.json, state-<worktree-name>.json) that
-// nothing reads anymore but that would otherwise be stranded forever.
-export const stateResetPaths = () =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const contextDir = `${service.pluginRoot()}/hooks/context`;
-    const git = yield* gitContext();
-    if (git.kind === 'unavailable') {
-      return [] as string[];
-    }
-    if (git.kind === 'no-repo') {
-      return [`${contextDir}/state-no-repo.json`, `${contextDir}/state.json`];
-    }
-    const paths = [`${contextDir}/${stateFileName(git.gitDir)}`, `${contextDir}/state.json`];
-    if (git.isLinkedWorktree) {
-      const legacyName = basename(git.gitDir).replace(/[^A-Za-z0-9._-]/g, '-');
-      paths.push(`${contextDir}/state-${legacyName}.json`);
-    }
-    return paths;
-  });
-
-const readStateAt = (path: string) =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const content = yield* service.readFile(path);
-    if (content == null) {
-      return {} as StateFile;
-    }
-    const raw = safeParseJson(content);
-    if (typeof raw !== 'object' || raw == null || Array.isArray(raw)) {
-      return {} as StateFile;
-    }
-    return Object.fromEntries(Object.entries(raw)) as StateFile;
-  });
-
-export const readState = () =>
-  Effect.gen(function* () {
-    const file = yield* stateFilePath();
-    if (file == null) {
-      return {} as StateFile;
-    }
-    return yield* readStateAt(file.path);
-  });
-
-export const writeStateKey = (key: string, value: Record<string, unknown>) =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const file = yield* stateFilePath();
-    if (file == null) {
-      return;
-    }
-    const { dir, path } = file;
-    const state = yield* readStateAt(path);
-    state[key] = { ...value, timestamp: Date.now() };
-    yield* service.ensureDir(dir);
-    yield* service.writeFile(path, JSON.stringify(state));
-  });
-
-export const removeStateKey = (key: string) =>
-  Effect.gen(function* () {
-    const service = yield* HookService;
-    const file = yield* stateFilePath();
-    if (file == null) {
-      return;
-    }
-    const { path } = file;
-    const state = yield* readStateAt(path);
-    if (!(key in state)) {
-      return;
-    }
-    const { [key]: _, ...rest } = state;
-    if (Object.keys(rest).length === 0) {
-      yield* service.removeFile(path);
-    } else {
-      yield* service.writeFile(path, JSON.stringify(rest));
-    }
-  });
-
-const readStateKey = (key: string, ttlMs: number) =>
-  Effect.gen(function* () {
-    const state = yield* readState();
-    const entry = state[key];
-    if (entry == null) {
-      return null;
-    }
-    if (typeof entry.timestamp !== 'number') {
-      return null;
-    }
-    const isStale = Date.now() - entry.timestamp > ttlMs;
-    return isStale ? null : entry;
-  });
-
-export const readFlowPhase = () =>
-  Effect.gen(function* () {
-    const entry = yield* readStateKey('flowPhase', FLOW_PHASE_TTL_MS);
-    if (entry == null || typeof entry.phase !== 'string') {
-      return null;
-    }
-    return entry.phase;
-  });
-
-export const readFlowPhaseContext = () =>
-  Effect.gen(function* () {
-    const entry = yield* readStateKey('flowPhase', FLOW_PHASE_TTL_MS);
-    if (entry == null || typeof entry.phase !== 'string' || typeof entry.issueId !== 'string') {
-      return null;
-    }
-    return { phase: entry.phase, issueId: entry.issueId };
   });
 
 // Ignores the cache TTL: use when reading data that does not go stale (epic
@@ -240,9 +100,9 @@ export const readTrackerCache = () =>
     return isStale ? null : cache;
   });
 
-// Canceled counts as done here: gates and banners ask "is this settled?", not "did it ship?".
+// Canceled counts as done here: banners ask "is this settled?", not "did it ship?".
 // The PR closing line answers the second question and excludes canceled children separately.
-export const isDoneTask = (task: TrackerTask) => {
+const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return (
@@ -255,7 +115,7 @@ export const isDoneTask = (task: TrackerTask) => {
   );
 };
 
-export const isReadyTask = (task: TrackerTask) => {
+const isReadyTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return (
@@ -319,7 +179,7 @@ const isDoneEpic = (epic: TrackerEpic) => {
   return status === 'done' || status === 'closed' || status === 'completed';
 };
 
-const epicForBranch = (cache: TrackerCache, branch: string) =>
+export const epicForBranch = (cache: TrackerCache, branch: string) =>
   Object.values(cache.epics).find((epic) => !isDoneEpic(epic) && branchMatchesEpic(branch, epic)) ??
   null;
 
@@ -373,10 +233,6 @@ export const sessionStart = () =>
     const service = yield* HookService;
     const root = service.pluginRoot();
 
-    // One-time migration: prune legacy tddState key from user state files.
-    yield* removeStateKey('tddState');
-
-    const flowPhase = yield* readFlowPhase();
     const sessionBanner = yield* readSessionBanner();
 
     const skillPath = `${root}/skills/don-cape/SKILL.md`;
@@ -392,9 +248,6 @@ export const sessionStart = () =>
       );
     } else {
       parts.push('cape plugin loaded.');
-    }
-    if (flowPhase != null) {
-      parts.push(`<flow-context>Current phase: ${flowPhase}</flow-context>`);
     }
 
     return { additionalContext: parts.join('\n\n') };
@@ -420,7 +273,6 @@ export const userPromptSubmit = () =>
     }
 
     const skills: string[] = [];
-    const contexts: string[] = [];
 
     if (detectTrackerSkill(prompt)) {
       skills.push('cape:tracker');
@@ -432,24 +284,13 @@ export const userPromptSubmit = () =>
       skills.push('cape:execute-plan');
     }
 
-    const flowPhase = yield* readFlowPhase();
-    if (flowPhase != null) {
-      contexts.push(`<flow-context>Current phase: ${flowPhase}</flow-context>`);
-    }
-
-    if (skills.length === 0 && contexts.length === 0) {
+    if (skills.length === 0) {
       return { decision: 'approve' as const };
     }
 
-    const parts: string[] = [];
-    if (skills.length > 0) {
-      parts.push(`Use the following skill(s): ${skills.join(' ')}`);
-    }
-    parts.push(...contexts);
-
     return {
       decision: 'approve' as const,
-      additionalContext: parts.join('\n\n'),
+      additionalContext: `Use the following skill(s): ${skills.join(' ')}`,
     };
   });
 

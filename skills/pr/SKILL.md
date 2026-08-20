@@ -49,7 +49,6 @@ template in step 3.
 ```bash
 cape git context
 git diff <default-branch>...HEAD --stat
-cape state list
 ```
 
 Use `mainBranch` from the context output as `<default-branch>` throughout. Two gate checks: the

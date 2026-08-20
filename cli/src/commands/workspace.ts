@@ -3,9 +3,8 @@ import { Argument, Command } from 'effect/unstable/cli';
 
 import { GitService } from '../services/git';
 import { composeLabels, HerdrService } from '../services/herdr';
-import { readFlowPhaseContext, readRawTrackerCache } from '../services/hook';
+import { HookService, epicForBranch, readRawTrackerCache } from '../services/hook';
 import { PrService } from '../services/pr';
-import { findEpic } from '../services/tracker';
 
 // gh emits '{"number":123,"state":"OPEN"}'. Anything else — no PR for the branch, an
 // error message, a payload without a usable number — means there is nothing to label
@@ -60,18 +59,21 @@ const workspacePhase = Command.make(
       );
     }
 
-    const context = yield* readFlowPhaseContext();
-    if (context == null) {
-      return yield* Console.log(JSON.stringify({ skipped: true, reason: 'no epic stamped' }));
-    }
-
     // Raw read on purpose: a stale cache still has the right epic title, and a
     // bare "icon + id" label is worse than a slightly old title.
     const cache = yield* readRawTrackerCache();
-    const epic = cache == null ? null : findEpic(cache, context.issueId);
+    const hook = yield* HookService;
+    const branch = yield* hook.spawnGit(['branch', '--show-current']);
+    const epic = cache == null || branch == null ? null : epicForBranch(cache, branch);
+    if (epic == null) {
+      return yield* Console.log(
+        JSON.stringify({ skipped: true, reason: 'no cached epic matches the current branch' }),
+      );
+    }
+
     const repo = yield* git.repoName();
     const prNumber = yield* lookupPrNumber(phase);
-    const labels = composeLabels(phase, context.issueId, epic?.title ?? null, repo, prNumber);
+    const labels = composeLabels(phase, epic.id, epic.title, repo, prNumber);
     if (labels == null) {
       return yield* Console.log(
         JSON.stringify({ skipped: true, reason: `unknown phase: ${phase}` }),
@@ -94,7 +96,7 @@ const workspacePhase = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Relabel the current herdr workspace and tab with the cape workflow phase icon for the active epic. Safe no-op outside a herdr workspace or with no stamped epic.',
+    'Relabel the current herdr workspace and tab with the cape workflow phase icon for the active epic. Safe no-op outside a herdr workspace or with no cached epic matching the current branch.',
   ),
 );
 

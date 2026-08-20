@@ -13,7 +13,6 @@ import {
   detectTrackerSkill,
   normalizeEventName,
   preToolUseBash,
-  preToolUseSkill,
   sessionStart,
   stripQuotedContent,
   userPromptSubmit,
@@ -221,24 +220,6 @@ const makeStubHookLayer = (
   return Layer.mergeAll(hookLayer, prLayer);
 };
 
-const flowPhaseEntry = (phase: string) => ({
-  phase,
-  issueId: 'cape-abc',
-  timestamp: Date.now(),
-});
-
-const flowPhaseEntryForIssue = (phase: string, issueId: string) => ({
-  phase,
-  issueId,
-  timestamp: Date.now(),
-});
-
-const stateFile = (entries: Record<string, unknown>) => ({
-  '/test/hooks/context/state-no-repo.json': JSON.stringify(entries),
-});
-
-const flowPhaseFile = (phase: string) => stateFile({ flowPhase: flowPhaseEntry(phase) });
-
 const trackerCacheFile = (cache: Record<string, unknown>) => ({
   '/test/hooks/context/tracker.json': JSON.stringify(cache),
 });
@@ -270,28 +251,6 @@ const trackerCache = (timestamp = Date.now()) => ({
   },
 });
 
-const task = (id: string, status: string, stateType: string, title = 'Task') => ({
-  id,
-  title,
-  status,
-  stateType,
-});
-
-const epic = (id: string, tasks: readonly ReturnType<typeof task>[], title = 'My Epic') => ({
-  id,
-  title,
-  status: 'In Progress',
-  tasks,
-});
-
-const trackerGateFiles = (
-  epics: Record<string, ReturnType<typeof epic> & { humanTicketId?: string }>,
-  activeEpicId = 'cape-1',
-) => ({
-  ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', activeEpicId) }),
-  ...trackerCacheFile({ version: 1, timestamp: Date.now(), epics }),
-});
-
 describe('sessionStart', () => {
   it('outputs SKILL.md content when present', async () => {
     const layer = makeStubHookLayer({
@@ -306,49 +265,6 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer();
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('cape plugin loaded.');
-  });
-
-  it('includes flow context when flowPhase exists in state', async () => {
-    const layer = makeStubHookLayer({
-      files: {
-        '/test/skills/don-cape/SKILL.md': 'content',
-        ...flowPhaseFile('executing'),
-      },
-    });
-    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('<flow-context>');
-    expect(result.additionalContext).toContain('executing');
-  });
-
-  it('removes legacy tddState key from the state file', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      writtenFiles,
-      removedFiles,
-      files: stateFile({ tddState: { phase: 'red', timestamp: Date.now() } }),
-    });
-    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(removedFiles).toContain('/test/hooks/context/state-no-repo.json');
-  });
-
-  it('preserves flowPhase while removing legacy tddState', async () => {
-    const writtenFiles: Record<string, string> = {};
-    const removedFiles: string[] = [];
-    const layer = makeStubHookLayer({
-      writtenFiles,
-      removedFiles,
-      files: stateFile({
-        tddState: { phase: 'red', timestamp: Date.now() },
-        flowPhase: flowPhaseEntry('executing'),
-      }),
-    });
-    await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    const written = writtenFiles['/test/hooks/context/state-no-repo.json'];
-    expect(written).toBeDefined();
-    const parsed = JSON.parse(written as string);
-    expect(parsed).not.toHaveProperty('tddState');
-    expect(parsed).toHaveProperty('flowPhase');
   });
 
   it('derives the banner from the branch matched against a cached epic gitBranchName', async () => {
@@ -677,16 +593,6 @@ describe('userPromptSubmit', () => {
     expect(result.additionalContext).toContain('cape:tracker');
   });
 
-  it('injects flow context when flowPhase exists in state', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'hello' }),
-      files: flowPhaseFile('executing'),
-    });
-    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('<flow-context>');
-    expect(result.additionalContext).toContain('executing');
-  });
-
   it('approves with no context when nothing matches', async () => {
     const layer = makeStubHookLayer({
       stdin: JSON.stringify({ prompt: 'hello' }),
@@ -726,17 +632,6 @@ describe('userPromptSubmit', () => {
     });
     const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
     expect(result).toEqual({ decision: 'approve' });
-  });
-
-  it('combines skills and flow context', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ prompt: 'show the issue tracker' }),
-      files: flowPhaseFile('planning'),
-    });
-    const result = await Effect.runPromise(userPromptSubmit().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).toContain('cape:tracker');
-    expect(result.additionalContext).toContain('<flow-context>');
-    expect(result.additionalContext).toContain('planning');
   });
 });
 
@@ -810,9 +705,6 @@ describe('hook command wiring', () => {
 
 const bashStdin = (command: string, cwd?: string) =>
   JSON.stringify({ ...(cwd != null ? { cwd } : {}), tool_input: { command } });
-
-const skillStdin = (skill: string, args?: string) =>
-  JSON.stringify({ tool_input: { skill, ...(args != null ? { args } : {}) } });
 
 const expectDeny = (result: unknown, reasonSubstring: string) => {
   const r = result as {
@@ -1106,253 +998,6 @@ describe('preToolUseBash', () => {
   });
 });
 
-describe('preToolUseSkill', () => {
-  it.each([
-    'cape:commit',
-    'cape:pr',
-    'cape:tracker',
-    'cape:fix-bug',
-    'cape:brainstorm',
-    'cape:write-plan',
-  ])('allows non-gated skill %s', async (skill) => {
-    const layer = makeStubHookLayer({ stdin: skillStdin(skill) });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('passes through on invalid JSON', async () => {
-    const layer = makeStubHookLayer({ stdin: 'not json' });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('passes through when skill field is missing', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ tool_input: { command: 'echo' } }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('passes through when tool_input is missing', async () => {
-    const layer = makeStubHookLayer({
-      stdin: JSON.stringify({ other: 'data' }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('adds context for execute-plan when no open epic exists', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({}),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('brainstorm'),
-    });
-  });
-
-  it('adds context for execute-plan when epic exists but no ready tasks', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [task('cape-1.1', 'In Progress', 'started')]),
-      }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('ready'),
-    });
-  });
-
-  it('allows execute-plan when epic and ready tasks exist', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
-      }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('adds context for finish-epic when open tasks remain', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [
-          task('cape-1.1', 'Done', 'completed'),
-          task('cape-1.2', 'Todo', 'unstarted'),
-          task('cape-1.3', 'In Progress', 'started'),
-        ]),
-      }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('open task'),
-    });
-  });
-
-  it('allows finish-epic when all tasks closed', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [
-          task('cape-1.1', 'Done', 'completed'),
-          task('cape-1.2', 'Closed', 'completed'),
-          task('cape-1.3', 'Completed', 'completed'),
-        ]),
-      }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('allows finish-epic when the remaining task is canceled', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [
-          task('cape-1.1', 'Done', 'completed'),
-          task('cape-1.2', 'Canceled', 'canceled'),
-        ]),
-      }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('adds context for a target named by its human ticket id when open tasks remain', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic', 'ABU-14'),
-      files: trackerGateFiles(
-        {
-          'AI-15': {
-            ...epic('AI-15', [task('AI-15.1', 'Todo', 'unstarted')]),
-            humanTicketId: 'ABU-14',
-          },
-        },
-        'AI-15',
-      ),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('open task'),
-    });
-  });
-
-  it('allows finish-epic for target epic when other epics have open tasks', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic', 'cape-target'),
-      files: trackerGateFiles(
-        {
-          'cape-other': epic('cape-other', [
-            task('cape-other.1', 'Todo', 'unstarted'),
-            task('cape-other.2', 'Done', 'completed'),
-          ]),
-          'cape-target': epic('cape-target', [task('cape-target.1', 'Done', 'completed')]),
-        },
-        'cape-target',
-      ),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('adds context for target epic when it has open tasks', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:finish-epic', 'cape-target'),
-      files: trackerGateFiles(
-        {
-          'cape-other': epic('cape-other', [task('cape-other.1', 'Done', 'completed')]),
-          'cape-target': epic('cape-target', [
-            task('cape-target.1', 'Done', 'completed'),
-            task('cape-target.2', 'Todo', 'unstarted'),
-          ]),
-        },
-        'cape-target',
-      ),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('cape-target'),
-    });
-  });
-
-  it('allows fix-bug through without an unconditional diagnosis nudge', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:fix-bug'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('returns additionalContext when on default branch with open epic and ready tasks', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
-      }),
-      gitResponses: {
-        'rev-parse --abbrev-ref HEAD': 'main',
-        'symbolic-ref': 'refs/remotes/origin/main',
-      },
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toHaveProperty('additionalContext');
-    expect((result as unknown as { additionalContext: string }).additionalContext).toContain(
-      'branch',
-    );
-  });
-
-  it('allows execute-plan on a feature branch with open epic and ready tasks', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({
-        'cape-1': epic('cape-1', [task('cape-1.1', 'Todo', 'unstarted')]),
-      }),
-      gitResponses: {
-        'rev-parse --abbrev-ref HEAD': 'feat/my-feature',
-        'symbolic-ref': 'refs/remotes/origin/main',
-      },
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('allows execute-plan when tracker cache is unreadable', async () => {
-    const layer = makeStubHookLayer({ stdin: skillStdin('cape:execute-plan') });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('allows finish-epic when tracker cache is unreadable', async () => {
-    const layer = makeStubHookLayer({ stdin: skillStdin('cape:finish-epic') });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-
-  it('adds context for test-driven-development when no workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:test-driven-development'),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toEqual({
-      additionalContext: expect.stringContaining('internal'),
-    });
-  });
-
-  it('allows test-driven-development when workflow is active', async () => {
-    const layer = makeStubHookLayer({
-      stdin: skillStdin('cape:test-driven-development'),
-      files: stateFile({ workflowActive: { value: true, timestamp: Date.now() } }),
-    });
-    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
-    expect(result).toBeNull();
-  });
-});
-
 describe('hook command - PreToolUse wiring', () => {
   it('routes pre-tool-use --matcher Bash to deny table', async () => {
     const hookLayer = makeStubHookLayer({
@@ -1367,23 +1012,6 @@ describe('hook command - PreToolUse wiring', () => {
     const output = console_.output();
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
-    console_.restore();
-  });
-
-  it('routes pre-tool-use --matcher Skill to flow-gate', async () => {
-    const hookLayer = makeStubHookLayer({
-      stdin: skillStdin('cape:execute-plan'),
-      files: trackerGateFiles({}),
-    });
-    const console_ = spyConsole();
-    await Effect.runPromise(
-      run(['hook', 'pre-tool-use', '--matcher', 'Skill']).pipe(
-        Effect.provide(makeCommandLayers(hookLayer)),
-      ),
-    );
-    const output = console_.output();
-    const result = JSON.parse(output);
-    expect(result.additionalContext).toContain('brainstorm');
     console_.restore();
   });
 
@@ -1428,39 +1056,6 @@ describe('hook command - PreToolUse wiring', () => {
     const result = JSON.parse(output);
     expect(result.hookSpecificOutput.permissionDecision).toBe('deny');
     console_.restore();
-  });
-});
-
-describe('readFlowPhase', () => {
-  it('returns null when flowPhase is older than 30 minutes', async () => {
-    const staleTimestamp = Date.now() - 31 * 60 * 1000;
-    const layer = makeStubHookLayer({
-      files: stateFile({
-        flowPhase: { phase: 'executing', issueId: 'cape-abc', timestamp: staleTimestamp },
-      }),
-    });
-    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).not.toContain('<flow-context>');
-  });
-
-  it('returns null when the state file contains malformed JSON', async () => {
-    const layer = makeStubHookLayer({
-      files: {
-        '/test/hooks/context/state-no-repo.json': 'corrupted{{{',
-      },
-    });
-    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).not.toContain('<flow-context>');
-  });
-
-  it('returns null when flowPhase is missing phase field', async () => {
-    const layer = makeStubHookLayer({
-      files: stateFile({
-        flowPhase: { issueId: 'cape-abc', timestamp: Date.now() },
-      }),
-    });
-    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
-    expect(result.additionalContext).not.toContain('<flow-context>');
   });
 });
 

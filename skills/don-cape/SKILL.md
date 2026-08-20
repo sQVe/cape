@@ -57,7 +57,7 @@ Otherwise, first matching row wins:
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
 
 `cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
-any production code, and hook safety nets cover resumed sessions.
+any production code.
 
 Code review is the builtin `/code-review`, not a cape skill. The user runs it; `cape:pr` carries it
 as a test-plan checkbox.

@@ -25,8 +25,8 @@ worth doing adapt to context.
    for future cases you can already imagine; let each change inform the next test.
 3. **Test behavior, not implementation.** Tests describe what changes for the caller, not which
    internal method ran.
-4. **Skip only with explicit user approval.** No hook enforces the cycle. Skip it only when the user
-   accepts doing so for a stated reason, and report that the TDD contract was overridden.
+4. **Skip only with explicit user approval.** Skip it only when the user accepts doing so for a
+   stated reason, and report that the TDD contract was overridden.
 
 ## Process
 
