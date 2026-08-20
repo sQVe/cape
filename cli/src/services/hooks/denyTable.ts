@@ -1,4 +1,4 @@
-type DenyTier = 'redirect' | 'block' | 'warn';
+type DenyTier = 'redirect' | 'block';
 
 interface DenyEntry {
   readonly pattern: RegExp;
@@ -11,12 +11,6 @@ export const denyTable: readonly DenyEntry[] = [
     pattern: /\bgit\s+commit\b.*--amend\b/,
     message:
       'Commit amend is blocked. Reason: amending rewrites history and can overwrite work already shared in the previous commit.',
-    tier: 'block',
-  },
-  {
-    pattern: /\bgit\s+push\b.*(?:--force\b(?!-)|-f\b)/,
-    message:
-      'Force push is blocked. Reason: it can overwrite commits on the remote that others depend on.',
     tier: 'block',
   },
   {
@@ -47,23 +41,5 @@ export const denyTable: readonly DenyEntry[] = [
     message:
       'Use `cape git create-branch` to create a branch. Run `cape git create-branch --help` to learn the workflow.',
     tier: 'redirect',
-  },
-  {
-    pattern: /\bgit\s+reset\s+--hard\b/,
-    message:
-      'Caution: `git reset --hard` risks discarding uncommitted changes permanently. Consider `git stash` first.',
-    tier: 'warn',
-  },
-  {
-    pattern: /\bgit\s+checkout\s+--(?:\s|$)/,
-    message:
-      'Caution: `git checkout --` risks discarding working tree changes. Consider `git stash` first.',
-    tier: 'warn',
-  },
-  {
-    pattern: /\bgit\s+clean\b.*-f\b/,
-    message:
-      'Caution: `git clean -f` risks permanently removing untracked files. Consider `git clean -n` first.',
-    tier: 'warn',
   },
 ];

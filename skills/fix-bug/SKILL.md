@@ -59,12 +59,12 @@ Reproduction: <exact steps>
 Create a Linear bug issue for this fix?
 ```
 
-After approval, load `cape:tracker` and apply its agent contract; it owns dedupe, labels, priority,
-and the bug title shape. Create the issue with MCP Linear `save_issue`, including root cause,
-evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and success
-criteria. Then refresh the cache per `cape:tracker`: when the bug sits under an epic, refresh the
-parent with `cape tracker cache-epic`. If the bug is standalone and not yet in cache, create or
-refresh a containing parent issue first.
+After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns dedupe,
+labels, priority, and the bug title shape. Create the issue with MCP Linear `save_issue`, including
+root cause, evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and
+success criteria. Then refresh the cache per `cape:tracker`: when the bug sits under an epic,
+refresh the parent with `cape tracker cache-epic`. If the bug is standalone and not yet in cache,
+create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 

@@ -3,7 +3,6 @@ import { basename, resolve } from 'node:path';
 
 import { Effect, ServiceMap } from 'effect';
 
-import { logEvent } from '../../eventLog';
 import { safeParseJson } from '../../utils/json';
 import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
 import type { TrackerEpic, TrackerTask } from '../tracker';
@@ -391,8 +390,6 @@ export const userPromptSubmit = () =>
     if (skills.length === 0 && contexts.length === 0) {
       return { decision: 'approve' as const };
     }
-
-    logEvent('hook.UserPromptSubmit', skills.length > 0 ? skills.join(', ') : 'flow-context');
 
     const parts: string[] = [];
     if (skills.length > 0) {

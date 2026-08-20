@@ -7,6 +7,35 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+
+- Skills: removed `cape:worktree`. Grove owns worktree creation; the cape-specific tail (stamp
+  `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
+  `cape:execute-plan`. The `cape worktree` CLI command is unchanged.
+- Commands: removed `commands/tracker.md`, the last wrapper duplicating a skill. The tracker skill
+  is `user-invocable: false` by design and works as model-loaded plumbing; it was almost never typed
+  as a command.
+- CLI: removed the event log (`eventLog.ts` and its `events.jsonl` output). It was write-only —
+  nothing in the repo, any skill, or any settings file read it.
+- Hooks: removed the `warn` deny tier (`git reset --hard`, `git checkout --`, `git clean -f`) and
+  the force-push block from the Bash deny table. The cc-safety-net plugin owns destructive-command
+  policy globally; cape keeps only its own rules (amend, `gh pr merge|close`, and the
+  commit/pr/branch redirects).
+- Resources: removed `resources/skill-template.md` and `resources/agent-template.md`.
+  `cape validate` is the executable source of truth for definition structure; two markdown mirrors
+  of the same schema drifted.
+- Agents: removed the dead `notebox-researcher` mode from `codebase-investigator`. The notebox
+  plugin is no longer installed, so the mode instructed searches against a tool that does not exist.
+
+### Changed
+
+- Skills: `cape:tracker` slimmed from five steps to the cache shape plus the write-and-refresh
+  protocol. Steps that restated `cape tracker --help` are gone; the Linear agent contract (dedupe,
+  labels, priority, titles) moved to `skills/tracker/resources/agent-contract.md` so write-plan,
+  execute-plan, and fix-bug can load it directly.
+- CI: the check job now builds the CLI and runs `cape validate`, so definition lint is enforced
+  instead of advisory.
+
 ### Added
 
 - Skills: added `cape:unslop`, adapted from Cursor's pstack unslop skill: 31 AI-tell patterns, an
@@ -57,14 +86,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Docs: ran `cape:unslop` over the prose the skill migration left behind, so the whole repo now
-  reads the same way: the README, `CLAUDE.md`, all five agents, the agent template, and the tracker
-  and PR resource files. Em dashes are gone, the last XML tag (`<example_calibration>` in
-  `code-reviewer`) is plain markdown, citation format is `(URL, Tier N)` everywhere instead of two
-  spellings, and the README drops the directory table that repeated its own tree. `CLAUDE.md` now
-  states the rule: every prose file goes through `cape:unslop`, the CHANGELOG excepted.
-- CLI: the three em dashes in user-facing strings are gone, in `cape --help`, the `flowPhase` entry
-  of `cape state list`, and the session-start preamble that introduces the don-cape skill. Code
-  comments keep theirs.
+  reads the same way: the README, `CLAUDE.md`, all five agents, and the tracker and PR resource
+  files. Em dashes are gone, the last XML tag (`<example_calibration>` in `code-reviewer`) is plain
+  markdown, citation format is `(URL, Tier N)` everywhere instead of two spellings, and the README
+  drops the directory table that repeated its own tree. `CLAUDE.md` now states the rule: every prose
+  file goes through `cape:unslop`, the CHANGELOG excepted.
+- CLI: the em dashes in user-facing strings are gone, in `cape --help`, the `flowPhase` entry of
+  `cape state list`, the session-start preamble that introduces the don-cape skill, and both unknown
+  matcher errors from `cape hook`. Code comments keep theirs.
 - Skills: rewrote all 13 remaining skills and the skill template from the XML tag structure to plain
   markdown, applying the `cape:unslop` patterns throughout. The frontmatter description now carries
   the triggers and the body starts at the contract, cutting the sections that restated them; the
