@@ -181,6 +181,23 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('accepts a review item that names the agent reviewer instead of the command', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by cape:code-reviewer, findings addressed or dismissed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('matches the review item regardless of case', () => {
+    const result = validatePrBody(template, withTestPlan('- [x] CODE REVIEW done, no findings'));
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
   it('returns invalid when the /code-review item is checked but another box is not', () => {
     const result = validatePrBody(
       template,

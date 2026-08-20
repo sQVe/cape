@@ -35,6 +35,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   returns JSON and the dispatching skill relays it; a dispatched agent has no `ReportFindings` tool
   of its own. Its finding bar now requires a concrete failure scenario per finding and refutes only
   what the code disproves.
+- Skills: `cape:pr` runs the review itself when nothing has reviewed the current HEAD, instead of
+  stopping to ask for one. The review checkbox names the reviewer that actually ran
+  (`- [x] Code review by cape:code-reviewer, ...`), and `cape pr create` matches `code review`,
+  `/code-review`, or `code-reviewer`, so a box that says who reviewed no longer claims a command
+  nobody typed.
 - Skills: a `cape:code-reviewer` pass satisfies the PR review checkbox on any branch, not just the
   AFK one. `cape:pr`, `cape:set-goal`, `cape:don-cape`, and the README no longer claim code review
   is human-only. Ticking the box still requires a real review with its findings addressed.

@@ -17,7 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
-  '- [ ] /code-review run on this branch, or an equivalent agent review, findings addressed or dismissed',
+  '- [ ] Code review by /code-review or cape:code-reviewer, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 
@@ -86,10 +86,11 @@ export const extractUncheckedBoxes = (body: string) =>
     .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
-// that simply omits the box must fail rather than pass for having no unticked boxes.
+// that simply omits the box must fail rather than pass for having no unticked boxes. The item names
+// whichever reviewer ran, so the match spans "Code review", "/code-review", and "code-reviewer".
 const hasReviewItem = (templateSections: string[], body: string) =>
   sectionLines(body, testSectionName(templateSections)).some(
-    (line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'),
+    (line) => /^\s*- \[[ xX]\]/.test(line) && /code[- ]review/i.test(line),
   );
 
 export const validatePrBody = (templateSections: string[], body: string) => {
