@@ -201,6 +201,18 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('accepts a review item that names the model and reviewed commit', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
     const result = validatePrBody(
       template,

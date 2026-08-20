@@ -17,7 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
-  '- [ ] Code review by /code-review or cape:code-reviewer, findings addressed or dismissed',
+  '- [ ] Code review by /code-review or cape:code-reviewer on <sha>, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 

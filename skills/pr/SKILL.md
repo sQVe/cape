@@ -85,11 +85,18 @@ bundled template's sections and heading levels exactly:
 The title uses conventional commit format: `type(scope): subject`.
 
 Whatever the template source, the test plan section must contain a review checkbox that opens with
-the review token and attributes the review:
-`- [x] Code review by <reviewer>, findings addressed or dismissed`, or
-`- [x] /code-review run on this branch, findings addressed`. Naming who reviewed is what separates a
-review from a checklist item that mentions one, and `cape pr create` rejects the latter. Repo
-templates rarely carry the box; add it.
+the review token and attributes the review. Name the model first, since that is the part a reader
+outside this repo can weigh, then the reviewer, then the commit reviewed:
+
+```text
+- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+- [x] Code review by /code-review (Claude Opus 5) on 59a9a3a, findings addressed
+- [x] Code review by @sQVe on 59a9a3a, findings addressed
+```
+
+Write the model you actually ran, never a version you are guessing at. Naming who reviewed is what
+separates a review from a checklist item that mentions one, and `cape pr create` rejects the latter.
+Repo templates rarely carry the box; add it.
 
 Write the body for a reviewer who knows the domain but not this branch:
 
@@ -150,9 +157,16 @@ emoji into the title or body, and describe the change, not the orchestration tha
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
 pass, keep `[ ]` on fail. For the review box: when no review covers the current HEAD, dispatch
 `cape:code-reviewer` over the branch diff now, relay its findings through one `ReportFindings` call,
-and address or dismiss each one. Then rewrite the box to name the reviewer that ran
-(`- [x] Code review by cape:code-reviewer, findings addressed or dismissed`) and tick it. On any
-failure, stop, report details, and ask **Fix and retry** or **Cancel**.
+and address or dismiss each one. Then rewrite the box to name the model, the reviewer, and the
+commit it read, and tick it:
+
+```text
+- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+```
+
+The sha is the part that makes a stale review visible: use the HEAD the reviewer actually read, so a
+later commit leaves the mismatch on the record instead of hiding under a ticked box. On any failure,
+stop, report details, and ask **Fix and retry** or **Cancel**.
 
 After all pass, validate the rewritten description with `cape pr validate --stdin`. It rejects
 missing sections and unchecked boxes; loop back if any `- [ ]` remains. Then create:
