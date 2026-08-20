@@ -149,7 +149,9 @@ const cacheStatus = Command.make(
     yield* Console.log(JSON.stringify({ cached: true, issueId: trimmedIssueId, changed: true }));
   }),
 ).pipe(
-  Command.withDescription('Refresh one cached issue status after an MCP Linear state update.'),
+  Command.withDescription(
+    'Update one cached issue status locally. Build-time status is cache-only; Linear catches up via the PR closing line.',
+  ),
 );
 
 export const tracker = Command.make('tracker').pipe(
