@@ -29,6 +29,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Agents: `code-reviewer` reports findings in the `ReportFindings` shape (`file`, `line`, `summary`,
+  `short_summary`, `failure_scenario`, `category`, `verdict`) instead of Critical/Important/
+  Suggestion prose, so an agent review renders the way the builtin `/code-review` does. The agent
+  returns JSON and the dispatching skill relays it; a dispatched agent has no `ReportFindings` tool
+  of its own. Its finding bar now requires a concrete failure scenario per finding and refutes only
+  what the code disproves.
+- Skills: a `cape:code-reviewer` pass satisfies the PR review checkbox on any branch, not just the
+  AFK one. `cape:pr`, `cape:set-goal`, `cape:don-cape`, and the README no longer claim code review
+  is human-only. Ticking the box still requires a real review with its findings addressed.
 - Skills: `cape:tracker` slimmed from five steps to the cache shape plus the write-and-refresh
   protocol. Steps that restated `cape tracker --help` are gone; the Linear agent contract (dedupe,
   labels, priority, titles) moved to `skills/tracker/resources/agent-contract.md` so write-plan,
