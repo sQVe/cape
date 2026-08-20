@@ -51,9 +51,10 @@ chains:
 own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each task
 so you can review.
 
-Code review is Claude Code's builtin `/code-review`, not a cape skill. You run it. The `pr` skill
-carries the requirement as a test-plan checkbox, and `cape pr create` refuses a body with an
-unticked box.
+Code review has no cape skill. You run Claude Code's builtin `/code-review`, or a skill dispatches
+the `code-reviewer` agent, which reports through the same `ReportFindings` tool and renders the same
+way. The `pr` skill carries the requirement as a test-plan checkbox, and `cape pr create` refuses a
+body with an unticked box.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
 to the default branch, `git commit --amend`, `gh pr merge`, and `gh pr close`. Raw commands with a
