@@ -87,16 +87,25 @@ export const extractUncheckedBoxes = (body: string) =>
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
 // that simply omits the box must fail rather than pass for having no unticked boxes. The item names
-// whichever reviewer ran, so the token spans "Code review", "code reviewed", and "/code-review".
-// Three things have to hold, each closing a leak this gate has actually had. The token opens the
-// item, or "Update the code review checklist" counts. An attribution follows it ("by <who>", "run
-// on <branch>"), or "Code review checklist updated" counts. And the attribution names something
-// real instead of an unfilled placeholder, or ticking the template line verbatim counts.
-const reviewItemPattern = /^\s*- \[[ xX]\]\s*\/?code[- ]review(ed)?\s+(by|run)\b(?!\s*[[<])/i;
+// whichever reviewer ran, so two spellings pass. "/code-review run ..." is the legacy form, where
+// the slash command names its own reviewer. Everything else has to say "code review(ed) by <who>",
+// and <who> must be a real name rather than an unfilled placeholder.
+//
+// Each clause closes a leak this gate has actually shipped with. Requiring the token to open the
+// item stops "Update the code review checklist". Requiring the attribution stops "Code review
+// checklist updated". Requiring the slash on the "run" branch stops "Code review run instructions
+// added to CONTRIBUTING.md", which named no reviewer at all. Rejecting a following [ or < stops a
+// run from ticking the placeholder line cape itself ships.
+const reviewItemPattern =
+  /^\s*- \[[ xX]\]\s*(?:\/code-review\s+run\b|code[- ]review(?:ed)?\s+by\s+(?![[<])\S)/i;
+
+// Bold or italic markers around the label ("**Code review** by ...") are ordinary markdown and must
+// not read as a missing review.
+const stripEmphasis = (line: string) => line.replace(/[*_]/g, '');
 
 const hasReviewItem = (templateSections: string[], body: string) =>
   sectionLines(body, testSectionName(templateSections)).some((line) =>
-    reviewItemPattern.test(line),
+    reviewItemPattern.test(stripEmphasis(line)),
   );
 
 export const validatePrBody = (templateSections: string[], body: string) => {

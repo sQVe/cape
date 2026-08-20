@@ -29,6 +29,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Agents: `code-reviewer` runs on `opus` instead of `sonnet`. Run head to head on the same commit
+  with the same prompt, Opus returned every finding Sonnet did plus five more, including a live gate
+  bypass (`- [x] Code review run instructions added to CONTRIBUTING.md` satisfied the review gate)
+  that two Sonnet passes and two commercial review bots had all cleared.
 - Agents: `code-reviewer` reports findings in the `ReportFindings` shape (`file`, `line`, `summary`,
   `short_summary`, `failure_scenario`, `category`, `verdict`) instead of Critical/Important/
   Suggestion prose, so an agent review renders the way the builtin `/code-review` does. The agent

@@ -243,6 +243,26 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('returns invalid when the run form names no reviewer', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review run instructions added to CONTRIBUTING.md\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('accepts a review item wrapped in markdown emphasis', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] **Code review** by Claude Opus 5 on a1b2c3d, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
     const result = validatePrBody(
       template,

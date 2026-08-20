@@ -74,7 +74,9 @@ Run the checks the epic or project requires. Dispatch `cape:test-runner` (model:
 commands are long-running or noisy. If checks fail: **STOP.** Report the failing command.
 
 For non-trivial epics, dispatch `cape:code-reviewer` with the epic contract and branch diff; the
-reviewer judges the delivered code against the R-IDs and required constraints.
+reviewer judges the delivered code against the R-IDs and required constraints. It returns one JSON
+object: relay its `findings` through a single `ReportFindings` call, which is what renders them, and
+address each before handing off.
 
 ### 4. Hand off
 
@@ -115,6 +117,9 @@ Dispatch `cape:test-runner` when:
 Dispatch `cape:code-reviewer` when:
 
 - The epic changes shared behavior, public APIs, or cross-module contracts
+
+It returns one JSON object. Relay its `findings` through a single `ReportFindings` call; the agent
+has no such tool of its own.
 
 ## Skills
 

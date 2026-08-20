@@ -91,7 +91,7 @@ outside this repo can weigh, then the reviewer that ran it, then the commit revi
 reviewer is their own name, with no parenthetical.
 
 ```text
-- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
 - [x] Code review by Claude Opus 5 (/code-review) on 59a9a3a, findings addressed
 - [x] Code review by @sQVe on 59a9a3a, findings addressed
 ```
@@ -150,9 +150,12 @@ outputting the description and calling `AskUserQuestion`.
 in doubt, a human is present and the interactive path applies unchanged. Print the full PR (title,
 description, automatable items) to the transcript so the opened PR is on record, skip
 `AskUserQuestion`, and continue to step 5 as if approved. The review runs the same way it does with
-a human present, since step 5 dispatches it. No human edits an AFK body before it ships, so the step
-3 quality bar and unslop apply in full, plus two AFK-only rules: never write a robot signature or
-emoji into the title or body, and describe the change, not the orchestration that produced it.
+a human present, since step 5 dispatches it. Step 5's failure path asks a question this branch has
+no one to ask, so take this instead: on a review that needs changes, fix the findings and re-review;
+on anything left unresolved, stop with the box unticked and report why. `cape pr create` refuses the
+body either way. No human edits an AFK body before it ships, so the step 3 quality bar and unslop
+apply in full, plus two AFK-only rules: never write a robot signature or emoji into the title or
+body, and describe the change, not the orchestration that produced it.
 
 ### 5. Run the gate and create
 
