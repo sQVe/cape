@@ -1106,6 +1106,25 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
+  it('adds context for a target named by its human ticket id when open tasks remain', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic', 'ABU-14'),
+      files: trackerGateFiles(
+        {
+          'AI-15': {
+            ...epic('AI-15', [task('AI-15.1', 'Todo', 'unstarted')]),
+            humanTicketId: 'ABU-14',
+          },
+        },
+        'AI-15',
+      ),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toEqual({
+      additionalContext: expect.stringContaining('open task'),
+    });
+  });
+
   it('allows finish-epic for target epic when other epics have open tasks', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic', 'cape-target'),

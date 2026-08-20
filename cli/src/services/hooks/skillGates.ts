@@ -114,7 +114,7 @@ const gateFinishEpic = (targetEpicId: string | null) =>
       return null;
     }
     for (const epic of Object.values(cache.epics)) {
-      if (targetEpicId != null && epic.id !== targetEpicId) {
+      if (targetEpicId != null && epic.id !== targetEpicId && epic.humanTicketId !== targetEpicId) {
         continue;
       }
       const openCount = epic.tasks.filter((task) => !isDoneTask(task)).length;
