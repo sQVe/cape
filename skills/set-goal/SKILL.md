@@ -1,9 +1,9 @@
 ---
 name: set-goal
-argument-hint: '[epic id or description]'
+argument-hint: '[epic ID or description]'
 description: >
   Interview the user and stage a reviewable `/goal` draft for an autonomous epic run. Takes a Linear
-  epic id or a free-form description; never launches the run itself. Not for supervised tasks
+  epic ID or a free-form description; never launches the run itself. Not for supervised tasks
   (cape:execute-plan) or interactive design exploration (cape:brainstorm).
 ---
 
@@ -36,7 +36,7 @@ fixed; interview defaults and approach-prompt wording adapt to the epic.
 
 Resolve the target from the invocation:
 
-- An epic id (`/cape:set-goal ABU-123`): use that epic.
+- An epic ID (`/cape:set-goal ABU-123`): use that epic.
 - A free-form description: mint a lean epic first, with a title, goal, success criteria, and one
   first task, via the `cape:tracker` contract, then refresh the cache. One first task is enough
   because the run creates later tasks one ahead. Run the epic text through `cape:unslop` before

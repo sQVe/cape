@@ -106,9 +106,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- Skills: shortened every frontmatter description to the pstack style — what the skill does, the
-  strongest trigger, one disambiguation — replacing the long trigger-phrase enumerations, which
-  routed worse than short descriptions.
+- Skills: shortened every remaining frontmatter description to the pstack style `cape:unslop`
+  already used — what the skill does, the strongest trigger, one disambiguation — replacing the long
+  trigger-phrase enumerations, which routed worse than short descriptions.
 - Docs: ran `cape:unslop` over the prose the skill migration left behind, so the whole repo now
   reads the same way: the README, `CLAUDE.md`, all five agents, and the tracker and PR resource
   files. Em dashes are gone, the last XML tag (`<example_calibration>` in `code-reviewer`) is plain
