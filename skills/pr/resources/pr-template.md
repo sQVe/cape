@@ -60,16 +60,16 @@ Fixes ABU-XX
 
 ## Section guidelines
 
-- **Motivation**: The problem or opportunity driving the change (1-3 sentences)
-- **Changes**: What was implemented, with technical details
-- **Test plan**: Commands, assertions, and the `/code-review` pass. Every checkbox must be `[x]`
+- **Motivation.** The problem or opportunity driving the change (1-3 sentences)
+- **Changes.** What was implemented, with technical details
+- **Test plan.** Commands, assertions, and the `/code-review` pass. Every checkbox must be `[x]`
   before the PR exists.
-- **Verification performed**: Evidence of testing already done during development
-- **Deployment notes**: Operational steps for deployers (optional, omit if none)
-- **Manual verification**: Subjective human judgment only (optional, often omitted)
-- **Deferred verification**: Checks that need a deployed environment (optional, plain bullets, never
+- **Verification performed.** Evidence of testing already done during development
+- **Deployment notes.** Operational steps for deployers (optional, omit if none)
+- **Manual verification.** Subjective human judgment only (optional, often omitted)
+- **Deferred verification.** Checks that need a deployed environment (optional, plain bullets, never
   marked done)
-- **Issues**: Reference the Linear epic by its identifier. Default to a closing keyword
+- **Issues.** Reference the Linear epic by its identifier. Default to a closing keyword
   (`Fixes ABU-XX`) so the epic auto-closes on merge. Use a non-closing keyword (`Related to ABU-XX`)
   ONLY when this PR does not complete the epic, meaning more PRs or a live cutover are still
   pending. A non-closing link still moves the issue through pre-merge statuses but never closes it,

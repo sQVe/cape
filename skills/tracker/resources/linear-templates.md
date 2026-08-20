@@ -28,7 +28,7 @@ involved, or rollout, observability, or rollback matters.
 Untyped parent. No `type:*` label. Set `src:*` and Medium priority as template defaults.
 
 ```markdown
-## 🧭 At a glance
+## At a glance
 
 | Field             | Value                               |
 | ----------------- | ----------------------------------- |
@@ -67,7 +67,7 @@ and data flow. Mermaid for flows over ~3 steps.]
 Light plus the alignment sections. Same untyped-parent rules.
 
 ````markdown
-## 🧭 At a glance
+## At a glance
 
 | Field            | Value                               |
 | ---------------- | ----------------------------------- |

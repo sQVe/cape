@@ -1274,6 +1274,7 @@ describe('hook command - PreToolUse wiring', () => {
     expect(console_.output()).toHaveLength(0);
     expect(console_.errorOutput()).toContain('Unknown');
     expect(console_.errorOutput()).toContain('PreToolUse');
+    expect(console_.errorOutput()).not.toContain('—');
     console_.restore();
   });
 
@@ -1368,6 +1369,7 @@ describe('hook command - PostToolUse wiring', () => {
     expect(console_.output()).toHaveLength(0);
     expect(console_.errorOutput()).toContain('Unknown');
     expect(console_.errorOutput()).toContain('PostToolUse');
+    expect(console_.errorOutput()).not.toContain('—');
     console_.restore();
   });
 });

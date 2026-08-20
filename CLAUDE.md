@@ -24,14 +24,15 @@ cape validate skills    # skills only
 
 ## Conventions
 
-- Commands are thin wrappers — route to skills via `Use the cape:<name> skill exactly as written.`
-  Add one only when it earns its keep: a different name than the skill (`build` → `execute-plan`) or
-  a skill marked `user-invocable: false`. A command named after its own skill duplicates the
-  `/cape:name` entry in the slash-command menu.
+- Commands are thin wrappers. Each routes to a skill with
+  `Use the cape:<name> skill exactly as written.` Add one only when it earns its keep: a different
+  name than the skill (`build` → `execute-plan`) or a skill marked `user-invocable: false`. A
+  command named after its own skill duplicates the `/cape:name` entry in the slash-command menu.
 - Skills follow `resources/skill-template.md`: plain markdown, no XML tags, sentence case headings.
-  The frontmatter description carries the triggers; the body starts at the contract. Write skill
-  prose with the `cape:unslop` skill.
+  The frontmatter description carries the triggers; the body starts at the contract.
 - Agents follow `resources/agent-template.md`. Use "Investigation approach" as the section header.
+- Every prose file in the repo goes through the `cape:unslop` skill: skills, agents, templates,
+  README, this file. The CHANGELOG is the exception, since released entries are a record.
 - Tests co-located with source in `cli/src/`. E2E tests in `cli/src/__e2e__/`.
 - Effect service pattern: interface in `services/<name>.ts`, live implementation in
   `services/<name>Live.ts`.

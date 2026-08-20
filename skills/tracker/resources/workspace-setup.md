@@ -14,7 +14,7 @@
 - [ ] Delete ad-hoc labels `dx`, `infra`, and `tooling`.
 - [ ] Create grouped labels `type:bug` and `type:feature` under the `type` label group.
 - [ ] Migrate the existing flat `pr-watcher` label into the `src` group as `src:pr-watcher`, then
-      retag its about 19 issues.
+      retag the 19 or so issues carrying it.
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
 - [ ] Create the standalone `agent-ticket` label (no group): cape applies it to every task and bug
       sub-issue it creates so humans can filter agent work tickets out with `-label:agent-ticket`.
@@ -34,4 +34,4 @@
       `Done` and `Canceled`.
 - [ ] Rename the team-named `Aburaya` project to a distinct product noun chosen by a human.
 - [ ] Run the one-time priority reset: bulk-clear inflated `High` issues to `Medium`, then re-raise
-      only the true next about 5 issues.
+      only the five or so issues that really are next.

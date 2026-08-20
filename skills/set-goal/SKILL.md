@@ -58,7 +58,7 @@ session before drafting. Do not guess.
 
 Derive the task source from the cache; do not ask it. Multiple ready tasks (a pre-planned epic)
 means the run executes them in dependency order; a freshly minted or single-task epic means the run
-seeds tasks lazily one ahead. Surface the derived mode in the draft header.
+seeds tasks lazily one ahead. Show the derived mode in the draft header.
 
 Ask three questions with `AskUserQuestion`, each with a marked default so the user can accept all at
 once:
@@ -201,7 +201,7 @@ changes nothing.
 ### 4. Open the draft for launch
 
 In a herdr workspace, open the draft in a split editor and let the human launch with `:wq`. There is
-no Run/Edit/Cancel question; the editor is the review, edit, and launch surface.
+no Run/Edit/Cancel question; review, edits, and launch all happen in the editor.
 
 **If the pane is a live herdr workspace**, meaning `$HERDR_PANE_ID` is set AND
 `herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be

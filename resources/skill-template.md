@@ -37,7 +37,7 @@ with a clear deliverable.]
 
 ### 2. [Title]
 
-[If this step makes design or implementation decisions, add a short assumption checkpoint: surface
+[If this step makes design or implementation decisions, add a short assumption checkpoint: show
 scope creep, ambiguous terms, or over-engineering before committing. Keep it inline.]
 
 ### 3. [Title]

@@ -116,10 +116,10 @@ Output the full PR:
 
 End with a `---` separator, then immediately use `AskUserQuestion` with options:
 
-- **Create PR**: run tests and publish
-- **Create draft**: run tests and publish as draft
-- **Edit**: revise title or description
-- **Cancel**: abort
+- **Create PR.** Run tests and publish
+- **Create draft.** Run tests and publish as draft
+- **Edit.** Revise title or description
+- **Cancel.** Abort
 
 Do not announce next steps or say "Let me..." after the separator, and do not call any tools between
 outputting the description and calling `AskUserQuestion`.

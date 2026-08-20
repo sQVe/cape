@@ -37,20 +37,20 @@ chains:
 | PLAN  | brainstorm → write-plan                         | `/plan`  |
 | BUILD | execute-plan → test-driven-development → commit | `/build` |
 | SHIP  | finish-epic → pr                                | `/ship`  |
-| BUG   | fix-bug → test-driven-development → commit      | —        |
+| BUG   | fix-bug → test-driven-development → commit      | None     |
 
-`/plan`, `/build`, and `/ship` are the user-invoked entry points. The steps inside each chain run on
-their own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each
-task so you can review.
+`/plan`, `/build`, and `/ship` are the entry points you type. The steps inside a chain run on their
+own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each task
+so you can review.
 
-Code review is Claude Code's builtin `/code-review`, not a cape skill. You run it; the `pr` skill
+Code review is Claude Code's builtin `/code-review`, not a cape skill. You run it. The `pr` skill
 carries the requirement as a test-plan checkbox, and `cape pr create` refuses a body with an
 unticked box.
 
-Skill gates are contextual warnings you can ignore. Some Bash commands are still denied outright:
-pushing to the default branch, destructive git and `gh` commands (`git push --force`,
-`git commit --amend`, `gh pr merge`, `gh pr close`), and raw commands that have a cape equivalent
-(`git commit`, `gh pr create`), which are redirected rather than blocked.
+Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
+to the default branch, and destructive git and `gh` commands (`git push --force`,
+`git commit --amend`, `gh pr merge`, `gh pr close`). Raw commands with a cape equivalent
+(`git commit`, `gh pr create`) are redirected, not blocked.
 
 ## Skills
 
@@ -101,32 +101,22 @@ epic, phase, task progress, next task, and branch. The banner stays absent when 
 
 ```text
 cape/
-├── agents/       # Agent definitions
-├── cli/          # cape CLI (TypeScript, Effect services)
-├── commands/     # Slash command aliases for differently-named skills
+├── agents/       # Agent definitions with model tiers
+├── cli/          # cape CLI: validation, git, hooks, tracker cache
+├── commands/     # Aliases only; skills are already /cape:name
 ├── skills/       # Skill workflows
-├── hooks/        # Hook definitions and context cache
-├── resources/    # Templates and reference files
+├── hooks/        # Session-start banner, gates, and the tracker cache
+├── resources/    # Templates for skills, agents, epics, and PRs
 ├── CLAUDE.md     # Dev guide
 └── CHANGELOG.md  # Release history
 ```
 
-| Directory    | Purpose                                               |
-| ------------ | ----------------------------------------------------- |
-| `agents/`    | Agent configurations with model tiers                 |
-| `cli/`       | The `cape` CLI: validation, git, hooks, tracker cache |
-| `commands/`  | Aliases only; skills are already `/cape:name`         |
-| `skills/`    | Reusable skill workflows                              |
-| `hooks/`     | Session-start banner, gates, and the tracker cache    |
-| `resources/` | Templates for skills, agents, epics, and PRs          |
-
 ## Contributing
 
-1. Clone the repository.
-2. Create a branch for your change.
-3. Place new files in the appropriate directory.
-4. Test locally with `claude --plugin-dir .`.
-5. Open a pull request.
+1. Clone the repository and branch off `main`.
+2. Put new files in the directory that already holds their kind.
+3. Run `pnpm check` and try the change with `claude --plugin-dir .`.
+4. Open a pull request.
 
 ## License
 

@@ -72,9 +72,9 @@ Apply before every issue create or update.
 - **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label on tasks
   and bugs (`type:bug`, `type:feature`, `type:chore`); epics stay untyped parents. Also apply
   `agent-ticket` to every task and bug sub-issue cape creates, never to epics or to human-created
-  issues cape only updates. It marks the issue as an agent work ticket whose review surface is the
-  PR, not the issue, so humans can filter these out (`-label:agent-ticket`) and review only epics
-  and human-created work. The workspace bootstrap creates these labels; until a given label exists,
+  issues cape only updates. It marks the issue as an agent work ticket reviewed in the PR, not the
+  issue, so humans can filter these out (`-label:agent-ticket`) and review only epics and
+  human-created work. The workspace bootstrap creates these labels; until a given label exists,
   apply it best-effort and skip what is missing. See
   [resources/workspace-setup.md](resources/workspace-setup.md).
 - **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never

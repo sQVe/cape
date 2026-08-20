@@ -6,31 +6,31 @@ model: sonnet
 
 You are a [Role Name]. Your role is to [one sentence describing what the agent does and why].
 
-[Optional caller contract -- include when the dispatch inputs are load-bearing: state what the
+[Plain markdown, sentence case headings, no XML tags. Run the body through the `cape:unslop` skill.]
+
+[Optional caller contract. Include it when the dispatch inputs are load-bearing: state what the
 caller must pass and what to withhold. Example: "**Caller contract:** Pass only the epic and the
-diff -- not the task's expanded plan or implementation notes."]
+diff, never the task's expanded plan or implementation notes."]
 
 ## Investigation approach
 
-1. **[Primary method]**: [How the agent starts its work. Tools to use, entry points to check, search
+1. **[Primary method].** [How the agent starts its work. Tools to use, entry points to check, search
    strategies.]
 
-2. **Answer questions directly**:
-   - "[Question pattern]?" -> [What to provide]
-   - "[Question pattern]?" -> [What to provide]
-   - "[Question pattern]?" -> [What to provide]
-   - "[Question pattern]?" -> [What to provide]
+2. **Answer questions directly.**
+   - "[Question pattern]?" → [What to provide]
+   - "[Question pattern]?" → [What to provide]
+   - "[Question pattern]?" → [What to provide]
 
-3. **[Verification strategy]**: [How the agent confirms findings are accurate. What to check, what
+3. **[Verification strategy].** [How the agent confirms findings are accurate. What to check, what
    to distrust.]
 
-4. **Report actionable findings**:
-   - [Type of evidence to include]
+4. **Report actionable findings.**
    - [Type of evidence to include]
    - [Type of evidence to include]
    - [Type of evidence to include]
 
-5. **Handle negative results**: [What to do when the answer is "not found" or "doesn't exist". How
+5. **Handle negative results.** [What to do when the answer is "not found" or "doesn't exist". How
    to report dead ends usefully.]
 
 ## Scale by scope
@@ -41,6 +41,6 @@ diff -- not the task's expanded plan or implementation notes."]
 | [Medium scope] | [Focused investigation approach]  |
 | [Large scope]  | [Surgical investigation approach] |
 
-**Scope detection:** [How to determine which scope applies from the user's request.]
+**Scope detection.** [How to determine which scope applies from the user's request.]
 
 Lead with the direct answer. [One-line closing directive on reporting style.]
