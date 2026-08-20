@@ -16,7 +16,7 @@ const STATE_KEY_CATALOG = [
     key: 'flowPhase',
     description:
       'Current workflow phase. Surfaces in session-start and user-prompt-submit context, and gates cape:execute-plan',
-    validValues: 'executing | debugging | planning',
+    validValues: 'PLAN | BUILD | SHIP',
     valueShape: '{ phase, issueId }',
     ttlMs: 30 * 60 * 1000,
   },
