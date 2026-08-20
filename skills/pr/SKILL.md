@@ -92,6 +92,12 @@ Write the body for a reviewer who knows the domain but not this branch:
   or per-issue-id bullet structure, no per-task test counts.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
+- End the description with the cache-built closing line, whatever the template source:
+  `Fixes <human-id>, <plan-id>, <completed task ids>` from `hooks/context/tracker.json` — the epic
+  entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
+  task's own `humanTicketId`; incomplete and canceled children excluded. Use `Related to` with the
+  same set ONLY when this PR does not complete the epic. Build it now, before approval — this is
+  what catches Linear up on the cache-only build statuses; step 6 only confirms it.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
