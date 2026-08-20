@@ -38,7 +38,7 @@
 
 Prerequisites for the two-tier contract in [SKILL.md](../SKILL.md): human tickets in the repo's home
 team (`Aburaya` here), agent plan issues and tasks in the workspace's `AI` team. A human runs these
-once per Linear workspace before its first paired epic — a separate workspace (for example the work
+once per Linear workspace before its first paired epic — a separate workspace (for example, the work
 one) needs its own `AI` team and automations.
 
 - [x] Create the team `AI` in Linear (issue ids like `AI-12`).
