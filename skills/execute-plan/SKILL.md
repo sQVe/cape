@@ -35,8 +35,9 @@ fixed. Implementation tactics adapt to the task.
 
 ### 0. Enter the epic worktree
 
-Skip this step when already on the epic's branch. When starting BUILD work from the default branch,
-set up the per-epic worktree first — one epic, one worktree:
+Skip this step only when already on the epic's branch. From any other branch — the default branch or
+an unrelated feature branch — set up the per-epic worktree first, so epic changes never land on the
+wrong branch. One epic, one worktree:
 
 1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
 2. Use grove: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the

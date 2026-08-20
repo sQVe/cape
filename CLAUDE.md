@@ -30,7 +30,8 @@ cape validate skills    # skills only
   `/cape:name` entry in the slash-command menu.
 - Skills are plain markdown: no XML tags, sentence case headings. The frontmatter description
   carries the triggers; the body starts at the contract. Write skill prose with the `cape:unslop`
-  skill. `cape validate` is the source of truth for required structure.
+  skill. `cape validate` enforces the machine-checkable part: frontmatter, a nonempty body, and
+  known `cape:<name>` references. The rest of this convention is review-enforced.
 - Agents use "Investigation approach" as the section header.
 - Tests co-located with source in `cli/src/`. E2E tests in `cli/src/__e2e__/`.
 - Effect service pattern: interface in `services/<name>.ts`, live implementation in
