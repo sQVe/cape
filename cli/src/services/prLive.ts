@@ -22,12 +22,12 @@ const readStdin = () =>
       error instanceof Error ? error : new Error('failed to read stdin', { cause: error }),
   });
 
-const spawnGh = (args: readonly string[]) =>
+const spawnGh = (args: readonly string[], timeoutMs?: number) =>
   Effect.try({
     try: () =>
       execFileSync('gh', [...args], {
         encoding: 'utf-8',
-        timeout: 30_000,
+        timeout: timeoutMs ?? 30_000,
       }).trim(),
     catch: (error) => {
       if (error != null && typeof error === 'object' && 'stderr' in error) {

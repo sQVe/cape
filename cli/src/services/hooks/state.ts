@@ -4,11 +4,12 @@ import { basename, resolve } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { safeParseJson } from '../../utils/json';
-import { TRACKER_CACHE_TTL_MS, findEpic, isTrackerCache } from '../tracker';
-import type { TrackerEpic, TrackerTask } from '../tracker';
+import { PrService } from '../pr';
+import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
+import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
 import { detectBugReport, detectExecutePlan, detectTrackerSkill } from './parsing';
 
-export const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
+const FLOW_PHASE_TTL_MS = 30 * 60 * 1000;
 
 // Distinguishes "git ran and said no" from "git never answered": exit-nonzero
 // means not-a-repo, unavailable means timeout/missing binary. Conflating the
@@ -182,7 +183,7 @@ export const removeStateKey = (key: string) =>
     }
   });
 
-export const readStateKey = (key: string, ttlMs: number) =>
+const readStateKey = (key: string, ttlMs: number) =>
   Effect.gen(function* () {
     const state = yield* readState();
     const entry = state[key];
@@ -300,29 +301,71 @@ const buildSessionBanner = (
   ].join('\n');
 };
 
+// Worktree branches carry a conventional-commit prefix (chore/<slug>), so the
+// Linear slug matches either the whole branch or its last path segments.
+const branchMatchesEpic = (branch: string, epic: TrackerEpic) => {
+  const slug = epic.gitBranchName?.toLowerCase();
+  if (slug == null || slug === '') {
+    return false;
+  }
+  const current = branch.toLowerCase();
+  return current === slug || current.endsWith(`/${slug}`);
+};
+
+// Nothing prunes the tracker cache, so a finished epic stays cached forever;
+// skipping it here keeps its branch from rendering an actionable banner.
+const isDoneEpic = (epic: TrackerEpic) => {
+  const status = epic.status.toLowerCase();
+  return status === 'done' || status === 'closed' || status === 'completed';
+};
+
+const epicForBranch = (cache: TrackerCache, branch: string) =>
+  Object.values(cache.epics).find((epic) => !isDoneEpic(epic) && branchMatchesEpic(branch, epic)) ??
+  null;
+
+// gh pr view with no argument falls back to the branch's most recent merged or
+// closed PR, so only state OPEN counts. Missing gh or a failed lookup means no
+// PR — the banner degrades to the ship phase, never to an error. The short
+// timeout keeps a slow network from stalling session start.
+const hasOpenPr = () =>
+  Effect.gen(function* () {
+    const pr = yield* PrService;
+    const raw = yield* pr.spawnGh(['pr', 'view', '--json', 'state'], 3000);
+    const parsed = safeParseJson(raw);
+    return (
+      typeof parsed === 'object' &&
+      parsed != null &&
+      !Array.isArray(parsed) &&
+      'state' in parsed &&
+      parsed.state === 'OPEN'
+    );
+  }).pipe(Effect.orElseSucceed(() => false));
+
 const readSessionBanner = () =>
   Effect.gen(function* () {
-    const flowPhase = yield* readFlowPhaseContext();
-    if (flowPhase == null) {
-      return null;
-    }
-
     const cache = yield* readRawTrackerCache();
     if (cache == null) {
-      return null;
-    }
-    const epic = findEpic(cache, flowPhase.issueId);
-    if (epic == null) {
       return null;
     }
 
     const service = yield* HookService;
     const branch = yield* service.spawnGit(['branch', '--show-current']);
+    if (branch == null) {
+      return null;
+    }
+    const epic = epicForBranch(cache, branch);
+    if (epic == null) {
+      return null;
+    }
+
+    // An epic cached before its tasks exist is in planning, not shipping.
+    const building = epic.tasks.length === 0 || epic.tasks.some(isReadyTask);
+    const phase = building ? 'build' : (yield* hasOpenPr()) ? 'pr' : 'ship';
     const git = yield* gitContext();
     const isWorktree = git.kind === 'repo' && git.isLinkedWorktree;
     const isStale = Date.now() - cache.timestamp > TRACKER_CACHE_TTL_MS;
     const staleAge = isStale ? formatRelativeAge(cache.timestamp) : null;
-    return buildSessionBanner(epic, flowPhase.phase, { branch, isWorktree }, staleAge);
+    return buildSessionBanner(epic, phase, { branch, isWorktree }, staleAge);
   });
 
 export const sessionStart = () =>

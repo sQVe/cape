@@ -67,7 +67,7 @@ const worktreeStop = Command.make(
 
 export const worktree = Command.make('worktree').pipe(
   Command.withDescription(
-    'Manage cape worktree context. Grove owns worktree creation; this command stamps or clears the local epic context used by the session banner.',
+    'Manage cape worktree context. Grove owns worktree creation; this command stamps or clears the local epic context used by workspace labels; the session banner derives its epic from the git branch and tracker cache.',
   ),
   Command.withSubcommands([worktreeStart, worktreeStop]),
 );

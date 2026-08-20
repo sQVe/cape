@@ -30,6 +30,7 @@ const trackerCache = () => ({
       id: 'ABU-50',
       title: 'Worktree skill',
       status: 'In Progress',
+      gitBranchName: 'abu-50-worktree-skill',
       tasks: [
         {
           id: 'ABU-51',
@@ -244,7 +245,7 @@ describe('cape worktree start', () => {
         [trackerPath]: JSON.stringify(trackerCache()),
       },
       {
-        'branch --show-current': 'feat/abu-50',
+        'branch --show-current': 'feat/abu-50-worktree-skill',
         'rev-parse --git-dir --git-common-dir': '/repo/.git/worktrees/abu-50\n/repo/.git',
       },
     );
@@ -255,14 +256,16 @@ describe('cape worktree start', () => {
     );
     console_.restore();
 
-    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(hookLayer)));
+    const result = await Effect.runPromise(
+      sessionStart().pipe(Effect.provide(Layer.mergeAll(hookLayer, stubPrLayer))),
+    );
 
     expect(files[worktreeStatePath]).toContain('ABU-50');
     expect(files[statePath]).toBeUndefined();
     expect(result.additionalContext).toContain('| Epic   ABU-50  Worktree skill');
-    expect(result.additionalContext).toContain('| Phase  BUILD  (1/2 tasks done)');
+    expect(result.additionalContext).toContain('| Phase  build  (1/2 tasks done)');
     expect(result.additionalContext).toContain('| Next   ABU-52 - Skill markdown');
-    expect(result.additionalContext).toContain('| Branch feat/abu-50 (worktree)');
+    expect(result.additionalContext).toContain('| Branch feat/abu-50-worktree-skill (worktree)');
   });
 });
 
