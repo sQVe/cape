@@ -22,14 +22,15 @@ defaults.
 [What changes and why, in 2-4 sentences a human can scan in ten seconds.]
 
 Done when: [one concrete completion statement]
-
-Agent plan: [AI-XX](url)
 ```
+
+The agent plan is a sub-issue of this ticket, so Linear renders the link. Never write one into the
+body.
 
 ## Plan issue
 
-`AI` team. Untyped parent of the task sub-issues. Set `src:*` and Medium priority as template
-defaults.
+`AI` team. Untyped parent of the task sub-issues, and itself a sub-issue of the human ticket it
+satisfies, or parentless when AI-only. Set `src:*` and Medium priority as template defaults.
 
 The plan-issue body separates four questions that must never blend:
 
@@ -54,7 +55,6 @@ involved, or rollout, observability, or rollback matters.
 | **Outcome**       | [What is true after this]           |
 | **Problem**       | [What is wrong or missing]          |
 | **User / system** | [Who benefits]                      |
-| **Human ticket**  | [ABU-XX](url), or AI-only           |
 | **Variant**       | Light                               |
 | **Done when**     | [One concrete completion statement] |
 
@@ -94,7 +94,6 @@ Light plus the alignment sections. Same untyped-parent rules.
 | **Outcome**      | [What is true after this]           |
 | **Problem**      | [What is wrong or missing]          |
 | **Primary user** | [User, persona, or system]          |
-| **Human ticket** | [ABU-XX](url), or AI-only           |
 | **Risk**         | Low / Medium / High                 |
 | **Variant**      | Full                                |
 | **Done when**    | [One concrete completion statement] |

@@ -86,9 +86,13 @@ Create paired work with MCP Linear `save_issue`, using the shapes in
    material.
 2. Plan issue in `AI`: the full agent contract (required behavior, constraints, approach, acceptance
    criteria).
-3. Link the two bidirectionally: a `relatedTo` relation plus a markdown link to the counterpart in
-   each body.
+3. Set the plan issue's `parentId` to the human ticket. That parent is the pair. Write no
+   `relatedTo` relation and no counterpart link in either body.
 4. Create the first task with `save_issue` as a sub-issue of the AI plan issue.
+
+A plan issue keeps its own team and takes nothing from the parent. Sub-issues may live in any team,
+and the API applies none of the UI's inheritance, so `AI` stays `AI` and the parent's project does
+not carry over.
 
 Pairing rules:
 
@@ -96,6 +100,12 @@ Pairing rules:
   no human ticket.
 - Pairing is per ticket, not per tree: any human ticket, including human sub-issues, can carry its
   own AI pair.
+- Pair at the leaf: a plan issue attaches only to a human ticket with no home-team children. Run
+  `list_issues(parentId: <ticket>, team: <home team>)` first; anything it returns means the ticket
+  is a container, so stop and ask which child to build against. Leaf counts home-team issues only,
+  since the plan and its tasks become the deepest nodes once attached.
+- A leaf that later gains children keeps the plan it already has. Never re-parent it, and never
+  treat it as a violation on a later read.
 
 After each Linear MCP write, refresh the matching cache slice (`cape tracker --help` documents each
 command):
@@ -105,11 +115,16 @@ cape tracker cache-epic '<linear-plan-issue-json-with-children>'
 cape tracker cache-tasks <plan-id> '<linear-task-array-json>'
 ```
 
-Prefer `cache-epic` with a full children-included `get_issue` result so task membership stays
-current. Stamp the pair into the JSON before caching: add a top-level
-`"humanTicketId": "<human-ticket-id>"` field (the Linear payload does not carry it), and stamp
-paired child issues the same way inside `children`. The cache preserves both across later refreshes
-that omit them.
+`cache-epic` is authoritative: it prunes cached tasks the payload omits unless they already
+advanced. MCP `get_issue` returns no children, so never pass its result straight to `cache-epic` or
+the refresh drops every unstarted task. Compose the payload instead: take the epic fields from
+`get_issue` and fill `children.nodes` from `list_issues(parentId: <plan-id>)`. To refresh task
+membership alone, use `cache-tasks` with the same `list_issues` result.
+
+The plan issue needs no stamp: `cache-epic` reads its pair from `parentId`. Task-level pairs still
+do. Add `"humanTicketId": "<human-ticket-id>"` to the paired child inside `children`, because a bug
+child keeps the plan issue as its parent and so has no parent of its own to derive from. The cache
+preserves the stamp across later refreshes that omit it.
 
 ## Update status during build
 
@@ -150,9 +165,8 @@ cache afterwards, run `cape tracker cache-status <issue-id> Done completed` per 
 the human ticket, or creates everything in one team.
 
 **Right:** write-plan creates a concise human ticket in the repo's home team (`Aburaya` in cape) and
-a plan issue in `AI` holding the full contract, links them via `relatedTo` plus a markdown link in
-each body, creates the first task as a sub-issue of the plan issue, then runs
-`cape tracker cache-epic '<json>'`.
+a plan issue in `AI` holding the full contract, sets the plan's `parentId` to that ticket, creates
+the first task as a sub-issue of the plan issue, then runs `cape tracker cache-epic '<json>'`.
 
 **Wrong:** execute-plan writes a task's `Done` status to Linear with MCP `save_issue` mid-build.
 

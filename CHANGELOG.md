@@ -9,10 +9,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Tracker: a plan issue is now a sub-issue of the human ticket it satisfies, and that parent is the
+  pair. The `relatedTo` relation and the counterpart markdown links in both bodies are gone, and
+  `cape tracker cache-epic` reads `humanTicketId` from `parentId` instead of a hand-stamped field.
+  Plans attach only to a leaf ticket, never to one that already has home-team children. Task-level
+  pairs still carry an explicit stamp, since a task's parent is the plan issue.
+
 - Hooks: the SessionStart banner is now derived entirely from the current git branch and the tracker
   cache. The epic is matched from the branch against each cached epic's `gitBranchName`, and the
   phase from ready-task counts plus open-PR state (ready tasks = build; none and no PR = ship; PR
   open = pr). Done epics stay silent. `cape workspace phase` derives its epic the same way.
+
+### Fixed
+
+- Tracker: the refresh recipe told skills to pipe a `get_issue` result straight into
+  `cape tracker cache-epic`. `get_issue` returns no children and `cache-epic` prunes unstarted tasks
+  the payload omits, so following it deleted them. Children now come from `list_issues`.
+- Tracker: the agent contract required a project on every issue, which the `AI` team cannot satisfy
+  because projects belong to teams. Agent-side issues stay project-less.
 
 ### Removed
 

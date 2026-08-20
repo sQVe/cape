@@ -88,15 +88,17 @@ Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team ro
 project routing, labels, priority, and naming. Create the pair per the tracker contract's pairing
 protocol: a concise human ticket in the repo's home team whose description a human can scan,
 carrying no R-tables, constraints, or acceptance criteria, plus a plan issue in `AI` holding the
-full contract from step 2, linked bidirectionally. When the work has no user-informational value,
-use the tracker contract's AI-only exception and skip the human ticket. Both stay untyped parents.
+full contract from step 2, created as a sub-issue of that ticket. Check the ticket is a leaf first,
+per the contract's pairing rules. When the work has no user-informational value, use the tracker
+contract's AI-only exception and skip the human ticket. Both stay untyped parents.
 
 Create exactly one sub-issue under the plan issue with `save_issue`, with only task-level detail in
 its description.
 
 Then refresh the cache per `cape:tracker`'s create-work recipe: fetch the plan issue with
-`get_issue` (sub-issues included), stamp `humanTicketId`, and pass the JSON to
-`cape tracker cache-epic`.
+`get_issue`, fill its `children.nodes` from `list_issues(parentId: <plan-id>)`, and pass the
+composed JSON to `cape tracker cache-epic`. The plan's `parentId` carries the pair, so it needs no
+stamp.
 
 ### 5. Present and STOP
 

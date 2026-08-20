@@ -14,7 +14,9 @@ Apply before every issue create or update.
   instead of creating a duplicate; the comment states what cape would have created and links the
   match.
 - **Project.** Route work to a matching named project. Use `Inbox` when no project matches. Never
-  create project-less issues. Confirm a new project with the user before creating it.
+  create project-less issues in a home team. Confirm a new project with the user before creating it.
+  Projects belong to teams, so a project the `AI` team does not share is rejected on save; leave
+  those agent-side issues project-less rather than inventing a project for them.
 - **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label
   (`type:bug`, `type:feature`, `type:chore`) on the AI-side work issue: tasks and AI bug issues.
   Plan issues and human tickets stay untyped parents, the human half of a bug pair included. The
