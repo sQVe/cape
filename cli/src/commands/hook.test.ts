@@ -20,9 +20,7 @@ import {
 import { PrService } from '../services/pr';
 import { TRACKER_CACHE_TTL_MS } from '../services/tracker';
 import {
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -642,8 +640,6 @@ const makeCommandLayers = (hookLayer = makeStubHookLayer()) =>
     NodeServices.layer,
     stubHerdrLayer,
     stubGitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
     stubCommitLayer,
     stubPrLayer,
     stubValidateLayer,

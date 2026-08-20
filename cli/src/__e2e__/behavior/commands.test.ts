@@ -13,7 +13,7 @@ describe('cape --help', () => {
   it('lists all subcommands', async () => {
     const result = await inProcess(['--help']);
     expect(result.status).toBe(0);
-    for (const sub of ['check', 'commit', 'git', 'hook', 'pr', 'validate']) {
+    for (const sub of ['commit', 'git', 'hook', 'pr', 'validate']) {
       expect(result.stdout).toContain(sub);
     }
   });
@@ -258,25 +258,6 @@ describe('cape commit', () => {
 
     const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: add two files');
-  });
-});
-
-describe('cape check', () => {
-  it('cape --help lists check subcommand', async () => {
-    const result = await inProcess(['--help']);
-    expect(result.status).toBe(0);
-    expect(result.stdout).toContain('check');
-  });
-
-  it('exits 1 in a repo with no detected ecosystem', async () => {
-    const emptyDir = initTestRepo('cape-check');
-
-    try {
-      const result = await inProcess(['check'], { cwd: emptyDir });
-      expect(result.status).not.toBe(0);
-    } finally {
-      cleanupTestRepo(emptyDir);
-    }
   });
 });
 

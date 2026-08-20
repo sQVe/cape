@@ -98,7 +98,7 @@ Before closing, confirm:
 
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- `cape check` (or the repository's verification command) passes
+- The repository's documented check command passes (for cape itself: `pnpm check`)
 - Critical code-review findings are addressed
 
 ### 4. Close and plan next

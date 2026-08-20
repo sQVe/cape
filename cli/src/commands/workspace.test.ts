@@ -9,9 +9,7 @@ import { HookService } from '../services/hook';
 import { PrService } from '../services/pr';
 import {
   makeStubGitLayer,
-  stubCheckLayer,
   stubCommitLayer,
-  stubDetectLayer,
   stubGitLayer,
   stubPrLayer,
   stubValidateLayer,
@@ -88,8 +86,6 @@ const makeLayers = (
   Layer.mergeAll(
     NodeServices.layer,
     gitLayer,
-    stubDetectLayer,
-    stubCheckLayer,
     stubCommitLayer,
     hookLayer,
     herdrLayer,

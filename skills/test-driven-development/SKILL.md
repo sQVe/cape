@@ -32,7 +32,7 @@ worth doing adapt to context.
 
 ### 1. Confirm tests can run
 
-Run `cape check` or the project's test command. If tests cannot run, stop and tell the user; do not
+Run the project's documented check command. If tests cannot run, stop and tell the user; do not
 bootstrap a framework yourself. Read existing test files and match their file naming, assertion
 style, structure, and helpers exactly.
 

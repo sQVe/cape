@@ -8,9 +8,7 @@ import { Command } from 'effect/unstable/cli';
 import { vi } from 'vitest';
 
 import { main } from '../main';
-import { CheckServiceLive } from '../services/checkLive';
 import { CommitServiceLive } from '../services/commitLive';
-import { DetectServiceLive } from '../services/detectLive';
 import { GitServiceLive } from '../services/gitLive';
 import { HerdrServiceLive } from '../services/herdrLive';
 import { HookServiceLive } from '../services/hookLive';
@@ -64,9 +62,7 @@ const REPO_ROOT = join(import.meta.dirname, '..', '..', '..');
 
 const liveCommandLayers = Layer.mergeAll(
   NodeServices.layer,
-  CheckServiceLive,
   CommitServiceLive,
-  DetectServiceLive,
   GitServiceLive,
   HerdrServiceLive,
   HookServiceLive,
@@ -83,7 +79,7 @@ export const cape = (
     input: stdin,
     encoding: 'utf-8',
     env: { ...process.env, ...env }, // eslint-disable-line node/no-process-env
-    // Run from the simulated plugin/project dir, not the dev's cape checkout,
+    // Run from the simulated plugin/project dir, not the cape repo itself,
     // so git-derived context (the session banner's branch match) comes from
     // the repo these tests seed under CLAUDE_PLUGIN_ROOT, not the checkout.
     cwd: env.CLAUDE_PLUGIN_ROOT ?? process.cwd(),
