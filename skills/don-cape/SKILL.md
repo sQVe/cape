@@ -46,10 +46,9 @@ Otherwise, first matching row wins:
 | Build, add, create, or implement something new                    | `cape:brainstorm`   | Starts build chain         |
 | "How should I approach X" or unclear requirements                 | `cape:brainstorm`   | Design before code         |
 | Formalize a design into an epic                                   | `cape:write-plan`   | Requires brainstorm output |
-| "Continue", "next task", "work on the plan", Linear task ID       | `cape:execute-plan` | Orient from tracker cache  |
+| "Continue", "next task", start/resume epic work, Linear task ID   | `cape:execute-plan` | Worktree entry is Step 0   |
 | Set up an autonomous run, draft a `/goal`, prep an AFK run        | `cape:set-goal`     | Stages a run draft         |
 | Something broken, error, stack trace, or a diagnosed Linear bug   | `cape:fix-bug`      | Diagnose then patch        |
-| Start work in an epic worktree, create/enter per-epic worktree    | `cape:worktree`     | Standalone                 |
 | Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`  | End of build chain         |
 | Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |

@@ -33,6 +33,18 @@ fixed. Implementation tactics adapt to the task.
 
 ## Process
 
+### 0. Enter the epic worktree
+
+Skip this step only when already on the epic's branch. From any other branch — the default branch or
+an unrelated feature branch — set up the per-epic worktree first, so epic changes never land on the
+wrong branch. One epic, one worktree:
+
+1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
+2. Use grove: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the
+   conventional-commit prefix). If the worktree exists, enter it instead of creating another.
+3. From inside it, stamp cape context: `cape worktree start <epic-id>`, then
+   `cape workspace phase build` (safe no-op outside herdr).
+
 ### 1. Orient from the tracker cache
 
 Read `hooks/context/tracker.json` (shape documented in `cape:tracker`). Pick work in this order:
@@ -103,9 +115,9 @@ approach still holds, and the next smallest vertical slice. The next task comes 
 revealed, not from what planning assumed.
 
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
-a Linear sub-issue through MCP: load `cape:tracker`, apply its agent contract, and run the issue
-text through `cape:unslop` before posting. Then refresh the epic cache per `cape:tracker`'s
-create-work recipe: a fresh `get_issue` result piped to `cape tracker cache-epic`.
+a Linear sub-issue through MCP: load `cape:tracker`, apply its `resources/agent-contract.md`, and
+run the issue text through `cape:unslop` before posting. Then refresh the epic cache per
+`cape:tracker`'s create-work recipe: a fresh `get_issue` result piped to `cape tracker cache-epic`.
 
 If no work remains, load `cape:finish-epic`.
 

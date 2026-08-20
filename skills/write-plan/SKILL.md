@@ -85,10 +85,10 @@ The first task is a vertical slice with:
 
 Run all epic and task prose through the `cape:unslop` skill before writing to Linear.
 
-Load `cape:tracker` and apply its agent contract; it owns dedupe, project routing, labels, priority,
-and naming. Create the epic with MCP Linear `save_issue`, putting the full contract from step 2 in
-the description. Create exactly one sub-issue under the epic with `save_issue`, with only task-level
-detail in its description.
+Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns dedupe, project routing,
+labels, priority, and naming. Create the epic with MCP Linear `save_issue`, putting the full
+contract from step 2 in the description. Create exactly one sub-issue under the epic with
+`save_issue`, with only task-level detail in its description.
 
 Then refresh the cache per `cape:tracker`'s create-work recipe: fetch the epic with `get_issue`
 (sub-issues included) and pass the JSON to `cape tracker cache-epic`.

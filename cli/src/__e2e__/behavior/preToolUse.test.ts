@@ -66,24 +66,6 @@ describe('redirect tier', () => {
 });
 
 describe('block tier', () => {
-  it('blocks git push --force', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git push --force origin main'),
-      env,
-    );
-    expectDeny(result, 'Force push');
-  });
-
-  it('blocks git push -f', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git push -f'),
-      env,
-    );
-    expectDeny(result, 'Force push');
-  });
-
   it('blocks gh pr merge', () => {
     const result = cape(
       ['hook', 'pre-tool-use', '--matcher', 'Bash'],
@@ -118,35 +100,6 @@ describe('block tier', () => {
       env,
     );
     expectDeny(result, 'amend');
-  });
-});
-
-describe('warn tier', () => {
-  it('warns on git reset --hard', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git reset --hard HEAD~1'),
-      env,
-    );
-    expectWarn(result, 'reset --hard');
-  });
-
-  it('warns on git checkout --', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git checkout -- src/foo.ts'),
-      env,
-    );
-    expectWarn(result, 'checkout --');
-  });
-
-  it('warns on git clean -f', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git clean -f'),
-      env,
-    );
-    expectWarn(result, 'clean -f');
   });
 });
 
@@ -259,18 +212,6 @@ describe('pass-through for benign commands', () => {
     );
     expectPassThrough(result);
   });
-
-  it('does not block git push --force-with-lease as force push', () => {
-    const result = cape(
-      ['hook', 'pre-tool-use', '--matcher', 'Bash'],
-      bashInput('git push --force-with-lease origin feat'),
-      env,
-    );
-    if (result.stdout) {
-      const parsed = JSON.parse(result.stdout);
-      expect(parsed.hookSpecificOutput?.permissionDecisionReason ?? '').not.toContain('Force push');
-    }
-  });
 });
 
 describe('skill gate: non-gated skills pass through', () => {
@@ -278,7 +219,7 @@ describe('skill gate: non-gated skills pass through', () => {
     'cape:commit',
     'cape:pr',
     'cape:tracker',
-    'cape:worktree',
+    'cape:fix-bug',
     'cape:brainstorm',
     'cape:write-plan',
   ])('allows non-gated skill %s', (skill) => {

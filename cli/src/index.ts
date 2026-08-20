@@ -3,7 +3,6 @@ import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 
 import type { UserError } from './dieWithError';
-import { logEvent } from './eventLog';
 import { main } from './main';
 import { CheckServiceLive } from './services/checkLive';
 import { CommitServiceLive } from './services/commitLive';
@@ -24,15 +23,6 @@ const AppLayer = Layer.mergeAll(
   PrServiceLive,
   ValidateServiceLive,
 );
-
-const skipCommands = new Set(['hook']);
-const args = process.argv.slice(2);
-const cmdSegments = args.filter((a) => !a.startsWith('-'));
-const cmd = cmdSegments.join('.');
-
-if (cmd && cmdSegments[0] != null && !skipCommands.has(cmdSegments[0])) {
-  logEvent(cmd);
-}
 
 main.pipe(
   Command.run({ version: '1.6.2' }),

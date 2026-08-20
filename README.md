@@ -27,6 +27,14 @@ pnpm install && pnpm build
 ln -s "$PWD/cli/dist/index.mjs" ~/.local/bin/cape
 ```
 
+Cape's hook denies only workflow-specific commands. Install cc-safety-net alongside it for
+destructive-command policy (force push, `git reset --hard`, `git clean -f`); without it those run
+unblocked on feature branches.
+
+```bash
+claude plugin add cc-safety-net@kenryu42/cc-marketplace
+```
+
 ## Workflow
 
 The `don-cape` router loads at session start and matches each request to a skill. Skills run in four
@@ -48,13 +56,14 @@ carries the requirement as a test-plan checkbox, and `cape pr create` refuses a 
 unticked box.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are still denied outright:
-pushing to the default branch, destructive git and `gh` commands (`git push --force`,
-`git commit --amend`, `gh pr merge`, `gh pr close`), and raw commands that have a cape equivalent
-(`git commit`, `gh pr create`), which are redirected rather than blocked.
+pushing to the default branch, `git commit --amend`, `gh pr merge`, `gh pr close`, and raw commands
+that have a cape equivalent (`git commit`, `gh pr create`), which are redirected rather than
+blocked. Broader destructive-command policy (force push, `git reset --hard`, `git clean -f`) is
+owned by the cc-safety-net plugin, not cape — see [Installation](#installation).
 
 ## Skills
 
-Cape ships 13 workflow skills plus the `don-cape` router.
+Cape ships 12 workflow skills plus the `don-cape` router.
 
 | Skill                     | Role                                                  |
 | ------------------------- | ----------------------------------------------------- |
@@ -68,7 +77,6 @@ Cape ships 13 workflow skills plus the `don-cape` router.
 | `pr`                      | Open a pull request with a verified test plan         |
 | `pr-feedback`             | Triage inbound PR review comments and resolve threads |
 | `fix-bug`                 | Diagnose to root cause, then patch test-first         |
-| `worktree`                | Create a per-epic grove worktree                      |
 | `tracker`                 | Write Linear results into the local cache             |
 | `unslop`                  | Cut AI tells from prose and add human voice           |
 
@@ -79,13 +87,13 @@ Skills that emit prose (commit messages, PR descriptions, epic text) run their o
 
 Five agents handle focused sub-tasks. Each dispatch names a model tier.
 
-| Agent                   | Tier   | Use                                                                                                     |
-| ----------------------- | ------ | ------------------------------------------------------------------------------------------------------- |
-| `codebase-investigator` | haiku  | Find patterns and verify codebase state; carries bug-tracer, test-auditor, and notebox-researcher modes |
-| `code-reviewer`         | sonnet | Review a completed step against the epic contract                                                       |
-| `fact-checker`          | sonnet | Verify claims against codebase and external evidence                                                    |
-| `internet-researcher`   | sonnet | Pull current docs and external knowledge                                                                |
-| `test-runner`           | haiku  | Run tests and hooks without flooding context                                                            |
+| Agent                   | Tier   | Use                                                                                |
+| ----------------------- | ------ | ---------------------------------------------------------------------------------- |
+| `codebase-investigator` | haiku  | Find patterns and verify codebase state; carries bug-tracer and test-auditor modes |
+| `code-reviewer`         | sonnet | Review a completed step against the epic contract                                  |
+| `fact-checker`          | sonnet | Verify claims against codebase and external evidence                               |
+| `internet-researcher`   | sonnet | Pull current docs and external knowledge                                           |
+| `test-runner`           | haiku  | Run tests and hooks without flooding context                                       |
 
 ## Tracker and Linear
 
@@ -106,19 +114,17 @@ cape/
 ├── commands/     # Slash command aliases for differently-named skills
 ├── skills/       # Skill workflows
 ├── hooks/        # Hook definitions and context cache
-├── resources/    # Templates and reference files
 ├── CLAUDE.md     # Dev guide
 └── CHANGELOG.md  # Release history
 ```
 
-| Directory    | Purpose                                               |
-| ------------ | ----------------------------------------------------- |
-| `agents/`    | Agent configurations with model tiers                 |
-| `cli/`       | The `cape` CLI: validation, git, hooks, tracker cache |
-| `commands/`  | Aliases only; skills are already `/cape:name`         |
-| `skills/`    | Reusable skill workflows                              |
-| `hooks/`     | Session-start banner, gates, and the tracker cache    |
-| `resources/` | Templates for skills, agents, epics, and PRs          |
+| Directory   | Purpose                                               |
+| ----------- | ----------------------------------------------------- |
+| `agents/`   | Agent configurations with model tiers                 |
+| `cli/`      | The `cape` CLI: validation, git, hooks, tracker cache |
+| `commands/` | Aliases only; skills are already `/cape:name`         |
+| `skills/`   | Reusable skill workflows                              |
+| `hooks/`    | Session-start banner, gates, and the tracker cache    |
 
 ## Contributing
 
