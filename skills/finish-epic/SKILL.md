@@ -2,7 +2,8 @@
 name: finish-epic
 description: >
   Verify a Linear tracker epic after all tasks are complete and hand off to the PR. Use when the
-  user wants to close out an epic. Not while tasks remain (cape:execute-plan).
+  user wants to close out an epic. Not while tasks remain (cape:execute-plan) or for creating the PR
+  itself (cape:pr).
 ---
 
 # Finish epic

@@ -4,7 +4,7 @@ argument-hint: '[epic id or description]'
 description: >
   Interview the user and stage a reviewable `/goal` draft for an autonomous epic run. Takes a Linear
   epic id or a free-form description; never launches the run itself. Not for supervised tasks
-  (cape:execute-plan).
+  (cape:execute-plan) or interactive design exploration (cape:brainstorm).
 ---
 
 # Set goal
