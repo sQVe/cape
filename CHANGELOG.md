@@ -7,7 +7,20 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Hooks: the SessionStart banner is now derived entirely from the current git branch and the tracker
+  cache. The epic is matched from the branch against each cached epic's `gitBranchName`, and the
+  phase from ready-task counts plus open-PR state (ready tasks = build; none and no PR = ship; PR
+  open = pr). Done epics stay silent. `cape workspace phase` derives its epic the same way.
+
 ### Removed
+
+- CLI: removed the `cape state` and `cape worktree` commands, the per-worktree `state-*.json` files,
+  and the Skill-matcher PreToolUse gates. Git and the tracker cache already carry the flow context
+  the state files duplicated. The Bash deny gate stays.
+- CLI: removed `cape check` and the ecosystem detect service. Every repo documents its check command
+  in CLAUDE.md; skills now point there instead of guessing across six ecosystems.
 
 - Skills: removed `cape:worktree`. Grove owns worktree creation; the cape-specific tail (stamp
   `cape worktree start`, relabel via `cape workspace phase`) now lives as Step 0 in
