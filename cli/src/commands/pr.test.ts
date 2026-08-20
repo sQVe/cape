@@ -177,6 +177,147 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('accepts a review item that names the agent reviewer instead of the command', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by cape:code-reviewer, findings addressed or dismissed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('matches the review item regardless of case', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] CODE REVIEW BY alice, no findings'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('accepts a review item that names the model and reviewed commit', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the review box is ticked but still holds placeholders', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by <model> (<reviewer>) on <sha>, findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the bracketed template placeholder is merely ticked', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by [model and reviewer] on [sha], findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('accepts the past-tense phrasing a human is likely to type', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code reviewed by Priya on abc1234, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the run form names no reviewer', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review run instructions added to CONTRIBUTING.md\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('accepts a review item wrapped in markdown emphasis', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] **Code review** by Claude Opus 5 on a1b2c3d, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('accepts a reviewer written as a markdown link', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by [Priya](https://github.com/priya) on abc1234, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('accepts the legacy slash-command item whatever verb follows it', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review passed, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when a checked box is checklist maintenance, not a review', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review checklist updated\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a checked box documents the reviewer rather than running it', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] code-reviewer documentation updated'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a checked box only mentions review in passing', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Update the code review checklist in CONTRIBUTING.md\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a checked box contains the token inside another word', () => {
+    const result = validatePrBody(template, withTestPlan('- [x] Re-encode review video assets'));
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
   it('returns invalid when the /code-review item is checked but another box is not', () => {
     const result = validatePrBody(
       template,

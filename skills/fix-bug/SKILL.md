@@ -144,6 +144,9 @@ Dispatch `cape:code-reviewer` when:
   the root cause and the fix diff; the reviewer judges whether the fix addresses the diagnosed
   defect without regressions.
 
+It returns one JSON object. Relay its `findings` through a single `ReportFindings` call; the agent
+has no such tool of its own.
+
 ## Skills
 
 Load `cape:test-driven-development` when:

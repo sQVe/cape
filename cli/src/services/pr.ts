@@ -17,7 +17,7 @@ const defaultContent = [
   '',
   '#### Test plan',
   '',
-  '- [ ] /code-review run on this branch, or an equivalent agent review, findings addressed or dismissed',
+  '- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed',
   '- [ ] [Command or verifiable behavior]',
 ].join('\n');
 
@@ -86,11 +86,35 @@ export const extractUncheckedBoxes = (body: string) =>
     .map((line) => line.replace(/^\s*- \[ \]\s*/, '').trim());
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
-// that simply omits the box must fail rather than pass for having no unticked boxes.
+// that simply omits the box must fail rather than pass for having no unticked boxes. Two spellings
+// pass. "/code-review ..." is the slash command naming its own reviewer. Everything else has to say
+// "code review(ed) by <who>", and <who> has to be a real name.
+//
+// Each clause closes a leak this gate has actually shipped with. Requiring the token to open the
+// item stops "Update the code review checklist". Requiring the attribution stops "Code review
+// checklist updated" and "Code review run instructions added to CONTRIBUTING.md", neither of which
+// names a reviewer. Rejecting a placeholder stops a run from ticking the line cape itself ships.
+const reviewItemPattern =
+  /^\s*- \[[ xX]\]\s*(?:\/code-review\b|code[- ]review(?:ed)?\s+by\s+(?<who>\S+))/i;
+
+// Bold or italic markers around the label ("**Code review** by ...") are ordinary markdown and must
+// not read as a missing review.
+const stripEmphasis = (line: string) => line.replace(/[*_]/g, '');
+
+// `<model>` and `[model and reviewer]` are the slots cape ships unfilled. A markdown link is not a
+// placeholder, so `[Priya](https://...)` names a reviewer and counts.
+const isPlaceholder = (who: string) =>
+  who.startsWith('<') || (who.startsWith('[') && !who.includes(']('));
+
 const hasReviewItem = (templateSections: string[], body: string) =>
-  sectionLines(body, testSectionName(templateSections)).some(
-    (line) => /^\s*- \[[ xX]\]/.test(line) && line.includes('/code-review'),
-  );
+  sectionLines(body, testSectionName(templateSections)).some((line) => {
+    const match = reviewItemPattern.exec(stripEmphasis(line));
+    if (match == null) {
+      return false;
+    }
+    const who = match.groups?.who;
+    return who == null || !isPlaceholder(who);
+  });
 
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);

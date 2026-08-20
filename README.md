@@ -51,9 +51,12 @@ chains:
 own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each task
 so you can review.
 
-Code review is Claude Code's builtin `/code-review`, not a cape skill. You run it. The `pr` skill
-carries the requirement as a test-plan checkbox, and `cape pr create` refuses a body with an
-unticked box.
+Code review has no cape skill. You run Claude Code's builtin `/code-review`, or `/cape:review` to
+dispatch the `code-reviewer` agent yourself, or a skill dispatches it for you. The agent returns its
+findings as JSON for the caller to relay through one `ReportFindings` call, so every route renders
+the same. The `pr` skill carries the requirement as a test-plan checkbox, runs the review itself
+when nothing has reviewed the current commits, and `cape pr create` refuses a body with an unticked
+box.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
 to the default branch, `git commit --amend`, `gh pr merge`, and `gh pr close`. Raw commands with a
@@ -90,7 +93,7 @@ Five agents handle focused sub-tasks. Each dispatch names a model tier.
 | Agent                   | Tier   | Use                                                                                |
 | ----------------------- | ------ | ---------------------------------------------------------------------------------- |
 | `codebase-investigator` | haiku  | Find patterns and verify codebase state; carries bug-tracer and test-auditor modes |
-| `code-reviewer`         | sonnet | Review a completed step against the epic contract                                  |
+| `code-reviewer`         | opus   | Review a completed step against the epic contract                                  |
 | `fact-checker`          | sonnet | Verify claims against codebase and external evidence                               |
 | `internet-researcher`   | sonnet | Pull current docs and external knowledge                                           |
 | `test-runner`           | haiku  | Run tests and hooks without flooding context                                       |
@@ -111,7 +114,7 @@ epic, phase, task progress, next task, and branch. The banner stays absent when 
 cape/
 ├── agents/       # Agent definitions with model tiers
 ├── cli/          # cape CLI: validation, git, hooks, tracker cache
-├── commands/     # Aliases only; skills are already /cape:name
+├── commands/     # Aliases, plus review, the one command with its own instructions
 ├── skills/       # Skill workflows
 ├── hooks/        # Session-start banner, gates, and the tracker cache
 ├── CLAUDE.md     # Dev guide

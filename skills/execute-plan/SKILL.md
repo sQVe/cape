@@ -95,7 +95,8 @@ Before closing, confirm:
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
 - The repository's documented check command passes (for cape itself: `pnpm check`)
-- Critical code-review findings are addressed
+- Every `CONFIRMED` code-review finding is fixed, and every `PLAUSIBLE` one is fixed or dismissed
+  with a reason
 
 ### 4. Close and plan next
 
@@ -143,6 +144,9 @@ Dispatch `cape:codebase-investigator` when:
 Dispatch `cape:code-reviewer` when:
 
 - A change is non-trivial: it crosses modules or touches public interfaces
+
+It returns one JSON object. Relay its `findings` through a single `ReportFindings` call, which is
+what renders them; the agent has no such tool of its own.
 
 Dispatch `cape:fact-checker` when:
 

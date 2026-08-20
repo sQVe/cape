@@ -12,8 +12,11 @@ export interface ValidateResult {
 const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
+// Skills backtick their references; commands write the routing sentence bare ("Use the
+// cape:execute-plan skill exactly as written"). Both forms have to resolve, or a renamed skill
+// leaves a dead command behind that validation calls fine.
 const checkCapeReferences = (content: string, knownNames: Set<string>, errors: string[]) => {
-  for (const match of content.matchAll(/`cape:([a-z][a-z0-9-]*)`/g)) {
+  for (const match of content.matchAll(/`?\bcape:([a-z][a-z0-9-]*)`?/g)) {
     const name = match[1];
     if (name != null && !knownNames.has(name)) {
       errors.push(`References unknown skill or agent: cape:${name}`);
@@ -94,7 +97,7 @@ export const validateAgentContent = (file: string, content: string): ValidateRes
 };
 
 interface CommandValidateOptions {
-  readonly knownSkills?: Set<string>;
+  readonly knownNames?: Set<string>;
 }
 
 export const validateCommandContent = (
@@ -113,15 +116,15 @@ export const validateCommandContent = (
     }
   }
 
-  if (!content.includes('Use the cape:')) {
-    errors.push("Body must reference a skill (expected 'Use the cape:' pattern)");
+  // Almost every command routes to a skill with "Use the cape:<name> skill exactly as written".
+  // `review` is the exception: code review is an agent with no skill behind it, so a command may
+  // target either kind. What has to hold either way is a cape reference that resolves.
+  if (!/cape:[a-z]/.test(content)) {
+    errors.push("Body must reference a cape skill or agent (expected a 'cape:<name>' reference)");
   }
 
-  if (options.knownSkills != null) {
-    const skillRef = content.match(/Use the cape:([a-z][a-z0-9-]*)/);
-    if (skillRef?.[1] != null && !options.knownSkills.has(skillRef[1])) {
-      errors.push(`References unknown skill: cape:${skillRef[1]}`);
-    }
+  if (options.knownNames != null) {
+    checkCapeReferences(content, options.knownNames, errors);
   }
 
   return { file, valid: errors.length === 0, errors };

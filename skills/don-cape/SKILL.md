@@ -57,8 +57,11 @@ Otherwise, first matching row wins:
 `cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
 any production code.
 
-Code review is the builtin `/code-review`, not a cape skill. The user runs it; `cape:pr` carries it
-as a test-plan checkbox.
+Code review has no cape skill. The user runs the builtin `/code-review`, or a skill dispatches
+`cape:code-reviewer`. That agent returns its findings as JSON, and whoever dispatched it relays them
+through one `ReportFindings` call, which renders them the way the builtin does. A dispatched agent
+cannot call that tool itself, so a skipped relay means the findings never render. `cape:pr` carries
+the review requirement as a test-plan checkbox.
 
 If nothing matches, proceed without a cape skill.
 

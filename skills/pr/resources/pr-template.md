@@ -19,8 +19,7 @@
 
 <!-- Run these before PR creation, by command or by hand. All must pass. -->
 
-- [ ] /code-review run on this branch, or an equivalent agent review, findings addressed or
-      dismissed
+- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed
 - [ ] [Command or verifiable behavior]
 - [ ] [Command or verifiable behavior]
 
@@ -64,8 +63,9 @@ Fixes ABU-XX, AI-XX, AI-XX
 
 - **Motivation.** The problem or opportunity driving the change (1-3 sentences)
 - **Changes.** What was implemented, with technical details
-- **Test plan.** Commands, assertions, and the `/code-review` pass. Every checkbox must be `[x]`
-  before the PR exists.
+- **Test plan.** Commands, assertions, and the code review pass. The review item names the model and
+  reviewer that actually ran and the commit they read, so a reader outside the repo can judge the
+  review and spot a stale one. Every checkbox must be `[x]` before the PR exists.
 - **Verification performed.** Evidence of testing already done during development
 - **Deployment notes.** Operational steps for deployers (optional, omit if none)
 - **Manual verification.** Subjective human judgment only (optional, often omitted)

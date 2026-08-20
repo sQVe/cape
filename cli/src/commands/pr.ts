@@ -16,7 +16,7 @@ const formatValidationErrors = (result: ReturnType<typeof validatePrBody>) => {
   }
   if (result.missingReviewItem) {
     parts.push(
-      'test plan has no /code-review item: run /code-review on this branch, then add a checked "- [x] /code-review run on this branch, findings addressed or dismissed" item to the test plan',
+      'test plan has no code review item: review this branch with /code-review or a cape:code-reviewer pass, then add a checked "- [x] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed" item to the test plan. The item must name who reviewed; a box that only mentions review does not count',
     );
   }
   return parts.join('; ');

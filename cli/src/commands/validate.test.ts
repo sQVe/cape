@@ -172,16 +172,34 @@ describe('validateCommandContent', () => {
     const content = '---\ndescription: test\n---\nSome body without skill ref.';
     const result = validateCommandContent('test.md', content);
     expect(result.errors).toContain(
-      "Body must reference a skill (expected 'Use the cape:' pattern)",
+      "Body must reference a cape skill or agent (expected a 'cape:<name>' reference)",
     );
   });
 
   it('detects reference to nonexistent skill', () => {
-    const knownSkills = new Set(['brainstorm', 'commit']);
+    const knownNames = new Set(['brainstorm', 'commit']);
+    const content = '---\ndescription: test\n---\nDispatch `cape:nonexistent` over the diff.';
+    const result = validateCommandContent('test.md', content, { knownNames });
+    expect(result.errors).toContain('References unknown skill or agent: cape:nonexistent');
+  });
+
+  it('detects a nonexistent skill in the unbackticked routing sentence', () => {
+    const knownNames = new Set(['brainstorm', 'commit']);
     const content =
-      '---\ndescription: test\n---\nUse the cape:nonexistent skill exactly as written.';
-    const result = validateCommandContent('test.md', content, { knownSkills });
-    expect(result.errors).toContain('References unknown skill: cape:nonexistent');
+      '---\ndescription: test\n---\nUse the cape:doesnotexist skill exactly as written.';
+    const result = validateCommandContent('test.md', content, { knownNames });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('References unknown skill or agent: cape:doesnotexist');
+  });
+
+  it('accepts a command that dispatches an agent instead of routing to a skill', () => {
+    const knownNames = new Set(['brainstorm', 'code-reviewer']);
+    const content = '---\ndescription: test\n---\nDispatch the `cape:code-reviewer` agent.';
+    const result = validateCommandContent('test.md', content, { knownNames });
+
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
   });
 });
 

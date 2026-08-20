@@ -8,8 +8,8 @@ description: >
 # PR
 
 Create a pull request with a conventional title, a template-driven description, and a test plan that
-gates creation. Nothing ships until every test plan checkbox passes, including the `/code-review`
-box the human runs.
+gates creation. Nothing ships until every test plan checkbox passes, including the review box, and
+the skill runs the review itself when nothing has reviewed the current HEAD.
 
 Every step runs in order and the gates are non-negotiable; only the description content adapts to
 the change.
@@ -19,9 +19,11 @@ the change.
 1. **Never call `cape pr create` without approval.** Present the full description, then use
    `AskUserQuestion` for explicit confirmation. The only exception is the AFK branch in step 4.
 2. **Never skip the test plan gate.** Every checkbox must be `[x]` before `cape pr create` runs.
-3. **Never tick the `/code-review` box yourself.** The human runs the builtin `/code-review` and
-   reports back. Never invoke it or replicate a review in its place; if the box is unticked, stop
-   and ask the user to run it. On the AFK branch a `cape:code-reviewer` pass stands in for it.
+3. **Never tick the review box without a review of the current HEAD.** Reuse a review from this
+   session when it covered these commits. Otherwise run one: dispatch `cape:code-reviewer` over the
+   branch diff and relay its findings through one `ReportFindings` call. The user running the
+   builtin `/code-review` satisfies it too. Tick only once the findings are addressed or dismissed,
+   and never stop to ask for a review you can run yourself.
 4. **Never invent description sections.** Use the repo template or the bundled template exactly. No
    ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
    section from step 3.
@@ -77,9 +79,21 @@ bundled template's sections and heading levels exactly:
 
 The title uses conventional commit format: `type(scope): subject`.
 
-Whatever the template source, the test plan section must contain a checkbox whose text includes
-`/code-review` (the bundled template's "- [ ] /code-review run on this branch..." item). Repo
-templates rarely carry it; add it. `cape pr create` refuses a body without that box.
+Whatever the template source, the test plan section must contain a review checkbox that opens with
+the review token and attributes the review. The shape is
+`Code review by <model> (<reviewer>) on <sha>`: the model first, since that is the part a reader
+outside this repo can weigh, then the reviewer that ran it, then the commit reviewed. A human
+reviewer is their own name, with no parenthetical.
+
+```text
+- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+- [x] Code review by Claude Opus 5 (/code-review) on 59a9a3a, findings addressed
+- [x] Code review by @sQVe on 59a9a3a, findings addressed
+```
+
+Write the model you actually ran, never a version you are guessing at. Naming who reviewed is what
+separates a review from a checklist item that mentions one, and `cape pr create` rejects the latter
+along with an unfilled `<model>` placeholder. Repo templates rarely carry the box; add it.
 
 Write the body for a reviewer who knows the domain but not this branch:
 
@@ -130,19 +144,28 @@ outputting the description and calling `AskUserQuestion`.
 **AFK branch.** Take this branch only when the invoking run explicitly states it is unattended; when
 in doubt, a human is present and the interactive path applies unchanged. Print the full PR (title,
 description, automatable items) to the transcript so the opened PR is on record, skip
-`AskUserQuestion`, and continue to step 5 as if approved. The builtin `/code-review` is not
-model-invocable, so satisfy the review item with a `cape:code-reviewer` pass over the branch diff
-instead: tick the box only on a pass. On a fail, fix the findings and re-review, or stop with the
-box unticked; `cape pr create` refuses the body either way. Never tick it because no human was
-available. No human edits an AFK body before it ships, so the step 3 quality bar and unslop apply in
-full, plus two AFK-only rules: never write a robot signature or emoji into the title or body, and
-describe the change, not the orchestration that produced it.
+`AskUserQuestion`, and continue to step 5 as if approved. The review runs the same way it does with
+a human present, since step 5 dispatches it. Step 5's failure path asks a question this branch has
+no one to ask, so take this instead: on a review that needs changes, fix the findings and re-review;
+on anything left unresolved, stop with the box unticked and report why. `cape pr create` refuses the
+body either way. No human edits an AFK body before it ships, so the step 3 quality bar and unslop
+apply in full, plus two AFK-only rules: never write a robot signature or emoji into the title or
+body, and describe the change, not the orchestration that produced it.
 
 ### 5. Run the gate and create
 
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
-pass, keep `[ ]` on fail. Tick the `/code-review` box only when the user confirms they ran it and
-handled the findings (on the AFK branch, on a `cape:code-reviewer` pass instead). On any failure,
+pass, keep `[ ]` on fail. For the review box: when no review covers the current HEAD, dispatch
+`cape:code-reviewer` over the branch diff now, relay its findings through one `ReportFindings` call,
+and address or dismiss each one. Then rewrite the box to name the model, the reviewer, and the
+commit it read, and tick it:
+
+```text
+- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+```
+
+The sha is the part that makes a stale review visible: use the HEAD the reviewer actually read, so a
+later commit leaves the mismatch on the record instead of hiding under a ticked box. On any failure,
 stop, report details, and ask **Fix and retry** or **Cancel**.
 
 After all pass, validate the rewritten description with `cape pr validate --stdin`. It rejects

@@ -58,7 +58,7 @@ const validateByType = (type: string, root: string) =>
     }
     if (type === 'all' || type === 'commands') {
       const r = yield* loadDefinitions(service, join(root, 'commands/*.md'), (file, content) =>
-        validateCommandContent(relative(root, file), content, { knownSkills }),
+        validateCommandContent(relative(root, file), content, { knownNames }),
       );
       results.push(...r);
     }
@@ -111,12 +111,15 @@ export const validate = Command.make(
       } else if (fileType === 'agent') {
         results = [validateAgentContent(relPath, content)];
       } else {
-        const knownSkills = yield* collectDefinitionNames(
-          service,
-          join(root, 'skills/*/SKILL.md'),
-          skillNameFromPath,
-        );
-        results = [validateCommandContent(relPath, content, { knownSkills })];
+        const knownNames = new Set([
+          ...(yield* collectDefinitionNames(
+            service,
+            join(root, 'skills/*/SKILL.md'),
+            skillNameFromPath,
+          )),
+          ...(yield* collectDefinitionNames(service, join(root, 'agents/*.md'), agentNameFromPath)),
+        ]);
+        results = [validateCommandContent(relPath, content, { knownNames })];
       }
     }
 

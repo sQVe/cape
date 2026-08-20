@@ -61,10 +61,9 @@ once:
    options so neither implies TDD is claude-only.
 2. **Review.** Chosen independently of the builder: `codex` reviews (default), `claude` reviews, or
    self-review only. A separate reviewer runs up to 2 fix cycles. Self-review means the worker's own
-   judgment plus the automated gates; `/code-review` is a human-typed command an AFK run cannot
-   invoke. Prefer a separate reviewer for anything non-trivial. Either way the SHIP phase runs a
-   `cape:code-reviewer` pass over the branch, which is what lets an unattended run tick the PR's
-   review box.
+   judgment plus the automated gates. Prefer a separate reviewer for anything non-trivial. Either
+   way the SHIP phase runs a `cape:code-reviewer` pass over the branch, which is what lets an
+   unattended run tick the PR's review box.
 3. **Run instructions.** Free text for anything that shapes the run: guardrails ("no schema
    changes", "no new deps"), workflow ("one PR per task"), review focus, areas to avoid. Empty means
    defaults only.
