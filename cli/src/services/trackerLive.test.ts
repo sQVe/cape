@@ -265,6 +265,33 @@ describe('trackerLive', () => {
       expect(result).not.toBeNull();
       expect(result?.humanTicketId).toBeUndefined();
     });
+
+    it('reads humanTicketId from parentId when the payload has no explicit field', () => {
+      const result = toEpic({ identifier: 'AI-3', title: 'Plan', parentId: 'ABU-252' });
+
+      expect(result?.humanTicketId).toBe('ABU-252');
+    });
+
+    it('prefers an explicit humanTicketId over parentId', () => {
+      const result = toEpic({
+        identifier: 'AI-3',
+        title: 'Plan',
+        humanTicketId: 'ABU-9',
+        parentId: 'ABU-252',
+      });
+
+      expect(result?.humanTicketId).toBe('ABU-9');
+    });
+
+    it('never derives a task humanTicketId from its parent plan issue', () => {
+      const result = toEpic({
+        identifier: 'AI-3',
+        title: 'Plan',
+        children: { nodes: [{ identifier: 'AI-4', title: 'Task', parentId: 'AI-3' }] },
+      });
+
+      expect(result?.tasks[0]?.humanTicketId).toBeUndefined();
+    });
   });
 
   describe('stateTypeFromStatus', () => {
