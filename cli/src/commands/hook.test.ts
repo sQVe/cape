@@ -313,6 +313,44 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
   });
 
+  it('matches a sanitized worktree branch against a slashed Linear slug', async () => {
+    const cache = trackerCache();
+    cache.epics['ABU-15'].gitBranchName = 'sqve/abu-15-cape-v2';
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...trackerCacheFile(cache),
+      },
+      gitResponses: {
+        'branch --show-current': 'feat/sqve-abu-15-cape-v2',
+        'rev-parse --git-dir --git-common-dir': '/repo/.git\n/repo/.git',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+  });
+
+  it('matches a raw checkout of a slashed Linear slug', async () => {
+    const cache = trackerCache();
+    cache.epics['ABU-15'].gitBranchName = 'sqve/abu-15-cape-v2';
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'content',
+        ...trackerCacheFile(cache),
+      },
+      gitResponses: {
+        'branch --show-current': 'sqve/abu-15-cape-v2',
+        'rev-parse --git-dir --git-common-dir': '/repo/.git\n/repo/.git',
+      },
+    });
+
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
+
+    expect(result.additionalContext).toContain('| Epic   ABU-15  Cape V2');
+  });
+
   it('matches the branch case-insensitively', async () => {
     const layer = makeStubHookLayer({
       files: {

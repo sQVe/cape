@@ -64,7 +64,8 @@ const workspacePhase = Command.make(
     const cache = yield* readRawTrackerCache();
     const hook = yield* HookService;
     const branch = yield* hook.spawnGit(['branch', '--show-current']);
-    const epic = cache == null || branch == null ? null : epicForBranch(cache, branch);
+    const epic =
+      cache == null || branch == null ? null : epicForBranch(cache, branch, { includeDone: true });
     if (epic == null) {
       return yield* Console.log(
         JSON.stringify({ skipped: true, reason: 'no cached epic matches the current branch' }),

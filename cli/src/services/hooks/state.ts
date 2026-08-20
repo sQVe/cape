@@ -161,27 +161,44 @@ const buildSessionBanner = (
   ].join('\n');
 };
 
-// Worktree branches carry a conventional-commit prefix (chore/<slug>), so the
-// Linear slug matches either the whole branch or its last path segments.
+// Linear can render gitBranchName with a slash (user/abu-15-title) that the
+// worktree flow sanitizes to kebab-case, so the cached slug is normalized the
+// same way before comparing. The branch keeps its own `/` so the
+// conventional-commit prefix boundary stays intact; a raw checkout of the
+// slashed slug is covered by kebab-casing the whole branch.
+const kebabCase = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 const branchMatchesEpic = (branch: string, epic: TrackerEpic) => {
-  const slug = epic.gitBranchName?.toLowerCase();
-  if (slug == null || slug === '') {
+  const slug = kebabCase(epic.gitBranchName ?? '');
+  if (slug === '') {
     return false;
   }
   const current = branch.toLowerCase();
-  return current === slug || current.endsWith(`/${slug}`);
+  return kebabCase(current) === slug || current.endsWith(`/${slug}`);
 };
 
 // Nothing prunes the tracker cache, so a finished epic stays cached forever;
-// skipping it here keeps its branch from rendering an actionable banner.
+// skipping it here keeps its branch from rendering an actionable banner. An
+// explicit labeling command opts in to done epics instead (workspace phase
+// done must land after finish-epic).
 const isDoneEpic = (epic: TrackerEpic) => {
   const status = epic.status.toLowerCase();
   return status === 'done' || status === 'closed' || status === 'completed';
 };
 
-export const epicForBranch = (cache: TrackerCache, branch: string) =>
-  Object.values(cache.epics).find((epic) => !isDoneEpic(epic) && branchMatchesEpic(branch, epic)) ??
-  null;
+export const epicForBranch = (
+  cache: TrackerCache,
+  branch: string,
+  options?: { readonly includeDone?: boolean },
+) =>
+  Object.values(cache.epics).find(
+    (epic) =>
+      (options?.includeDone === true || !isDoneEpic(epic)) && branchMatchesEpic(branch, epic),
+  ) ?? null;
 
 // gh pr view with no argument falls back to the branch's most recent merged or
 // closed PR, so only state OPEN counts. Missing gh or a failed lookup means no

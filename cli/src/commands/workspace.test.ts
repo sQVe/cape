@@ -19,7 +19,12 @@ import { spyConsole } from '../testUtils';
 const run = Command.runWith(main, { version: '0.1.0' });
 const trackerPath = '/test/hooks/context/tracker.json';
 
-const trackerFile = (issueId: string, title: string, timestamp = Date.now()) =>
+const trackerFile = (
+  issueId: string,
+  title: string,
+  timestamp = Date.now(),
+  status = 'In Progress',
+) =>
   JSON.stringify({
     version: 1,
     timestamp,
@@ -27,7 +32,7 @@ const trackerFile = (issueId: string, title: string, timestamp = Date.now()) =>
       [issueId]: {
         id: issueId,
         title,
-        status: 'In Progress',
+        status,
         gitBranchName: `${issueId.toLowerCase()}-epic`,
         tasks: [],
       },
@@ -394,6 +399,32 @@ describe('cape workspace phase', () => {
       reason: 'not in a herdr workspace',
     });
     expect(renames).toEqual([]);
+    console_.restore();
+  });
+
+  it('labels a done epic so the finish-epic phase transition still lands', async () => {
+    const hookLayer = makeHookLayer(
+      {
+        [trackerPath]: trackerFile(
+          'ABU-134',
+          'Surface cape workflow phase in labels',
+          Date.now(),
+          'Done',
+        ),
+      },
+      epicBranch('ABU-134'),
+    );
+    const { layer: herdrLayer, renames } = makeHerdrLayer('ws1', 'tab1');
+    const console_ = spyConsole();
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'done']).pipe(Effect.provide(makeLayers(hookLayer, herdrLayer))),
+    );
+    expect(JSON.parse(console_.output())).toEqual({
+      renamed: true,
+      workspace: 'cape: ✅ surface cape workflow phase in',
+      tab: '✅ abu-134',
+    });
+    expect(renames.length).toBe(2);
     console_.restore();
   });
 
