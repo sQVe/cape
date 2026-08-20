@@ -56,6 +56,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Commands: added `/cape:review`, which dispatches the `code-reviewer` agent over the branch diff
+  and relays its findings. Code review is an agent with no skill behind it, so nothing else made it
+  user-invocable; it is the one command that carries instructions rather than routing to a skill.
 - Agents: `code-reviewer` runs on `opus` instead of `sonnet`. Run head to head on the same commit
   with the same prompt, Opus returned every finding Sonnet did plus five more, including a live gate
   bypass (`- [x] Code review run instructions added to CONTRIBUTING.md` satisfied the review gate)

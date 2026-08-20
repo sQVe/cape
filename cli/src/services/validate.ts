@@ -94,7 +94,7 @@ export const validateAgentContent = (file: string, content: string): ValidateRes
 };
 
 interface CommandValidateOptions {
-  readonly knownSkills?: Set<string>;
+  readonly knownNames?: Set<string>;
 }
 
 export const validateCommandContent = (
@@ -113,15 +113,15 @@ export const validateCommandContent = (
     }
   }
 
-  if (!content.includes('Use the cape:')) {
-    errors.push("Body must reference a skill (expected 'Use the cape:' pattern)");
+  // Almost every command routes to a skill with "Use the cape:<name> skill exactly as written".
+  // `review` is the exception: code review is an agent with no skill behind it, so a command may
+  // target either kind. What has to hold either way is a cape reference that resolves.
+  if (!/cape:[a-z]/.test(content)) {
+    errors.push("Body must reference a cape skill or agent (expected a 'cape:<name>' reference)");
   }
 
-  if (options.knownSkills != null) {
-    const skillRef = content.match(/Use the cape:([a-z][a-z0-9-]*)/);
-    if (skillRef?.[1] != null && !options.knownSkills.has(skillRef[1])) {
-      errors.push(`References unknown skill: cape:${skillRef[1]}`);
-    }
+  if (options.knownNames != null) {
+    checkCapeReferences(content, options.knownNames, errors);
   }
 
   return { file, valid: errors.length === 0, errors };

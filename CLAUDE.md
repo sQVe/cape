@@ -28,6 +28,8 @@ cape validate skills    # skills only
   `Use the cape:<name> skill exactly as written.` Add one only when it earns its keep: a different
   name than the skill (`build` → `execute-plan`) or a skill marked `user-invocable: false`. A
   command named after its own skill duplicates the `/cape:name` entry in the slash-command menu.
+  `review` is the one command that carries its own instructions instead of routing to a skill, since
+  code review is an agent with no skill behind it and nothing else would make it user-invocable.
 - Skills are plain markdown: no XML tags, sentence case headings. The frontmatter description
   carries the triggers; the body starts at the contract. `cape validate` enforces the
   machine-checkable part: frontmatter, a nonempty body, and known `cape:<name>` references. The rest

@@ -51,11 +51,12 @@ chains:
 own through routing. A human gate sits after PLAN and before SHIP, and BUILD stops after each task
 so you can review.
 
-Code review has no cape skill. You run Claude Code's builtin `/code-review`, or a skill dispatches
-the `code-reviewer` agent, which returns its findings as JSON for the dispatching skill to relay
-through one `ReportFindings` call. Either way the findings render the same. The `pr` skill carries
-the requirement as a test-plan checkbox, runs the review itself when nothing has reviewed the
-current commits, and `cape pr create` refuses a body with an unticked box.
+Code review has no cape skill. You run Claude Code's builtin `/code-review`, or `/cape:review` to
+dispatch the `code-reviewer` agent yourself, or a skill dispatches it for you. The agent returns its
+findings as JSON for the caller to relay through one `ReportFindings` call, so every route renders
+the same. The `pr` skill carries the requirement as a test-plan checkbox, runs the review itself
+when nothing has reviewed the current commits, and `cape pr create` refuses a body with an unticked
+box.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
 to the default branch, `git commit --amend`, `gh pr merge`, and `gh pr close`. Raw commands with a
@@ -113,7 +114,7 @@ epic, phase, task progress, next task, and branch. The banner stays absent when 
 cape/
 ├── agents/       # Agent definitions with model tiers
 ├── cli/          # cape CLI: validation, git, hooks, tracker cache
-├── commands/     # Aliases only; skills are already /cape:name
+├── commands/     # Aliases, plus review, the one command with its own instructions
 ├── skills/       # Skill workflows
 ├── hooks/        # Session-start banner, gates, and the tracker cache
 ├── CLAUDE.md     # Dev guide
