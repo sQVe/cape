@@ -183,6 +183,16 @@ describe('validateCommandContent', () => {
     expect(result.errors).toContain('References unknown skill or agent: cape:nonexistent');
   });
 
+  it('detects a nonexistent skill in the unbackticked routing sentence', () => {
+    const knownNames = new Set(['brainstorm', 'commit']);
+    const content =
+      '---\ndescription: test\n---\nUse the cape:doesnotexist skill exactly as written.';
+    const result = validateCommandContent('test.md', content, { knownNames });
+
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain('References unknown skill or agent: cape:doesnotexist');
+  });
+
   it('accepts a command that dispatches an agent instead of routing to a skill', () => {
     const knownNames = new Set(['brainstorm', 'code-reviewer']);
     const content = '---\ndescription: test\n---\nDispatch the `cape:code-reviewer` agent.';

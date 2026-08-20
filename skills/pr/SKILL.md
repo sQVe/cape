@@ -161,7 +161,7 @@ and address or dismiss each one. Then rewrite the box to name the model, the rev
 commit it read, and tick it:
 
 ```text
-- [x] Code review by Claude Sonnet (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
+- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
 ```
 
 The sha is the part that makes a stale review visible: use the HEAD the reviewer actually read, so a

@@ -259,6 +259,28 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
+  it('accepts a reviewer written as a markdown link', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by [Priya](https://github.com/priya) on abc1234, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('accepts the legacy slash-command item whatever verb follows it', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review passed, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
     const result = validatePrBody(
       template,

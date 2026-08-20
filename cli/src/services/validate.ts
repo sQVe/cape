@@ -12,8 +12,11 @@ export interface ValidateResult {
 const hasHeading = (content: string, heading: string): boolean =>
   content.split('\n').some((line) => line.startsWith(heading));
 
+// Skills backtick their references; commands write the routing sentence bare ("Use the
+// cape:execute-plan skill exactly as written"). Both forms have to resolve, or a renamed skill
+// leaves a dead command behind that validation calls fine.
 const checkCapeReferences = (content: string, knownNames: Set<string>, errors: string[]) => {
-  for (const match of content.matchAll(/`cape:([a-z][a-z0-9-]*)`/g)) {
+  for (const match of content.matchAll(/`?\bcape:([a-z][a-z0-9-]*)`?/g)) {
     const name = match[1];
     if (name != null && !knownNames.has(name)) {
       errors.push(`References unknown skill or agent: cape:${name}`);
