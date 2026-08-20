@@ -239,11 +239,18 @@ export const readTrackerCache = () =>
     return isStale ? null : cache;
   });
 
+// Canceled counts as done here: gates and banners ask "is this settled?", not "did it ship?".
+// The PR closing line answers the second question and excludes canceled children separately.
 export const isDoneTask = (task: TrackerTask) => {
   const status = task.status.toLowerCase();
   const stateType = task.stateType.toLowerCase();
   return (
-    stateType === 'completed' || status === 'done' || status === 'closed' || status === 'completed'
+    stateType === 'completed' ||
+    stateType === 'canceled' ||
+    status === 'done' ||
+    status === 'closed' ||
+    status === 'completed' ||
+    status === 'canceled'
   );
 };
 

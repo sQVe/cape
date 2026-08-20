@@ -1057,6 +1057,20 @@ describe('preToolUseSkill', () => {
     expect(result).toBeNull();
   });
 
+  it('allows finish-epic when the remaining task is canceled', async () => {
+    const layer = makeStubHookLayer({
+      stdin: skillStdin('cape:finish-epic'),
+      files: trackerGateFiles({
+        'cape-1': epic('cape-1', [
+          task('cape-1.1', 'Done', 'completed'),
+          task('cape-1.2', 'Canceled', 'canceled'),
+        ]),
+      }),
+    });
+    const result = await Effect.runPromise(preToolUseSkill().pipe(Effect.provide(layer)));
+    expect(result).toBeNull();
+  });
+
   it('adds context for a target named by its human ticket id when open tasks remain', async () => {
     const layer = makeStubHookLayer({
       stdin: skillStdin('cape:finish-epic', 'ABU-14'),
