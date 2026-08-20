@@ -15,14 +15,22 @@ call; a dispatched agent does not have that tool.
 
 ## Output contract
 
-Return the findings as a JSON array, as the whole of your final message. The caller relays them
-through one `ReportFindings` call, which is what renders them. Return `[]` when nothing clears the
-bar. Never write the findings to a file or an artifact.
+Return one JSON object as the whole of your final message, with no prose before or after it. The
+caller reads `findings` and relays it through one `ReportFindings` call, which is what renders them.
+Never write the findings to a file or an artifact.
+
+```json
+{ "status": "passes review" | "needs changes", "dropped": 0, "findings": [] }
+```
+
+`status` is your overall call, `dropped` counts findings that cleared the bar but lost the cut, and
+`findings` is empty when nothing clears the bar. Keeping all three inside the object is what lets
+the caller parse the message; a status line outside it would break the parse.
 
 When `ReportFindings` is in your own tool list, call it once instead and let that call be the whole
-report. Dispatched runs usually do not have it, so the array is the normal path.
+report. Dispatched runs usually do not have it, so the JSON object is the normal path.
 
-Each finding carries:
+Each finding in `findings` carries:
 
 - `file` and `line`, pointing at the code that has to change
 - `summary`, one sentence naming the defect
@@ -47,9 +55,8 @@ A worked finding:
 ```
 
 Rank most severe first. Correctness outranks reuse, conventions, and efficiency whenever the cut is
-close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and count
-the rest. One status line follows the array, and it is the only prose you write: passes review or
-needs changes, the finding count, and how many you dropped.
+close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and put the
+rest in `dropped`.
 
 ## Finding bar
 
