@@ -1,12 +1,8 @@
 ---
 name: pr
 description: >
-  Create a pull request with a clear description and an actionable test plan. Use whenever the user
-  wants to open a PR: explicit requests ("create a PR", "open a pull request", "let's PR this",
-  "/cape:pr") and implicit ones ("ship it", "ready for review", "push this up"). Also use when
-  finish-epic completes and the user wants to publish the work. Runs automatable test plan items
-  before creating the PR. Do NOT use for reviewing someone else's PR or committing (use
-  cape:commit).
+  Create a pull request with a clear description and a verified test plan. Use whenever the user
+  wants to open a PR or ship the work. Not for reviewing PRs or committing (cape:commit).
 ---
 
 # PR

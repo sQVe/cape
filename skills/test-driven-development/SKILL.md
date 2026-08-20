@@ -1,11 +1,8 @@
 ---
 name: test-driven-development
 description: >
-  Drive behavioral changes with tests written before the production code they justify. Use this
-  skill whenever implementing a feature, fixing a bug, adding behavior, or changing logic that
-  automated tests can verify. Also use when another cape skill (fix-bug, execute-plan) says to
-  follow TDD. Do NOT use for: verification testing (manual run-the-app checks), documentation
-  changes, configuration changes, or refactoring that has no behavioral change.
+  Write the failing test before the production code that justifies it. Use for any feature, fix, or
+  logic change automated tests can verify. Not for docs, config, or behavior-preserving refactors.
 ---
 
 # Test-driven development

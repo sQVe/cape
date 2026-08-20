@@ -2,11 +2,9 @@
 name: tracker
 user-invocable: false
 description: >
-  Reference for cape's tracker protocol: Linear MCP writes plus local cache refreshes. Use whenever
-  a cape skill needs to create, list, update, close, or cache tracker work. Triggers on: issue
-  tracking, Linear ticket/plan/task/bug workflow, team routing between human and agent issues,
-  tracker cache, ready work, closing tracked work. Do NOT use for implementation planning itself;
-  use the chain skill and load this only for tracker protocol details.
+  Reference for cape's tracker protocol: Linear MCP writes, team routing between human tickets and
+  agent plans, and local cache refreshes. Load when a cape skill needs to create, update, close, or
+  cache tracker work.
 ---
 
 # Tracker

@@ -1,16 +1,10 @@
 ---
 name: set-goal
-argument-hint: '[epic id or description]'
+argument-hint: '[epic ID or description]'
 description: >
-  Interview-first front end for an autonomous epic run. Asks how to achieve the goal, which agent
-  builds, how tasks split, who reviews, then stages a reviewable draft: a `/goal` completion
-  condition plus an approach prompt that primes the run. The draft opens in an editor; the user
-  reviews and launches it with `:wq`; set-goal never launches itself. Takes a Linear epic id or a
-  free-form description, which it turns into a lean epic first. Triggers on: "set up an autonomous
-  run", "draft a /goal for this epic", "prep an AFK run", "/cape:set-goal ABU-123", "/cape:set-goal
-  <description>". Do NOT use for: driving a run (that is the approach prompt fed to `/goal`), a
-  single supervised task (use cape:execute-plan), or interactive PLAN exploration with a human in
-  the loop (use cape:brainstorm or cape:write-plan).
+  Interview the user and stage a reviewable `/goal` draft for an autonomous epic run. Takes a Linear
+  epic ID or a free-form description; never launches the run itself. Not for supervised tasks
+  (cape:execute-plan) or interactive design exploration (cape:brainstorm).
 ---
 
 # Set goal
@@ -42,7 +36,7 @@ fixed; interview defaults and approach-prompt wording adapt to the epic.
 
 Resolve the target from the invocation:
 
-- An epic id (`/cape:set-goal ABU-123`): use that epic.
+- An epic ID (`/cape:set-goal ABU-123`): use that epic.
 - A free-form description: mint a lean epic first, with a title, goal, success criteria, and one
   first task, via the `cape:tracker` contract, then refresh the cache. One first task is enough
   because the run creates later tasks one ahead. Run the epic text through `cape:unslop` before

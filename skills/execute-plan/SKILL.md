@@ -1,12 +1,8 @@
 ---
 name: execute-plan
 description: >
-  Build from a Linear tracker epic, one task at a time. cape:write-plan creates the epic and first
-  sub-issue, execute-plan implements it. Triggers on: "continue", "next task", "resume", "let's go",
-  "work on the plan", a Linear issue ID, or transitioning after planning is complete. Uses the local
-  tracker cache for orientation and refreshes that cache after every Linear write. Do NOT use for
-  bug fixes (use cape:fix-bug), exploratory design (use cape:brainstorm), or acting on inbound PR
-  review comments (use cape:pr-feedback).
+  Implement a Linear tracker epic one task at a time. Use on "continue", "next task", a Linear issue
+  ID, or after planning completes. Not for bug fixes (cape:fix-bug) or design (cape:brainstorm).
 ---
 
 # Execute plan

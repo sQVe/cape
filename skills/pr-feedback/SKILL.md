@@ -2,13 +2,8 @@
 name: pr-feedback
 argument-hint: '[pr number or url]'
 description: >
-  Resolve inbound PR review comments end to end: fetch the threads with their node IDs, judge each
-  comment's validity, fix the accepted ones, then reply, resolve the matching threads via GraphQL,
-  and commit referencing the review. Use whenever the user wants to act on review feedback: "fetch
-  comments on PR, are they valid?", "resolve threads that are fixed", "push and resolve threads we
-  fixed", "resolve the comment threads that are fixed or ignored", "fix the valid issues and
-  resolve", "/cape:pr-feedback". Do NOT use for fixing a single diagnosed defect with no PR thread
-  (use cape:fix-bug), or creating a PR (use cape:pr).
+  Act on inbound PR review comments: judge validity, fix what's accepted, reply, resolve threads,
+  commit. Use whenever the user wants review feedback handled. Not for creating a PR (cape:pr).
 ---
 
 # PR feedback
