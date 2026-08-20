@@ -1,10 +1,8 @@
 ---
 name: don-cape
 description: >
-  Meta-skill that activates cape's workflow system. Injected at session start, always active, never
-  manually triggered. Routes every task to the right cape skill and enforces workflow chains:
-  brainstorm before planning, plan before coding, TDD during implementation, diagnosis before
-  fixing. If a cape skill matches the user request, using it is mandatory.
+  Meta-skill that routes every task to the right cape skill and enforces the workflow chain.
+  Injected at session start, always active, never manually triggered.
 ---
 
 # Don cape

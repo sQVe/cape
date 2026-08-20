@@ -1,14 +1,9 @@
 ---
 name: brainstorm
-description:
-  Use BEFORE writing any code for new features, integrations, or system changes. Triggers when the
-  user describes something to build, asks "how should I approach X", is unsure between approaches,
-  or mentions adding/creating/building functionality. Also use when requirements are vague,
-  architecture is unclear, or the task involves design decisions (e.g., choosing libraries, data
-  models, API patterns). Do NOT use for bug fixes, straightforward code cleanup, executing existing
-  plans, or tasks where the implementation path is already clear. This skill researches the
-  codebase, asks Socratic questions, generates competing designs under different constraints, and
-  produces a design summary for `cape:write-plan` to formalize into a Linear tracker epic.
+description: >
+  Explore a design before any code is written. Use when the user describes something to build and
+  the approach or requirements are unclear. Not for bug fixes or tasks with an obvious
+  implementation path.
 ---
 
 # Brainstorm

@@ -1,10 +1,8 @@
 ---
 name: fix-bug
 description: >
-  End-to-end bug fix workflow from discovery to closure. Triggers on: "fix this bug", "can you fix",
-  user wants to address a diagnosed Linear bug issue, fixing a regression, patching broken behavior,
-  or investigating a defect before fixing it. Do NOT use for feature work (use execute-plan) or
-  cleanup without a specific defect.
+  Diagnose and fix a bug end to end, from discovery to closure. Use for any defect, regression, or
+  broken behavior. Not for feature work (cape:execute-plan).
 ---
 
 # Fix bug

@@ -1,14 +1,8 @@
 ---
 name: finish-epic
 description: >
-  Verify and hand off a Linear tracker epic after all tasks are complete. Use when the user says
-  "finish the epic", "we're done", "close out the epic", all tasks are done and the user wants to
-  close it, or execute-plan detects all acceptance criteria appear met. Runs final verification,
-  checks acceptance criteria with evidence, optionally writes a minimal outcome summary to Linear,
-  and hands off to the PR. Linear's GitHub integration closes the epic when the PR merges; cape
-  never sets Linear status. Do NOT use when tasks still need implementation (use execute-plan), when
-  the epic does not exist yet (use brainstorm then write-plan), or for git operations like PRs and
-  pushes.
+  Verify a Linear tracker epic after all tasks are complete and hand off to the PR. Use when the
+  user wants to close out an epic. Not while tasks remain (cape:execute-plan).
 ---
 
 # Finish epic

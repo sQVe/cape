@@ -1,11 +1,9 @@
 ---
 name: write-plan
 description: >
-  Formalize a brainstorm design into a Linear human-ticket/plan-issue pair with one first sub-issue
-  task. Use after cape:brainstorm has produced a design summary. Triggers on: user runs
-  /cape:write-plan, "create the epic", "formalize this design", "write the plan", transitioning from
-  brainstorm to implementation. Do NOT use for initial exploration (use cape:brainstorm), executing
-  existing plans (use cape:execute-plan), or bug diagnosis and fixes (use cape:fix-bug).
+  Formalize a brainstorm design into a Linear human-ticket/plan-issue pair with its first sub-issue
+  task. Use after cape:brainstorm produces a design summary. Not for exploration (cape:brainstorm)
+  or execution (cape:execute-plan).
 ---
 
 # Write plan
