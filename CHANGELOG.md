@@ -220,6 +220,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Tracker routing: the human tier is no longer hardcoded to Aburaya. Human-facing issues go to the
+  repo's home team, resolved from the active pair, the tracker cache, or the repo's CLAUDE.md; the
+  agent team is the workspace's `AI` team (matching the real team name), created once per Linear
+  workspace.
 - CLI: `cape state list` no longer describes `flowPhase` as "read by challenge". The challenge skill
   folded into `cape:brainstorm` long ago; the key now says what actually reads it, the session-start
   and user-prompt-submit context plus the `cape:execute-plan` gate.

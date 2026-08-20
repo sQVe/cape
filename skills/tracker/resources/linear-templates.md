@@ -6,16 +6,17 @@ them itself: the Linear MCP server's `save_issue` takes raw markdown and exposes
 The [agent contract](agent-contract.md) enforces the shape; these templates are a human-side
 convenience.
 
-The shapes split by audience. The human ticket (Aburaya team) is a scannable description and nothing
-more; the plan issue (Agents team, AI) carries the full agent contract. SKILL.md documents the
-pairing protocol. The authoring sources mirror these shapes: human ticket, plan issue, and task are
-produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery stay in
-session, not on the board.
+The shapes split by audience. The human ticket (the repo's home team) is a scannable description and
+nothing more; the plan issue (the workspace's `AI` team) carries the full agent contract. SKILL.md
+documents the pairing protocol. The authoring sources mirror these shapes: human ticket, plan issue,
+and task are produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery
+stay in session, not on the board.
 
 ## Human ticket
 
-Aburaya team. Description only: no R-tables, no constraints, no acceptance criteria. The human tier
-exists to be scannable. Untyped parent. Set `src:*` and Medium priority as template defaults.
+The repo's home team. Description only: no R-tables, no constraints, no acceptance criteria. The
+human tier exists to be scannable. Untyped parent. Set `src:*` and Medium priority as template
+defaults.
 
 ```markdown
 [What changes and why, in 2-4 sentences a human can scan in ten seconds.]
@@ -27,7 +28,7 @@ Agent plan: [AI-XX](url)
 
 ## Plan issue
 
-Agents team. Untyped parent of the task sub-issues. Set `src:*` and Medium priority as template
+`AI` team. Untyped parent of the task sub-issues. Set `src:*` and Medium priority as template
 defaults.
 
 The plan-issue body separates four questions that must never blend:
@@ -168,7 +169,7 @@ The work breakdown is a non-binding sketch; do not pre-create these as sub-issue
 
 ## Task
 
-Sub-issue of the plan issue, Agents team. Set exactly one `type:*`, `src:*`, and Medium priority as
+Sub-issue of the plan issue, `AI` team. Set exactly one `type:*`, `src:*`, and Medium priority as
 template defaults.
 
 ```markdown
