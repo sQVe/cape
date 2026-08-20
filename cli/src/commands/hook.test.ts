@@ -270,7 +270,7 @@ const epic = (id: string, tasks: readonly ReturnType<typeof task>[], title = 'My
 });
 
 const trackerGateFiles = (
-  epics: Record<string, ReturnType<typeof epic>>,
+  epics: Record<string, ReturnType<typeof epic> & { humanTicketId?: string }>,
   activeEpicId = 'cape-1',
 ) => ({
   ...stateFile({ flowPhase: flowPhaseEntryForIssue('BUILD', activeEpicId) }),
