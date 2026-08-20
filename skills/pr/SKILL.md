@@ -84,10 +84,12 @@ bundled template's sections and heading levels exactly:
 
 The title uses conventional commit format: `type(scope): subject`.
 
-Whatever the template source, the test plan section must contain a review checkbox: a line matching
-`code review`, `/code-review`, or `code-reviewer`. Write it as
-`- [ ] Code review by <reviewer>, findings addressed or dismissed`, naming whoever reviews. Repo
-templates rarely carry it; add it. `cape pr create` refuses a body without that box.
+Whatever the template source, the test plan section must contain a review checkbox that opens with
+the review token and attributes the review:
+`- [x] Code review by <reviewer>, findings addressed or dismissed`, or
+`- [x] /code-review run on this branch, findings addressed`. Naming who reviewed is what separates a
+review from a checklist item that mentions one, and `cape pr create` rejects the latter. Repo
+templates rarely carry the box; add it.
 
 Write the body for a reviewer who knows the domain but not this branch:
 

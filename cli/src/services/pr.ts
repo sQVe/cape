@@ -87,11 +87,11 @@ export const extractUncheckedBoxes = (body: string) =>
 
 // The review requirement rides on this item alone: cape has no hook or state gate for it, so a body
 // that simply omits the box must fail rather than pass for having no unticked boxes. The item names
-// whichever reviewer ran, so the token spans "Code review", "/code-review", and "code-reviewer". It
-// has to open the item: a box that merely mentions review in passing ("update the code review
-// checklist", "re-encode review assets") is not a review, and matching it anywhere would let an
-// unrelated line satisfy the gate.
-const reviewItemPattern = /^\s*- \[[ xX]\]\s*\/?code[- ]review/i;
+// whichever reviewer ran, so the token spans "Code review" and "/code-review". The item must open
+// with that token AND attribute the review ("by <reviewer>" or "run on ..."), because anchoring
+// alone still lets a checklist item claim the gate: "Code review checklist updated" starts with the
+// token, and a docs PR is exactly where that phrasing shows up.
+const reviewItemPattern = /^\s*- \[[ xX]\]\s*\/?code[- ]review\s+(by|run)\b/i;
 
 const hasReviewItem = (templateSections: string[], body: string) =>
   sectionLines(body, testSectionName(templateSections)).some((line) =>

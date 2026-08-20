@@ -192,10 +192,33 @@ describe('validatePrBody review item requirement', () => {
   });
 
   it('matches the review item regardless of case', () => {
-    const result = validatePrBody(template, withTestPlan('- [x] CODE REVIEW done, no findings'));
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] CODE REVIEW BY alice, no findings'),
+    );
 
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when a checked box is checklist maintenance, not a review', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review checklist updated\n- [x] pnpm test'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a checked box documents the reviewer rather than running it', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] code-reviewer documentation updated'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 
   it('returns invalid when a checked box only mentions review in passing', () => {
