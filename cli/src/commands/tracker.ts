@@ -178,12 +178,20 @@ const show = Command.make(
   'show',
   {},
   Effect.fn(function* () {
+    // Resolve first so "git did not answer" fails loudly instead of printing an
+    // empty cache. Skills orient off this command, and a wrongly empty answer
+    // reads as "no work left" on a cache that is intact on disk.
+    yield* Effect.try({
+      try: () => trackerCachePath(pluginRoot()),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }).pipe(catchAndDie);
+
     const cache = yield* readCacheFile();
     yield* Console.log(JSON.stringify(cache ?? { version: 1, timestamp: 0, epics: {} }));
   }),
 ).pipe(
   Command.withDescription(
-    "Print this repository's tracker cache as JSON. An absent or unreadable cache prints an empty one.",
+    "Print this repository's tracker cache as JSON. An absent or corrupt cache prints an empty one; an unresolvable path exits nonzero.",
   ),
 );
 

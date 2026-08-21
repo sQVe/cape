@@ -29,6 +29,10 @@ const readCommonDir = (cwd?: string): GitCommonDir => {
     raw = execFileSync('git', ['rev-parse', '--git-common-dir'], {
       cwd,
       encoding: 'utf-8',
+      // gitFailureKind reads git's message to tell "not a repository" from a
+      // failure we must not act on, and git translates that message. LC_ALL=C
+      // pins it to English; glibc ignores LANGUAGE under the C locale.
+      env: { ...process.env, LC_ALL: 'C' }, // eslint-disable-line node/no-process-env
       stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 3000,
     }).trim();

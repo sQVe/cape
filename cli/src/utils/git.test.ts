@@ -16,8 +16,8 @@ describe('gitRoot', () => {
 });
 
 describe('gitFailureKind', () => {
-  // hookLive.ts draws this same distinction: a transient failure must never be
-  // mistaken for "not a repo", or the cache write lands in the shared file.
+  // Only no-repo may take the shared fallback cache file, so anything that is
+  // not a positive not-a-repository answer has to fail closed.
   it('treats an explicit not-a-repository answer as no-repo', () => {
     expect(
       gitFailureKind({
@@ -80,6 +80,23 @@ describe('gitCommonDir', () => {
 
   it('reports no-repo outside a repository', () => {
     expect(gitCommonDir('/')).toEqual({ kind: 'no-repo' });
+  });
+
+  // git translates its fatal messages, so the classifier only works if the
+  // spawn pins the locale. Without that, a Swedish shell gets "inte ett
+  // git-arkiv" and every non-repo invocation fails closed instead.
+  it('reports no-repo outside a repository under a translated locale', () => {
+    const previous = process.env.LC_ALL;
+    process.env.LC_ALL = 'sv_SE.utf8';
+    try {
+      expect(gitCommonDir('/tmp')).toEqual({ kind: 'no-repo' });
+    } finally {
+      if (previous == null) {
+        delete process.env.LC_ALL;
+      } else {
+        process.env.LC_ALL = previous;
+      }
+    }
   });
 
   // A real repository git refuses to read must never take the shared fallback,
