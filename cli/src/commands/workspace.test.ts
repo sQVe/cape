@@ -139,6 +139,25 @@ describe('cape workspace phase', () => {
     console_.restore();
   });
 
+  // Argument validity does not depend on the environment. An agent running an older
+  // copy of a skill still calls `done`, and hearing about herdr instead of the phase
+  // hides the vocabulary change behind an environment message.
+  it('names the invalid phase rather than the environment when both are wrong', async () => {
+    const { layer, reports } = makeHerdrLayer(null);
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run(['workspace', 'phase', 'done']).pipe(Effect.provide(makeLayers(layer))),
+    );
+
+    expect(JSON.parse(console_.output())).toEqual({
+      skipped: true,
+      reason: 'unknown phase: done',
+    });
+    expect(reports).toEqual([]);
+    console_.restore();
+  });
+
   it('reports reported false when the herdr call fails', async () => {
     const { layer, reports } = makeHerdrLayer('ws1', false);
     const console_ = spyConsole();

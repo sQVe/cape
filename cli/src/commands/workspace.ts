@@ -13,17 +13,21 @@ const workspacePhase = Command.make(
   Effect.fn(function* ({ phase }) {
     const herdr = yield* HerdrService;
 
-    const workspaceId = herdr.workspaceId();
-    if (workspaceId == null) {
-      return yield* Console.log(
-        JSON.stringify({ skipped: true, reason: 'not in a herdr workspace' }),
-      );
-    }
-
+    // Argument before environment: a caller naming a phase that no longer exists
+    // hears about the phase, not about herdr. blocked and done were valid until
+    // recently, so the callers most likely to get this wrong are the ones running
+    // an older copy of a skill, outside herdr as often as in it.
     const normalized = normalizePhase(phase);
     if (normalized == null) {
       return yield* Console.log(
         JSON.stringify({ skipped: true, reason: `unknown phase: ${phase}` }),
+      );
+    }
+
+    const workspaceId = herdr.workspaceId();
+    if (workspaceId == null) {
+      return yield* Console.log(
+        JSON.stringify({ skipped: true, reason: 'not in a herdr workspace' }),
       );
     }
 

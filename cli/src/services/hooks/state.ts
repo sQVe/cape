@@ -182,23 +182,15 @@ const branchMatchesEpic = (branch: string, epic: TrackerEpic) => {
 };
 
 // Nothing prunes the tracker cache, so a finished epic stays cached forever;
-// skipping it here keeps its branch from rendering an actionable banner. An
-// explicit labeling command opts in to done epics instead (workspace phase
-// done must land after finish-epic).
+// skipping it here keeps its branch from rendering an actionable banner.
 const isDoneEpic = (epic: TrackerEpic) => {
   const status = epic.status.toLowerCase();
   return status === 'done' || status === 'closed' || status === 'completed';
 };
 
-export const epicForBranch = (
-  cache: TrackerCache,
-  branch: string,
-  options?: { readonly includeDone?: boolean },
-) =>
-  Object.values(cache.epics).find(
-    (epic) =>
-      (options?.includeDone === true || !isDoneEpic(epic)) && branchMatchesEpic(branch, epic),
-  ) ?? null;
+export const epicForBranch = (cache: TrackerCache, branch: string) =>
+  Object.values(cache.epics).find((epic) => !isDoneEpic(epic) && branchMatchesEpic(branch, epic)) ??
+  null;
 
 // gh pr view with no argument falls back to the branch's most recent merged or
 // closed PR, so only state OPEN counts. Missing gh or a failed lookup means no
