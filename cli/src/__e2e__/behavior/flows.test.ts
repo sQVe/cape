@@ -193,6 +193,19 @@ describe('flow 5: tracker cache isolation across repositories', () => {
     expect(cacheB.epics['AI-5'].title).toBe('Repo B epic');
   });
 
+  // A repository git refuses to read must not look like an empty cache, since
+  // every skill now orients off `tracker show`.
+  it('exits nonzero instead of reporting an empty cache when git cannot answer', () => {
+    writeFileSync(join(repoA, '.git', 'config'), '[core\nbroken\n');
+
+    const shown = cape(['tracker', 'show'], '', env, { cwd: repoA });
+    expect(shown.status).not.toBe(0);
+    expect(shown.stdout).not.toContain('"epics"');
+
+    const located = cape(['tracker', 'path'], '', env, { cwd: repoA });
+    expect(located.status).not.toBe(0);
+  });
+
   // cache-status is the command that caused the reported corruption, and it
   // takes a read-modify-write path that cache-epic does not.
   it('keeps a cache-status write in one repository out of the other', () => {
