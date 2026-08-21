@@ -30,6 +30,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   repeated runs converge. Don-cape gained a sixth rule reserving skill prose for what no lint rule,
   hook, or `cape validate` check can enforce.
 
+- Skills: `cape:unslop` now picks a register before it edits. Plain is the default and covers every
+  surface that ships under the user's name or reports back to them: commit messages, PR text, review
+  replies, Linear issue text, review findings, summaries. The "add soul" advice, which pushed toward
+  opinions and varied rhythm, is now scoped to docs, the README, and posts. It used to apply
+  everywhere and was the reason drafted PR replies read as too dense.
+
+- Agents: `code-reviewer` writes its finding text in the plain register. Six call sites relay that
+  same JSON to `ReportFindings` and none of them edited it, so the register belongs with the agent
+  that authors it. The 60-character `short_summary` cap now sits next to the instruction, since a
+  later rewrite pass would have broken it.
+
 - Tracker: a plan issue is now a sub-issue of the human ticket it satisfies, and that parent is the
   pair. The `relatedTo` relation and the counterpart markdown links in both bodies are gone, and
   `cape tracker cache-epic` reads `humanTicketId` from `parentId` instead of a hand-stamped field.

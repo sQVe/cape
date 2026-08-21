@@ -142,9 +142,9 @@ atomic commits. If the user asked to push, push after the commit lands. A thread
 resolve until its fix is on the remote.
 
 Reply, then resolve, over exactly the threads whose fix is pushed or whose dismissal reply is
-posted. Run replies through the `cape:unslop` skill: short plain sentences, one point per reply, no
-filler or emoji. A fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason. Each
-`threadId` is the `id` carried from step 1, no re-lookup:
+posted. Run replies through the `cape:unslop` skill in its plain register, one point per reply. A
+fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason. Each `threadId` is the `id`
+carried from step 1, no re-lookup:
 
 ```bash
 # Reply in a thread (dismissed or out-of-scope, with the reason, or "Fixed in <sha>")
