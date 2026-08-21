@@ -48,6 +48,10 @@ Shape the design into the canonical plan-issue shape from `cape:tracker`'s
 authorization matters, multiple systems or teams are involved, or rollout, observability, or
 rollback matters.
 
+When the data shape is not obvious, settle it in required constraints before writing any R-row:
+fields, types, what is nullable, which states it makes unrepresentable. The R-table then describes
+behavior over a fixed shape.
+
 Keep the four sections separate; never blend them:
 
 - **Required behavior.** A numbered table (R1, R2, ...) of `Scenario → Expected result`. Name the
@@ -55,7 +59,10 @@ Keep the four sections separate; never blend them:
   headers, the import lists each missing header"). Never "works as expected". Use `GIVEN/WHEN/THEN`
   in the scenario cell when a case has several preconditions. Subtasks reference these rows.
 - **Required constraints.** Settled boundaries (routes, schemas, service boundaries, auth and
-  storage patterns, compatibility rules) and anti-patterns as `NO X (reason: Y)`.
+  storage patterns, compatibility rules) and anti-patterns as `NO X (reason: Y)`. When the work
+  writes, migrates, syncs, or retries, say whether a second run lands where the first did and what
+  makes it so (a key, a guard, an upsert). When nothing repeats, say that. Never leave it to the
+  implementer.
 - **Proposed approach.** A recommendation the builder may improve, with concrete files, data flow,
   and known risks.
 - **Acceptance criteria.** Evidence per R-ID, plus a regression check that out-of-scope behavior
@@ -73,7 +80,7 @@ and file reads: file paths, APIs, test setup, helpers to reuse, similar implemen
 The first task is a vertical slice with:
 
 - Goal, with `Delivers: R1, R2` naming the plan R-IDs it covers
-- Interface: inputs, outputs, side effects
+- Interface: inputs, outputs, side effects, and what a repeat run does when the plan calls for it
 - Execution mode: HITL or AFK
 - Behaviors small enough for TDD cycles
 - References to verified files or patterns
