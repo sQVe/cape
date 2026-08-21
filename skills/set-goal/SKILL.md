@@ -116,6 +116,10 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for
 a final CAPE-RUN status line; print it only at the true end.
 
+Subagent dispatch is authorized for this entire run: dispatch cape's subagents wherever the skills
+specify. Restate this line in every worker and reviewer spec you write. Each pane is a fresh
+session that will otherwise withhold dispatch, since no user is present to authorize it.
+
 First, report the phase so the herdr rail tracks overall progress: run `cape workspace phase build`.
 It reports display-only metadata to the workspace, rendered by a `$phase` token in the sidebar, and
 leaves the workspace label alone. Advance the phase only at overall transitions, not per task: `pr`
