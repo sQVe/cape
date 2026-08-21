@@ -111,22 +111,23 @@ A hit is a cost to weigh, not a veto. Carry it into the comparison and say what 
 
 ### 5. STOP: choose a direction
 
-Present the approaches side by side without picking one:
+Present the approaches side by side without picking one. One column and one line per approach step 4
+produced: three in divergent mode, one or two inline.
 
 ```
-Three designs explored under different constraints, scored against the criteria:
+[N] design(s) explored, scored against the criteria:
 
-| Criterion   | Minimal        | Flexible       | Pragmatic      |
-| ----------- | -------------- | -------------- | -------------- |
-| [Criterion] | [score + why]  | [score + why]  | [score + why]  |
+| Criterion   | [Design 1]    | [Design 2]    |
+| ----------- | ------------- | ------------- |
+| [Criterion] | [score + why] | [score + why] |
 
-1. **[Minimal]** (simplest interface): [approach]. Trade-off: [x]. Smells: [hits, or none]
-2. **[Flexible]** (maximum flexibility): [approach]. Trade-off: [x]. Smells: [hits, or none]
-3. **[Pragmatic]** (common case optimized): [approach]. Trade-off: [x]. Smells: [hits, or none]
+1. **[Name]** ([its constraint]): [approach]. Trade-off: [x]. Smells: [hits, or none]
 
 I recommend option [N] because [specific reason, especially codebase consistency].
 The other designs revealed [insight the recommended approach should absorb].
 ```
+
+With a single design there is no runner-up line: say why it holds against each criterion instead.
 
 The comparison is the discussion artifact. The user may pick one, combine several, explore a new
 direction, or raise concerns. Iterate until they settle on a direction.
