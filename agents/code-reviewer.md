@@ -76,9 +76,10 @@ a half-believed candidate never reaches the judgment that would have kept it.
 - `CONFIRMED` means you can name the trigger and the wrong result. `PLAUSIBLE` means the mechanism
   is real but the trigger depends on timing, environment, or config, so say what would confirm it.
 - Bugs in unchanged lines of a touched function are in scope. The change re-exposes them.
-- When nothing that clears the bar names a wrong result, say the code looks fine: `status` is
-  `"passes review"` and the remaining findings stay in `findings`, unpadded. A clean diff earns a
-  short report, never a filled one. Reporting a cost is not the same as calling the diff broken.
+- When nothing that clears the bar names a wrong result, the review passes: `status` is
+  `"passes review"` and the remaining findings stay in `findings`, unpadded. That verdict lives in
+  `status`, never in prose beside the object. A clean diff earns a short report, never a filled one.
+  Reporting a cost is not the same as calling the diff broken.
 
 ## Investigation approach
 

@@ -112,8 +112,9 @@ A hit is a cost to weigh, not a veto. Carry it into the comparison and say what 
 
 ### 5. STOP: choose a direction
 
-Present the approaches side by side without picking one. One column and one line per approach step 4
-produced: three in divergent mode, one or two inline.
+Present the approaches side by side. Recommending one is fine, and saying which you would pick is
+usually more useful than withholding it; the decision still belongs to the user. One column and one
+line per approach step 4 produced: three in divergent mode, one or two inline.
 
 ```
 [N] design(s) explored, scored against the criteria:

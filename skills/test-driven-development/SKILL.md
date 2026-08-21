@@ -59,7 +59,8 @@ awkward names, do a small refactor and re-run tests. Otherwise move to the next 
 When you report the change, name the check that failed first and the failure it produced, then the
 passing run after. Under rule 4 that first run is the fallback check rather than a test, so name the
 approval that overrode the contract and what the check reported before the change. A before-run that
-did not fail is reported as that, never omitted.
+passes means the check does not demonstrate the gap: stop and fix the check or the diagnosis before
+touching production code.
 
 ## Agents
 
