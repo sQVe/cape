@@ -701,6 +701,7 @@ describe('cape tracker show', () => {
           state: { name: 'Todo', type: 'unstarted' },
           children: { nodes: [] },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
