@@ -119,8 +119,8 @@ a final CAPE-RUN status line; print it only at the true end.
 First, report the phase so the herdr rail tracks overall progress: run `cape workspace phase build`.
 It reports display-only metadata to the workspace, rendered by a `$phase` token in the sidebar, and
 leaves the workspace label alone. Advance the phase only at overall transitions, not per task: `pr`
-when SHIP starts. Park and clean-ship need no report — herdr tracks blocked and done itself as agent
-status. Per-task work happens in the task's own tab.
+when SHIP starts. Park and clean-ship need no report, since herdr tracks blocked and done itself as
+agent status. Per-task work happens in the task's own tab.
 
 ## Topology (decided, do not re-decide)
 - Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
