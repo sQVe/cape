@@ -21,8 +21,8 @@ A few sentences. Name real things, files, commands, numbers, instead of categori
 
 ## Limits
 
-Explain, do not re-run. No new tool calls, no fresh investigation, no revised answer. If the
-previous message was wrong, fixing it is a new request.
+Explain, do not re-run. Beyond loading this skill, no tool calls, no fresh investigation, no revised
+answer. If the previous message was wrong, fixing it is a new request.
 
 Report the same outcome the previous message reported. A failure stays a failure. Do not soften it
 into "mostly working" and do not inflate a warning into a crisis.

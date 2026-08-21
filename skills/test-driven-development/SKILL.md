@@ -57,8 +57,9 @@ broader affected suite to confirm nothing else broke. If the minimal change left
 awkward names, do a small refactor and re-run tests. Otherwise move to the next behavior.
 
 When you report the change, name the check that failed first and the failure it produced, then the
-passing run after. The only report without a failing-before run is one rule 4 covers. Name the user
-approval that overrode the contract and the check that ran in place of the red step.
+passing run after. Every report names a failing-before run; under rule 4 that run is the fallback
+check rather than a test, so name the approval that overrode the contract and the failure the
+fallback produced.
 
 ## Agents
 
