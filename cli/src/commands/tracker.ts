@@ -40,6 +40,15 @@ const parseJson = (input: string, label: string) =>
     catch: () => new Error(`invalid ${label} JSON`),
   }).pipe(catchAndDie);
 
+// readCacheFile reports an unresolvable path as an absent cache, which reads as
+// "nothing cached yet" and sends the user to a refresh that cannot help. Every
+// command that touches the cache resolves it up front so git trouble says so.
+const requireCachePath = () =>
+  Effect.try({
+    try: () => trackerCachePath(pluginRoot()),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  }).pipe(catchAndDie);
+
 const cacheEpic = Command.make(
   'cache-epic',
   {
@@ -49,6 +58,7 @@ const cacheEpic = Command.make(
     ),
   },
   Effect.fn(function* ({ issue }) {
+    yield* requireCachePath();
     const raw = yield* readJsonInput(issue);
     const parsed = yield* parseJson(raw, 'Linear issue');
     const epic = toEpic(parsed);
@@ -85,6 +95,7 @@ const cacheTasks = Command.make(
       return yield* dieWithError('epic id is required');
     }
 
+    yield* requireCachePath();
     const raw = yield* readJsonInput(issues);
     const parsed = yield* parseJson(raw, 'Linear tasks');
     if (!Array.isArray(parsed)) {
@@ -132,6 +143,7 @@ const cacheStatus = Command.make(
       return yield* dieWithError('status is required');
     }
 
+    yield* requireCachePath();
     const cache = yield* readCacheFile();
     const updatedCache = updateCachedIssueStatus({
       cache,
@@ -162,11 +174,7 @@ const path = Command.make(
   'path',
   {},
   Effect.fn(function* () {
-    const resolved = yield* Effect.try({
-      try: () => trackerCachePath(pluginRoot()),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    }).pipe(catchAndDie);
-    yield* Console.log(resolved);
+    yield* Console.log(yield* requireCachePath());
   }),
 ).pipe(
   Command.withDescription(
@@ -181,10 +189,7 @@ const show = Command.make(
     // Resolve first so "git did not answer" fails loudly instead of printing an
     // empty cache. Skills orient off this command, and a wrongly empty answer
     // reads as "no work left" on a cache that is intact on disk.
-    yield* Effect.try({
-      try: () => trackerCachePath(pluginRoot()),
-      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-    }).pipe(catchAndDie);
+    yield* requireCachePath();
 
     const cache = yield* readCacheFile();
     yield* Console.log(JSON.stringify(cache ?? { version: 1, timestamp: 0, epics: {} }));
