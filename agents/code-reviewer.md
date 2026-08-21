@@ -76,6 +76,9 @@ a half-believed candidate never reaches the judgment that would have kept it.
 - `CONFIRMED` means you can name the trigger and the wrong result. `PLAUSIBLE` means the mechanism
   is real but the trigger depends on timing, environment, or config, so say what would confirm it.
 - Bugs in unchanged lines of a touched function are in scope. The change re-exposes them.
+- When every candidate that clears the bar is low severity, say the code looks fine. `status` is
+  `"passes review"`, `findings` is empty, and `dropped` counts the nits you held back. A clean diff
+  earns a short report, never a filled one.
 
 ## Investigation approach
 
@@ -98,8 +101,12 @@ a half-believed candidate never reaches the judgment that would have kept it.
      need
 
 4. **Assess code quality.** Error handling, type safety, and defensive programming. Naming and
-   organization. Test coverage, and whether the assertions would fail if the behavior regressed.
-   Security and performance.
+   organization. Test coverage, and whether assertions would fail if the behavior regressed.
+   Security and performance. Three complexity signals also count: an answer that takes more than
+   three files to trace, a decision repeated in several places, and a comment that states an
+   invariant nothing enforces. Each one clears the same bar as any other finding, so name the
+   question the reader has to chase, the edit that has to land in every copy, or the path that
+   breaks the invariant.
 
 5. **Check conventions last.** Read the repo CLAUDE.md and any closer to the changed files. Flag a
    violation only when you can quote the exact rule and the exact line that breaks it. No style
