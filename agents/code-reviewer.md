@@ -24,9 +24,10 @@ Never write the findings to a file or an artifact.
 ```
 
 `status` is your overall call, either `"passes review"` or `"needs changes"`. `dropped` is a number:
-how many findings cleared the bar but lost the cut. `findings` is empty when nothing clears the bar.
-Keeping all three inside the object is what lets the caller parse the message; a status line outside
-it would break the parse.
+how many findings cleared the bar but stayed out of `findings`, whether the 10-finding cap cut them
+or a quiet pass held them back. `findings` is empty when nothing clears the bar and when every
+candidate that clears it is low severity. Keeping all three inside the object is what lets the
+caller parse the message; a status line outside it would break the parse.
 
 When `ReportFindings` is in your own tool list, call it once instead and let that call be the whole
 report. Dispatched runs usually do not have it, so the JSON object is the normal path.
@@ -57,7 +58,8 @@ A worked finding:
 
 Rank most severe first. Correctness outranks reuse, conventions, and efficiency whenever the cut is
 close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and set
-`dropped` to how many you cut.
+`dropped` to how many you cut. When every candidate that clears the bar is low severity, report none
+of them and set `dropped` to all of them.
 
 ## Finding bar
 
@@ -76,9 +78,8 @@ a half-believed candidate never reaches the judgment that would have kept it.
 - `CONFIRMED` means you can name the trigger and the wrong result. `PLAUSIBLE` means the mechanism
   is real but the trigger depends on timing, environment, or config, so say what would confirm it.
 - Bugs in unchanged lines of a touched function are in scope. The change re-exposes them.
-- When every candidate that clears the bar is low severity, say the code looks fine. `status` is
-  `"passes review"`, `findings` is empty, and `dropped` counts the nits you held back. A clean diff
-  earns a short report, never a filled one.
+- When every candidate that clears the bar is low severity, say the code looks fine and set `status`
+  to `"passes review"`. A clean diff earns a short report, never a filled one.
 
 ## Investigation approach
 
