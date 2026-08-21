@@ -7,23 +7,20 @@ import { HookService } from './services/hook';
 import { PrService } from './services/pr';
 import { ValidateService } from './services/validate';
 
-export const makeStubGitLayer = (repoName: string | null = 'cape') =>
-  Layer.succeed(GitService)({
-    getContext: () =>
-      Effect.succeed({
-        mainBranch: 'main',
-        currentBranch: 'main',
-        status: [],
-        diffStat: '',
-        recentLog: [],
-      }),
-    getDiff: () => Effect.succeed(''),
-    validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
-    createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
-    repoName: () => Effect.succeed(repoName),
-  });
-
-export const stubGitLayer = makeStubGitLayer();
+export const stubGitLayer = Layer.succeed(GitService)({
+  getContext: () =>
+    Effect.succeed({
+      mainBranch: 'main',
+      currentBranch: 'main',
+      status: [],
+      diffStat: '',
+      recentLog: [],
+    }),
+  getDiff: () => Effect.succeed(''),
+  validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
+  createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
+  repoName: () => Effect.succeed('cape'),
+});
 
 export const stubCommitLayer = Layer.succeed(CommitService)({
   stageAndCommit: () => Effect.succeed(undefined),
@@ -58,6 +55,5 @@ export const stubValidateLayer = Layer.succeed(ValidateService)({
 
 export const stubHerdrLayer = Layer.succeed(HerdrService)({
   workspaceId: () => null,
-  tabId: () => null,
-  rename: () => Effect.succeed(true),
+  reportPhase: () => Effect.succeed(true),
 });

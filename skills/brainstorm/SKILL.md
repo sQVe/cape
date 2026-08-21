@@ -39,6 +39,9 @@ brainstorm?" If the user redirects, load `cape:execute-plan` with the Skill tool
 confirm brainstorm, continue. A missing or stale cache follows the `cape:tracker` cache rule: treat
 it as empty.
 
+Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`
+(safe no-op outside herdr).
+
 ### 2. Research and clarify
 
 Run `cape git context` for recent commits and codebase state, and check existing docs and structure.
