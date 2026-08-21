@@ -81,11 +81,12 @@ Cape ships 13 workflow skills plus the `don-cape` router.
 | `pr-feedback`             | Triage inbound PR review comments and resolve threads |
 | `fix-bug`                 | Diagnose to root cause, then patch test-first         |
 | `tracker`                 | Write Linear results into the local cache             |
-| `unslop`                  | Cut AI tells from prose and add human voice           |
+| `unslop`                  | Cut AI tells from prose and set the register          |
 | `bro`                     | Restate the last message in plain language            |
 
 Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
-`cape:unslop` skill before finalizing.
+`cape:unslop` skill before finalizing. Everything that ships under your name or comes back as a
+report uses that skill's plain register. Docs and the README get its full voice.
 
 ## Agents
 

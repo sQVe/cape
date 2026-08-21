@@ -5,18 +5,26 @@ description: Cut AI tells from any writing. Must always apply.
 
 # Unslop
 
-Edit text to remove AI patterns and add human voice. Preserve meaning, match intended tone.
+Edit text to remove AI patterns. Preserve meaning, match the register.
 
 ## Process
 
-1. Scan for the patterns below.
-2. Rewrite. Preserve meaning, match intended tone.
-3. Add soul (see next section).
+1. Pick the register: plain or full voice.
+2. Scan for the patterns below.
+3. Rewrite. Preserve meaning.
 4. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
 
-## Adding soul
+## Register
 
-Removing patterns is half the job. Sterile, voiceless writing is just as obvious.
+Plain is the default. It covers anything that ships under the user's name and anything reported back
+to them: commit messages, PR titles and descriptions, review replies, Linear tickets and comments,
+plan and epic text, review findings, summaries. Assume the reader is skimming, in a hurry, and
+reading in a second language. Apply every pattern below. Lead with the answer, then the evidence,
+and structure the text so it can be scanned.
+
+Full voice is the exception. Use it for docs, the README, and posts, where sterile writing is its
+own AI tell. Rules 1 to 26 still apply. The plain speech rules, 27 to 31, do not, since they would
+cut the feeling, the long sentence, and the hedge that full voice is built on. Instead:
 
 - **Have opinions.** React to facts instead of neutrally listing pros and cons.
 - **Vary rhythm.** Short sentences. Then longer ones that take their time. Mix it up.
@@ -26,7 +34,7 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 - **Be specific.** Not "this is concerning" but "there's something unsettling about agents churning
   away at 3am."
 
-Scale to the medium: full voice for docs and posts, restraint for commit messages and issue text.
+When in doubt, pick plain.
 
 ## Patterns to detect and fix
 
@@ -75,7 +83,7 @@ Scale to the medium: full voice for docs and posts, restraint for commit message
     a period, names the item, and is followed by genuinely new detail ("**Schema in TypeScript.**
     Tables live in one file.") is fine, not a tell.
 17. **Title case headings.** Use sentence case.
-18. **Decorative emojis.** Remove from headings and bullets.
+18. **Decorative emojis.** Remove from headings, bullets, and prose.
 19. **Curly quotes.** Replace with straight quotes.
 
 ### Communication artifacts

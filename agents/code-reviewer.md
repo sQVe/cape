@@ -41,6 +41,10 @@ Each finding in `findings` carries:
   `efficiency`, or a narrower one when it fits
 - `verdict`, `CONFIRMED` or `PLAUSIBLE`
 
+Write every text field in the plain register from `cape:unslop`: simple words, short sentences, the
+claim before the rationale. The caller renders your text as written, so yours is the only pass it
+gets.
+
 A worked finding:
 
 ```json
