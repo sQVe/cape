@@ -43,10 +43,10 @@ Resolve the target from the invocation:
   writing it. Print a one-line plan summary (epic goal plus first task) before drafting.
 - Nothing: use the active epic from the cache; if several are active, ask which.
 
-Read the tracker cache (`hooks/context/tracker.json`) for the epic's ready-task titles and count;
-they ground the interview and the computed turn cap. Do not network-read for orientation. A stale or
-missing cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in
-session before drafting. Do not guess.
+Read the tracker cache (`cape tracker show`) for the epic's ready-task titles and count; they ground
+the interview and the computed turn cap. Do not network-read for orientation. A stale or missing
+cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in session before
+drafting. Do not guess.
 
 ### 2. Interview the approach
 

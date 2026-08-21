@@ -9,11 +9,11 @@ description: >
 
 # Tracker
 
-Cape uses Linear as the tracker and `hooks/context/tracker.json` as the local read cache. Work is
-two-tier: human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan
-issues and tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh
-the cache with `cape tracker`. Linear is the source of truth for issue content; the cache is the
-source of truth for reads, and for task status during build.
+Cape uses Linear as the tracker and a per-repository local read cache. Work is two-tier:
+human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan issues and
+tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh the cache
+with `cape tracker`. Linear is the source of truth for issue content; the cache is the source of
+truth for reads, and for task status during build.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -26,9 +26,9 @@ to the chain using the tracker.
    [resources/agent-contract.md](resources/agent-contract.md). Team routing is a `save_issue`
    parameter, with no config layer.
 3. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
-4. **Read from the cache.** Ready-work listing and orientation read `hooks/context/tracker.json`,
-   never Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read,
-   not orientation, and is allowed.
+4. **Read from the cache.** Ready-work listing and orientation read `cape tracker show`, never
+   Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read, not
+   orientation, and is allowed.
 5. **Build-time status is cache-only.** Track task status with `cape tracker cache-status` during
    build; no MCP `save_issue` status writes mid-build. The PR closing line catches Linear up at
    merge.
@@ -40,7 +40,9 @@ to the chain using the tracker.
 
 ## Cache shape
 
-The cache file is `hooks/context/tracker.json`.
+Read the cache with `cape tracker show`, which prints it as JSON. The file itself is named after the
+repository, so `cape tracker path` prints its location; never hardcode a cache filename. Its shape
+is:
 
 ```json
 {

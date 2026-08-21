@@ -4,6 +4,7 @@ import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
+import { pluginRoot } from '../pluginRoot';
 import {
   mergeEpic,
   mergeTasks,
@@ -15,6 +16,7 @@ import {
   writeCacheFile,
 } from '../services/trackerLive';
 import { catchAndDie } from '../utils/catchAndDie';
+import { trackerCachePath } from '../utils/trackerCachePath';
 
 const readStdin = () =>
   Effect.try({
@@ -154,9 +156,40 @@ const cacheStatus = Command.make(
   ),
 );
 
+// The cache file name is derived from the repository, so it cannot be written
+// down in a skill. This is how a reader finds it.
+const path = Command.make(
+  'path',
+  {},
+  Effect.fn(function* () {
+    const resolved = yield* Effect.try({
+      try: () => trackerCachePath(pluginRoot()),
+      catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    }).pipe(catchAndDie);
+    yield* Console.log(resolved);
+  }),
+).pipe(
+  Command.withDescription(
+    "Print the path of this repository's tracker cache file. Worktrees of one repo share it.",
+  ),
+);
+
+const show = Command.make(
+  'show',
+  {},
+  Effect.fn(function* () {
+    const cache = yield* readCacheFile();
+    yield* Console.log(JSON.stringify(cache ?? { version: 1, timestamp: 0, epics: {} }));
+  }),
+).pipe(
+  Command.withDescription(
+    "Print this repository's tracker cache as JSON. An absent or unreadable cache prints an empty one.",
+  ),
+);
+
 export const tracker = Command.make('tracker').pipe(
   Command.withDescription(
-    'Write MCP Linear results into the local tracker cache. Pure local cache writes; no network calls.',
+    'Read and write the local tracker cache. Pure local cache access; no network calls.',
   ),
-  Command.withSubcommands([cacheEpic, cacheTasks, cacheStatus]),
+  Command.withSubcommands([cacheEpic, cacheTasks, cacheStatus, path, show]),
 );

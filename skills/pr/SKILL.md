@@ -102,8 +102,8 @@ Write the body for a reviewer who knows the domain but not this branch:
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
 - End the description with the cache-built closing line, whatever the template source:
-  `Fixes <human-id>, <plan-id>, <completed task ids>` from `hooks/context/tracker.json`, meaning the
-  epic entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
+  `Fixes <human-id>, <plan-id>, <completed task ids>` from `cape tracker show`, meaning the epic
+  entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
   task's own `humanTicketId`; incomplete and canceled children excluded. List only ids that exist:
   AI-only work has no `humanTicketId`, so its line starts at the plan issue. Never invent a
   placeholder. Use `Related to` with the same set ONLY when this PR does not complete the epic.
