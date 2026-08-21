@@ -104,7 +104,8 @@ Before closing, confirm:
 
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- The repository's documented check command passes (for cape itself: `pnpm check`)
+- The repository's documented check commands pass (for cape itself: `pnpm check`, `pnpm typecheck`,
+  and `pnpm test`)
 - Every `CONFIRMED` code-review finding is fixed, and every `PLAUSIBLE` one is fixed or dismissed
   with a reason
 

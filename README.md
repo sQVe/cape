@@ -127,7 +127,8 @@ cape/
 
 1. Clone the repository and branch off `main`.
 2. Put new files in the directory that already holds their kind.
-3. Run `pnpm check` and try the change with `claude --plugin-dir .`.
+3. Run `pnpm check`, `pnpm typecheck`, and `pnpm test`, then try the change with
+   `claude --plugin-dir .`.
 4. Open a pull request.
 
 ## License
