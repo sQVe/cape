@@ -24,6 +24,8 @@ defines its own flexibility.
    human is present and the stops apply.
 5. **Use tracker for issue state.** Linear writes go through MCP, local reads through the tracker
    cache.
+6. **When editing a cape skill, spend prose only on what no check can enforce.** A rule a lint rule,
+   a hook, or a `cape validate` check can hold belongs in the check.
 
 ## Routing
 
