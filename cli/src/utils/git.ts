@@ -10,17 +10,24 @@ export type GitCommonDir =
   | { readonly kind: 'no-repo' }
   | { readonly kind: 'unavailable' };
 
-// Only git saying "not a repository" means not a repository. It exits 128 for
-// plenty of other reasons — a bad config line, a dubious-ownership refusal —
-// and those are real repositories whose cache must never land in the shared
-// fallback file. Anything we cannot positively identify fails closed.
+// Only a failed parent search means "there is no repository here". git exits
+// 128 for plenty of other reasons — a bad config line, a dubious-ownership
+// refusal, a worktree whose .git pointer is broken — and those are real
+// repositories whose cache must never land in the shared fallback file.
+//
+// The two phrasings that mean no repository both name the search:
+//   not a git repository (or any parent up to mount point /)
+//   not a git repository (or any of the parent directories): .git
+// A broken gitdir instead names the path it could not use:
+//   not a git repository: <path>
+// Anything we cannot positively identify fails closed.
 export const gitFailureKind = (error: unknown): 'no-repo' | 'unavailable' => {
   const { status, stderr } = error as { status?: unknown; stderr?: unknown };
   if (typeof status !== 'number' || status === 0) {
     return 'unavailable';
   }
   const text = typeof stderr === 'string' ? stderr : String(stderr ?? '');
-  return /not a git repository/i.test(text) ? 'no-repo' : 'unavailable';
+  return /not a git repository \(or any/i.test(text) ? 'no-repo' : 'unavailable';
 };
 
 const readCommonDir = (cwd?: string): GitCommonDir => {

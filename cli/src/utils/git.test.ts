@@ -45,6 +45,24 @@ describe('gitFailureKind', () => {
     ).toBe('unavailable');
   });
 
+  it('accepts the parent-directories phrasing of not-a-repository', () => {
+    expect(
+      gitFailureKind({
+        status: 128,
+        stderr: 'fatal: not a git repository (or any of the parent directories): .git',
+      }),
+    ).toBe('no-repo');
+  });
+
+  // A worktree whose .git pointer is broken says "not a git repository: <path>",
+  // naming a gitdir instead of reporting a failed parent search. It is a real
+  // repository, so it must not reach the shared fallback.
+  it('treats a broken gitdir pointer as unavailable', () => {
+    expect(gitFailureKind({ status: 128, stderr: 'fatal: not a git repository: (null)' })).toBe(
+      'unavailable',
+    );
+  });
+
   it('treats a nonzero exit with no stderr as unavailable', () => {
     expect(gitFailureKind({ status: 128 })).toBe('unavailable');
   });
@@ -108,6 +126,35 @@ describe('gitCommonDir', () => {
     writeFileSync(join(repo, '.git', 'config'), '[core\nbroken\n');
 
     expect(gitCommonDir(repo)).toEqual({ kind: 'unavailable' });
+  });
+
+  it('reports unavailable for a worktree whose gitdir pointer is broken', () => {
+    scratch = mkdtempSync(join(tmpdir(), 'cape-git-'));
+    const main = join(scratch, 'main');
+    execFileSync('git', ['init', '-b', 'main', main], { stdio: 'ignore' });
+    execFileSync(
+      'git',
+      ['-c', 'commit.gpgsign=false', 'commit', '-q', '--allow-empty', '-m', 'init'],
+      {
+        cwd: main,
+        stdio: 'ignore',
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: 't',
+          GIT_AUTHOR_EMAIL: 't@t',
+          GIT_COMMITTER_NAME: 't',
+          GIT_COMMITTER_EMAIL: 't@t',
+        }, // eslint-disable-line node/no-process-env
+      },
+    );
+    const worktree = join(scratch, 'wt');
+    execFileSync('git', ['worktree', 'add', '-q', worktree, '-b', 'wt'], {
+      cwd: main,
+      stdio: 'ignore',
+    });
+    writeFileSync(join(worktree, '.git'), `gitdir: ${join(scratch, 'gone')}/.git/worktrees/wt\n`);
+
+    expect(gitCommonDir(worktree)).toEqual({ kind: 'unavailable' });
   });
 
   it('resolves a symlinked path to the same common dir as the real one', () => {
