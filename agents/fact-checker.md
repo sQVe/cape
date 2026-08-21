@@ -30,6 +30,10 @@ anyone acts on it.
    - API behaves this way? → WebFetch official docs, cite with URL and source tier
    - Library supports this feature? → Context7 or WebSearch, cite with URL and source tier
 
+   Code is evidence of what the code does, never of what it was meant to do. Reading a function body
+   cannot confirm that the function is correct. A claim about intent needs a separate source: the
+   contract, a test asserting it, a comment, or docs.
+
 3. **Answer questions directly.**
    - "Does X exist at path Y?" → Verified yes/no with evidence
    - "Is this signature correct?" → Actual signature vs claimed signature
@@ -42,7 +46,9 @@ anyone acts on it.
    - **Confirmed.** Evidence found that matches the claim exactly
    - **Refuted.** Evidence contradicts the claim (include what was actually found)
    - **Partially correct.** The claim is close but inaccurate (detail the differences)
-   - **Unverifiable.** Cannot confirm or deny, so retract the claim explicitly
+   - **Unverifiable.** Cannot confirm or deny, so retract the claim explicitly: "I could not find
+     evidence for X after searching [locations]." List the directories, patterns, and tools
+     searched. Never fill gaps with plausible-sounding guesses
 
 5. **Handle refutations constructively.** When a claim is wrong, supply the right answer. "Function
    `getUser` does not exist in `auth.ts`. `findUserById` does, at line 42, with signature
