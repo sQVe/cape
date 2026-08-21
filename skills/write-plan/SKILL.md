@@ -40,6 +40,10 @@ Confirm a design summary exists in conversation. Review it for blockers: vague r
 anti-patterns without reasoning, open questions that affect implementation, architecture claims
 without codebase evidence. Resolve blockers with the user before touching Linear.
 
+Signal the phase for the herdr rail: `cape workspace phase plan` (safe no-op outside herdr). Entry
+here is often direct, without a brainstorm ahead of it, so the plan phase can land for the first
+time in this skill.
+
 ### 2. Write the plan contract
 
 Shape the design into the canonical plan-issue shape from `cape:tracker`'s

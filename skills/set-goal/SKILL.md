@@ -116,12 +116,11 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for
 a final CAPE-RUN status line; print it only at the true end.
 
-First, label this workspace so its prefix tracks overall progress: from the epic worktree, run
-`cape workspace phase build`. It derives the epic from the current branch against the tracker
-cache and renames your workspace and tab to `🔨 ABU-123 <title>`; off the epic branch it skips.
-Advance the phase only at overall transitions, not per task: `pr` when SHIP starts, `done` on a
-clean ship, `blocked` on park. Per-task work happens in the task's own tab and never touches the
-workspace label.
+First, report the phase so the herdr rail tracks overall progress: run `cape workspace phase build`.
+It reports display-only metadata to the workspace, rendered by a `$phase` token in the sidebar, and
+leaves the workspace label alone. Advance the phase only at overall transitions, not per task: `pr`
+when SHIP starts. Park and clean-ship need no report, since herdr tracks blocked and done itself as
+agent status. Per-task work happens in the task's own tab.
 
 ## Topology (decided, do not re-decide)
 - Tabs box tasks: the orchestrator keeps its own tab for the whole run; each task gets its own tab,
@@ -166,8 +165,7 @@ Omit this whole section when the field was empty.>
 - Poll once per turn; if no commit yet, end the turn. /goal's next turn is the retry tick. Never
   block a single call for many minutes.
 - Stall (timeout, dead pane, or done-without-commit): retry or respawn the same spec, up to 3
-  attempts; a retry counts only when a real commit lands. Budget spent means park: run
-  `cape workspace phase blocked`, then stop.
+  attempts; a retry counts only when a real commit lands. Budget spent means park: stop.
 
 ## Finishing
 - When no ready tasks remain, SHIP: `cape workspace phase pr`, then cape:finish-epic, then cape:pr
@@ -180,9 +178,9 @@ Omit this whole section when the field was empty.>
   stopping for approval.
   An unresolved thread must mean still open: never leave a thread you fixed unresolved, never
   resolve one you did not fix.
-- On a clean ship, run `cape workspace phase done`, then print exactly one line:
+- On a clean ship, print exactly one line:
       CAPE-RUN ABU-123 result=shipped pr=<the real PR url> tasks_closed=<n> reason=shipped
-- On an unrecoverable blocker, run `cape workspace phase blocked`, then stop and print:
+- On an unrecoverable blocker, stop and print:
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 

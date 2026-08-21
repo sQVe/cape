@@ -50,7 +50,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Hooks: the SessionStart banner is now derived entirely from the current git branch and the tracker
   cache. The epic is matched from the branch against each cached epic's `gitBranchName`, and the
   phase from ready-task counts plus open-PR state (ready tasks = build; none and no PR = ship; PR
-  open = pr). Done epics stay silent. `cape workspace phase` derives its epic the same way.
+  open = pr). Done epics stay silent.
+
+- CLI: `cape workspace phase` reports the workflow phase to herdr as display-only metadata under the
+  source `cape`, instead of renaming the workspace and tab. herdr renders it through a `$phase`
+  token in the sidebar, so the workspace label stays whatever a human named it. The command no
+  longer reads the tracker cache, matches a branch against an epic, or looks up a PR number. That
+  chain is why the old label almost never appeared: it needed a cached epic whose `gitBranchName`
+  was set, and that field is present in 2 of 54 cached epics. Phases narrow to `plan`, `build`,
+  `review`, and `pr`, since herdr already tracks blocked and done as agent status and renders them
+  through its own state icon. Reports carry a 24 hour TTL, so a phase left behind by a dead session
+  expires instead of going stale. Rendering needs a one-time `ui.sidebar.spaces` row in herdr's
+  config, documented in the tracker workspace-setup checklist.
 
 ### Fixed
 

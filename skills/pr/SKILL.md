@@ -155,10 +155,10 @@ body, and describe the change, not the orchestration that produced it.
 ### 5. Run the gate and create
 
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
-pass, keep `[ ]` on fail. For the review box: when no review covers the current HEAD, dispatch
-`cape:code-reviewer` over the branch diff now, relay its findings through one `ReportFindings` call,
-and address or dismiss each one. Then rewrite the box to name the model, the reviewer, and the
-commit it read, and tick it:
+pass, keep `[ ]` on fail. For the review box: when no review covers the current HEAD, run
+`cape workspace phase review`, dispatch `cape:code-reviewer` over the branch diff now, relay its
+findings through one `ReportFindings` call, and address or dismiss each one. Then rewrite the box to
+name the model, the reviewer, and the commit it read, and tick it:
 
 ```text
 - [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
@@ -183,7 +183,7 @@ trivial, re-attempt up to 3 times, then ask the user.
 
 ### 6. Finalize
 
-Label the herdr workspace:
+Report the phase to the herdr workspace:
 
 ```bash
 cape workspace phase pr

@@ -31,8 +31,8 @@ The evidence gate and automated checks are fixed; verification details adapt to 
 Read `hooks/context/tracker.json` and locate the epic. Every child task must have a completed state
 type or a done-like status.
 
-- Epic already `Done` (the PR merged before this ran): run `cape workspace phase done`, report that
-  the work is closed, and stop. Do not re-close or rewrite status.
+- Epic already `Done` (the PR merged before this ran): report that the work is closed and stop. Do
+  not re-close or rewrite status.
 - Any task still open: **STOP.** Report the open task IDs.
 - Cache missing or stale for this session: follow the `cape:tracker` cache rule and refresh from an
   MCP result already in session.

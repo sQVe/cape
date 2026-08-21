@@ -54,3 +54,25 @@ form, `Fixes ABU-x, AI-y`.
 
 Free-plan caveat: `AI` uses the second of the two free team slots, so any third team needs a plan
 upgrade.
+
+## herdr sidebar (run once, in herdr's config.toml)
+
+`cape workspace phase` reports the workflow phase to the current herdr workspace as display-only
+metadata under the source `cape`. herdr renders it only where a layout asks for it, and cape cannot
+write herdr's config, so without this step the reports land and nothing shows:
+
+```toml
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", "workspace", { token = "$phase", dim = true }],
+  [{ token = "branch", dim = true }, "git_status"],
+]
+```
+
+Apply with `herdr config check` then `herdr server reload-config`. A row disappears when none of its
+tokens have a value, so the layout is inert in workspaces cape never touches.
+
+Two constraints worth knowing before editing the rows: `fg` takes a hex string only (named colors
+are rejected, and hex does not follow a theme switch, so prefer `dim` for de-emphasis), and phase
+sits on the first row on purpose, because a long branch name on the second row consumes the whole
+sidebar width before a later token gets a column.
