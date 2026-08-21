@@ -114,6 +114,7 @@ describe('cape tracker cache-epic', () => {
           gitBranchName: 'abu-15-cape-v2',
           state: { name: 'In Progress', type: 'started' },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
@@ -136,12 +137,40 @@ describe('cape tracker cache-epic', () => {
           title: 'Fresh epic',
           state: { name: 'Todo', type: 'unstarted' },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
     const cache = readCache(root);
     expect(Object.keys(cache.epics)).toEqual(['ABU-16']);
     expect(cache.epics['ABU-16'].title).toBe('Fresh epic');
+    console_.restore();
+  });
+
+  it('rejects a childless epic without overwriting the existing cache', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan cached straight from get_issue',
+            state: { name: 'In Progress', type: 'started' },
+            children: { nodes: [] },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('list_issues(parentId: AI-9)');
     console_.restore();
   });
 

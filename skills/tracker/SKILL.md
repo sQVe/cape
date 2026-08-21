@@ -118,10 +118,11 @@ cape tracker cache-tasks <plan-id> '<linear-task-array-json>'
 ```
 
 `cache-epic` is authoritative: it prunes cached tasks the payload omits unless they already
-advanced. MCP `get_issue` returns no children, so never pass its result straight to `cache-epic` or
-the refresh drops every unstarted task. Compose the payload instead: take the epic fields from
-`get_issue` and fill `children.nodes` from `list_issues(parentId: <plan-id>)`. To refresh task
-membership alone, use `cache-tasks` with the same `list_issues` result.
+advanced. Compose the payload, never passing a bare `get_issue` result: take the epic fields from
+`get_issue` and fill `children.nodes` from `list_issues(parentId: <plan-id>)`, since `get_issue`
+returns no children. `cache-epic` rejects a childless payload for that reason; `--no-tasks` is the
+escape hatch for a plan that really has none. To refresh task membership alone, use `cache-tasks`
+with the same `list_issues` result.
 
 The plan issue needs no stamp: `cache-epic` reads its pair from `parentId`. Task-level pairs still
 do. Add `"humanTicketId": "<human-ticket-id>"` to the paired child inside `children`, because a bug

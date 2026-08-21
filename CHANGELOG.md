@@ -68,6 +68,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tracker: the refresh recipe told skills to pipe a `get_issue` result straight into
   `cape tracker cache-epic`. `get_issue` returns no children and `cache-epic` prunes unstarted tasks
   the payload omits, so following it deleted them. Children now come from `list_issues`.
+- Tracker: `cape tracker cache-epic` accepted a payload with no children, printed `taskCount: 0`,
+  and exited 0, so the recipe above was a warning nothing enforced. A plan cached that way held no
+  tasks: they never reached ready-work, never took a status, and never made the PR closing line. The
+  command now rejects a childless payload and names the `list_issues` call that fills it. Pass
+  `--no-tasks` when the plan genuinely has none.
 - Tracker: the agent contract required a project on every issue, which the `AI` team cannot satisfy
   because projects belong to teams. Agent-side issues stay project-less.
 - Tracker: one cache file at the plugin root served every repository, but Linear identifiers are

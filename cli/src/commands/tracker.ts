@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { Console, Effect, Option } from 'effect';
-import { Argument, Command } from 'effect/unstable/cli';
+import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
 import { pluginRoot } from '../pluginRoot';
@@ -56,14 +56,23 @@ const cacheEpic = Command.make(
       Argument.withDescription('Linear epic issue JSON; reads stdin when omitted'),
       Argument.optional,
     ),
+    noTasks: Flag.boolean('no-tasks').pipe(
+      Flag.withDescription('Accept a plan issue that genuinely has no sub-issues'),
+      Flag.withDefault(false),
+    ),
   },
-  Effect.fn(function* ({ issue }) {
+  Effect.fn(function* ({ issue, noTasks }) {
     yield* requireCachePath();
     const raw = yield* readJsonInput(issue);
     const parsed = yield* parseJson(raw, 'Linear issue');
     const epic = toEpic(parsed);
     if (epic == null) {
       return yield* dieWithError('Linear epic JSON must include an issue id');
+    }
+    if (epic.tasks.length === 0 && !noTasks) {
+      return yield* dieWithError(
+        `${epic.id} has no children, so every task under it would be invisible to build and to the PR closing line. MCP get_issue returns no children: fill children.nodes from list_issues(parentId: ${epic.id}). Pass --no-tasks if the plan really has none.`,
+      );
     }
 
     const cache = yield* readCacheFile();
