@@ -55,6 +55,7 @@ Otherwise, first matching row wins:
 | Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`  | Inbound review loop        |
 | Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
+| "Explain that", "what does that mean", "in plain english", "eli5" | `cape:bro`          | Restates the last message  |
 
 `cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
 any production code.
