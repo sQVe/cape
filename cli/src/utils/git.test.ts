@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -18,8 +18,35 @@ describe('gitRoot', () => {
 describe('gitFailureKind', () => {
   // hookLive.ts draws this same distinction: a transient failure must never be
   // mistaken for "not a repo", or the cache write lands in the shared file.
-  it('treats a nonzero exit as not-a-repo', () => {
-    expect(gitFailureKind({ status: 128 })).toBe('no-repo');
+  it('treats an explicit not-a-repository answer as no-repo', () => {
+    expect(
+      gitFailureKind({
+        status: 128,
+        stderr: 'fatal: not a git repository (or any parent up to mount point /)',
+      }),
+    ).toBe('no-repo');
+  });
+
+  // git exits 128 for many reasons besides "not a repository" — a broken
+  // config and a dubious-ownership refusal both do. Those are real
+  // repositories, so falling back would put them in the shared cache.
+  it('treats a broken config inside a real repository as unavailable', () => {
+    expect(
+      gitFailureKind({ status: 128, stderr: 'fatal: bad config line 1 in file .git/config' }),
+    ).toBe('unavailable');
+  });
+
+  it('treats a dubious-ownership refusal as unavailable', () => {
+    expect(
+      gitFailureKind({
+        status: 128,
+        stderr: 'fatal: detected dubious ownership in repository at ...',
+      }),
+    ).toBe('unavailable');
+  });
+
+  it('treats a nonzero exit with no stderr as unavailable', () => {
+    expect(gitFailureKind({ status: 128 })).toBe('unavailable');
   });
 
   it('treats a missing binary as unavailable', () => {
@@ -53,6 +80,17 @@ describe('gitCommonDir', () => {
 
   it('reports no-repo outside a repository', () => {
     expect(gitCommonDir('/')).toEqual({ kind: 'no-repo' });
+  });
+
+  // A real repository git refuses to read must never take the shared fallback,
+  // which is what every non-repo invocation writes to.
+  it('reports unavailable for a real repository git cannot read', () => {
+    scratch = mkdtempSync(join(tmpdir(), 'cape-git-'));
+    const repo = join(scratch, 'repo');
+    execFileSync('git', ['init', '-b', 'main', repo], { stdio: 'ignore' });
+    writeFileSync(join(repo, '.git', 'config'), '[core\nbroken\n');
+
+    expect(gitCommonDir(repo)).toEqual({ kind: 'unavailable' });
   });
 
   it('resolves a symlinked path to the same common dir as the real one', () => {
