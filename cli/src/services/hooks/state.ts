@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { Effect, ServiceMap } from 'effect';
 
 import { safeParseJson } from '../../utils/json';
+import { trackerCachePath } from '../../utils/trackerCachePath';
 import { PrService } from '../pr';
 import { TRACKER_CACHE_TTL_MS, isTrackerCache } from '../tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from '../tracker';
@@ -47,8 +48,6 @@ export const resolveBranchInfo = (cwd?: string) =>
     return { branch, defaultBranch };
   });
 
-const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
-
 type GitContext =
   | { readonly kind: 'repo'; readonly gitDir: string; readonly isLinkedWorktree: boolean }
   | { readonly kind: 'no-repo' }
@@ -81,7 +80,7 @@ const readRawTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
-    const content = yield* service.readFile(trackerPath(root));
+    const content = yield* service.readFile(trackerCachePath(root));
     if (content == null) {
       return null;
     }

@@ -8,6 +8,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { main } from '../main';
 import { HookService, readTrackerCache } from '../services/hooks/state';
 import { makeTestCommandLayers, spyConsole } from '../testUtils';
+import { trackerCachePath } from '../utils/trackerCachePath';
+
+const trackerPath = (root: string) => trackerCachePath(root);
 
 const run = Command.runWith(main, { version: '0.1.0' });
 let activeRoot: string | null = null;
@@ -18,8 +21,6 @@ const makeRoot = () => {
   vi.stubEnv('CLAUDE_PLUGIN_ROOT', root);
   return root;
 };
-
-const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 const readCache = (root: string) => JSON.parse(readFileSync(trackerPath(root), 'utf-8'));
 
@@ -593,9 +594,7 @@ describe('tracker cache validation', () => {
 
     const result = await Effect.runPromise(
       readTrackerCache().pipe(
-        Effect.provide(
-          makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) }),
-        ),
+        Effect.provide(makeHookLayer({ [trackerCachePath('/test')]: JSON.stringify(cache) })),
       ),
     );
 
@@ -629,9 +628,7 @@ describe('tracker cache validation', () => {
 
     const result = await Effect.runPromise(
       readTrackerCache().pipe(
-        Effect.provide(
-          makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) }),
-        ),
+        Effect.provide(makeHookLayer({ [trackerCachePath('/test')]: JSON.stringify(cache) })),
       ),
     );
 
