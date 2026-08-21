@@ -79,9 +79,10 @@ Ask "Anything to discuss or redirect before I propose approaches?" and wait.
 ### 4. Propose approaches
 
 First derive three to six criteria a design can be graded on, each traced to a research finding or a
-key decision: fit with the pattern already in the codebase, blast radius of the change, cost of the
-common path, whatever this idea turns on. Criteria that would fit any project mean you skipped the
-step. Every approach gets scored against them in step 5.
+key decision. Name the thing this idea actually turns on: "survives an offline client", "migrates
+the 40k existing rows without a backfill window", "one place to change when the vendor renames a
+field". Criteria that would fit any project, like blast radius or maintainability, mean you skipped
+the step. Every approach gets scored against them in step 5.
 
 Then pick a mode. Divergent: the idea touches multiple components, has competing viable approaches,
 or involves architectural decisions beyond interface shape. Inline: single-file change, one obvious
@@ -117,9 +118,11 @@ produced: three in divergent mode, one or two inline.
 ```
 [N] design(s) explored, scored against the criteria:
 
-| Criterion   | [Design 1]    | [Design 2]    |
-| ----------- | ------------- | ------------- |
-| [Criterion] | [score + why] | [score + why] |
+| Criterion   | [Design 1]    | [Design 2]    | [Design 3]    |
+| ----------- | ------------- | ------------- | ------------- |
+| [Criterion] | [score + why] | [score + why] | [score + why] |
+
+One column per approach step 4 produced, so drop the unused columns in inline mode.
 
 1. **[Name]** ([its constraint]): [approach]. Trade-off: [x]. Smells: [hits, or none]
 

@@ -67,9 +67,11 @@ Build an in-session breakdown before coding:
 - TDD slices, each with one behavior and one verification command
 - Risks, assumptions, and explicit out-of-scope items
 
-A delegate's summary is a claim, not evidence. Read its diff or open the files it names before
-acting on what it reports. That holds for `cape:codebase-investigator` here and for every agent
-dispatched later in the task.
+A delegate's summary is a claim, not evidence. Open the files it names, or read the diff when it
+wrote one, before acting on what it reports about the codebase. That holds for
+`cape:codebase-investigator` here and for any later delegate whose report shapes the change. It does
+not apply to a delegate you dispatched to keep output out of context, such as `cape:test-runner`;
+re-reading what it summarized would undo the dispatch.
 
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.

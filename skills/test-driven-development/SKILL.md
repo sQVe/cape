@@ -22,12 +22,12 @@ worth doing adapt to context.
    for future cases you can already imagine; let each change inform the next test.
 3. **Test behavior, not implementation.** Tests describe what changes for the caller, not which
    internal method ran.
-4. **Skip only with explicit user approval.** Skip it only when the user accepts doing so for a
-   stated reason, and report that the TDD contract was overridden. Once overridden, name why the
-   failing test is impractical, then use the closest executable check: a targeted script, a manual
-   reproduction command, browser automation, a snapshot comparison, a log assertion, or a focused
-   integration check. The fallback still has to run and still has to fail first. It is not a second
-   way to opt out.
+4. **Trade the test down only with explicit user approval.** Drop the failing test only when the
+   user accepts doing so for a stated reason, and report that the TDD contract was overridden. Once
+   overridden, name why the failing test is impractical, then use the closest executable check: a
+   targeted script, a manual reproduction command, browser automation, a log assertion, or a focused
+   integration check. Run that check before the production change as well as after, and report both
+   results. The fallback replaces the test, not the red step; it is not a second way to opt out.
 5. **Don't fake green.** Never change a test so it matches a wrong implementation. Never weaken an
    existing assertion unless the expected behavior genuinely changed, and say what changed and why.
 
@@ -57,9 +57,9 @@ broader affected suite to confirm nothing else broke. If the minimal change left
 awkward names, do a small refactor and re-run tests. Otherwise move to the next behavior.
 
 When you report the change, name the check that failed first and the failure it produced, then the
-passing run after. Every report names a failing-before run; under rule 4 that run is the fallback
-check rather than a test, so name the approval that overrode the contract and the failure the
-fallback produced.
+passing run after. Under rule 4 that first run is the fallback check rather than a test, so name the
+approval that overrode the contract and what the check reported before the change. A before-run that
+did not fail is reported as that, never omitted.
 
 ## Agents
 
