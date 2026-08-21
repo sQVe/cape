@@ -16,11 +16,19 @@ const env = (name: string) => {
 // nothing is working on -- the failure mode of the label this replaced.
 const phaseTtlMs = 86_400_000;
 
-// herdr rejects a report whose seq trails the last one from the same source, which
-// keeps a slow call that lost a race from overwriting a newer phase. Nanoseconds
-// past the epoch mirrors what herdr's own agent-state integration reports, and
-// exceeds Number.MAX_SAFE_INTEGER, so it has to be built as a bigint.
-const reportSeq = () => (BigInt(Date.now()) * 1_000_000n).toString();
+// herdr rejects a report whose seq does not advance past the last one from the same
+// source, ties included, and still exits 0 when it drops one. Scaling Date.now() to
+// nanoseconds looks precise but carries millisecond resolution, so two cape processes
+// reporting in the same millisecond built the same seq and the second write vanished
+// while the command still printed reported:true. timeOrigin is wall-clock at process
+// start with sub-millisecond precision and performance.now() adds monotonic elapsed
+// time, which keeps two processes comparable and separable. Microseconds hold the
+// origin inside the safe integer range; the sum exceeds it, hence the bigint.
+const reportSeq = () => {
+  const originNs = BigInt(Math.round(performance.timeOrigin * 1000)) * 1000n;
+  const elapsedNs = BigInt(Math.round(performance.now() * 1_000_000));
+  return (originNs + elapsedNs).toString();
+};
 
 // Display-only metadata, never a rename: the workspace label belongs to whoever named
 // it. Best-effort like every cosmetic cape call -- a cape command must never fail

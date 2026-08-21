@@ -89,6 +89,23 @@ describe('HerdrServiceLive.reportPhase', () => {
     expect(BigInt(second)).toBeGreaterThanOrEqual(BigInt(first));
   });
 
+  // herdr drops a report whose seq ties the previous one and still exits 0, so a
+  // millisecond-resolution clock loses the second of two reports in the same
+  // millisecond while the command claims success. Ten back to back stay distinct
+  // only if the seq carries sub-millisecond precision.
+  it('never repeats a seq across reports inside the same millisecond', async () => {
+    const seqs = new Set<string>();
+
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      vi.resetAllMocks();
+      mockExecFileSync.mockReturnValue('');
+      await reportPhase('w65', 'build');
+      seqs.add(flagValue('--seq'));
+    }
+
+    expect(seqs.size).toBe(10);
+  });
+
   it('reports false instead of throwing when herdr rejects the call', async () => {
     mockExecFileSync.mockImplementation(() => {
       throw new Error('metadata ttl_ms must be 86400000 or less');
