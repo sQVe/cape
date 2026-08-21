@@ -83,7 +83,7 @@ When in doubt, pick plain.
     a period, names the item, and is followed by genuinely new detail ("**Schema in TypeScript.**
     Tables live in one file.") is fine, not a tell.
 17. **Title case headings.** Use sentence case.
-18. **Decorative emojis.** Remove from headings and bullets.
+18. **Decorative emojis.** Remove from headings, bullets, and prose.
 19. **Curly quotes.** Replace with straight quotes.
 
 ### Communication artifacts

@@ -38,8 +38,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Agents: `code-reviewer` writes its finding text in the plain register. Six call sites relay that
   same JSON to `ReportFindings` and none of them edited it, so the register belongs with the agent
-  that authors it. The 60-character `short_summary` cap now sits next to the instruction, since a
-  later rewrite pass would have broken it.
+  that authors it. Rule 18 in `unslop` now strips decorative emojis from prose too, not just
+  headings and bullets, so the plain register covers replies and findings.
 
 - Tracker: a plan issue is now a sub-issue of the human ticket it satisfies, and that parent is the
   pair. The `relatedTo` relation and the counterpart markdown links in both bodies are gone, and
