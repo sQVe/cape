@@ -20,13 +20,13 @@ caller reads `findings` and relays it through one `ReportFindings` call, which i
 Never write the findings to a file or an artifact.
 
 ```json
-{ "status": "needs changes", "dropped": 0, "findings": [] }
+{ "status": "passes review", "dropped": 0, "findings": [] }
 ```
 
 `status` is your overall call, either `"passes review"` or `"needs changes"`. `dropped` is a number:
-how many findings cleared the bar but lost the cut. `findings` is empty when nothing clears the bar.
-Keeping all three inside the object is what lets the caller parse the message; a status line outside
-it would break the parse.
+how many findings cleared the bar but lost the 10-finding cut. `findings` is empty when nothing
+clears the bar. Keeping all three inside the object is what lets the caller parse the message; a
+status line outside it would break the parse.
 
 When `ReportFindings` is in your own tool list, call it once instead and let that call be the whole
 report. Dispatched runs usually do not have it, so the JSON object is the normal path.
@@ -76,6 +76,10 @@ a half-believed candidate never reaches the judgment that would have kept it.
 - `CONFIRMED` means you can name the trigger and the wrong result. `PLAUSIBLE` means the mechanism
   is real but the trigger depends on timing, environment, or config, so say what would confirm it.
 - Bugs in unchanged lines of a touched function are in scope. The change re-exposes them.
+- When nothing that clears the bar names a wrong result, the review passes: `status` is
+  `"passes review"` and the remaining findings stay in `findings`, unpadded. That verdict lives in
+  `status`, never in prose beside the object. A clean diff earns a short report, never a filled one.
+  Reporting a cost is not the same as calling the diff broken.
 
 ## Investigation approach
 
@@ -98,8 +102,13 @@ a half-believed candidate never reaches the judgment that would have kept it.
      need
 
 4. **Assess code quality.** Error handling, type safety, and defensive programming. Naming and
-   organization. Test coverage, and whether the assertions would fail if the behavior regressed.
-   Security and performance.
+   organization. Test coverage, and whether assertions would fail if the behavior regressed.
+   Security and performance. Three complexity signals also count: an answer scattered across more
+   files than the reader can hold, a decision repeated in several places, and a comment that states
+   an invariant nothing enforces. Each one clears the same bar as any other finding, so name the
+   question the reader has to chase, the edit that has to land in every copy, or the path that
+   breaks the invariant. A documented layering convention is not scatter; check step 5 before
+   flagging one.
 
 5. **Check conventions last.** Read the repo CLAUDE.md and any closer to the changed files. Flag a
    violation only when you can quote the exact rule and the exact line that breaks it. No style

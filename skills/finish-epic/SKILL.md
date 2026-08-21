@@ -51,9 +51,21 @@ Acceptance criteria audit - <epic-id>
 [ ] Criterion 3 - NOT MET: <gap>
 ```
 
-Mark `[x]` only with evidence this run actually produced. A criterion whose only verification is
-behavioral (UI flow, deployed endpoint) and that could not be exercised is `[~]` DEFERRED, never
-`[x]`. Verify it on a branch preview deploy if one exists; otherwise it stays deferred.
+Mark `[x]` only with evidence this run actually produced.
+
+When the criterion is behavioral, that evidence exercises the real user path, not a proxy for it. A
+test that only imports the changed module proves the module loads. Record the action and the state
+it left behind, plus the side effects the action was supposed to cause (files written, rows changed,
+requests sent). A dry run counts only when you read its output; assuming it ran is not evidence. A
+criterion an automated test already covers is met by that test's passing output.
+
+The out-of-scope regression check names the one fact the change is safe because of, and how far that
+fact was proved: which callers were checked, which paths were traced, which inputs were run. Safety
+asserted without that fact fails the check.
+
+A criterion whose only verification is behavioral (UI flow, deployed endpoint) and that could not be
+exercised is `[~]` DEFERRED, never `[x]`. Verify it on a branch preview deploy if one exists;
+otherwise it stays deferred.
 
 `[~]` does not block hand-off, but every deferred criterion goes verbatim into the PR's Deferred
 verification section (the `cape:pr` section for env-dependent checks) as "not yet done, verify

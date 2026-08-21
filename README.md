@@ -66,7 +66,7 @@ cc-safety-net plugin, not cape. See [Installation](#installation).
 
 ## Skills
 
-Cape ships 12 workflow skills plus the `don-cape` router.
+Cape ships 13 workflow skills plus the `don-cape` router.
 
 | Skill                     | Role                                                  |
 | ------------------------- | ----------------------------------------------------- |
@@ -82,6 +82,7 @@ Cape ships 12 workflow skills plus the `don-cape` router.
 | `fix-bug`                 | Diagnose to root cause, then patch test-first         |
 | `tracker`                 | Write Linear results into the local cache             |
 | `unslop`                  | Cut AI tells from prose and add human voice           |
+| `bro`                     | Restate the last message in plain language            |
 
 Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
 `cape:unslop` skill before finalizing.

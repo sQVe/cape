@@ -67,6 +67,12 @@ Build an in-session breakdown before coding:
 - TDD slices, each with one behavior and one verification command
 - Risks, assumptions, and explicit out-of-scope items
 
+A delegate's summary is a claim, not evidence. Open the files it names, or read the diff when it
+wrote one, before acting on what it reports about the codebase. That holds for
+`cape:codebase-investigator` here and for any later delegate whose report shapes the change. It does
+not apply to a delegate you dispatched to keep output out of context, such as `cape:test-runner`;
+re-reading what it summarized would undo the dispatch.
+
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
@@ -85,6 +91,10 @@ Load `cape:test-driven-development` with the Skill tool.
 Execute the breakdown one slice at a time: write the smallest failing test, confirm it fails for the
 expected reason, make the minimum production change, re-run the focused test and the affected suite,
 clean up only when it clearly improves the result, then run the slice's verification command.
+
+Threading a new signal through several layers is a stop-and-look moment, not routine work. Search
+for a more direct path first, such as a path that already reaches the destination or a value the
+endpoint can derive on its own. Go through the layers only after naming why the direct path fails.
 
 If an R-ID or required constraint forces a change of approach, explain the divergence in
 conversation and continue only when the new approach still satisfies the epic contract. The

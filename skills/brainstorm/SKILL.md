@@ -22,7 +22,8 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 2. **Never enter plan mode.** Brainstorm is a conversation, not a plan artifact. If plan mode is
    active, exit it first. The design summary lives in conversation context; `cape:write-plan`
    formalizes it later.
-3. **Answer your own questions first.** If code or research can answer a question, read the code.
+3. **Answer your own questions first.** If code or research can answer a question, read the code. If
+   the answer is observable, probe for it: run the command, read the output, check the actual data.
    Ask the user only what requires human judgment: priorities, preferences, business constraints.
 4. **Anti-patterns carry reasons.** Write "NO X (reason: Y)", never a bare "NO X".
 5. **The design summary is self-contained.** `cape:write-plan` must be able to create the epic
@@ -77,13 +78,18 @@ Ask "Anything to discuss or redirect before I propose approaches?" and wait.
 
 ### 4. Propose approaches
 
-Pick a mode. Divergent: the idea touches multiple components, has competing viable approaches, or
-involves architectural decisions beyond interface shape. Inline: single-file change, one obvious
-pattern to follow, trivial scope. In inline mode, propose 1-2 approaches directly with pros and
-cons.
+First derive three to six criteria a design can be graded on, each traced to a research finding or a
+key decision. Name the thing this idea actually turns on: "survives an offline client", "migrates
+the 40k existing rows without a backfill window", "one place to change when the vendor renames a
+field". Criteria that would fit any project, like blast radius or maintainability, mean you skipped
+the step. Every approach gets scored against them in step 5.
+
+Then pick a mode. Divergent: the idea touches multiple components, has competing viable approaches,
+or involves architectural decisions beyond interface shape. Inline: single-file change, one obvious
+pattern to follow, trivial scope. In inline mode, propose 1-2 approaches directly.
 
 In divergent mode, dispatch 3 parallel design agents. Each gets the same research context (codebase
-findings, external docs, key decisions) and designs under one constraint:
+findings, external docs, key decisions), the criteria, and one constraint:
 
 | Agent | Constraint               | Tendency                                         |
 | ----- | ------------------------ | ------------------------------------------------ |
@@ -93,28 +99,39 @@ findings, external docs, key decisions) and designs under one constraint:
 
 Without agents, design each approach yourself, sequentially, under the stated constraint.
 
+Screen every candidate, dispatched or self-designed, for four module smells:
+
+| Smell                  | Test                                                        |
+| ---------------------- | ----------------------------------------------------------- |
+| Shallow module         | The interface is as large as the implementation it hides    |
+| Information leakage    | One decision several components must know                   |
+| Temporal decomposition | Structure mirrors execution order, not knowledge boundaries |
+| Pass-through method    | A layer that only forwards                                  |
+
+A hit is a cost to weigh, not a veto. Carry it into the comparison and say what it buys.
+
 ### 5. STOP: choose a direction
 
-Present the approaches side by side without picking one:
+Present the approaches side by side. Recommending one is fine, and saying which you would pick is
+usually more useful than withholding it; the decision still belongs to the user. One column and one
+line per approach step 4 produced: three in divergent mode, one or two inline.
 
 ```
-Three designs explored under different constraints:
+[N] design(s) explored, scored against the criteria:
 
-1. **[Minimal]** (simplest interface)
-   - Approach: [description]
-   - Pros / Cons / Trade-off
+| Criterion   | [Design 1]    | [Design 2]    | [Design 3]    |
+| ----------- | ------------- | ------------- | ------------- |
+| [Criterion] | [score + why] | [score + why] | [score + why] |
 
-2. **[Flexible]** (maximum flexibility)
-   - Approach: [description]
-   - Pros / Cons / Trade-off
+One column per approach step 4 produced, so drop the unused columns in inline mode.
 
-3. **[Pragmatic]** (common case optimized)
-   - Approach: [description]
-   - Pros / Cons / Trade-off
+1. **[Name]** ([its constraint]): [approach]. Trade-off: [x]. Smells: [hits, or none]
 
 I recommend option [N] because [specific reason, especially codebase consistency].
 The other designs revealed [insight the recommended approach should absorb].
 ```
+
+With a single design there is no runner-up line: say why it holds against each criterion instead.
 
 The comparison is the discussion artifact. The user may pick one, combine several, explore a new
 direction, or raise concerns. Iterate until they settle on a direction.
