@@ -7,7 +7,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `cape:bro` restates the previous message in plain language: what happened, what it means, what to
+  do next. It explains rather than re-running the work, and it restates a pending choice instead of
+  making it. Routed from the `don-cape` table on "explain that", "what does that mean", "in plain
+  english", and "eli5".
+
 ### Changed
+
+- Skills and agents: eight files gained the disciplines they were missing. TDD names a fallback for
+  a genuinely impractical failing test, defines a test not worth writing, and forbids reaching green
+  by editing tests or weakening assertions. Brainstorm derives gradeable criteria before dispatching
+  its design agents and screens candidates for shallow modules, information leakage, temporal
+  decomposition, and pass-through layers. The code reviewer reports that a clean diff looks fine
+  instead of filling the report, and flags answers that take more than three files to trace. The
+  fact checker reports where it searched when a claim is unverifiable and no longer treats code as
+  evidence of its own intent. Finish-epic requires the regression check to name the one fact the
+  change is safe because of. Execute-plan treats threading a signal through several layers as a
+  stop-and-look moment and reads a delegate's diff rather than its summary. Write-plan settles a
+  non-obvious data shape before the behavior and states whether repeated runs converge.
 
 - Tracker: a plan issue is now a sub-issue of the human ticket it satisfies, and that parent is the
   pair. The `relatedTo` relation and the counterpart markdown links in both bodies are gone, and
