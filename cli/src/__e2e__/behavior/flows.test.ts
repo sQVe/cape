@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { gitCommonDir } from '../../utils/git';
-import { cacheFileName } from '../../utils/trackerCachePath';
+import { cacheFileNameFor } from '../../utils/trackerCachePath';
 import { cape, capeCmd, cleanupTestRepo, gitInRepo, initTestRepo } from '../helpers';
 
 let tmpDir: string;
@@ -42,7 +42,7 @@ describe('flow 3: session-start', () => {
     // The cache file is named per repository, and the CLI resolves it from its
     // own cwd (tmpDir), not this test process's.
     writeFileSync(
-      join(contextDir, cacheFileName(gitCommonDir(tmpDir))),
+      join(contextDir, cacheFileNameFor(gitCommonDir(tmpDir))),
       JSON.stringify({
         version: 1,
         timestamp: Date.now(),
@@ -183,13 +183,43 @@ describe('flow 5: tracker cache isolation across repositories', () => {
     expect(wroteB.status).toBe(0);
 
     const cacheA = JSON.parse(
-      readFileSync(join(contextDir, cacheFileName(gitCommonDir(repoA))), 'utf-8'),
+      readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repoA))), 'utf-8'),
     );
     const cacheB = JSON.parse(
-      readFileSync(join(contextDir, cacheFileName(gitCommonDir(repoB))), 'utf-8'),
+      readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repoB))), 'utf-8'),
     );
 
     expect(cacheA.epics['AI-5'].title).toBe('Repo A epic');
     expect(cacheB.epics['AI-5'].title).toBe('Repo B epic');
+  });
+
+  // cache-status is the command that caused the reported corruption, and it
+  // takes a read-modify-write path that cache-epic does not.
+  it('keeps a cache-status write in one repository out of the other', () => {
+    const epic = (taskTitle: string) =>
+      JSON.stringify({
+        identifier: 'AI-5',
+        title: 'Shared id',
+        state: { name: 'Todo', type: 'unstarted' },
+        children: {
+          nodes: [
+            { identifier: 'AI-6', title: taskTitle, state: { name: 'Todo', type: 'unstarted' } },
+          ],
+        },
+      });
+
+    cape(['tracker', 'cache-epic', epic('Repo A task')], '', env, { cwd: repoA });
+    cape(['tracker', 'cache-epic', epic('Repo B task')], '', env, { cwd: repoB });
+
+    const marked = cape(['tracker', 'cache-status', 'AI-6', 'Done', 'completed'], '', env, {
+      cwd: repoA,
+    });
+    expect(marked.status).toBe(0);
+
+    const readCache = (repo: string) =>
+      JSON.parse(readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repo))), 'utf-8'));
+
+    expect(readCache(repoA).epics['AI-5'].tasks[0].status).toBe('Done');
+    expect(readCache(repoB).epics['AI-5'].tasks[0].status).toBe('Todo');
   });
 });

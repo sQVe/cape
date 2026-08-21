@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cacheFileName, trackerCachePath } from './trackerCachePath';
+import { cacheFileName, cacheFileNameFor, trackerCachePath } from './trackerCachePath';
 
 describe('cacheFileName', () => {
   it('gives two repositories two different file names', () => {
@@ -12,9 +12,23 @@ describe('cacheFileName', () => {
   it('gives the same repository the same file name every call', () => {
     expect(cacheFileName('/home/me/cape/.git')).toEqual(cacheFileName('/home/me/cape/.git'));
   });
+});
+
+describe('cacheFileNameFor', () => {
+  it('names the file after the repository when git answers', () => {
+    expect(cacheFileNameFor({ kind: 'ok', commonDir: '/home/me/cape/.git' })).toEqual(
+      cacheFileName('/home/me/cape/.git'),
+    );
+  });
 
   it('falls back to a fixed name outside a repository', () => {
-    expect(cacheFileName(null)).toEqual('tracker-nogit.json');
+    expect(cacheFileNameFor({ kind: 'no-repo' })).toEqual('tracker-nogit.json');
+  });
+
+  // Falling back here would dump a real repository's cache into the file every
+  // non-repo invocation shares, which is the collision this module prevents.
+  it('refuses to guess a path when git never answered', () => {
+    expect(() => cacheFileNameFor({ kind: 'unavailable' })).toThrow(/git/i);
   });
 });
 

@@ -80,7 +80,16 @@ const readRawTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
-    const content = yield* service.readFile(trackerCachePath(root));
+    // trackerCachePath throws when git never answered, rather than guess a
+    // path. Hooks declare E=never and must degrade to no banner, never crash.
+    const path = yield* Effect.try({
+      try: () => trackerCachePath(root),
+      catch: () => new Error('tracker cache path unresolved'),
+    }).pipe(Effect.orElseSucceed(() => null));
+    if (path == null) {
+      return null;
+    }
+    const content = yield* service.readFile(path);
     if (content == null) {
       return null;
     }
