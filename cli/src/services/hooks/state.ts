@@ -77,7 +77,7 @@ const gitContext = (): Effect.Effect<GitContext, never, HookService> =>
 
 // Ignores the cache TTL: use when reading data that does not go stale (epic
 // titles), not task status.
-export const readRawTrackerCache = () =>
+const readRawTrackerCache = () =>
   Effect.gen(function* () {
     const service = yield* HookService;
     const root = service.pluginRoot();
@@ -188,7 +188,7 @@ const isDoneEpic = (epic: TrackerEpic) => {
   return status === 'done' || status === 'closed' || status === 'completed';
 };
 
-export const epicForBranch = (cache: TrackerCache, branch: string) =>
+const epicForBranch = (cache: TrackerCache, branch: string) =>
   Object.values(cache.epics).find((epic) => !isDoneEpic(epic) && branchMatchesEpic(branch, epic)) ??
   null;
 

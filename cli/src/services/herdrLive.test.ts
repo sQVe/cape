@@ -23,11 +23,23 @@ const reportPhase = (workspaceId: string, phase: 'plan' | 'build' | 'review' | '
     }),
   );
 
-const lastArgv = () => mockExecFileSync.mock.calls[0]?.[1] as string[];
+const lastArgv = () => {
+  const argv = mockExecFileSync.mock.calls[0]?.[1];
+  if (argv == null) {
+    throw new Error('herdr was never spawned');
+  }
+  return argv as string[];
+};
 
+// Throws rather than returning undefined: a missing flag is the failure these tests
+// exist to catch, so it has to surface as one instead of an undefined comparison.
 const flagValue = (flag: string) => {
   const argv = lastArgv();
-  return argv[argv.indexOf(flag) + 1];
+  const value = argv[argv.indexOf(flag) + 1];
+  if (value == null) {
+    throw new Error(`no value for ${flag} in: ${argv.join(' ')}`);
+  }
+  return value;
 };
 
 afterEach(() => {
