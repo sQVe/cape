@@ -8,6 +8,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { main } from '../main';
 import { HookService, readTrackerCache } from '../services/hooks/state';
 import { makeTestCommandLayers, spyConsole } from '../testUtils';
+import { trackerCachePath } from '../utils/trackerCachePath';
+
+const trackerPath = (root: string) => trackerCachePath(root);
 
 const run = Command.runWith(main, { version: '0.1.0' });
 let activeRoot: string | null = null;
@@ -18,8 +21,6 @@ const makeRoot = () => {
   vi.stubEnv('CLAUDE_PLUGIN_ROOT', root);
   return root;
 };
-
-const trackerPath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 const readCache = (root: string) => JSON.parse(readFileSync(trackerPath(root), 'utf-8'));
 
@@ -593,9 +594,7 @@ describe('tracker cache validation', () => {
 
     const result = await Effect.runPromise(
       readTrackerCache().pipe(
-        Effect.provide(
-          makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) }),
-        ),
+        Effect.provide(makeHookLayer({ [trackerCachePath('/test')]: JSON.stringify(cache) })),
       ),
     );
 
@@ -629,12 +628,58 @@ describe('tracker cache validation', () => {
 
     const result = await Effect.runPromise(
       readTrackerCache().pipe(
-        Effect.provide(
-          makeHookLayer({ '/test/hooks/context/tracker.json': JSON.stringify(cache) }),
-        ),
+        Effect.provide(makeHookLayer({ [trackerCachePath('/test')]: JSON.stringify(cache) })),
       ),
     );
 
     expect(result).toBeNull();
+  });
+});
+
+describe('cape tracker path', () => {
+  it('prints the resolved cache file for this repository', async () => {
+    const root = makeRoot();
+    const console_ = spyConsole();
+
+    await Effect.runPromise(run(['tracker', 'path']).pipe(Effect.provide(makeTestCommandLayers())));
+
+    expect(console_.output()).toBe(trackerPath(root));
+    console_.restore();
+  });
+});
+
+describe('cape tracker show', () => {
+  it('prints an empty cache when none has been written yet', async () => {
+    makeRoot();
+    const console_ = spyConsole();
+
+    await Effect.runPromise(run(['tracker', 'show']).pipe(Effect.provide(makeTestCommandLayers())));
+    const printed = JSON.parse(console_.output());
+    console_.restore();
+
+    expect(printed).toEqual({ version: 1, timestamp: 0, epics: {} });
+  });
+
+  it('prints the cache that cache-epic wrote', async () => {
+    makeRoot();
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-epic',
+        JSON.stringify({
+          identifier: 'ABU-15',
+          title: 'Cape V2',
+          state: { name: 'Todo', type: 'unstarted' },
+          children: { nodes: [] },
+        }),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    const console_ = spyConsole();
+    await Effect.runPromise(run(['tracker', 'show']).pipe(Effect.provide(makeTestCommandLayers())));
+    const printed = JSON.parse(console_.output());
+    console_.restore();
+
+    expect(printed.epics['ABU-15'].title).toBe('Cape V2');
   });
 });

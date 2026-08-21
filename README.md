@@ -106,9 +106,10 @@ Cape tracks epics and tasks as Linear issues and sub-issues through a Tracker se
 `createTasks`, `listReady`, `updateStatus`, `close`). Writes go to Linear in-session through the MCP
 Linear plugin.
 
-Reads never touch the network. The `cape tracker` CLI writes Linear results into a local cache
-(`hooks/context/tracker.json`), and the session-start hook reads that cache to render the banner:
-epic, phase, task progress, next task, and branch. The banner stays absent when no epic is active.
+Reads never touch the network. The `cape tracker` CLI writes Linear results into a local cache (one
+cache file per repository, located with `cape tracker path`), and the session-start hook reads that
+cache to render the banner: epic, phase, task progress, next task, and branch. The banner stays
+absent when no epic is active.
 
 ## Repository structure
 
@@ -127,7 +128,8 @@ cape/
 
 1. Clone the repository and branch off `main`.
 2. Put new files in the directory that already holds their kind.
-3. Run `pnpm check` and try the change with `claude --plugin-dir .`.
+3. Run `pnpm check`, `pnpm typecheck`, and `pnpm test`, then try the change with
+   `claude --plugin-dir .`.
 4. Open a pull request.
 
 ## License

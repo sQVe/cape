@@ -4,6 +4,7 @@ import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
+import { pluginRoot } from '../pluginRoot';
 import {
   mergeEpic,
   mergeTasks,
@@ -15,6 +16,7 @@ import {
   writeCacheFile,
 } from '../services/trackerLive';
 import { catchAndDie } from '../utils/catchAndDie';
+import { trackerCachePath } from '../utils/trackerCachePath';
 
 const readStdin = () =>
   Effect.try({
@@ -38,6 +40,15 @@ const parseJson = (input: string, label: string) =>
     catch: () => new Error(`invalid ${label} JSON`),
   }).pipe(catchAndDie);
 
+// readCacheFile reports an unresolvable path as an absent cache, which reads as
+// "nothing cached yet" and sends the user to a refresh that cannot help. Every
+// command that touches the cache resolves it up front so git trouble says so.
+const requireCachePath = () =>
+  Effect.try({
+    try: () => trackerCachePath(pluginRoot()),
+    catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+  }).pipe(catchAndDie);
+
 const cacheEpic = Command.make(
   'cache-epic',
   {
@@ -47,6 +58,7 @@ const cacheEpic = Command.make(
     ),
   },
   Effect.fn(function* ({ issue }) {
+    yield* requireCachePath();
     const raw = yield* readJsonInput(issue);
     const parsed = yield* parseJson(raw, 'Linear issue');
     const epic = toEpic(parsed);
@@ -83,6 +95,7 @@ const cacheTasks = Command.make(
       return yield* dieWithError('epic id is required');
     }
 
+    yield* requireCachePath();
     const raw = yield* readJsonInput(issues);
     const parsed = yield* parseJson(raw, 'Linear tasks');
     if (!Array.isArray(parsed)) {
@@ -130,6 +143,7 @@ const cacheStatus = Command.make(
       return yield* dieWithError('status is required');
     }
 
+    yield* requireCachePath();
     const cache = yield* readCacheFile();
     const updatedCache = updateCachedIssueStatus({
       cache,
@@ -154,9 +168,41 @@ const cacheStatus = Command.make(
   ),
 );
 
+// The cache file name is derived from the repository, so it cannot be written
+// down in a skill. This is how a reader finds it.
+const path = Command.make(
+  'path',
+  {},
+  Effect.fn(function* () {
+    yield* Console.log(yield* requireCachePath());
+  }),
+).pipe(
+  Command.withDescription(
+    "Print the path of this repository's tracker cache file. Worktrees of one repo share it.",
+  ),
+);
+
+const show = Command.make(
+  'show',
+  {},
+  Effect.fn(function* () {
+    // Resolve first so "git did not answer" fails loudly instead of printing an
+    // empty cache. Skills orient off this command, and a wrongly empty answer
+    // reads as "no work left" on a cache that is intact on disk.
+    yield* requireCachePath();
+
+    const cache = yield* readCacheFile();
+    yield* Console.log(JSON.stringify(cache ?? { version: 1, timestamp: 0, epics: {} }));
+  }),
+).pipe(
+  Command.withDescription(
+    "Print this repository's tracker cache as JSON. An absent or corrupt cache prints an empty one; an unresolvable path exits nonzero.",
+  ),
+);
+
 export const tracker = Command.make('tracker').pipe(
   Command.withDescription(
-    'Write MCP Linear results into the local tracker cache. Pure local cache writes; no network calls.',
+    'Read and write the local tracker cache. Pure local cache access; no network calls.',
   ),
-  Command.withSubcommands([cacheEpic, cacheTasks, cacheStatus]),
+  Command.withSubcommands([cacheEpic, cacheTasks, cacheStatus, path, show]),
 );

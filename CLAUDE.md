@@ -9,7 +9,9 @@ See [README.md](README.md) for usage and structure documentation.
 Run checks:
 
 ```bash
-pnpm check        # lint + typecheck + test
+pnpm check        # format + lint
+pnpm typecheck    # tsc
+pnpm test         # unit + e2e
 pnpm test:unit    # unit tests only
 pnpm test:e2e     # end-to-end tests only
 pnpm build        # build CLI

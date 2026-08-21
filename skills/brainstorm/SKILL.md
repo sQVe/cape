@@ -34,11 +34,11 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 
 ### 1. Check for ready work
 
-Read `hooks/context/tracker.json` before anything else. If it lists ready tasks, ask: "You have N
-ready task(s): [list]. Did you mean to continue with execute-plan instead of starting a new
-brainstorm?" If the user redirects, load `cape:execute-plan` with the Skill tool and stop. If they
-confirm brainstorm, continue. A missing or stale cache follows the `cape:tracker` cache rule: treat
-it as empty.
+Run `cape tracker show` before anything else. If it lists ready tasks, ask: "You have N ready
+task(s): [list]. Did you mean to continue with execute-plan instead of starting a new brainstorm?"
+If the user redirects, load `cape:execute-plan` with the Skill tool and stop. If they confirm
+brainstorm, continue. A missing or stale cache follows the `cape:tracker` cache rule: treat it as
+empty.
 
 Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`
 (safe no-op outside herdr).

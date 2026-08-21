@@ -28,8 +28,8 @@ The evidence gate and automated checks are fixed; verification details adapt to 
 
 ### 1. Confirm completion from cache
 
-Read `hooks/context/tracker.json` and locate the epic. Every child task must have a completed state
-type or a done-like status.
+Run `cape tracker show` and locate the epic. Every child task must have a completed state type or a
+done-like status.
 
 - Epic already `Done` (the PR merged before this ran): report that the work is closed and stop. Do
   not re-close or rewrite status.

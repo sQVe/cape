@@ -1,10 +1,12 @@
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { gitCommonDir } from '../../utils/git';
+import { cacheFileNameFor } from '../../utils/trackerCachePath';
 import { cape, capeCmd, cleanupTestRepo, gitInRepo, initTestRepo } from '../helpers';
 
 let tmpDir: string;
@@ -37,8 +39,10 @@ describe('flow 3: session-start', () => {
     // The banner derives the epic from the current branch, so the simulated
     // plugin root doubles as a repo whose branch matches the cached slug.
     execFileSync('git', ['init', '-b', 'feat/abu-15-cape-v2', tmpDir]);
+    // The cache file is named per repository, and the CLI resolves it from its
+    // own cwd (tmpDir), not this test process's.
     writeFileSync(
-      join(contextDir, 'tracker.json'),
+      join(contextDir, cacheFileNameFor(gitCommonDir(tmpDir))),
       JSON.stringify({
         version: 1,
         timestamp: Date.now(),
@@ -135,5 +139,100 @@ describe('flow 4: full commit pipeline', () => {
 
     expect(result.status).not.toBe(0);
     expect(result.stderr).toBeTruthy();
+  });
+});
+
+describe('flow 5: tracker cache isolation across repositories', () => {
+  let repoA: string;
+  let repoB: string;
+
+  beforeEach(() => {
+    repoA = initTestRepo('cape-cache-a');
+    repoB = initTestRepo('cape-cache-b');
+  });
+
+  afterEach(() => {
+    cleanupTestRepo(repoA);
+    cleanupTestRepo(repoB);
+  });
+
+  // Two Linear workspaces can both have a team named `AI`, so the same
+  // identifier means different work in different repos. One shared cache let
+  // whichever repo wrote last win.
+  it('keeps same-id entries from two repositories from overwriting each other', () => {
+    const epic = (title: string, taskTitle: string) =>
+      JSON.stringify({
+        identifier: 'AI-5',
+        title,
+        state: { name: 'Todo', type: 'unstarted' },
+        children: {
+          nodes: [
+            { identifier: 'AI-6', title: taskTitle, state: { name: 'Todo', type: 'unstarted' } },
+          ],
+        },
+      });
+
+    const wroteA = cape(['tracker', 'cache-epic', epic('Repo A epic', 'Repo A task')], '', env, {
+      cwd: repoA,
+    });
+    const wroteB = cape(['tracker', 'cache-epic', epic('Repo B epic', 'Repo B task')], '', env, {
+      cwd: repoB,
+    });
+
+    expect(wroteA.status).toBe(0);
+    expect(wroteB.status).toBe(0);
+
+    const cacheA = JSON.parse(
+      readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repoA))), 'utf-8'),
+    );
+    const cacheB = JSON.parse(
+      readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repoB))), 'utf-8'),
+    );
+
+    expect(cacheA.epics['AI-5'].title).toBe('Repo A epic');
+    expect(cacheB.epics['AI-5'].title).toBe('Repo B epic');
+  });
+
+  // A repository git refuses to read must not look like an empty cache, since
+  // every skill now orients off `tracker show`.
+  it('exits nonzero instead of reporting an empty cache when git cannot answer', () => {
+    writeFileSync(join(repoA, '.git', 'config'), '[core\nbroken\n');
+
+    const shown = cape(['tracker', 'show'], '', env, { cwd: repoA });
+    expect(shown.status).not.toBe(0);
+    expect(shown.stdout).not.toContain('"epics"');
+
+    const located = cape(['tracker', 'path'], '', env, { cwd: repoA });
+    expect(located.status).not.toBe(0);
+  });
+
+  // cache-status is the command that caused the reported corruption, and it
+  // takes a read-modify-write path that cache-epic does not.
+  it('keeps a cache-status write in one repository out of the other', () => {
+    const epic = (taskTitle: string) =>
+      JSON.stringify({
+        identifier: 'AI-5',
+        title: 'Shared id',
+        state: { name: 'Todo', type: 'unstarted' },
+        children: {
+          nodes: [
+            { identifier: 'AI-6', title: taskTitle, state: { name: 'Todo', type: 'unstarted' } },
+          ],
+        },
+      });
+
+    cape(['tracker', 'cache-epic', epic('Repo A task')], '', env, { cwd: repoA });
+    cape(['tracker', 'cache-epic', epic('Repo B task')], '', env, { cwd: repoB });
+
+    const marked = cape(['tracker', 'cache-status', 'AI-6', 'Done', 'completed'], '', env, {
+      cwd: repoA,
+    });
+    expect(marked.status).toBe(0);
+
+    const readCache = (repo: string) =>
+      JSON.parse(readFileSync(join(contextDir, cacheFileNameFor(gitCommonDir(repo))), 'utf-8'));
+
+    expect(readCache(repoA).epics['AI-5'].tasks[0].status).toBe('Done');
+    expect(readCache(repoB).epics['AI-5'].tasks[0].status).toBe('Todo');
   });
 });

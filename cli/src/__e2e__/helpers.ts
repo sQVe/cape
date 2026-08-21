@@ -74,6 +74,7 @@ export const cape = (
   args: string[],
   stdin: string,
   env: Record<string, string>,
+  options: { cwd?: string } = {},
 ): { stdout: string; stderr: string; status: number } => {
   const result = spawnSync('node', [BINARY, ...args], {
     input: stdin,
@@ -82,7 +83,8 @@ export const cape = (
     // Run from the simulated plugin/project dir, not the cape repo itself,
     // so git-derived context (the session banner's branch match) comes from
     // the repo these tests seed under CLAUDE_PLUGIN_ROOT, not the checkout.
-    cwd: env.CLAUDE_PLUGIN_ROOT ?? process.cwd(),
+    // Override cwd to simulate one plugin install driving several repos.
+    cwd: options.cwd ?? env.CLAUDE_PLUGIN_ROOT ?? process.cwd(),
     timeout: 10_000,
   });
   return {

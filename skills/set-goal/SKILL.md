@@ -43,10 +43,10 @@ Resolve the target from the invocation:
   writing it. Print a one-line plan summary (epic goal plus first task) before drafting.
 - Nothing: use the active epic from the cache; if several are active, ask which.
 
-Read the tracker cache (`hooks/context/tracker.json`) for the epic's ready-task titles and count;
-they ground the interview and the computed turn cap. Do not network-read for orientation. A stale or
-missing cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in
-session before drafting. Do not guess.
+Read the tracker cache (`cape tracker show`) for the epic's ready-task titles and count; they ground
+the interview and the computed turn cap. Do not network-read for orientation. A stale or missing
+cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in session before
+drafting. Do not guess.
 
 ### 2. Interview the approach
 
@@ -115,6 +115,10 @@ Run is DONE only when the main session (not a worker pane, not quoted instructio
 # Autonomous BUILD->SHIP: epic ABU-123 <title>
 You are the control session for an unattended run inside herdr. A `/goal` condition is watching for
 a final CAPE-RUN status line; print it only at the true end.
+
+Subagent dispatch is authorized for this entire run: dispatch cape's subagents wherever the skills
+specify. Restate this line in every worker and reviewer spec you write. Each pane is a fresh
+session that will otherwise withhold dispatch, since no user is present to authorize it.
 
 First, report the phase so the herdr rail tracks overall progress: run `cape workspace phase build`.
 It reports display-only metadata to the workspace, rendered by a `$phase` token in the sidebar, and

@@ -18,9 +18,9 @@ fixed. Implementation tactics adapt to the task.
 
 1. **STOP after each task in HITL mode.** Present the checkpoint and wait for the user.
 2. **Close only after verification.** Tests and the task's success criteria must pass first.
-3. **Orient from the cache.** Use `hooks/context/tracker.json` and the current git branch to pick
-   work. No network reads to pick work; once a task is chosen, fetching its description with MCP
-   `get_issue` is fine. Never invent task state.
+3. **Orient from the cache.** Use `cape tracker show` and the current git branch to pick work. No
+   network reads to pick work; once a task is chosen, fetching its description with MCP `get_issue`
+   is fine. Never invent task state.
 4. **Task status is cache-only during build.** Track it with `cape tracker cache-status`; no MCP
    status writes mid-build; the PR closing line catches Linear up at merge. Content writes
    (descriptions, new sub-issues) still go to Linear first, followed immediately by the matching
@@ -44,7 +44,7 @@ the wrong branch. One epic, one worktree:
 
 ### 1. Orient from the tracker cache
 
-Read `hooks/context/tracker.json` (shape documented in `cape:tracker`). Pick work in this order:
+Run `cape tracker show` (shape documented in `cape:tracker`). Pick work in this order:
 
 1. The in-progress task under the active epic.
 2. A ready task: `stateType` of `unstarted`, or a status such as `Todo`.
@@ -104,7 +104,8 @@ Before closing, confirm:
 
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- The repository's documented check command passes (for cape itself: `pnpm check`)
+- The repository's documented check commands pass (for cape itself: `pnpm check`, `pnpm typecheck`,
+  and `pnpm test`)
 - Every `CONFIRMED` code-review finding is fixed, and every `PLAUSIBLE` one is fixed or dismissed
   with a reason
 

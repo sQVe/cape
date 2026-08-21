@@ -27,6 +27,7 @@ import {
   stubHerdrLayer,
 } from '../testStubs';
 import { spyConsole } from '../testUtils';
+import { trackerCachePath } from '../utils/trackerCachePath';
 
 describe('normalizeEventName', () => {
   it('converts kebab-case to PascalCase', () => {
@@ -219,7 +220,7 @@ const makeStubHookLayer = (
 };
 
 const trackerCacheFile = (cache: Record<string, unknown>) => ({
-  '/test/hooks/context/tracker.json': JSON.stringify(cache),
+  [trackerCachePath('/test')]: JSON.stringify(cache),
 });
 
 const trackerCache = (timestamp = Date.now()) => ({
@@ -440,7 +441,7 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'content',
-        '/test/hooks/context/tracker.json': 'corrupted{{{',
+        [trackerCachePath('/test')]: 'corrupted{{{',
       },
       gitResponses: {
         'branch --show-current': 'feat/abu-15-cape-v2',

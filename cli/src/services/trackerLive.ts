@@ -5,6 +5,7 @@ import { Effect } from 'effect';
 import { pluginRoot } from '../pluginRoot';
 import { writeFileAtomic } from '../utils/fs';
 import { safeParseJson } from '../utils/json';
+import { trackerCacheDir, trackerCachePath } from '../utils/trackerCachePath';
 import { isTrackerCache } from './tracker';
 import type { TrackerCache, TrackerEpic, TrackerTask } from './tracker';
 
@@ -33,8 +34,6 @@ interface LinearIssue {
     readonly nodes?: readonly LinearIssue[];
   };
 }
-
-const trackerCachePath = (root: string) => `${root}/hooks/context/tracker.json`;
 
 const linearIssueId = (issue: LinearIssue) => {
   if (typeof issue.identifier === 'string') {
@@ -347,7 +346,7 @@ export const writeCacheFile = (cache: TrackerCache) =>
   Effect.try({
     try: () => {
       const root = pluginRoot();
-      mkdirSync(`${root}/hooks/context`, { recursive: true });
+      mkdirSync(trackerCacheDir(root), { recursive: true });
       writeFileAtomic(trackerCachePath(root), JSON.stringify(cache));
     },
     catch: (error) =>

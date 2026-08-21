@@ -70,6 +70,21 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the payload omits, so following it deleted them. Children now come from `list_issues`.
 - Tracker: the agent contract required a project on every issue, which the `AI` team cannot satisfy
   because projects belong to teams. Agent-side issues stay project-less.
+- Tracker: one cache file at the plugin root served every repository, but Linear identifiers are
+  only unique per workspace. Two workspaces that both have a team named `AI` produced colliding ids,
+  so a `cache-status` write in one repo could overwrite an unrelated issue in another and put the
+  wrong id in a PR closing line. The cache file name now derives from the git common dir: worktrees
+  of one repo share a cache, distinct repos never collide. A git that never answers throws rather
+  than fall back to the shared file, since a transient failure inside a real repo would otherwise
+  recreate the collision. The previous shared file is orphaned, not migrated;
+  `cape tracker cache-epic` rebuilds any epic from Linear.
+- Docs: `pnpm check` runs format and lint only. CLAUDE.md, the README, and the execute-plan close
+  gate all described it as covering typecheck and tests, so a task could close green with type
+  errors or failing tests. They now name `pnpm typecheck` and `pnpm test` alongside it.
+- Set goal: Opus 5 sessions carry a client-side directive not to dispatch subagents unless the user
+  requested it, and an unattended run has no user present, so worker panes silently skipped the
+  investigator and reviewer dispatches their skills specify. The staged prompt now grants that
+  authorization for the whole run and requires every worker spec to restate it.
 
 ### Removed
 
@@ -130,6 +145,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- CLI: `cape tracker show` prints the tracker cache as JSON and `cape tracker path` prints its
+  location. The cache filename is derived from the repository, so it can no longer be written down
+  in a skill; every skill and the README now read through these commands instead of naming a file.
 - Tracker: two-tier team routing. Human-facing tickets go to the Aburaya team; agent-facing plan
   issues and task sub-issues go to the Agents team (AI), linked bidirectionally as pairs. The cache
   carries the pair (`humanTicketId` on epics and, for per-ticket pairs like nested bugs, on tasks),
