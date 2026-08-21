@@ -86,12 +86,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   investigator and reviewer dispatches their skills specify. The staged prompt now grants that
   authorization for the whole run and requires every worker spec to restate it.
 
-### Added
-
-- CLI: `cape tracker show` prints the tracker cache as JSON and `cape tracker path` prints its
-  location. The cache filename is derived from the repository, so it can no longer be written down
-  in a skill; every skill and the README now read through these commands instead of naming a file.
-
 ### Removed
 
 - CLI: removed the `cape state` and `cape worktree` commands, the per-worktree `state-*.json` files,
@@ -151,6 +145,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- CLI: `cape tracker show` prints the tracker cache as JSON and `cape tracker path` prints its
+  location. The cache filename is derived from the repository, so it can no longer be written down
+  in a skill; every skill and the README now read through these commands instead of naming a file.
 - Tracker: two-tier team routing. Human-facing tickets go to the Aburaya team; agent-facing plan
   issues and task sub-issues go to the Agents team (AI), linked bidirectionally as pairs. The cache
   carries the pair (`humanTicketId` on epics and, for per-ticket pairs like nested bugs, on tasks),
