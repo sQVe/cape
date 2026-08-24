@@ -26,6 +26,11 @@ defines its own flexibility.
    cache.
 6. **When editing a cape skill, spend prose only on what no check can enforce.** Anything a lint
    rule, a hook, or a `cape validate` check can hold belongs in the check.
+7. **Ask questions in the user's terms.** An `AskUserQuestion` label names an outcome in plain
+   words: "Skip the review", "Open the PR anyway". Commit shas, agent names, and skill internals
+   stay out of labels; put them in the option description when the user needs them to decide. State
+   what happened and where things stand before asking, and never re-ask a confirmation the user
+   already gave this session.
 
 ## Routing
 
