@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 import { Console, Effect, Option } from 'effect';
-import { Argument, Command } from 'effect/unstable/cli';
+import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
 import { pluginRoot } from '../pluginRoot';
@@ -49,6 +49,16 @@ const requireCachePath = () =>
     catch: (error) => (error instanceof Error ? error : new Error(String(error))),
   }).pipe(catchAndDie);
 
+// toEpic drops any child without an issue id, so a malformed node leaves a shorter
+// task list rather than an error. Count the raw nodes to catch what it dropped.
+const childNodeCount = (value: unknown) => {
+  if (typeof value !== 'object' || value == null) {
+    return 0;
+  }
+  const nodes = (value as { children?: { nodes?: unknown } }).children?.nodes;
+  return Array.isArray(nodes) ? nodes.length : 0;
+};
+
 const cacheEpic = Command.make(
   'cache-epic',
   {
@@ -56,14 +66,29 @@ const cacheEpic = Command.make(
       Argument.withDescription('Linear epic issue JSON; reads stdin when omitted'),
       Argument.optional,
     ),
+    noTasks: Flag.boolean('no-tasks').pipe(
+      Flag.withDescription('Accept a payload with no children, when that is the real answer'),
+      Flag.withDefault(false),
+    ),
   },
-  Effect.fn(function* ({ issue }) {
+  Effect.fn(function* ({ issue, noTasks }) {
     yield* requireCachePath();
     const raw = yield* readJsonInput(issue);
     const parsed = yield* parseJson(raw, 'Linear issue');
     const epic = toEpic(parsed);
     if (epic == null) {
       return yield* dieWithError('Linear epic JSON must include an issue id');
+    }
+    const givenChildren = childNodeCount(parsed);
+    if (epic.tasks.length !== givenChildren) {
+      return yield* dieWithError(
+        `${epic.id} was given ${givenChildren} children but only ${epic.tasks.length} carry an issue id. A child without one is dropped silently, so it would reach neither ready-work nor the PR closing line.`,
+      );
+    }
+    if (epic.tasks.length === 0 && !noTasks) {
+      return yield* dieWithError(
+        `${epic.id} has no children. A bare get_issue result never carries any: fill children.nodes from list_issues(parentId: ${epic.id}). Caching it as-is records no tasks and prunes every cached task that has not started, so they reach neither ready-work nor the PR closing line. Pass --no-tasks when the empty list is the real answer, including a list_issues that skipped archived children.`,
+      );
     }
 
     const cache = yield* readCacheFile();
@@ -100,6 +125,11 @@ const cacheTasks = Command.make(
     const parsed = yield* parseJson(raw, 'Linear tasks');
     if (!Array.isArray(parsed)) {
       return yield* dieWithError('Linear tasks JSON must be an array of issues');
+    }
+    if (parsed.length === 0) {
+      return yield* dieWithError(
+        `no tasks given for ${trimmedEpicId}. An empty array leaves a cached epic untouched and seeds an uncached one as a titleless stub with no tasks, which is the state cache-epic refuses. Pass the list_issues(parentId: ${trimmedEpicId}) result, or cache-epic --no-tasks when the plan really has no children.`,
+      );
     }
 
     const tasks = toTasks(parsed);

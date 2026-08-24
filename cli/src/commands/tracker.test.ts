@@ -114,6 +114,7 @@ describe('cape tracker cache-epic', () => {
           gitBranchName: 'abu-15-cape-v2',
           state: { name: 'In Progress', type: 'started' },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
@@ -136,12 +137,97 @@ describe('cape tracker cache-epic', () => {
           title: 'Fresh epic',
           state: { name: 'Todo', type: 'unstarted' },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
     const cache = readCache(root);
     expect(Object.keys(cache.epics)).toEqual(['ABU-16']);
     expect(cache.epics['ABU-16'].title).toBe('Fresh epic');
+    console_.restore();
+  });
+
+  it('rejects children without issue ids instead of dropping them silently', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan with one malformed child',
+            state: { name: 'In Progress', type: 'started' },
+            children: {
+              nodes: [
+                { identifier: 'AI-10', title: 'a', state: { name: 'Todo', type: 'unstarted' } },
+                { title: 'orphan with no id' },
+              ],
+            },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain(
+      'given 2 children but only 1 carry an issue id',
+    );
+    console_.restore();
+  });
+
+  it('reports missing child ids rather than no children when every child lacks one', async () => {
+    makeRoot();
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan whose children all lack ids',
+            state: { name: 'In Progress', type: 'started' },
+            children: { nodes: [{ title: 'orphan with no id' }] },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(JSON.parse(console_.errorOutput()).error).toContain('carry an issue id');
+    console_.restore();
+  });
+
+  it('rejects a childless epic without overwriting the existing cache', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan cached straight from get_issue',
+            state: { name: 'In Progress', type: 'started' },
+            children: { nodes: [] },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('list_issues(parentId: AI-9)');
     console_.restore();
   });
 
@@ -401,6 +487,24 @@ describe('cape tracker cache-tasks', () => {
 
     expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
     expect(JSON.parse(console_.errorOutput()).error).toContain('invalid Linear tasks JSON');
+    console_.restore();
+  });
+
+  it('rejects an empty task array without seeding a stub epic', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run(['tracker', 'cache-tasks', 'AI-9', '[]']).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('no tasks given for AI-9');
     console_.restore();
   });
 
@@ -672,6 +776,7 @@ describe('cape tracker show', () => {
           state: { name: 'Todo', type: 'unstarted' },
           children: { nodes: [] },
         }),
+        '--no-tasks',
       ]).pipe(Effect.provide(makeTestCommandLayers())),
     );
 
