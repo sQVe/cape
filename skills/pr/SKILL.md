@@ -9,7 +9,7 @@ description: >
 
 Create a pull request with a conventional title, a template-driven description, and a test plan that
 gates creation. Nothing ships until every test plan checkbox passes, including the review box, and
-the skill runs the review itself when nothing has reviewed the current HEAD.
+the skill runs the review itself when no review covers the branch.
 
 Every step runs in order and the gates are non-negotiable; only the description content adapts to
 the change.
@@ -19,11 +19,15 @@ the change.
 1. **Never call `cape pr create` without approval.** Present the full description, then use
    `AskUserQuestion` for explicit confirmation. The only exception is the AFK branch in step 4.
 2. **Never skip the test plan gate.** Every checkbox must be `[x]` before `cape pr create` runs.
-3. **Never tick the review box without a review of the current HEAD.** Reuse a review from this
-   session when it covered these commits. Otherwise run one: dispatch `cape:code-reviewer` over the
-   branch diff and relay its findings through one `ReportFindings` call. The user running the
-   builtin `/code-review` satisfies it too. Tick only once the findings are addressed or dismissed,
-   and never stop to ask for a review you can run yourself.
+3. **Never tick the review box without a review that covers the branch.** A review covers the branch
+   when it read the current HEAD, or when every commit after the sha it read only applies a remedy
+   its findings named: wording, guards, mechanical edits. Addressing findings is how a review round
+   ends, not a reason to start another. A fix that goes beyond the named remedy (new behavior, a new
+   code path) is unreviewed work; review that delta before ticking. Reuse a covering review from
+   this session. Otherwise run one: dispatch `cape:code-reviewer` over the branch diff and relay its
+   findings through one `ReportFindings` call. The user running the builtin `/code-review` satisfies
+   it too. Tick only once the findings are addressed or dismissed, and never stop to ask for a
+   review you can run yourself.
 4. **Never invent description sections.** Use the repo template or the bundled template exactly. No
    ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
    section from step 3.
@@ -141,21 +145,26 @@ End with a `---` separator, then immediately use `AskUserQuestion` with options:
 Do not announce next steps or say "Let me..." after the separator, and do not call any tools between
 outputting the description and calling `AskUserQuestion`.
 
+When the skill is re-invoked in the same session and the user already approved this exact title and
+description, skip straight to step 5; approval does not expire with re-invocation. Any change to
+either since approval means presenting again.
+
 **AFK branch.** Take this branch only when the invoking run explicitly states it is unattended; when
 in doubt, a human is present and the interactive path applies unchanged. Print the full PR (title,
 description, automatable items) to the transcript so the opened PR is on record, skip
 `AskUserQuestion`, and continue to step 5 as if approved. The review runs the same way it does with
 a human present, since step 5 dispatches it. Step 5's failure path asks a question this branch has
-no one to ask, so take this instead: on a review that needs changes, fix the findings and re-review;
-on anything left unresolved, stop with the box unticked and report why. `cape pr create` refuses the
-body either way. No human edits an AFK body before it ships, so the step 3 quality bar and unslop
-apply in full, plus two AFK-only rules: never write a robot signature or emoji into the title or
-body, and describe the change, not the orchestration that produced it.
+no one to ask, so take this instead: on a review that needs changes, apply the findings' named
+remedies and tick the box naming the reviewed sha, re-reviewing only a fix that goes beyond its
+finding's remedy; on anything left unresolved, stop with the box unticked and report why.
+`cape pr create` refuses the body either way. No human edits an AFK body before it ships, so the
+step 3 quality bar and unslop apply in full, plus two AFK-only rules: never write a robot signature
+or emoji into the title or body, and describe the change, not the orchestration that produced it.
 
 ### 5. Run the gate and create
 
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
-pass, keep `[ ]` on fail. For the review box: when no review covers the current HEAD, run
+pass, keep `[ ]` on fail. For the review box: when no review covers the branch (rule 3), run
 `cape workspace phase review`, dispatch `cape:code-reviewer` over the branch diff now, relay its
 findings through one `ReportFindings` call, and address or dismiss each one. Then rewrite the box to
 name the model, the reviewer, and the commit it read, and tick it:
