@@ -110,23 +110,30 @@ const isPlaceholder = (who: string) =>
 // commit the reviewer read, so every review item must also say "on <sha>" with real hex — an
 // unfilled `<sha>` or `[sha]` placeholder is not hex and fails here. The bare "/code-review"
 // spelling names its own reviewer but gets no sha exemption; a sha-less spelling would be the one
-// wording that skips the requirement. Whether the sha exists in the repo is not checked; validate
-// runs on stdin alone, without git.
+// wording that skips the requirement. The sha must sit in the attribution clause, the part before
+// the first comma, or "Code review by Alice on this branch, fixes landed on abc1234" would pass an
+// unrelated commit off as the one the reviewer read. Whether the sha exists in the repo is not
+// checked; validate runs on stdin alone, without git.
 const reviewedShaPattern = /\bon\s+[0-9a-f]{7,40}\b/i;
 
-const hasReviewItem = (templateSections: string[], body: string) =>
-  sectionLines(body, testSectionName(templateSections)).some((line) => {
-    const stripped = stripEmphasis(line);
-    const match = reviewItemPattern.exec(stripped);
-    if (match == null) {
-      return false;
-    }
-    const who = match.groups?.who;
-    if (who != null && isPlaceholder(who)) {
-      return false;
-    }
-    return reviewedShaPattern.test(stripped);
-  });
+const isValidReviewLine = (stripped: string) => {
+  const who = reviewItemPattern.exec(stripped)?.groups?.who;
+  if (who != null && isPlaceholder(who)) {
+    return false;
+  }
+  const attributionClause = stripped.split(',')[0] ?? stripped;
+  return reviewedShaPattern.test(attributionClause);
+};
+
+// Every review-looking line must be valid, not just one: a body holding one attributed review plus
+// a sha-less "- [x] Code review by the team" line would otherwise pass while the extra line claims
+// a review no commit backs.
+const hasReviewItem = (templateSections: string[], body: string) => {
+  const reviewLines = sectionLines(body, testSectionName(templateSections))
+    .map(stripEmphasis)
+    .filter((line) => reviewItemPattern.test(line));
+  return reviewLines.length > 0 && reviewLines.every(isValidReviewLine);
+};
 
 export const validatePrBody = (templateSections: string[], body: string) => {
   const bodySections = extractPrSections(body);

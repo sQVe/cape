@@ -325,6 +325,28 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(true);
   });
 
+  it('returns invalid when a valid review item sits beside a sha-less one', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed\n- [x] Code review by the pairing session, no findings',
+      ),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the only hex sha sits outside the attribution clause', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Alice on this branch, fixes landed on abc1234'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
     const result = validatePrBody(
       template,
