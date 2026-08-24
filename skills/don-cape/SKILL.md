@@ -46,21 +46,22 @@ Only these signals skip earlier chain links. Never infer skill choice from confi
 
 Otherwise, first matching row wins:
 
-| User intent                                                       | Skill               | Notes                      |
-| ----------------------------------------------------------------- | ------------------- | -------------------------- |
-| Build, add, create, or implement something new                    | `cape:brainstorm`   | Starts build chain         |
-| "How should I approach X" or unclear requirements                 | `cape:brainstorm`   | Design before code         |
-| Formalize a design into an epic                                   | `cape:write-plan`   | Requires brainstorm output |
-| "Continue", "next task", start/resume epic work, Linear task ID   | `cape:execute-plan` | Worktree entry is Step 0   |
-| Set up an autonomous run, draft a `/goal`, prep an AFK run        | `cape:set-goal`     | Stages a run draft         |
-| Something broken, error, stack trace, or a diagnosed Linear bug   | `cape:fix-bug`      | Diagnose then patch        |
-| Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`  | End of build chain         |
-| Commit, save changes, wrap this up                                | `cape:commit`       | Standalone                 |
-| Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`           | Standalone                 |
-| Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`  | Inbound review loop        |
-| Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`      | Reference skill            |
-| Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`       | Standalone                 |
-| "Explain that", "what does that mean", "in plain english", "eli5" | `cape:bro`          | Restates the last message  |
+| User intent                                                        | Skill                    | Notes                      |
+| ------------------------------------------------------------------ | ------------------------ | -------------------------- |
+| Build, add, create, or implement something new                     | `cape:brainstorm`        | Starts build chain         |
+| "How should I approach X" or unclear requirements                  | `cape:brainstorm`        | Design before code         |
+| Formalize a design into an epic                                    | `cape:write-plan`        | Requires brainstorm output |
+| "Continue", "next task", start/resume epic work, Linear task ID    | `cape:execute-plan`      | Worktree entry is Step 0   |
+| Set up an autonomous run, draft a `/goal`, prep an AFK run         | `cape:set-goal`          | Stages a run draft         |
+| Resolve merge or rebase conflicts, "fix conflicts", rebase on main | `cape:resolve-conflicts` | Finish, never abort        |
+| Something broken, error, stack trace, or a diagnosed Linear bug    | `cape:fix-bug`           | Diagnose then patch        |
+| Finish or hand off a tracker epic, all tasks done                  | `cape:finish-epic`       | End of build chain         |
+| Commit, save changes, wrap this up                                 | `cape:commit`            | Standalone                 |
+| Create PR, open pull request, "ship it", "ready for review"        | `cape:pr`                | Standalone                 |
+| Act on inbound PR review comments, resolve review threads          | `cape:pr-feedback`       | Inbound review loop        |
+| Linear/tracker operations, issue state, ready work, cache refresh  | `cape:tracker`           | Reference skill            |
+| Remove AI tells from prose, "unslop", clean up a draft             | `cape:unslop`            | Standalone                 |
+| "Explain that", "what does that mean", "in plain english", "eli5"  | `cape:bro`               | Restates the last message  |
 
 `cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
 any production code.
