@@ -106,14 +106,25 @@ const stripEmphasis = (line: string) => line.replace(/[*_]/g, '');
 const isPlaceholder = (who: string) =>
   who.startsWith('<') || (who.startsWith('[') && !who.includes(']('));
 
+// The sha is the load-bearing half of the attribution: skills/pr defines review coverage from the
+// commit the reviewer read, so a "by <who>" item must also say "on <sha>" with real hex — an
+// unfilled `<sha>` or `[sha]` placeholder is not hex and fails here. Whether the sha exists in the
+// repo is not checked; validate runs on stdin alone, without git. The legacy "/code-review" spelling
+// predates the sha contract and stays exempt.
+const reviewedShaPattern = /\bon\s+[0-9a-f]{7,40}\b/i;
+
 const hasReviewItem = (templateSections: string[], body: string) =>
   sectionLines(body, testSectionName(templateSections)).some((line) => {
-    const match = reviewItemPattern.exec(stripEmphasis(line));
+    const stripped = stripEmphasis(line);
+    const match = reviewItemPattern.exec(stripped);
     if (match == null) {
       return false;
     }
     const who = match.groups?.who;
-    return who == null || !isPlaceholder(who);
+    if (who == null) {
+      return true;
+    }
+    return !isPlaceholder(who) && reviewedShaPattern.test(stripped);
   });
 
 export const validatePrBody = (templateSections: string[], body: string) => {

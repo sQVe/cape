@@ -180,7 +180,9 @@ describe('validatePrBody review item requirement', () => {
   it('accepts a review item that names the agent reviewer instead of the command', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] Code review by cape:code-reviewer, findings addressed or dismissed'),
+      withTestPlan(
+        '- [x] Code review by cape:code-reviewer on 59a9a3a, findings addressed or dismissed',
+      ),
     );
 
     expect(result.valid).toBe(true);
@@ -190,11 +192,43 @@ describe('validatePrBody review item requirement', () => {
   it('matches the review item regardless of case', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] CODE REVIEW BY alice, no findings'),
+      withTestPlan('- [x] CODE REVIEW BY alice ON ABC1234, no findings'),
     );
 
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the reviewer is real but the sha slot holds the placeholder', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Opus 5 (cape:code-reviewer) on <sha>, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the attributed item names no reviewed commit', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Claude Opus 5 (cape:code-reviewer), findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the sha slot holds prose instead of hex', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Claude Opus 5 on this branch, findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 
   it('accepts a review item that names the model and reviewed commit', () => {
