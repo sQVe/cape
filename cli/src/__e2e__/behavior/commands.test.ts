@@ -293,7 +293,7 @@ describe('cape pr', () => {
       spawnSync('rm', ['-rf', tmpDir]);
     });
 
-    const checkedReviewItem = '- [x] /code-review run on this branch, findings addressed';
+    const checkedReviewItem = '- [x] /code-review run on abc1234, findings addressed';
 
     it('exits 1 when no file or --stdin provided', async () => {
       const result = await inProcess(['pr', 'validate']);

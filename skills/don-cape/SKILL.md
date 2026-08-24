@@ -26,6 +26,11 @@ defines its own flexibility.
    cache.
 6. **When editing a cape skill, spend prose only on what no check can enforce.** Anything a lint
    rule, a hook, or a `cape validate` check can hold belongs in the check.
+7. **Ask questions in the user's terms.** An `AskUserQuestion` label names an outcome in plain
+   words: "Rebase onto main", "Keep the current base". Commit shas and session internals stay out of
+   labels; put them in the option description when the user needs them to decide. A name stays in a
+   label only when it is the thing being chosen. State what happened and where things stand before
+   asking, and never re-ask a confirmation the user already gave this session.
 
 ## Routing
 

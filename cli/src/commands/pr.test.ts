@@ -104,7 +104,7 @@ describe('validatePrBody', () => {
   it('returns valid when all sections present and all boxes checked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
     const body =
-      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works';
     expect(validatePrBody(template, body)).toEqual({
       valid: true,
       missing: [],
@@ -117,7 +117,7 @@ describe('validatePrBody', () => {
   it('returns invalid when checkboxes are unchecked', () => {
     const template = ['Motivation', 'Changes', 'Test plan'];
     const body =
-      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works';
+      '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [ ] works';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['works']);
@@ -134,7 +134,7 @@ describe('validatePrBody', () => {
   it('reports extra sections', () => {
     const template = ['Motivation', 'Test plan'];
     const body =
-      '#### Motivation\nwhy\n#### Test plan\n- [x] /code-review run\n#### Bonus\nextra stuff';
+      '#### Motivation\nwhy\n#### Test plan\n- [x] /code-review run on abc1234\n#### Bonus\nextra stuff';
     const result = validatePrBody(template, body);
     expect(result.valid).toBe(true);
     expect(result.extra).toEqual(['Bonus']);
@@ -161,17 +161,17 @@ describe('validatePrBody review item requirement', () => {
   it('returns invalid when the /code-review item is unchecked', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [ ] /code-review run on this branch, findings addressed'),
+      withTestPlan('- [ ] /code-review run on abc1234, findings addressed'),
     );
     expect(result.valid).toBe(false);
-    expect(result.unchecked).toEqual(['/code-review run on this branch, findings addressed']);
+    expect(result.unchecked).toEqual(['/code-review run on abc1234, findings addressed']);
     expect(result.missingReviewItem).toBe(false);
   });
 
   it('returns valid when the /code-review item is checked and all sections are present', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] /code-review run on this branch, findings addressed\n- [x] pnpm test'),
+      withTestPlan('- [x] /code-review run on abc1234, findings addressed\n- [x] pnpm test'),
     );
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
@@ -180,7 +180,9 @@ describe('validatePrBody review item requirement', () => {
   it('accepts a review item that names the agent reviewer instead of the command', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] Code review by cape:code-reviewer, findings addressed or dismissed'),
+      withTestPlan(
+        '- [x] Code review by cape:code-reviewer on 59a9a3a, findings addressed or dismissed',
+      ),
     );
 
     expect(result.valid).toBe(true);
@@ -190,11 +192,43 @@ describe('validatePrBody review item requirement', () => {
   it('matches the review item regardless of case', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] CODE REVIEW BY alice, no findings'),
+      withTestPlan('- [x] CODE REVIEW BY alice ON ABC1234, no findings'),
     );
 
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('returns invalid when the reviewer is real but the sha slot holds the placeholder', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Opus 5 (cape:code-reviewer) on <sha>, findings addressed',
+      ),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the attributed item names no reviewed commit', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Claude Opus 5 (cape:code-reviewer), findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the sha slot holds prose instead of hex', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Claude Opus 5 on this branch, findings addressed'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 
   it('accepts a review item that names the model and reviewed commit', () => {
@@ -271,14 +305,46 @@ describe('validatePrBody review item requirement', () => {
     expect(result.missingReviewItem).toBe(false);
   });
 
-  it('accepts the legacy slash-command item whatever verb follows it', () => {
+  it('accepts the slash-command item whatever verb follows it, given a sha', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] /code-review passed on abc1234, findings addressed'),
+    );
+
+    expect(result.valid).toBe(true);
+    expect(result.missingReviewItem).toBe(false);
+  });
+
+  it('requires the sha on the slash-command spelling too', () => {
     const result = validatePrBody(
       template,
       withTestPlan('- [x] /code-review passed, findings addressed'),
     );
 
-    expect(result.valid).toBe(true);
-    expect(result.missingReviewItem).toBe(false);
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when a valid review item sits beside a sha-less one', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan(
+        '- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed\n- [x] Code review by the pairing session, no findings',
+      ),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
+  });
+
+  it('returns invalid when the only hex sha sits outside the attribution clause', () => {
+    const result = validatePrBody(
+      template,
+      withTestPlan('- [x] Code review by Alice on this branch, fixes landed on abc1234'),
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.missingReviewItem).toBe(true);
   });
 
   it('returns invalid when a checked box is checklist maintenance, not a review', () => {
@@ -321,7 +387,7 @@ describe('validatePrBody review item requirement', () => {
   it('returns invalid when the /code-review item is checked but another box is not', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('- [x] /code-review run on this branch\n- [ ] pnpm test'),
+      withTestPlan('- [x] /code-review run on abc1234\n- [ ] pnpm test'),
     );
     expect(result.valid).toBe(false);
     expect(result.unchecked).toEqual(['pnpm test']);
@@ -332,7 +398,7 @@ describe('validatePrBody review item requirement', () => {
     const body =
       '#### Motivation\nwhy\n#### Changes\nwhat\n' +
       '#### Test plan\nran it manually\n' +
-      '#### Verification performed\n- [x] /code-review run earlier on another branch';
+      '#### Verification performed\n- [x] /code-review run on abc1234 earlier on another branch';
     const result = validatePrBody([...template, 'Verification performed'], body);
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
@@ -341,7 +407,7 @@ describe('validatePrBody review item requirement', () => {
   it('ignores a checked /code-review item inside a fenced code block', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('```\n- [x] /code-review run on this branch\n```\nnot actually run'),
+      withTestPlan('```\n- [x] /code-review run on abc1234\n```\nnot actually run'),
     );
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
@@ -350,7 +416,7 @@ describe('validatePrBody review item requirement', () => {
   it('ignores a checked /code-review item inside a tilde-fenced code block', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('~~~\n- [x] /code-review run on this branch\n~~~\nnot actually run'),
+      withTestPlan('~~~\n- [x] /code-review run on abc1234\n~~~\nnot actually run'),
     );
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
@@ -359,15 +425,14 @@ describe('validatePrBody review item requirement', () => {
   it('ignores a checked /code-review item inside an HTML comment', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('<!--\n- [x] /code-review run on this branch\n-->\nnot actually run'),
+      withTestPlan('<!--\n- [x] /code-review run on abc1234\n-->\nnot actually run'),
     );
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
   });
 
   it('does not mistake a section whose name merely contains "test" for the test plan', () => {
-    const body =
-      '#### Latest changes\nstuff\n#### Test plan\n- [x] /code-review run on this branch';
+    const body = '#### Latest changes\nstuff\n#### Test plan\n- [x] /code-review run on abc1234';
     const result = validatePrBody(['Latest changes', 'Test plan'], body);
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
@@ -376,7 +441,7 @@ describe('validatePrBody review item requirement', () => {
   it('does not count an unchecked box that is only quoted inside a fence', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('```\n- [ ] example line in a snippet\n```\n- [x] /code-review run'),
+      withTestPlan('```\n- [ ] example line in a snippet\n```\n- [x] /code-review run on abc1234'),
     );
     expect(result.unchecked).toEqual([]);
     expect(result.valid).toBe(true);
@@ -385,9 +450,7 @@ describe('validatePrBody review item requirement', () => {
   it('keeps the section open past a fenced block whose content looks like a heading', () => {
     const result = validatePrBody(
       template,
-      withTestPlan(
-        '```bash\n# run the tests\npnpm test\n```\n- [x] /code-review run on this branch',
-      ),
+      withTestPlan('```bash\n# run the tests\npnpm test\n```\n- [x] /code-review run on abc1234'),
     );
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
@@ -396,14 +459,14 @@ describe('validatePrBody review item requirement', () => {
   it('ignores a review item quoted inside a longer outer fence', () => {
     const result = validatePrBody(
       template,
-      withTestPlan('````\nouter\n```\n- [x] /code-review run on this branch\n```\n````'),
+      withTestPlan('````\nouter\n```\n- [x] /code-review run on abc1234\n```\n````'),
     );
     expect(result.valid).toBe(false);
     expect(result.missingReviewItem).toBe(true);
   });
 
   it('finds the review item under a template that names the section Testing', () => {
-    const body = '#### Summary\nwhy\n#### Testing\n- [x] /code-review run on this branch';
+    const body = '#### Summary\nwhy\n#### Testing\n- [x] /code-review run on abc1234';
     const result = validatePrBody(['Summary', 'Testing'], body);
     expect(result.valid).toBe(true);
     expect(result.missingReviewItem).toBe(false);
@@ -412,7 +475,7 @@ describe('validatePrBody review item requirement', () => {
   it('still requires a review item when the template names no test section', () => {
     const withItem = validatePrBody(
       ['Summary'],
-      '#### Summary\nwhy\n- [x] /code-review run on this branch',
+      '#### Summary\nwhy\n- [x] /code-review run on abc1234',
     );
     expect(withItem.missingReviewItem).toBe(false);
     const without = validatePrBody(['Summary'], '#### Summary\nwhy');
@@ -517,7 +580,7 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () =>
         Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works',
         ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
@@ -543,7 +606,7 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () =>
         Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [ ] works',
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [ ] works',
         ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
@@ -588,7 +651,7 @@ describe('pr validate command', () => {
       readFile: () => Effect.fail(new Error('should not read file')),
       readStdin: () =>
         Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works',
+          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works',
         ),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -623,7 +686,7 @@ describe('pr validate command', () => {
         path === '/repo/.github/pull_request_template.md'
           ? Effect.succeed(repoTemplate)
           : Effect.succeed(
-              '#### Summary\nhere\n#### Test plan\n- [x] /code-review run\n- [x] works',
+              '#### Summary\nhere\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works',
             ),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
@@ -645,7 +708,7 @@ describe('pr validate command', () => {
 });
 
 const validBody =
-  '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run\n- [x] works';
+  '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works';
 
 const makeCreateHookLayer = (
   overrides: {

@@ -65,6 +65,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- PR: the review gate could never terminate. Rule 3 demanded a review of the current HEAD, but
+  fixing findings always moves HEAD, so the skill kept demanding another round after every fix
+  commit. A review now covers the branch when it read the current HEAD or when every later commit
+  only fixes what its findings named; a fix that goes beyond a finding still gets its delta
+  reviewed, and the AFK branch runs exactly one machine re-review over the fix delta. Re-invoking
+  the skill after an approval no longer re-asks for it: an unchanged HEAD and unchanged text skip
+  straight to the gate, carrying the PR-vs-draft choice, and step 5's checkbox bookkeeping never
+  voids the approval. `cape pr validate` and `cape pr create` now require the review item to name a
+  real hex sha, so an unfilled `<sha>` placeholder fails instead of shipping.
+- Don-cape: a new rule has `AskUserQuestion` labels name outcomes in plain words. Commit shas and
+  session internals move to the option description, a name stays in a label only when it is the
+  thing being chosen, and a confirmation the user already gave is never re-asked.
 - Tracker: the refresh recipe told skills to pipe a `get_issue` result straight into
   `cape tracker cache-epic`. `get_issue` returns no children and `cache-epic` prunes unstarted tasks
   the payload omits, so following it deleted them. Children now come from `list_issues`.
