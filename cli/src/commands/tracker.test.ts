@@ -433,6 +433,24 @@ describe('cape tracker cache-tasks', () => {
     console_.restore();
   });
 
+  it('rejects an empty task array without seeding a stub epic', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run(['tracker', 'cache-tasks', 'AI-9', '[]']).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain('no tasks given for AI-9');
+    console_.restore();
+  });
+
   it('rejects any task issue without an id without overwriting the existing cache', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });

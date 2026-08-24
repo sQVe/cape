@@ -57,7 +57,7 @@ const cacheEpic = Command.make(
       Argument.optional,
     ),
     noTasks: Flag.boolean('no-tasks').pipe(
-      Flag.withDescription('Accept a plan issue that genuinely has no sub-issues'),
+      Flag.withDescription('Accept a payload with no children, when that is the real answer'),
       Flag.withDefault(false),
     ),
   },
@@ -71,7 +71,7 @@ const cacheEpic = Command.make(
     }
     if (epic.tasks.length === 0 && !noTasks) {
       return yield* dieWithError(
-        `${epic.id} has no children, so every task under it would be invisible to build and to the PR closing line. MCP get_issue returns no children: fill children.nodes from list_issues(parentId: ${epic.id}). Pass --no-tasks if the plan really has none.`,
+        `${epic.id} has no children. A bare get_issue result never carries any: fill children.nodes from list_issues(parentId: ${epic.id}). Caching it as-is prunes every unstarted task, so they reach neither ready-work nor the PR closing line. Pass --no-tasks when the empty list is the real answer, including a list_issues that skipped archived children.`,
       );
     }
 
@@ -109,6 +109,11 @@ const cacheTasks = Command.make(
     const parsed = yield* parseJson(raw, 'Linear tasks');
     if (!Array.isArray(parsed)) {
       return yield* dieWithError('Linear tasks JSON must be an array of issues');
+    }
+    if (parsed.length === 0) {
+      return yield* dieWithError(
+        `no tasks given for ${trimmedEpicId}. An empty array leaves a cached epic untouched and seeds an uncached one as a titleless stub with no tasks, which is the state cache-epic refuses. Pass the list_issues(parentId: ${trimmedEpicId}) result, or cache-epic --no-tasks when the plan really has no children.`,
+      );
     }
 
     const tasks = toTasks(parsed);

@@ -125,8 +125,8 @@ revealed, not from what planning assumed.
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
 a sub-issue of the AI plan issue through MCP: load `cape:tracker`, apply its
 `resources/agent-contract.md`, and run the issue text through `cape:unslop` before posting. Then
-refresh the epic cache per `cape:tracker`'s create-work recipe: a fresh `get_issue` result piped to
-`cape tracker cache-epic`.
+refresh task membership per `cape:tracker`: pass a fresh `list_issues(parentId: <plan-id>)` result
+to `cape tracker cache-tasks <plan-id>`.
 
 If no work remains, load `cape:finish-epic`.
 
