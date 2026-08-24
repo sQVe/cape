@@ -55,8 +55,9 @@ Code review has no cape skill. You run Claude Code's builtin `/code-review`, or 
 dispatch the `code-reviewer` agent yourself, or a skill dispatches it for you. The agent returns its
 findings as JSON for the caller to relay through one `ReportFindings` call, so every route renders
 the same. The `pr` skill carries the requirement as a test-plan checkbox, runs the review itself
-when nothing has reviewed the current commits, and `cape pr create` refuses a body with an unticked
-box.
+when no review covers the branch, and `cape pr create` refuses a body with an unticked box. A review
+covers the branch when it read the current HEAD or when every later commit only fixes what its
+findings named.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
 to the default branch, `git commit --amend`, `gh pr merge`, and `gh pr close`. Raw commands with a
