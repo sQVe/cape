@@ -71,7 +71,7 @@ const cacheEpic = Command.make(
     }
     if (epic.tasks.length === 0 && !noTasks) {
       return yield* dieWithError(
-        `${epic.id} has no children. A bare get_issue result never carries any: fill children.nodes from list_issues(parentId: ${epic.id}). Caching it as-is prunes every unstarted task, so they reach neither ready-work nor the PR closing line. Pass --no-tasks when the empty list is the real answer, including a list_issues that skipped archived children.`,
+        `${epic.id} has no children. A bare get_issue result never carries any: fill children.nodes from list_issues(parentId: ${epic.id}). Caching it as-is records no tasks and prunes every cached task that has not started, so they reach neither ready-work nor the PR closing line. Pass --no-tasks when the empty list is the real answer, including a list_issues that skipped archived children.`,
       );
     }
 
