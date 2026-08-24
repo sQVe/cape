@@ -49,6 +49,16 @@ const requireCachePath = () =>
     catch: (error) => (error instanceof Error ? error : new Error(String(error))),
   }).pipe(catchAndDie);
 
+// toEpic drops any child without an issue id, so a malformed node leaves a shorter
+// task list rather than an error. Count the raw nodes to catch what it dropped.
+const childNodeCount = (value: unknown) => {
+  if (typeof value !== 'object' || value == null) {
+    return 0;
+  }
+  const nodes = (value as { children?: { nodes?: unknown } }).children?.nodes;
+  return Array.isArray(nodes) ? nodes.length : 0;
+};
+
 const cacheEpic = Command.make(
   'cache-epic',
   {
@@ -68,6 +78,12 @@ const cacheEpic = Command.make(
     const epic = toEpic(parsed);
     if (epic == null) {
       return yield* dieWithError('Linear epic JSON must include an issue id');
+    }
+    const givenChildren = childNodeCount(parsed);
+    if (epic.tasks.length !== givenChildren) {
+      return yield* dieWithError(
+        `${epic.id} was given ${givenChildren} children but only ${epic.tasks.length} carry an issue id. A child without one is dropped silently, so it would reach neither ready-work nor the PR closing line.`,
+      );
     }
     if (epic.tasks.length === 0 && !noTasks) {
       return yield* dieWithError(

@@ -147,6 +147,63 @@ describe('cape tracker cache-epic', () => {
     console_.restore();
   });
 
+  it('rejects children without issue ids instead of dropping them silently', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    const existing = JSON.stringify({ version: 1, timestamp: 1, epics: {} });
+    writeFileSync(trackerPath(root), existing);
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan with one malformed child',
+            state: { name: 'In Progress', type: 'started' },
+            children: {
+              nodes: [
+                { identifier: 'AI-10', title: 'a', state: { name: 'Todo', type: 'unstarted' } },
+                { title: 'orphan with no id' },
+              ],
+            },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(readFileSync(trackerPath(root), 'utf-8')).toBe(existing);
+    expect(JSON.parse(console_.errorOutput()).error).toContain(
+      'given 2 children but only 1 carry an issue id',
+    );
+    console_.restore();
+  });
+
+  it('reports missing child ids rather than no children when every child lacks one', async () => {
+    makeRoot();
+    const console_ = spyConsole();
+
+    await expect(
+      Effect.runPromise(
+        run([
+          'tracker',
+          'cache-epic',
+          JSON.stringify({
+            identifier: 'AI-9',
+            title: 'Plan whose children all lack ids',
+            state: { name: 'In Progress', type: 'started' },
+            children: { nodes: [{ title: 'orphan with no id' }] },
+          }),
+        ]).pipe(Effect.provide(makeTestCommandLayers())),
+      ),
+    ).rejects.toThrow();
+
+    expect(JSON.parse(console_.errorOutput()).error).toContain('carry an issue id');
+    console_.restore();
+  });
+
   it('rejects a childless epic without overwriting the existing cache', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });
