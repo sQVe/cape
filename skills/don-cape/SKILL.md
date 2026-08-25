@@ -53,7 +53,7 @@ Otherwise, first matching row wins:
 | Formalize a design into an epic                                    | `cape:write-plan`        | Requires brainstorm output |
 | "Continue", "next task", start/resume epic work, Linear task ID    | `cape:execute-plan`      | Worktree entry is Step 0   |
 | Set up an autonomous run, draft a `/goal`, prep an AFK run         | `cape:set-goal`          | Stages a run draft         |
-| Resolve merge or rebase conflicts, "fix conflicts", rebase on main | `cape:resolve-conflicts` | Finish, never abort        |
+| Resolve merge or rebase conflicts, "fix conflicts", rebase on main | `cape:resolve-conflicts` | Finishes the merge         |
 | Something broken, error, stack trace, or a diagnosed Linear bug    | `cape:fix-bug`           | Diagnose then patch        |
 | Finish or hand off a tracker epic, all tasks done                  | `cape:finish-epic`       | End of build chain         |
 | Commit, save changes, wrap this up                                 | `cape:commit`            | Standalone                 |
