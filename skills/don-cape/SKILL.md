@@ -41,13 +41,10 @@ Short-circuit when the user has already chosen a skill or phase:
 - `/plan` loads `cape:brainstorm`, `/build` loads `cape:execute-plan`, `/ship` loads
   `cape:finish-epic`.
 - A Linear issue ID, or a ready task in the tracker cache for the active epic, loads
-  `cape:execute-plan`.
-- A merge or rebase that hits conflicts mid-task loads `cape:resolve-conflicts`, with no user
-  request needed.
-- `cape:set-goal` is user-invoked only. When a request matches its row, point the user to
-  `/cape:set-goal` instead of loading it.
-
-Only these signals skip earlier chain links. Never infer skill choice from confidence or task size.
+  `cape:execute-plan`. Only these signals skip earlier chain links. Never infer skill choice from
+  confidence or task size. One event routes without any request: a merge or rebase that hits
+  conflicts mid-task loads `cape:resolve-conflicts` and returns to the interrupted skill once it
+  finishes.
 
 Otherwise, first matching row wins:
 

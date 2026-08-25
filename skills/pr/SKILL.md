@@ -191,9 +191,8 @@ EOF
 )"
 ```
 
-Add `--draft` for the draft option. On creation failure, load `cape:resolve-conflicts` for
-conflicts; for other causes such as a rejected push, auto-fix if trivial. Re-attempt up to 3 times,
-then ask the user.
+Add `--draft` for the draft option. On creation failure (push rejected, conflicts): auto-fix if
+trivial, re-attempt up to 3 times, then ask the user.
 
 ### 6. Finalize
 

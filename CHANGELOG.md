@@ -18,14 +18,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   conflicts mid-task.
 - `cape:fix-bug` gained a diagnosis gate: one reproduction command that has already run once, 3 to 5
   ranked hypotheses before any is tested, and `[DEBUG-<id>]` tags on every debug log.
-- `cape:brainstorm` asks only frontier questions, those whose prerequisites are settled, 1 to 5 per
-  round.
 
 ### Changed
 
+- `cape:brainstorm` asks only frontier questions per round, those whose prerequisites are settled; a
+  question that depends on an open one waits for a later round.
 - `cape:set-goal` is user-invoked only. `don-cape` points the user to `/cape:set-goal` instead of
   loading it.
-
+- `cape validate` reads hyphenated frontmatter keys such as `disable-model-invocation`.
 - Skills and agents: eight files gained the disciplines they were missing. TDD names a fallback for
   a genuinely impractical failing test, defines a test not worth writing, and forbids reaching green
   by editing tests or weakening assertions. Brainstorm derives gradeable criteria before dispatching

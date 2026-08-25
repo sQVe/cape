@@ -45,18 +45,22 @@ AI issue to close.
 Whenever the root cause is not yet diagnosed, adopted issue or not, diagnose before touching code:
 
 - Clarify the symptom, then name one reproduction command you have already run once. It must fail on
-  the bug, fail the same way every run, and finish fast. No hypotheses until it exists.
+  the bug, fail the same way every run, and finish fast. No hypotheses until it exists. When the bug
+  has no deterministic reproduction (a race, a production-only failure), say so, name the closest
+  check you did run, and treat the missing command as the first finding.
 - Gather evidence from file reads, logs, tests, git history, and docs.
 - Present 3 to 5 ranked, falsifiable hypotheses before testing any of them, then test them in order
-  and trace the symptom to a root cause.
-- Tag every debug log added during diagnosis with `[DEBUG-<id>]` so step 4 can find them.
+  and trace the symptom to a root cause. When the evidence already names the line, state that one
+  hypothesis and what rules the others out instead of padding the list.
+- Tag every debug log added while working the bug with `[DEBUG-<id>]` so step 4 can find them.
 - Record dead ends in the conversation.
 
 Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
 prose.
 
-When no issue exists, **STOP. Present the investigation summary and wait for approval before
-creating the Linear bug pair.**
+**STOP. Present the investigation summary and wait for approval.** For an adopted issue, approval
+also covers writing the root cause to its AI bug issue with `save_issue` and refreshing the cache.
+When no issue exists, it covers creating the Linear bug pair.
 
 ```text
 Investigation summary
