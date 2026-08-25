@@ -53,10 +53,12 @@ Read, WebSearch, and WebFetch.
 
 Then ask what research could not answer. Use AskUserQuestion for structured choices (token storage,
 auth strategy, data model decisions) and conversational follow-ups for open exploration (what
-problem, who are the users, what does success look like). Ask 1-5 questions per round. Prefer
-multiple choice with a recommended default, separate must-answer questions from ones with good
-defaults, and offer "Reply 'defaults' to accept all recommended options" when a batch has clear
-defaults.
+problem, who are the users, what does success look like). Ask 1-5 questions per round, and only
+frontier questions: ones whose prerequisites are settled. A question that depends on an open one
+waits for a later round. Research still in flight never holds a round; ask what is answerable now
+and fold the results in next round. Prefer multiple choice with a recommended default, separate
+must-answer questions from ones with good defaults, and offer "Reply 'defaults' to accept all
+recommended options" when a batch has clear defaults.
 
 Record every answer in a running key decisions table. It feeds the design summary:
 

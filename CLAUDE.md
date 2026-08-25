@@ -36,6 +36,10 @@ cape validate skills    # skills only
   carries the triggers; the body starts at the contract. `cape validate` enforces the
   machine-checkable part: frontmatter, a nonempty body, and known `cape:<name>` references. The rest
   of this convention is review-enforced.
+- Before adding a skill instruction, run the no-op test: would the model already do this without the
+  line? If yes, leave it out, and delete existing lines that fail the same test.
+- When a skill points at a doc and the model skips or misreads it, sharpen the pointer's trigger
+  wording first. Inline the doc only when a sharper pointer still misses.
 - Agents use "Investigation approach" as the section header.
 - Every prose file in the repo goes through the `cape:unslop` skill: skills, agents, README, this
   file. The CHANGELOG is the exception, since released entries are a record.
