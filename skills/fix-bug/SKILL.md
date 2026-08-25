@@ -19,7 +19,8 @@ writes are fixed. Investigation depth adapts to the bug.
 1. **No patch without diagnosis.** Reproduce the symptom and trace it to an evidence-backed root
    cause before changing code.
 2. **Failing test before the fix.** Reproduce the bug in a test and confirm it fails for the
-   diagnosed reason.
+   diagnosed reason. When no correct seam exists for that test, `cape:test-driven-development` rule
+   4 owns the fallback; fix-bug only reports the missing seam.
 3. **Verify the original symptom before close.** Reproduction, tests, and success criteria gate
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
@@ -42,9 +43,12 @@ AI issue to close.
 
 If no issue exists, diagnose before touching code:
 
-- Clarify the symptom and reproduce it with a command, test, or manual step.
+- Clarify the symptom, then name one reproduction command you have already run once. It must fail on
+  the bug, fail the same way every run, and finish fast. No hypotheses until it exists.
 - Gather evidence from file reads, logs, tests, git history, and docs.
-- Form hypotheses, test them, and trace the symptom to a root cause.
+- Present 3 to 5 ranked, falsifiable hypotheses before testing any of them, then test them in order
+  and trace the symptom to a root cause.
+- Tag every debug log added during diagnosis with `[DEBUG-<id>]` so step 4 can find them.
 - Record dead ends in the conversation.
 
 Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
@@ -102,7 +106,9 @@ make the test pass, then run the relevant broader suite.
 ### 4. Verify and close
 
 Re-run the original reproduction steps and confirm the symptom is gone. Run the relevant tests and
-project checks. Present the fix summary, run through `cape:unslop`:
+project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains. If the regression test
+had no correct seam, report the missing seam as a finding. Present the fix summary, run through
+`cape:unslop`:
 
 ```text
 Fix summary: <bug-id>
