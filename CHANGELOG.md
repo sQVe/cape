@@ -16,8 +16,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `cape:resolve-conflicts` finishes an in-progress merge or rebase with both sides' intent intact
   and never aborts. Routed from `don-cape` on "fix conflicts" and whenever a merge or rebase hits
   conflicts mid-task.
-- `cape:fix-bug` gained a diagnosis gate: one reproduction command that has already run once, 3 to 5
-  ranked hypotheses before any is tested, and `[DEBUG-<id>]` tags on every debug log.
+- `cape:fix-bug` gained a diagnosis gate: one reproduction command that has already run once (a
+  non-deterministic bug names its closest check instead), 3 to 5 ranked hypotheses before any is
+  tested unless the evidence already names the line, and `[DEBUG-<id>]` tags on every debug log.
 
 ### Changed
 
