@@ -70,10 +70,12 @@ Root cause: <file:line and mechanism>
 Evidence: <key observations>
 Reproduction: <exact steps>
 
-Create a Linear bug pair for this fix?
+Create a Linear bug pair for this fix? (adopted issue: write this root cause to <ai-bug-id>?)
 ```
 
-After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
+For an adopted issue, approval means one `save_issue` on its AI bug issue with the root cause,
+evidence, and reproduction, then a cache refresh; skip the rest of this step. When no issue existed,
+after approval load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
 routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
 Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
 symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
@@ -86,9 +88,9 @@ cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 
-Run the reproduction steps and confirm the symptom locally. If reproduction fails, the bug may
-already be fixed or the environment may differ; investigate and report that before editing
-production code.
+Run the reproduction command from step 1, or the closest check it named, and confirm the symptom
+locally. If reproduction fails, the bug may already be fixed or the environment may differ;
+investigate and report that before editing production code.
 
 Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
 contract:
@@ -111,9 +113,9 @@ rule 4. Implement the minimum fix, make the test pass, then run the relevant bro
 
 ### 4. Verify and close
 
-Re-run the original reproduction steps and confirm the symptom is gone. Run the relevant tests and
-project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains. Present the fix
-summary, run through `cape:unslop`:
+Re-run the step 1 reproduction command, or its closest check, and confirm the symptom is gone. Run
+the relevant tests and project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains.
+Present the fix summary, run through `cape:unslop`:
 
 ```text
 Fix summary: <bug-id>

@@ -18,9 +18,10 @@ Finish the merge or rebase with both sides' intent intact. Never abort.
 3. **Resolve each hunk.** Keep both intents where they fit together. Where they cannot, pick the one
    that matches the merge's stated goal and note the trade-off. Never invent behavior. Never
    `--abort`.
-4. **Finish.** Stage the resolved files by name. For a merge, `cape commit --no-edit` keeps git's
-   merge message. For a rebase, `git rebase --continue` keeps the replayed commit's message; repeat
-   from step 1 for each later conflict until every commit is rebased.
+4. **Finish.** Stage the resolved files by name with `git add <file>...`. Then, for a merge,
+   `cape commit --no-edit` keeps git's merge message. For a rebase, `git rebase --continue` keeps
+   the replayed commit's message; repeat from step 1 for each later conflict until every commit is
+   rebased.
 5. **Run the project's checks.** Find them in the README or package scripts: typecheck, then tests,
    then format. Run them once the merge or rebase is complete, since a half-applied rebase is not
    buildable history. Fix what the merge broke and commit the fix on its own.
