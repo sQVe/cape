@@ -20,5 +20,5 @@ Finish the merge or rebase with both sides' intent intact. Never abort.
    `--abort`.
 4. **Run the project's checks.** Find them in the README or package scripts: typecheck, then tests,
    then format. Fix what the merge broke.
-5. **Finish.** Stage everything and commit. For a rebase, `git rebase --continue` until every commit
-   is rebased.
+5. **Finish.** Stage the resolved files by name and load `cape:commit` for the commit. For a rebase,
+   `git rebase --continue` until every commit is rebased.

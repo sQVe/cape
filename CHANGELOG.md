@@ -13,8 +13,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   do next. It explains rather than re-running the work, and it restates a pending choice instead of
   making it. Routed from the `don-cape` table on "explain that", "what does that mean", "in plain
   english", and "eli5".
+- `cape:resolve-conflicts` finishes an in-progress merge or rebase with both sides' intent intact
+  and never aborts. Routed from `don-cape` on "fix conflicts" and whenever a merge or rebase hits
+  conflicts mid-task.
+- `cape:fix-bug` gained a diagnosis gate: one reproduction command that has already run once, 3 to 5
+  ranked hypotheses before any is tested, and `[DEBUG-<id>]` tags on every debug log.
+- `cape:brainstorm` asks only frontier questions, those whose prerequisites are settled, 1 to 5 per
+  round.
 
 ### Changed
+
+- `cape:set-goal` is user-invoked only. `don-cape` points the user to `/cape:set-goal` instead of
+  loading it.
 
 - Skills and agents: eight files gained the disciplines they were missing. TDD names a fallback for
   a genuinely impractical failing test, defines a test not worth writing, and forbids reaching green

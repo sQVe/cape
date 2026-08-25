@@ -19,8 +19,9 @@ writes are fixed. Investigation depth adapts to the bug.
 1. **No patch without diagnosis.** Reproduce the symptom and trace it to an evidence-backed root
    cause before changing code.
 2. **Failing test before the fix.** Reproduce the bug in a test and confirm it fails for the
-   diagnosed reason. When no correct seam exists for that test, `cape:test-driven-development` rule
-   4 owns the fallback; fix-bug only reports the missing seam.
+   diagnosed reason. When no correct seam exists for that test, report the missing seam before the
+   fix, then follow `cape:test-driven-development` rule 4, which requires explicit approval for the
+   fallback.
 3. **Verify the original symptom before close.** Reproduction, tests, and success criteria gate
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
@@ -41,7 +42,7 @@ AI bug issue, or create and link one per the tracker contract's pairing protocol
 cache before proceeding. Build-time status tracks the AI-side id, and the PR closing line needs an
 AI issue to close.
 
-If no issue exists, diagnose before touching code:
+Whenever the root cause is not yet diagnosed, adopted issue or not, diagnose before touching code:
 
 - Clarify the symptom, then name one reproduction command you have already run once. It must fail on
   the bug, fail the same way every run, and finish fast. No hypotheses until it exists.
@@ -54,8 +55,8 @@ If no issue exists, diagnose before touching code:
 Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
 prose.
 
-**STOP. Present the investigation summary and wait for approval before creating the Linear bug
-pair.**
+When no issue exists, **STOP. Present the investigation summary and wait for approval before
+creating the Linear bug pair.**
 
 ```text
 Investigation summary
@@ -100,15 +101,15 @@ Signal the build phase for the herdr rail: `cape workspace phase build`. Load
 Fix the root cause only. No refactoring beyond what the fix requires, no unrelated error handling or
 features, no cleanup of unrelated tests.
 
-Write the regression test and confirm it fails for the diagnosed reason. Implement the minimum fix,
-make the test pass, then run the relevant broader suite.
+Write the regression test and confirm it fails for the diagnosed reason. If no correct seam exists
+for it, report the missing seam now, before any fix, and follow `cape:test-driven-development`
+rule 4. Implement the minimum fix, make the test pass, then run the relevant broader suite.
 
 ### 4. Verify and close
 
 Re-run the original reproduction steps and confirm the symptom is gone. Run the relevant tests and
-project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains. If the regression test
-had no correct seam, report the missing seam as a finding. Present the fix summary, run through
-`cape:unslop`:
+project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains. Present the fix
+summary, run through `cape:unslop`:
 
 ```text
 Fix summary: <bug-id>
@@ -116,6 +117,7 @@ Fix summary: <bug-id>
 Root cause: <diagnosed cause>
 Fix: <what changed>
 Regression test: <test file or command>
+Missing seam: <none, or the seam the test needed and the approved fallback>
 Verification: <commands and results>
 Status: FIXED | PARTIALLY_FIXED | BLOCKED
 ```
