@@ -264,12 +264,12 @@ describe('sessionStart', () => {
     const layer = makeStubHookLayer({
       files: {
         '/test/skills/don-cape/SKILL.md': 'routing',
-        '/test/skills/unslop/SKILL.md': 'writing rules',
+        '/test/skills/unslop/SKILL.md': 'UNSLOP-BODY',
       },
     });
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('skills/unslop/SKILL.md');
-    expect(result.additionalContext.indexOf('writing rules')).toBeGreaterThan(
+    expect(result.additionalContext.indexOf('UNSLOP-BODY')).toBeGreaterThan(
       result.additionalContext.indexOf('routing'),
     );
   });

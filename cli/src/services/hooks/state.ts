@@ -270,7 +270,7 @@ export const sessionStart = () =>
     const unslop = yield* service.readFile(`${root}/skills/unslop/SKILL.md`);
     if (unslop != null) {
       parts.push(
-        `The content below is cape's writing rules, from skills/unslop/SKILL.md. They apply to every commit message, PR, ticket, comment, and reply without loading the skill:\n\n${unslop}`,
+        `The content below is cape's writing rules, from skills/unslop/SKILL.md. They apply without loading the skill:\n\n${unslop}`,
       );
     }
 
