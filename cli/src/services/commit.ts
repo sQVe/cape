@@ -3,7 +3,13 @@ import { Effect, ServiceMap } from 'effect';
 const conventionalPattern =
   /^(feat|fix|refactor|docs|test|chore|ci|perf|build|style|revert)(\(.+\))?: .+$/;
 
-const sensitivePatterns = [/(^|\/)\.env/, /credentials/i, /secret/i, /\.pem$/, /\.key$/];
+const sensitivePatterns = [
+  /(^|\/)\.env(?!rc$|\.example$|\.sample$)/,
+  /credentials/i,
+  /secret/i,
+  /\.pem$/,
+  /\.key$/,
+];
 
 export interface CommitResult {
   readonly message: string;
@@ -45,15 +51,20 @@ export class CommitService extends ServiceMap.Service<
     readonly stageAndCommit: (
       files: readonly string[],
       message: string,
+      allowSensitive: boolean,
     ) => Effect.Effect<void, Error>;
     readonly commitNoEdit: () => Effect.Effect<void, Error>;
   }
 >()('CommitService') {}
 
-export const stageAndCommit = (files: readonly string[], message: string) =>
+export const stageAndCommit = (
+  files: readonly string[],
+  message: string,
+  allowSensitive: boolean,
+) =>
   Effect.gen(function* () {
     const service = yield* CommitService;
-    return yield* service.stageAndCommit(files, message);
+    return yield* service.stageAndCommit(files, message, allowSensitive);
   });
 
 export const commitNoEdit = () =>

@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
 import { Effect } from 'effect';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CommitService } from './commit';
 import { CommitServiceLive } from './commitLive';
@@ -21,6 +21,10 @@ const run = <A>(effect: Effect.Effect<A, unknown, CommitService>) =>
 const mockExecFileSync = vi.mocked(execFileSync);
 const mockExistsSync = vi.mocked(existsSync);
 
+beforeEach(() => {
+  mockExecFileSync.mockReturnValue('');
+});
+
 afterEach(() => {
   vi.resetAllMocks();
 });
@@ -33,7 +37,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['exists.ts', 'deleted.ts'], 'test');
+          yield* service.stageAndCommit(['exists.ts', 'deleted.ts'], 'test', false);
         }),
       );
 
@@ -55,7 +59,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['deleted.ts'], 'test');
+          yield* service.stageAndCommit(['deleted.ts'], 'test', false);
         }),
       );
 
@@ -71,7 +75,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['exists.ts'], 'test');
+          yield* service.stageAndCommit(['exists.ts'], 'test', false);
         }),
       );
 
@@ -91,7 +95,7 @@ describe('CommitServiceLive', () => {
         run(
           Effect.gen(function* () {
             const service = yield* CommitService;
-            yield* service.stageAndCommit(['f.ts'], 'msg');
+            yield* service.stageAndCommit(['f.ts'], 'msg', false);
           }),
         ),
       ).rejects.toThrow();

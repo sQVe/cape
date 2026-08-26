@@ -2,14 +2,9 @@ import { Console, Effect } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-import {
-  commitNoEdit,
-  detectSensitiveFiles,
-  stageAndCommit,
-  validateFiles,
-  validateMessage,
-} from '../services/commit';
+import { commitNoEdit, stageAndCommit, validateFiles, validateMessage } from '../services/commit';
 import type { CommitResult } from '../services/commit';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const commit = Command.make(
   'commit',
@@ -61,14 +56,7 @@ export const commit = Command.make(
       return yield* dieWithError(messageError);
     }
 
-    const sensitive = detectSensitiveFiles(files);
-    if (sensitive.length > 0 && !allowSensitive) {
-      return yield* dieWithError(
-        `sensitive files: ${sensitive.join(', ')}. pass --allow-sensitive to commit them`,
-      );
-    }
-
-    yield* stageAndCommit(files, msg);
+    yield* stageAndCommit(files, msg, allowSensitive).pipe(catchAndDie);
 
     const result: CommitResult = {
       message: msg,
@@ -79,6 +67,6 @@ export const commit = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Stage files and create a git commit with message validation and sensitive-file rejection (override with --allow-sensitive). Returns { message, files }. Use instead of raw git commit.',
+    'Stage files and create a git commit with message validation and rejection of staged sensitive files (override with --allow-sensitive). Returns { message, files }. Use instead of raw git commit.',
   ),
 );

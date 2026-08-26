@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
-import { CommitService } from './commit';
+import { CommitService, detectSensitiveFiles } from './commit';
 
 const stageFiles = (files: readonly string[]) => {
   const existing = files.filter((f) => existsSync(f));
@@ -19,11 +19,22 @@ const stageFiles = (files: readonly string[]) => {
   }
 };
 
-const stageAndCommit = (files: readonly string[], message: string) =>
+const stagedFiles = () =>
+  execFileSync('git', ['diff', '--cached', '--name-only'], { encoding: 'utf-8' })
+    .split('\n')
+    .filter((line) => line.length > 0);
+
+const stageAndCommit = (files: readonly string[], message: string, allowSensitive: boolean) =>
   Effect.try({
     try: () => {
       stageFiles(files);
-      execFileSync('git', ['commit', '-m', message, '--', ...files], { encoding: 'utf-8' });
+      const sensitive = detectSensitiveFiles(stagedFiles());
+      if (sensitive.length > 0 && !allowSensitive) {
+        throw new Error(
+          `sensitive files staged: ${sensitive.join(', ')}. pass --allow-sensitive to commit them`,
+        );
+      }
+      execFileSync('git', ['commit', '-m', message], { encoding: 'utf-8' });
     },
     catch: (error) =>
       error instanceof Error ? error : new Error('commit failed', { cause: error }),

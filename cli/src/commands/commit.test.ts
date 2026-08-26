@@ -134,6 +134,10 @@ describe('detectSensitiveFiles', () => {
     expect(detectSensitiveFiles(['src/foo.ts', 'README.md'])).toEqual([]);
   });
 
+  it('ignores env templates', () => {
+    expect(detectSensitiveFiles(['.env.example', 'apps/.env.sample', '.envrc'])).toEqual([]);
+  });
+
   it('detects env files in subdirectories', () => {
     expect(detectSensitiveFiles(['apps/web/.env', 'config/.env.local'])).toEqual([
       'apps/web/.env',
@@ -150,7 +154,7 @@ describe('stageAndCommit', () => {
   it('propagates service errors', async () => {
     await expect(
       Effect.runPromise(
-        stageAndCommit(['file.ts'], 'feat: thing').pipe(
+        stageAndCommit(['file.ts'], 'feat: thing', false).pipe(
           Effect.provide(makeErrorCommitLayer('git failed')),
         ),
       ),
@@ -232,24 +236,6 @@ describe('commit command wiring', () => {
         ),
       ),
     ).rejects.toThrow('bulk staging');
-  });
-
-  it('rejects sensitive files without --allow-sensitive', async () => {
-    const msg = 'feat: add config\n\nAdd environment configuration.';
-    await expect(
-      Effect.runPromise(run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers))),
-    ).rejects.toThrow('sensitive files');
-  });
-
-  it('commits sensitive files with --allow-sensitive', async () => {
-    const console_ = spyConsole();
-    const msg = 'feat: add config\n\nAdd environment configuration.';
-    await Effect.runPromise(
-      run(['commit', '.env', '--allow-sensitive', '-m', msg]).pipe(Effect.provide(commandLayers)),
-    );
-    const result = JSON.parse(console_.output());
-    expect(result.message).toBe(msg);
-    console_.restore();
   });
 
   it('commits with --no-edit for merge commits', async () => {

@@ -103,7 +103,7 @@ EOF
 )"
 ```
 
-The CLI validates the message format, rejects sensitive files (`.env`, `*.pem`, `*.key`,
+The CLI validates the message format, rejects staged sensitive files (`.env`, `*.pem`, `*.key`,
 credentials, secrets) unless `--allow-sensitive` is passed, and stages and commits in one operation.
 
 If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can

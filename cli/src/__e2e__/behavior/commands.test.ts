@@ -236,17 +236,15 @@ describe('cape commit', () => {
     expect(log).toContain('feat: config');
   });
 
-  it('leaves previously staged files out of the commit', async () => {
+  it('rejects a sensitive file that was staged beforehand', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
     gitInRepo(repoDir, 'add', '.env');
     writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
     const msg = 'feat: add thing\n\nAdd the thing to the project.';
     const result = await inProcess(['commit', 'file.ts', '-m', msg], { cwd: repoDir });
-    expect(result.status).toBe(0);
-
-    const committed = gitInRepo(repoDir, 'show', '--name-only', '--format=', 'HEAD');
-    expect(committed).toContain('file.ts');
-    expect(committed).not.toContain('.env');
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('.env');
+    expect(gitInRepo(repoDir, 'log', '--oneline')).not.toContain('feat: add thing');
   });
 
   it('rejects invalid conventional commit message', async () => {
