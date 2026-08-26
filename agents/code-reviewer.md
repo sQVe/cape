@@ -38,8 +38,7 @@ Each finding in `findings` carries:
 - `short_summary`, the same claim in 60 characters or less, no rationale or consequence clause
 - `failure_scenario`, the concrete inputs or state that produce the wrong output or the crash
 - `category`, a kebab-case slug: `correctness`, `contract`, `test-coverage`, `reuse`, `conventions`,
-  `efficiency`, one of the over-engineering tags from step 4 (`delete`, `stdlib`, `native`, `yagni`,
-  `shrink`), or a narrower one when it fits
+  `efficiency`, an over-engineering tag from step 4, or a narrower one when it fits
 - `verdict`, `CONFIRMED` or `PLAUSIBLE`
 
 Write every text field in the plain register from `cape:unslop`: simple words, short sentences, the
@@ -60,9 +59,9 @@ A worked finding:
 }
 ```
 
-Rank most severe first. Correctness outranks reuse, conventions, and efficiency whenever the cut is
-close. Report at most 10 findings, and when more clear the bar, keep the 10 most severe and set
-`dropped` to how many you cut.
+Rank most severe first. Correctness outranks reuse, conventions, efficiency, and the
+over-engineering tags whenever the cut is close. Report at most 10 findings, and when more clear the
+bar, keep the 10 most severe and set `dropped` to how many you cut.
 
 ## Finding bar
 
@@ -72,7 +71,8 @@ a half-believed candidate never reaches the judgment that would have kept it.
 
 - Every finding needs a concrete failure scenario. Drop what you cannot back with one.
 - For categories that are not bugs, `failure_scenario` states the concrete cost instead of a crash:
-  what is duplicated, what breaks the next time someone edits it, or which rule the line violates.
+  what is duplicated, what breaks the next time someone edits it, which rule the line violates, or
+  what replaces the code and how many lines go.
 - Do not drop a candidate for being speculative when the state is realistic. Concurrency races, and
   nil on a rare but reachable path (error handler, cold cache, absent optional field), are findings.
 - Refute only what the code disproves: the line does not say that, a type or invariant makes it
@@ -117,8 +117,8 @@ a half-believed candidate never reaches the judgment that would have kept it.
    a speculative feature, `stdlib` for a hand-rolled thing the standard library ships, `native` for
    a dependency or code doing what the platform already does, `yagni` for an abstraction with one
    implementation or config nobody sets, `shrink` for the same logic in fewer lines. The
-   `failure_scenario` names the replacement and the lines it removes. A single smoke test or
-   self-check is the minimum, never bloat.
+   `failure_scenario` names the replacement and the lines it removes. Never flag a single smoke test
+   or self-check for deletion; it is the minimum, not bloat.
 
 5. **Check conventions last.** Read the repo CLAUDE.md and any closer to the changed files. Flag a
    violation only when you can quote the exact rule and the exact line that breaks it. No style
