@@ -12,8 +12,8 @@ description: >
 Cape uses Linear as the tracker and a per-repository local read cache. Work is two-tier:
 human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan issues and
 tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh the cache
-with `cape tracker`. Linear is the source of truth for issue content; the cache is the source of
-truth for reads, and for task status during build.
+with `cape tracker`. Linear is the source of truth for issue content and status; the cache is the
+source of truth for reads.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -29,9 +29,10 @@ to the chain using the tracker.
 4. **Read from the cache.** Ready-work listing and orientation read `cape tracker show`, never
    Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read, not
    orientation, and is allowed.
-5. **Build-time status is cache-only.** Track task status with `cape tracker cache-status` during
-   build; no MCP `save_issue` status writes mid-build. The PR closing line catches Linear up at
-   merge.
+5. **Linear holds status; the cache copies it.** Create plan issues, tasks, and AI bug issues with
+   `state: "Todo"`. When a task starts or finishes, write the state to Linear with `save_issue`,
+   then copy it with `cape tracker cache-status`. The human ticket and plan issue close at merge,
+   via the PR closing line.
 6. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
 7. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
    entries.
@@ -87,10 +88,11 @@ Create paired work with MCP Linear `save_issue`, using the shapes in
 1. Human ticket in the repo's home team: a concise, scannable description, no agent contract
    material.
 2. Plan issue in `AI`: the full agent contract (required behavior, constraints, approach, acceptance
-   criteria).
+   criteria), with `state: "Todo"`.
 3. Set the plan issue's `parentId` to the human ticket. That parent is the pair. Write no
    `relatedTo` relation and no counterpart link in either body.
-4. Create the first task with `save_issue` as a sub-issue of the AI plan issue.
+4. Create the first task with `save_issue` as a sub-issue of the AI plan issue, with
+   `state: "Todo"`.
 
 A plan issue keeps its own team and takes nothing from the parent. Sub-issues may live in any team,
 and the API applies none of the UI's inheritance, so `AI` stays `AI` and the parent's project does
@@ -132,20 +134,39 @@ preserves the stamp across later refreshes that omit it.
 
 ## Update status during build
 
-Task status is cache-only during build. Update the cache directly; do not write status to Linear
-with MCP `save_issue` mid-build:
+Write the state to Linear first, then copy it into the cache. Starting a task:
 
-```bash
-cape tracker cache-status <issue-id> "In Progress" started
-cape tracker cache-status <issue-id> Done completed
+```text
+save_issue(id: <task-id>, state: "In Progress")
+save_issue(id: <plan-id>, state: "In Progress")    # while the plan issue is still Todo
+save_issue(id: <human-id>, state: "In Progress")   # same, when a human ticket exists
 ```
 
-Content updates (bodies, titles, new sub-issues) still go to Linear first; only status stays local
-until PR time.
+```bash
+cape tracker cache-status <task-id> "In Progress" started
+cape tracker cache-status <plan-id> "In Progress" started
+```
+
+Finishing a task:
+
+```text
+save_issue(id: <task-id>, state: "Done")
+```
+
+```bash
+cape tracker cache-status <task-id> Done completed
+```
+
+The plan issue and human ticket stay `In Progress` until the PR opens; the GitHub integration takes
+them from there.
 
 Reopening: the forward-only merge keeps a completed task completed through every refresh, even when
-Linear reopens it. To put a task back in play, write the downgrade explicitly. `cache-status`
-bypasses the ranking:
+Linear reopens it. To put a task back in play, write the downgrade to both. `cache-status` bypasses
+the ranking:
+
+```text
+save_issue(id: <issue-id>, state: "Todo")
+```
 
 ```bash
 cape tracker cache-status <issue-id> Todo unstarted
@@ -153,15 +174,17 @@ cape tracker cache-status <issue-id> Todo unstarted
 
 ## Close work at PR time
 
-Never close issues through MCP. Linear catches up when the PR merges, via the PR closing line:
+Never close the human ticket or plan issue through MCP. They close when the PR merges, via the PR
+closing line:
 
 ```text
-Fixes <human-id>, <plan-id>, <completed task ids>
+Fixes <human-id>, <plan-id>
 ```
 
-Linear's GitHub integration moves every listed issue to `Done` on merge. To mirror that into the
-cache afterwards, run `cape tracker cache-status <issue-id> Done completed` per issue, or
-`cache-epic` if you have the full refreshed plan issue with children.
+Tasks are already `Done` and stay off the line: the integration moves every listed issue to
+`In Review` when the PR opens, which would reopen them. On merge it moves the listed issues to
+`Done`; copy that into the cache with `cape tracker cache-status <issue-id> Done completed` per
+issue, or `cache-epic` if you have the full refreshed plan issue with children.
 
 ## Examples
 
@@ -172,7 +195,9 @@ the human ticket, or creates everything in one team.
 a plan issue in `AI` holding the full contract, sets the plan's `parentId` to that ticket, creates
 the first task as a sub-issue of the plan issue, then runs `cape tracker cache-epic '<json>'`.
 
-**Wrong:** execute-plan writes a task's `Done` status to Linear with MCP `save_issue` mid-build.
+**Wrong:** execute-plan marks a task `Done` in the cache only, leaving it `Todo` in Linear until the
+PR merges.
 
-**Right:** execute-plan runs `cape tracker cache-status <task-id> Done completed`. The PR closing
-line (`Fixes <human-id>, <plan-id>, <completed task ids>`) updates Linear at merge.
+**Right:** execute-plan writes `save_issue(id, state: "Done")`, then runs
+`cape tracker cache-status <task-id> Done completed`. The PR closing line
+(`Fixes <human-id>, <plan-id>`) closes the human ticket and plan at merge.

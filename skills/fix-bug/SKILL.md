@@ -26,8 +26,8 @@ writes are fixed. Investigation depth adapts to the bug.
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
    Linear per the `cape:tracker` contract.
-5. **Refresh cache after every Linear write.** Every create or content update is followed by
-   `cape tracker`; status stays cache-only until the PR closing line.
+5. **Refresh cache after every Linear write.** Every create, content update, or status change is
+   followed by `cape tracker`.
 
 ## Process
 
@@ -76,15 +76,15 @@ Create a Linear bug pair for this fix? (adopted issue: write this root cause to 
 For an adopted issue, approval means one `save_issue` on its AI bug issue with the root cause,
 evidence, and reproduction, then a cache refresh; skip the rest of this step. When no issue existed,
 after approval load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
-routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
-Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
-symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
-reproduction steps, expected behavior, actual behavior, suggested fix, and success criteria. When
-the bug has no user-informational value, use the tracker contract's AI-only exception and skip the
-human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an epic, refresh
-the parent with `cape tracker cache-epic`, stamping the bug child's `humanTicketId` into the JSON so
-the PR closing line picks up the bug's own human ticket. If the bug is standalone and not yet in
-cache, create or refresh a containing parent issue first.
+routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, `state: "Todo"`, and the bug
+title shape. Create the pair per the tracker contract's pairing protocol: a concise human bug ticket
+carrying the symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause,
+evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and success
+criteria. When the bug has no user-informational value, use the tracker contract's AI-only exception
+and skip the human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an
+epic, refresh the parent with `cape tracker cache-epic`, stamping the bug child's `humanTicketId`
+into the JSON so the PR closing line picks up the bug's own human ticket. If the bug is standalone
+and not yet in cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 
@@ -92,11 +92,17 @@ Run the reproduction command from step 1, or the closest check it named, and con
 locally. If reproduction fails, the bug may already be fixed or the environment may differ;
 investigate and report that before editing production code.
 
-Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
-contract:
+Mark the bug in progress in Linear, then in the cache, per the tracker contract:
+
+```text
+save_issue(id: <bug-id>, state: "In Progress")
+save_issue(id: <plan-id>, state: "In Progress")    # while the parent plan issue is still Todo
+save_issue(id: <human-id>, state: "In Progress")   # same, when a human ticket exists
+```
 
 ```bash
 cape tracker cache-status <bug-id> "In Progress" started
+cape tracker cache-status <plan-id> "In Progress" started
 ```
 
 ### 3. Fix with TDD
@@ -131,8 +137,12 @@ Status: FIXED | PARTIALLY_FIXED | BLOCKED
 **STOP and wait if the user asked to approve closure.** Otherwise close only when verification is
 green.
 
-Never close through MCP. The PR closing line moves the issue to `Done` at merge, per the tracker
-contract. Mirror the closure into the cache:
+Mark the bug done in Linear, then in the cache. The PR closing line closes the human ticket at
+merge, per the tracker contract:
+
+```text
+save_issue(id: <bug-id>, state: "Done")
+```
 
 ```bash
 cape tracker cache-status <bug-id> Done completed

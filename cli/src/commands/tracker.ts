@@ -192,11 +192,7 @@ const cacheStatus = Command.make(
     yield* writeCacheFile(updatedCache).pipe(catchAndDie);
     yield* Console.log(JSON.stringify({ cached: true, issueId: trimmedIssueId, changed: true }));
   }),
-).pipe(
-  Command.withDescription(
-    'Update one cached issue status locally. Build-time status is cache-only; Linear catches up via the PR closing line.',
-  ),
-);
+).pipe(Command.withDescription('Copy one issue status into the cache after writing it to Linear.'));
 
 // The cache file name is derived from the repository, so it cannot be written
 // down in a skill. This is how a reader finds it.

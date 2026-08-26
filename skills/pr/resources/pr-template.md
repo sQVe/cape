@@ -71,16 +71,15 @@ Fixes ABU-XX, AI-XX, AI-XX
 - **Manual verification.** Subjective human judgment only (optional, often omitted)
 - **Deferred verification.** Checks that need a deployed environment (optional, plain bullets, never
   marked done)
-- **Issues.** Build the closing line from the tracker cache:
-  `Fixes <human-id>, <plan-id>, <completed task ids>`, meaning the human ticket, the AI plan issue,
-  and every completed child task plus any completed task's own `humanTicketId`. Incomplete and
-  canceled children are excluded, and ids that do not exist are omitted (AI-only work has no human
-  ticket). Use a non-closing keyword (`Related to`) with the same set ONLY when this PR does not
-  complete the epic, meaning more PRs or a live cutover are still pending. A non-closing link still
-  moves the issues through pre-merge statuses but never closes them, which is the most common reason
-  an epic stays open after its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`,
-  `implement` (and their tenses). Linear links and closes by Linear identifier, not GitHub issue
-  number.
+- **Issues.** Build the closing line from the tracker cache: `Fixes <human-id>, <plan-id>`, meaning
+  the human ticket and the AI plan issue, plus any completed task's own `humanTicketId`. Tasks stay
+  off the line, since they are already `Done` and a listed issue moves to `In Review` when the PR
+  opens. Ids that do not exist are omitted (AI-only work has no human ticket). Use a non-closing
+  keyword (`Related to`) with the same set ONLY when this PR does not complete the epic, meaning
+  more PRs or a live cutover are still pending. A non-closing link still moves the issues through
+  pre-merge statuses but never closes them, which is the most common reason an epic stays open after
+  its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`, `implement` (and their
+  tenses). Linear links and closes by Linear identifier, not GitHub issue number.
 
 ## Test plan format
 
