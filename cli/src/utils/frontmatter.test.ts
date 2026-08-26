@@ -35,6 +35,11 @@ describe('parseFrontmatter', () => {
     expect(result).toEqual({ name: 'foo', description: 'bar' });
   });
 
+  it('parses hyphenated keys', () => {
+    const result = parseFrontmatter('---\nname: foo\ndisable-model-invocation: true\n---\nbody');
+    expect(result).toEqual({ name: 'foo', 'disable-model-invocation': 'true' });
+  });
+
   it('returns null for missing frontmatter', () => {
     expect(parseFrontmatter('no frontmatter')).toBeNull();
   });

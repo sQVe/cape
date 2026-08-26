@@ -19,7 +19,9 @@ writes are fixed. Investigation depth adapts to the bug.
 1. **No patch without diagnosis.** Reproduce the symptom and trace it to an evidence-backed root
    cause before changing code.
 2. **Failing test before the fix.** Reproduce the bug in a test and confirm it fails for the
-   diagnosed reason.
+   diagnosed reason. When no correct seam exists for that test, report the missing seam before the
+   fix, then follow `cape:test-driven-development` rule 4, which requires explicit approval for the
+   fallback.
 3. **Verify the original symptom before close.** Reproduction, tests, and success criteria gate
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
@@ -40,18 +42,25 @@ AI bug issue, or create and link one per the tracker contract's pairing protocol
 cache before proceeding. Build-time status tracks the AI-side id, and the PR closing line needs an
 AI issue to close.
 
-If no issue exists, diagnose before touching code:
+Whenever the root cause is not yet diagnosed, adopted issue or not, diagnose before touching code:
 
-- Clarify the symptom and reproduce it with a command, test, or manual step.
+- Clarify the symptom, then name one reproduction command you have already run once. It must fail on
+  the bug, fail the same way every run, and finish fast. No hypotheses until it exists. When the bug
+  has no deterministic reproduction (a race, a production-only failure), say so, name the closest
+  check you did run, and treat the missing command as the first finding.
 - Gather evidence from file reads, logs, tests, git history, and docs.
-- Form hypotheses, test them, and trace the symptom to a root cause.
+- Present 3 to 5 ranked, falsifiable hypotheses before testing any of them, then test them in order
+  and trace the symptom to a root cause. When the evidence already names the line, state that one
+  hypothesis and what rules the others out instead of padding the list.
+- Tag every debug log added while working the bug with `[DEBUG-<id>]` so step 4 can find them.
 - Record dead ends in the conversation.
 
 Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
 prose.
 
-**STOP. Present the investigation summary and wait for approval before creating the Linear bug
-pair.**
+**STOP. Present the investigation summary and wait for approval.** For an adopted issue, approval
+also covers writing the root cause to its AI bug issue with `save_issue` and refreshing the cache.
+When no issue exists, it covers creating the Linear bug pair.
 
 ```text
 Investigation summary
@@ -61,10 +70,12 @@ Root cause: <file:line and mechanism>
 Evidence: <key observations>
 Reproduction: <exact steps>
 
-Create a Linear bug pair for this fix?
+Create a Linear bug pair for this fix? (adopted issue: write this root cause to <ai-bug-id>?)
 ```
 
-After approval, load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
+For an adopted issue, approval means one `save_issue` on its AI bug issue with the root cause,
+evidence, and reproduction, then a cache refresh; skip the rest of this step. When no issue existed,
+after approval load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
 routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
 Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
 symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
@@ -77,9 +88,9 @@ cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 
-Run the reproduction steps and confirm the symptom locally. If reproduction fails, the bug may
-already be fixed or the environment may differ; investigate and report that before editing
-production code.
+Run the reproduction command from step 1, or the closest check it named, and confirm the symptom
+locally. If reproduction fails, the bug may already be fixed or the environment may differ;
+investigate and report that before editing production code.
 
 Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
 contract:
@@ -96,13 +107,15 @@ Signal the build phase for the herdr rail: `cape workspace phase build`. Load
 Fix the root cause only. No refactoring beyond what the fix requires, no unrelated error handling or
 features, no cleanup of unrelated tests.
 
-Write the regression test and confirm it fails for the diagnosed reason. Implement the minimum fix,
-make the test pass, then run the relevant broader suite.
+Write the regression test and confirm it fails for the diagnosed reason. If no correct seam exists
+for it, report the missing seam now, before any fix, and follow `cape:test-driven-development`
+rule 4. Implement the minimum fix, make the test pass, then run the relevant broader suite.
 
 ### 4. Verify and close
 
-Re-run the original reproduction steps and confirm the symptom is gone. Run the relevant tests and
-project checks. Present the fix summary, run through `cape:unslop`:
+Re-run the step 1 reproduction command, or its closest check, and confirm the symptom is gone. Run
+the relevant tests and project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains.
+Present the fix summary, run through `cape:unslop`:
 
 ```text
 Fix summary: <bug-id>
@@ -110,6 +123,7 @@ Fix summary: <bug-id>
 Root cause: <diagnosed cause>
 Fix: <what changed>
 Regression test: <test file or command>
+Missing seam: <none, or the seam the test needed and the approved fallback>
 Verification: <commands and results>
 Status: FIXED | PARTIALLY_FIXED | BLOCKED
 ```

@@ -30,7 +30,7 @@ export const parseFrontmatter = (content: string): Record<string, string> | null
   let currentValue: string[] = [];
 
   for (const line of frontmatter.split('\n')) {
-    const match = line.match(/^(\w+):\s*(.*)/);
+    const match = line.match(/^([\w-]+):\s*(.*)/);
     if (match) {
       if (currentKey != null) {
         fields[currentKey] = currentValue.join(' ').trim();

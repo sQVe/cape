@@ -67,7 +67,7 @@ cc-safety-net plugin, not cape. See [Installation](#installation).
 
 ## Skills
 
-Cape ships 13 workflow skills plus the `don-cape` router.
+Cape ships 14 workflow skills plus the `don-cape` router.
 
 | Skill                     | Role                                                  |
 | ------------------------- | ----------------------------------------------------- |
@@ -77,6 +77,7 @@ Cape ships 13 workflow skills plus the `don-cape` router.
 | `set-goal`                | Draft a `/goal` and approach prompt for an AFK run    |
 | `test-driven-development` | Drive each change RED → GREEN → REFACTOR              |
 | `commit`                  | Stage selectively and write a conventional commit     |
+| `resolve-conflicts`       | Finish a conflicted merge or rebase, never abort      |
 | `finish-epic`             | Verify acceptance criteria and hand off the epic      |
 | `pr`                      | Open a pull request with a verified test plan         |
 | `pr-feedback`             | Triage inbound PR review comments and resolve threads |

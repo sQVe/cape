@@ -33,9 +33,14 @@ cape validate skills    # skills only
   `review` is the one command that carries its own instructions instead of routing to a skill, since
   code review is an agent with no skill behind it and nothing else would make it user-invocable.
 - Skills are plain markdown: no XML tags, sentence case headings. The frontmatter description
-  carries the triggers; the body starts at the contract. `cape validate` enforces the
-  machine-checkable part: frontmatter, a nonempty body, and known `cape:<name>` references. The rest
-  of this convention is review-enforced.
+  carries the triggers, except under `disable-model-invocation: true`, where only a human reads it
+  and a one-line summary is the whole description; the body starts at the contract. `cape validate`
+  enforces the machine-checkable part: frontmatter, a nonempty body, and known `cape:<name>`
+  references. The rest of this convention is review-enforced.
+- Before adding a skill instruction, run the no-op test: would the model already do this without the
+  line? If yes, leave it out, and delete existing lines that fail the same test.
+- When a skill points at a doc and the model skips or misreads it, sharpen the pointer's trigger
+  wording first. Inline the doc only when a sharper pointer still misses.
 - Agents use "Investigation approach" as the section header.
 - Every prose file in the repo goes through the `cape:unslop` skill: skills, agents, README, this
   file. The CHANGELOG is the exception, since released entries are a record.
