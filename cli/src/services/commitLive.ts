@@ -20,20 +20,20 @@ const stageFiles = (files: readonly string[]) => {
 };
 
 const stagedFiles = () =>
-  execFileSync('git', ['diff', '--cached', '--name-only'], { encoding: 'utf-8' })
-    .split('\n')
+  execFileSync('git', ['diff', '--cached', '--name-only', '-z'], { encoding: 'utf-8' })
+    .split('\0')
     .filter((line) => line.length > 0);
 
 const stageAndCommit = (files: readonly string[], message: string, allowSensitive: boolean) =>
   Effect.try({
     try: () => {
-      stageFiles(files);
-      const sensitive = detectSensitiveFiles(stagedFiles());
+      const sensitive = detectSensitiveFiles([...stagedFiles(), ...files]);
       if (sensitive.length > 0 && !allowSensitive) {
         throw new Error(
-          `sensitive files staged: ${sensitive.join(', ')}. pass --allow-sensitive to commit them`,
+          `sensitive files: ${sensitive.join(', ')}. pass --allow-sensitive to commit them`,
         );
       }
+      stageFiles(files);
       execFileSync('git', ['commit', '-m', message], { encoding: 'utf-8' });
     },
     catch: (error) =>

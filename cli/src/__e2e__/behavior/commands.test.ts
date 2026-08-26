@@ -226,6 +226,7 @@ describe('cape commit', () => {
     const rejected = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
     expect(rejected.status).toBe(1);
     expect(rejected.stderr).toContain('sensitive files');
+    expect(gitInRepo(repoDir, 'diff', '--cached', '--name-only')).toBe('');
 
     const result = await inProcess(['commit', '.env', '--allow-sensitive', '-m', msg], {
       cwd: repoDir,

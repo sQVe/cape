@@ -4,7 +4,7 @@ const conventionalPattern =
   /^(feat|fix|refactor|docs|test|chore|ci|perf|build|style|revert)(\(.+\))?: .+$/;
 
 const sensitivePatterns = [
-  /(^|\/)\.env(?!rc$|\.example$|\.sample$)/,
+  /(^|\/)\.env(?!\.example$|\.sample$)/,
   /credentials/i,
   /secret/i,
   /\.pem$/,

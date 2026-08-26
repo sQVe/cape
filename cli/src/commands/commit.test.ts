@@ -135,7 +135,7 @@ describe('detectSensitiveFiles', () => {
   });
 
   it('ignores env templates', () => {
-    expect(detectSensitiveFiles(['.env.example', 'apps/.env.sample', '.envrc'])).toEqual([]);
+    expect(detectSensitiveFiles(['.env.example', 'apps/.env.sample'])).toEqual([]);
   });
 
   it('detects env files in subdirectories', () => {
