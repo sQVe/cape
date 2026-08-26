@@ -134,6 +134,13 @@ describe('detectSensitiveFiles', () => {
     expect(detectSensitiveFiles(['src/foo.ts', 'README.md'])).toEqual([]);
   });
 
+  it('detects env files in subdirectories', () => {
+    expect(detectSensitiveFiles(['apps/web/.env', 'config/.env.local'])).toEqual([
+      'apps/web/.env',
+      'config/.env.local',
+    ]);
+  });
+
   it('filters mixed safe and sensitive files', () => {
     expect(detectSensitiveFiles(['src/foo.ts', '.env', 'README.md'])).toEqual(['.env']);
   });

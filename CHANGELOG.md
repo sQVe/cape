@@ -22,10 +22,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- CLI: `cape commit` rejects sensitive files (`.env`, `*.pem`, `*.key`, credentials, secrets)
-  instead of warning; pass `--allow-sensitive` to commit them. `cape git context` prints compact
-  JSON, and the `getX` git service wrappers are gone in favor of `GitService` directly.
-
+- CLI: `cape commit` rejects sensitive files (`.env` at any depth, `*.pem`, `*.key`, credentials,
+  secrets) instead of warning; pass `--allow-sensitive` to commit them. The commit now carries only
+  the named files, so anything staged beforehand stays staged instead of riding along.
+  `cape git context` prints compact JSON, and the `getX` git service wrappers are gone in favor of
+  `GitService` directly.
 - `cape:brainstorm` asks only frontier questions per round, those whose prerequisites are settled; a
   question that depends on an open one waits for a later round.
 - `cape:set-goal` is user-invoked only. `don-cape` points the user to `/cape:set-goal` instead of

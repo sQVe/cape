@@ -23,7 +23,7 @@ const stageAndCommit = (files: readonly string[], message: string) =>
   Effect.try({
     try: () => {
       stageFiles(files);
-      execFileSync('git', ['commit', '-m', message], { encoding: 'utf-8' });
+      execFileSync('git', ['commit', '-m', message, '--', ...files], { encoding: 'utf-8' });
     },
     catch: (error) =>
       error instanceof Error ? error : new Error('commit failed', { cause: error }),

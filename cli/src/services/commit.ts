@@ -3,7 +3,7 @@ import { Effect, ServiceMap } from 'effect';
 const conventionalPattern =
   /^(feat|fix|refactor|docs|test|chore|ci|perf|build|style|revert)(\(.+\))?: .+$/;
 
-const sensitivePatterns = [/^\.env/, /credentials/i, /secret/i, /\.pem$/, /\.key$/];
+const sensitivePatterns = [/(^|\/)\.env/, /credentials/i, /secret/i, /\.pem$/, /\.key$/];
 
 export interface CommitResult {
   readonly message: string;
