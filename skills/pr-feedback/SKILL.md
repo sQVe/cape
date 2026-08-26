@@ -131,9 +131,9 @@ For each row marked Fix, apply the change at the right weight per rule 5: edit n
 `cape:test-driven-development` with the comment's concern as the test target for behavioral changes,
 load `cape:fix-bug` for diagnosed defects.
 
-Fix only what the accepted comment asks. Leave adjacent code and the out-of-scope items alone.
-Update each row to Applied (with the change or test reference) or Dismissed as you go, so the table
-stays the source of truth.
+Fix only what the accepted comment asks. Leave adjacent code and the out-of-scope items alone. The
+reasoning behind a fix goes in the commit message, not in a code comment. Update each row to Applied
+(with the change or test reference) or Dismissed as you go, so the table stays the source of truth.
 
 ### 5. Commit, respond, and resolve
 

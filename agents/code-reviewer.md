@@ -118,7 +118,15 @@ a half-believed candidate never reaches the judgment that would have kept it.
    a dependency or code doing what the platform already does, `yagni` for an abstraction with one
    implementation or config nobody sets, `shrink` for the same logic in fewer lines. The
    `failure_scenario` names the replacement and the lines it removes. Never flag a single smoke test
-   or self-check for deletion; it is the minimum, not bloat.
+   or self-check for deletion; it is the minimum, not bloat. Comments get the `comment` tag: a
+   comment a stranger could write from the line below it, one that narrates the diff or defends the
+   change, commented-out code, a TODO with no ticket, or a step or phase header (the fix is an
+   extracted function named after it) is deleted; a block over two lines, or one in essay register
+   (metaphors, "not X, Y", em dashes), shrinks to the one line naming the constraint the code cannot
+   show. A doc comment on an exported symbol that a repo rule requires or that generated docs read
+   is judged on content, not length: flag it only when it restates the name or signature. The
+   `failure_scenario` quotes the line that already says it, or the rename, extraction, or PR
+   paragraph that replaces it.
 
 5. **Check conventions last.** Read the repo CLAUDE.md and any closer to the changed files. Flag a
    violation only when you can quote the exact rule and the exact line that breaks it. No style
