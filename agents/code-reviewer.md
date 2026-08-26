@@ -70,9 +70,9 @@ apply the bar in one pass at the end. Filtering while you read is the main cause
 a half-believed candidate never reaches the judgment that would have kept it.
 
 - Every finding needs a concrete failure scenario. Drop what you cannot back with one.
-- For categories that are not bugs, `failure_scenario` states the concrete cost instead of a crash:
-  what is duplicated, what breaks the next time someone edits it, which rule the line violates, or
-  what replaces the code and how many lines go.
+- For categories other than `correctness`, `failure_scenario` states the concrete cost instead of a
+  crash: what is duplicated, what breaks the next time someone edits it, which rule the line
+  violates, or what replaces the code and how many lines go.
 - Do not drop a candidate for being speculative when the state is realistic. Concurrency races, and
   nil on a rare but reachable path (error handler, cold cache, absent optional field), are findings.
 - Refute only what the code disproves: the line does not say that, a type or invariant makes it
