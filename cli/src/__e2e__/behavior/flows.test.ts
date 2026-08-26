@@ -120,15 +120,17 @@ describe('flow 4: full commit pipeline', () => {
     expect(result.stderr).toContain('bulk staging with');
   });
 
-  it('warns on sensitive files but still commits', () => {
+  it('rejects sensitive files unless --allow-sensitive is passed', () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=abc\n');
 
     const msg = 'feat: config\n\nAdd environment configuration.';
-    const result = capeCmd(['commit', '.env', '-m', msg], { cwd: repoDir });
+    const rejected = capeCmd(['commit', '.env', '-m', msg], { cwd: repoDir });
+    expect(rejected.status).toBe(1);
+    expect(rejected.stderr).toContain('sensitive files');
+    expect(rejected.stderr).toContain('.env');
 
+    const result = capeCmd(['commit', '.env', '--allow-sensitive', '-m', msg], { cwd: repoDir });
     expect(result.status).toBe(0);
-    expect(result.stderr).toContain('sensitive files');
-    expect(result.stderr).toContain('.env');
 
     const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: config');

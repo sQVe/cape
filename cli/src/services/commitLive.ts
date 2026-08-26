@@ -1,9 +1,9 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
-import { CommitService } from './commit';
+import { CommitService, detectSensitiveFiles } from './commit';
 
 const stageFiles = (files: readonly string[]) => {
   const existing = files.filter((f) => existsSync(f));
@@ -19,9 +19,32 @@ const stageFiles = (files: readonly string[]) => {
   }
 };
 
-const stageAndCommit = (files: readonly string[], message: string) =>
+const stagedFiles = () =>
+  execFileSync('git', ['diff', '--cached', '--name-only', '-z'], {
+    encoding: 'utf-8',
+  })
+    .split('\0')
+    .filter((line) => line.length > 0);
+
+const rejectSensitive = (files: readonly string[], allowSensitive: boolean) => {
+  const sensitive = detectSensitiveFiles(files);
+  if (sensitive.length > 0 && !allowSensitive) {
+    throw new Error(
+      `sensitive files: ${sensitive.join(', ')}. pass --allow-sensitive to commit them`,
+    );
+  }
+};
+
+const stageAndCommit = (files: readonly string[], message: string, allowSensitive: boolean) =>
   Effect.try({
     try: () => {
+      const directories = files.filter((f) => existsSync(f) && statSync(f).isDirectory());
+      if (directories.length > 0) {
+        throw new Error(
+          `directories are not allowed: ${directories.join(', ')}. name the files inside them instead`,
+        );
+      }
+      rejectSensitive([...stagedFiles(), ...files], allowSensitive);
       stageFiles(files);
       execFileSync('git', ['commit', '-m', message], { encoding: 'utf-8' });
     },
@@ -29,9 +52,10 @@ const stageAndCommit = (files: readonly string[], message: string) =>
       error instanceof Error ? error : new Error('commit failed', { cause: error }),
   });
 
-const commitNoEdit = () =>
+const commitNoEdit = (allowSensitive: boolean) =>
   Effect.try({
     try: () => {
+      rejectSensitive(stagedFiles(), allowSensitive);
       execFileSync('git', ['commit', '--no-edit'], { encoding: 'utf-8' });
     },
     catch: (error) =>

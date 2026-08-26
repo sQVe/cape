@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 
 import { Effect } from 'effect';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CommitService } from './commit';
 import { CommitServiceLive } from './commitLive';
@@ -13,6 +13,7 @@ vi.mock('node:child_process', () => ({
 
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
+  statSync: vi.fn(() => ({ isDirectory: () => false })),
 }));
 
 const run = <A>(effect: Effect.Effect<A, unknown, CommitService>) =>
@@ -20,6 +21,10 @@ const run = <A>(effect: Effect.Effect<A, unknown, CommitService>) =>
 
 const mockExecFileSync = vi.mocked(execFileSync);
 const mockExistsSync = vi.mocked(existsSync);
+
+beforeEach(() => {
+  mockExecFileSync.mockReturnValue('');
+});
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -33,7 +38,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['exists.ts', 'deleted.ts'], 'test');
+          yield* service.stageAndCommit(['exists.ts', 'deleted.ts'], 'test', false);
         }),
       );
 
@@ -55,7 +60,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['deleted.ts'], 'test');
+          yield* service.stageAndCommit(['deleted.ts'], 'test', false);
         }),
       );
 
@@ -71,7 +76,7 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.stageAndCommit(['exists.ts'], 'test');
+          yield* service.stageAndCommit(['exists.ts'], 'test', false);
         }),
       );
 
@@ -91,7 +96,7 @@ describe('CommitServiceLive', () => {
         run(
           Effect.gen(function* () {
             const service = yield* CommitService;
-            yield* service.stageAndCommit(['f.ts'], 'msg');
+            yield* service.stageAndCommit(['f.ts'], 'msg', false);
           }),
         ),
       ).rejects.toThrow();
@@ -103,7 +108,42 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.commitNoEdit();
+          yield* service.commitNoEdit(false);
+        }),
+      );
+
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['commit', '--no-edit'],
+        expect.objectContaining({ encoding: 'utf-8' }),
+      );
+    });
+
+    it('rejects staged sensitive files before committing', async () => {
+      mockExecFileSync.mockReturnValue('.env\0src/foo.ts\0');
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* CommitService;
+            yield* service.commitNoEdit(false);
+          }),
+        ),
+      ).rejects.toThrow('sensitive files: .env');
+      expect(mockExecFileSync).not.toHaveBeenCalledWith(
+        'git',
+        ['commit', '--no-edit'],
+        expect.anything(),
+      );
+    });
+
+    it('commits staged sensitive files when allowed', async () => {
+      mockExecFileSync.mockReturnValue('.env\0');
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* CommitService;
+          yield* service.commitNoEdit(true);
         }),
       );
 
@@ -123,7 +163,7 @@ describe('CommitServiceLive', () => {
         run(
           Effect.gen(function* () {
             const service = yield* CommitService;
-            yield* service.commitNoEdit();
+            yield* service.commitNoEdit(false);
           }),
         ),
       ).rejects.toThrow();

@@ -220,15 +220,42 @@ describe('cape commit', () => {
     expect(log).toContain('feat: add thing');
   });
 
-  it('warns on stderr about sensitive files', async () => {
+  it('rejects sensitive files unless --allow-sensitive is passed', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
     const msg = 'feat: config\n\nAdd environment configuration.';
-    const result = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
+    const rejected = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
+    expect(rejected.status).toBe(1);
+    expect(rejected.stderr).toContain('sensitive files');
+    expect(gitInRepo(repoDir, 'diff', '--cached', '--name-only')).toBe('');
+
+    const result = await inProcess(['commit', '.env', '--allow-sensitive', '-m', msg], {
+      cwd: repoDir,
+    });
     expect(result.status).toBe(0);
-    expect(result.stderr.length).toBeGreaterThan(0);
 
     const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: config');
+  });
+
+  it('rejects a directory argument', async () => {
+    mkdirSync(join(repoDir, 'apps'));
+    writeFileSync(join(repoDir, 'apps', '.env'), 'SECRET=123\n');
+    const msg = 'feat: apps\n\nAdd the apps directory.';
+    const result = await inProcess(['commit', 'apps', '-m', msg], { cwd: repoDir });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('directories are not allowed');
+    expect(gitInRepo(repoDir, 'log', '--oneline')).not.toContain('feat: apps');
+  });
+
+  it('rejects a sensitive file that was staged beforehand', async () => {
+    writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
+    gitInRepo(repoDir, 'add', '.env');
+    writeFileSync(join(repoDir, 'file.ts'), 'export const x = 1;\n');
+    const msg = 'feat: add thing\n\nAdd the thing to the project.';
+    const result = await inProcess(['commit', 'file.ts', '-m', msg], { cwd: repoDir });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('.env');
+    expect(gitInRepo(repoDir, 'log', '--oneline')).not.toContain('feat: add thing');
   });
 
   it('rejects invalid conventional commit message', async () => {

@@ -134,6 +134,17 @@ describe('detectSensitiveFiles', () => {
     expect(detectSensitiveFiles(['src/foo.ts', 'README.md'])).toEqual([]);
   });
 
+  it('ignores env templates', () => {
+    expect(detectSensitiveFiles(['.env.example', 'apps/.env.sample'])).toEqual([]);
+  });
+
+  it('detects env files in subdirectories', () => {
+    expect(detectSensitiveFiles(['apps/web/.env', 'config/.env.local'])).toEqual([
+      'apps/web/.env',
+      'config/.env.local',
+    ]);
+  });
+
   it('filters mixed safe and sensitive files', () => {
     expect(detectSensitiveFiles(['src/foo.ts', '.env', 'README.md'])).toEqual(['.env']);
   });
@@ -143,7 +154,7 @@ describe('stageAndCommit', () => {
   it('propagates service errors', async () => {
     await expect(
       Effect.runPromise(
-        stageAndCommit(['file.ts'], 'feat: thing').pipe(
+        stageAndCommit(['file.ts'], 'feat: thing', false).pipe(
           Effect.provide(makeErrorCommitLayer('git failed')),
         ),
       ),
@@ -225,17 +236,6 @@ describe('commit command wiring', () => {
         ),
       ),
     ).rejects.toThrow('bulk staging');
-  });
-
-  it('warns on sensitive files to stderr but still commits', async () => {
-    const console_ = spyConsole();
-    const msg = 'feat: add config\n\nAdd environment configuration.';
-    await Effect.runPromise(run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)));
-    expect(console_.errorOutput()).toContain('warning: sensitive files');
-    expect(console_.errorOutput()).toContain('.env');
-    const result = JSON.parse(console_.output());
-    expect(result.message).toBe(msg);
-    console_.restore();
   });
 
   it('commits with --no-edit for merge commits', async () => {

@@ -2,14 +2,9 @@ import { Console, Effect } from 'effect';
 import { Argument, Command, Flag } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-import {
-  commitNoEdit,
-  detectSensitiveFiles,
-  stageAndCommit,
-  validateFiles,
-  validateMessage,
-} from '../services/commit';
+import { commitNoEdit, stageAndCommit, validateFiles, validateMessage } from '../services/commit';
 import type { CommitResult } from '../services/commit';
+import { catchAndDie } from '../utils/catchAndDie';
 
 export const commit = Command.make(
   'commit',
@@ -22,15 +17,21 @@ export const commit = Command.make(
       Flag.withDescription('Finalize a merge commit (git commit --no-edit)'),
       Flag.withDefault(false),
     ),
+    allowSensitive: Flag.boolean('allow-sensitive').pipe(
+      Flag.withDescription(
+        'Commit files matching sensitive patterns (.env, *.pem, *.key, credentials, secret)',
+      ),
+      Flag.withDefault(false),
+    ),
     message: Flag.string('message').pipe(
       Flag.withDescription('Commit message (repeatable, joined with blank line)'),
       Flag.withAlias('m'),
       Flag.atLeast(0),
     ),
   },
-  Effect.fn(function* ({ files, noEdit, message }) {
+  Effect.fn(function* ({ files, noEdit, allowSensitive, message }) {
     if (noEdit) {
-      yield* commitNoEdit();
+      yield* commitNoEdit(allowSensitive).pipe(catchAndDie);
       yield* Console.log(JSON.stringify({ noEdit: true }));
       return;
     }
@@ -55,12 +56,7 @@ export const commit = Command.make(
       return yield* dieWithError(messageError);
     }
 
-    const sensitive = detectSensitiveFiles(files);
-    if (sensitive.length > 0) {
-      yield* Console.error(`warning: sensitive files: ${sensitive.join(', ')}`);
-    }
-
-    yield* stageAndCommit(files, msg);
+    yield* stageAndCommit(files, msg, allowSensitive).pipe(catchAndDie);
 
     const result: CommitResult = {
       message: msg,
@@ -71,6 +67,6 @@ export const commit = Command.make(
   }),
 ).pipe(
   Command.withDescription(
-    'Stage files and create a git commit with message validation and sensitive-file detection. Returns { message, files }. Use instead of raw git commit.',
+    'Stage files and create a git commit with message validation and rejection of staged sensitive files (override with --allow-sensitive). Returns { message, files }. Use instead of raw git commit.',
   ),
 );
