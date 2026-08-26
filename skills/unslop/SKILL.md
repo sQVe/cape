@@ -139,4 +139,5 @@ When in doubt, pick plain.
     identifiers below. No history, no examples the code already shows, no defense of the change, no
     arguing with a reviewer. A section header becomes an extracted function, a diagnosis goes in the
     commit message or PR body, a TODO carries a ticket id or is not written, commented-out code is
-    deleted. A comment that needs a paragraph means the code needs restructuring.
+    deleted. A comment that needs a paragraph means the code needs restructuring. A doc comment a
+    repo rule requires on an exported symbol stays, at the length that rule asks for.
