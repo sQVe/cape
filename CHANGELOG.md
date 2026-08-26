@@ -12,6 +12,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - The session-start hook injects `cape:unslop` next to `don-cape`, so the writing rules sit in every
   session and come back after compaction instead of depending on a skill load that other skills'
   pointers triggered about a quarter of the time.
+- `cape:code-reviewer` reports over-engineering under the ponytail tags `delete`, `stdlib`,
+  `native`, `yagni`, and `shrink`, each finding naming the replacement and the lines it removes.
 - `cape:bro` restates the previous message in plain language: what happened, what it means, what to
   do next. It explains rather than re-running the work, and it restates a pending choice instead of
   making it. Routed from the `don-cape` table on "explain that", "what does that mean", "in plain
