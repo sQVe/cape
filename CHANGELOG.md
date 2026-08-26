@@ -14,6 +14,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   pointers triggered about a quarter of the time.
 - `cape:code-reviewer` reports over-engineering under the ponytail tags `delete`, `stdlib`,
   `native`, `yagni`, and `shrink`, each finding naming the replacement and the lines it removes.
+- Code comments get rules. `cape:unslop` covers them under plain register: none by default, one or
+  two lines naming what the code cannot show, no history or defense of the change. The reviewer
+  flags them under a `comment` tag, and `/cape:review` and `cape:pr-feedback` send fix reasoning to
+  the commit message instead of a comment above the fix.
 - `cape:bro` restates the previous message in plain language: what happened, what it means, what to
   do next. It explains rather than re-running the work, and it restates a pending choice instead of
   making it. Routed from the `don-cape` table on "explain that", "what does that mean", "in plain

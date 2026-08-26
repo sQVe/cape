@@ -18,12 +18,12 @@ Edit text to remove AI patterns. Preserve meaning, match the register.
 
 Plain is the default. It covers anything that ships under the user's name and anything reported back
 to them: commit messages, PR titles and descriptions, review replies, Linear tickets and comments,
-plan and epic text, review findings, summaries. Assume the reader is skimming, in a hurry, and
-reading in a second language. Apply every pattern below. Lead with the answer, then the evidence,
-and structure the text so it can be scanned.
+plan and epic text, review findings, summaries, code comments. Assume the reader is skimming, in a
+hurry, and reading in a second language. Apply every pattern below. Lead with the answer, then the
+evidence, and structure the text so it can be scanned.
 
 Full voice is the exception. Use it for docs, the README, and posts, where sterile writing is its
-own AI tell. Rules 1 to 26 still apply. The plain speech rules, 27 to 31, do not, since they would
+own AI tell. Rules 1 to 26 still apply. The plain speech rules, 27 to 32, do not, since they would
 cut the feeling, the long sentence, and the hedge that full voice is built on. Instead:
 
 - **Have opinions.** React to facts instead of neutrally listing pros and cons.
@@ -131,3 +131,13 @@ When in doubt, pick plain.
 31. **Prefer the plain word.** "utilize" becomes "use", "leverage" becomes "use", "facilitate"
     becomes "help", "numerous" becomes "many", "in the event that" becomes "if". The fancier synonym
     is rarely clearer.
+32. **Code comments.** Default is none. A comment earns its place only for what the code cannot
+    carry: a constraint or workaround a reader would otherwise undo, a deliberate omission that
+    looks like a bug, a pointer out of the file (ticket, spec, upstream bug), a toolchain pragma.
+    Test each one: could a stranger write it from the code beside it? Then delete it. Keep it to one
+    or two lines that name the external fact and what breaks without it, in different words than the
+    identifiers below. No history, no examples the code already shows, no defense of the change, no
+    arguing with a reviewer. A section header becomes an extracted function, a diagnosis goes in the
+    commit message or PR body, a TODO carries a ticket id or is not written, commented-out code is
+    deleted. A comment that needs a paragraph means the code needs restructuring. A doc comment a
+    repo rule requires on an exported symbol stays, at the length that rule asks for.
