@@ -4,7 +4,7 @@ import { Command } from 'effect/unstable/cli';
 import { describe, expect, it } from 'vitest';
 
 import { main } from '../main';
-import { GitService, getGitDiff } from '../services/git';
+import { GitService } from '../services/git';
 import type { DiffScope, GitContext } from '../services/git';
 import {
   stubCommitLayer,
@@ -29,15 +29,6 @@ const makeTestGitLayer = (diffResult = 'diff --git a/file.ts b/file.ts') =>
     getDiff: (_scope: DiffScope) => Effect.succeed(diffResult),
     validateBranch: () => Effect.succeed({ valid: true, errors: [] }),
     createBranch: () => Effect.succeed({ created: true, branch: 'feat/test' }),
-    repoName: () => Effect.succeed('cape'),
-  });
-
-const makeErrorGitLayer = () =>
-  Layer.succeed(GitService)({
-    getContext: () => Effect.fail(new Error('not a git repository')),
-    getDiff: () => Effect.fail(new Error('not a git repository')),
-    validateBranch: () => Effect.fail(new Error('not a git repository')),
-    createBranch: () => Effect.fail(new Error('not a git repository')),
     repoName: () => Effect.succeed('cape'),
   });
 
@@ -108,20 +99,5 @@ describe('git diff command', () => {
     const { layer, getCaptured } = makeScopeCapturingLayer();
     await Effect.runPromise(run(['git', 'diff', 'pr']).pipe(Effect.provide(testLayers(layer))));
     expect(getCaptured()).toBe('pr');
-  });
-});
-
-describe('getGitDiff', () => {
-  it('returns diff content from service', async () => {
-    const result = await Effect.runPromise(
-      getGitDiff('unstaged').pipe(Effect.provide(makeTestGitLayer('fake diff output'))),
-    );
-    expect(result).toBe('fake diff output');
-  });
-
-  it('propagates error when not in a git repo', async () => {
-    await expect(
-      Effect.runPromise(getGitDiff('unstaged').pipe(Effect.provide(makeErrorGitLayer()))),
-    ).rejects.toThrow('not a git repository');
   });
 });

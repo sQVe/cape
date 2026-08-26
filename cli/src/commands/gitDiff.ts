@@ -2,7 +2,7 @@ import { Console, Effect, Option } from 'effect';
 import { Argument, Command } from 'effect/unstable/cli';
 
 import { dieWithError } from '../dieWithError';
-import { DIFF_SCOPES, getGitDiff } from '../services/git';
+import { DIFF_SCOPES, GitService } from '../services/git';
 import type { DiffScope } from '../services/git';
 import { catchAndDie } from '../utils/catchAndDie';
 
@@ -24,9 +24,8 @@ export const gitDiff = Command.make(
       return yield* dieWithError(`invalid scope: ${raw}. valid: ${DIFF_SCOPES.join(', ')}`);
     }
 
-    const resolved = raw;
-
-    const diff = yield* getGitDiff(resolved).pipe(catchAndDie);
+    const git = yield* GitService;
+    const diff = yield* git.getDiff(raw).pipe(catchAndDie);
 
     yield* Console.log(diff);
   }),

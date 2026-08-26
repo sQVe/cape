@@ -1,16 +1,17 @@
 import { Console, Effect } from 'effect';
 import { Command } from 'effect/unstable/cli';
 
-import { getGitContext } from '../services/git';
+import { GitService } from '../services/git';
 import { catchAndDie } from '../utils/catchAndDie';
 
 export const gitContext = Command.make(
   'context',
   {},
   Effect.fn(function* () {
-    const context = yield* getGitContext.pipe(catchAndDie);
+    const git = yield* GitService;
+    const context = yield* git.getContext().pipe(catchAndDie);
 
-    yield* Console.log(JSON.stringify(context, null, 2));
+    yield* Console.log(JSON.stringify(context));
   }),
 ).pipe(
   Command.withDescription(

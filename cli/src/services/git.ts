@@ -34,30 +34,3 @@ export class GitService extends ServiceMap.Service<
     readonly repoName: () => Effect.Effect<string | null>;
   }
 >()('GitService') {}
-
-export const getGitContext = Effect.gen(function* () {
-  const git = yield* GitService;
-
-  return yield* git.getContext();
-});
-
-export const getGitDiff = (scope: DiffScope) =>
-  Effect.gen(function* () {
-    const git = yield* GitService;
-
-    return yield* git.getDiff(scope);
-  });
-
-export const getValidateBranch = (name: string) =>
-  Effect.gen(function* () {
-    const git = yield* GitService;
-
-    return yield* git.validateBranch(name);
-  });
-
-export const getCreateBranch = (name: string) =>
-  Effect.gen(function* () {
-    const git = yield* GitService;
-
-    return yield* git.createBranch(name);
-  });
