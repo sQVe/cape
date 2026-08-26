@@ -108,7 +108,42 @@ describe('CommitServiceLive', () => {
       await run(
         Effect.gen(function* () {
           const service = yield* CommitService;
-          yield* service.commitNoEdit();
+          yield* service.commitNoEdit(false);
+        }),
+      );
+
+      expect(mockExecFileSync).toHaveBeenCalledWith(
+        'git',
+        ['commit', '--no-edit'],
+        expect.objectContaining({ encoding: 'utf-8' }),
+      );
+    });
+
+    it('rejects staged sensitive files before committing', async () => {
+      mockExecFileSync.mockReturnValue('.env\0src/foo.ts\0');
+
+      await expect(
+        run(
+          Effect.gen(function* () {
+            const service = yield* CommitService;
+            yield* service.commitNoEdit(false);
+          }),
+        ),
+      ).rejects.toThrow('sensitive files: .env');
+      expect(mockExecFileSync).not.toHaveBeenCalledWith(
+        'git',
+        ['commit', '--no-edit'],
+        expect.anything(),
+      );
+    });
+
+    it('commits staged sensitive files when allowed', async () => {
+      mockExecFileSync.mockReturnValue('.env\0');
+
+      await run(
+        Effect.gen(function* () {
+          const service = yield* CommitService;
+          yield* service.commitNoEdit(true);
         }),
       );
 
@@ -128,7 +163,7 @@ describe('CommitServiceLive', () => {
         run(
           Effect.gen(function* () {
             const service = yield* CommitService;
-            yield* service.commitNoEdit();
+            yield* service.commitNoEdit(false);
           }),
         ),
       ).rejects.toThrow();

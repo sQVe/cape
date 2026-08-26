@@ -31,7 +31,7 @@ export const commit = Command.make(
   },
   Effect.fn(function* ({ files, noEdit, allowSensitive, message }) {
     if (noEdit) {
-      yield* commitNoEdit();
+      yield* commitNoEdit(allowSensitive).pipe(catchAndDie);
       yield* Console.log(JSON.stringify({ noEdit: true }));
       return;
     }

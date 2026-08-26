@@ -53,7 +53,7 @@ export class CommitService extends ServiceMap.Service<
       message: string,
       allowSensitive: boolean,
     ) => Effect.Effect<void, Error>;
-    readonly commitNoEdit: () => Effect.Effect<void, Error>;
+    readonly commitNoEdit: (allowSensitive: boolean) => Effect.Effect<void, Error>;
   }
 >()('CommitService') {}
 
@@ -67,8 +67,8 @@ export const stageAndCommit = (
     return yield* service.stageAndCommit(files, message, allowSensitive);
   });
 
-export const commitNoEdit = () =>
+export const commitNoEdit = (allowSensitive: boolean) =>
   Effect.gen(function* () {
     const service = yield* CommitService;
-    return yield* service.commitNoEdit();
+    return yield* service.commitNoEdit(allowSensitive);
   });
