@@ -260,6 +260,20 @@ describe('sessionStart', () => {
     expect(result.additionalContext).toContain('skills/don-cape/SKILL.md');
   });
 
+  it('outputs the unslop skill after don-cape', async () => {
+    const layer = makeStubHookLayer({
+      files: {
+        '/test/skills/don-cape/SKILL.md': 'routing',
+        '/test/skills/unslop/SKILL.md': 'writing rules',
+      },
+    });
+    const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
+    expect(result.additionalContext).toContain('skills/unslop/SKILL.md');
+    expect(result.additionalContext.indexOf('writing rules')).toBeGreaterThan(
+      result.additionalContext.indexOf('routing'),
+    );
+  });
+
   it('outputs fallback when SKILL.md missing', async () => {
     const layer = makeStubHookLayer();
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
