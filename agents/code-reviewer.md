@@ -119,13 +119,14 @@ a half-believed candidate never reaches the judgment that would have kept it.
    implementation or config nobody sets, `shrink` for the same logic in fewer lines. The
    `failure_scenario` names the replacement and the lines it removes. Never flag a single smoke test
    or self-check for deletion; it is the minimum, not bloat. Comments get the `comment` tag. Delete
-   one a stranger could write from the line below it, one that narrates the diff or defends the
-   change, commented-out code, a TODO with no ticket, and a step or phase header, whose fix is an
-   extracted function named after it. Shrink a block over two lines, or one in essay register
-   (metaphors, "not X, Y", em dashes), to the one line naming the constraint the code cannot show. A
-   doc comment a repo rule requires on an exported symbol is exempt from both; flag it only when it
-   exceeds the length that rule asks for. The `failure_scenario` quotes the line that already says
-   it, or the rename, extraction, or PR paragraph that replaces it.
+   any comment a stranger could write from the line below it, any that narrates the diff or defends
+   the change, commented-out code, and a TODO with no ticket. Delete a step or phase header too; its
+   fix is an extracted function named after it. Shrink a block over two lines, or one in essay
+   register (metaphors, "not X, Y", em dashes), to the one or two lines that name the external fact
+   and what breaks without it. Two exemptions: a toolchain pragma stays, and a doc comment a repo
+   rule requires on an exported symbol is flagged only when it exceeds the length that rule asks
+   for. The `failure_scenario` quotes the line that already says it, or the rename, extraction, or
+   PR paragraph that replaces it.
 
 5. **Check conventions last.** Read the repo CLAUDE.md and any closer to the changed files. Flag a
    violation only when you can quote the exact rule and the exact line that breaks it. No style
