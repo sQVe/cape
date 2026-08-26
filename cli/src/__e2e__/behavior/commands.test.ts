@@ -220,12 +220,17 @@ describe('cape commit', () => {
     expect(log).toContain('feat: add thing');
   });
 
-  it('warns on stderr about sensitive files', async () => {
+  it('rejects sensitive files unless --allow-sensitive is passed', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
     const msg = 'feat: config\n\nAdd environment configuration.';
-    const result = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
+    const rejected = await inProcess(['commit', '.env', '-m', msg], { cwd: repoDir });
+    expect(rejected.status).toBe(1);
+    expect(rejected.stderr).toContain('sensitive files');
+
+    const result = await inProcess(['commit', '.env', '--allow-sensitive', '-m', msg], {
+      cwd: repoDir,
+    });
     expect(result.status).toBe(0);
-    expect(result.stderr.length).toBeGreaterThan(0);
 
     const log = gitInRepo(repoDir, 'log', '--oneline');
     expect(log).toContain('feat: config');

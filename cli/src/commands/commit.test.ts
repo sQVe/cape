@@ -227,12 +227,19 @@ describe('commit command wiring', () => {
     ).rejects.toThrow('bulk staging');
   });
 
-  it('warns on sensitive files to stderr but still commits', async () => {
+  it('rejects sensitive files without --allow-sensitive', async () => {
+    const msg = 'feat: add config\n\nAdd environment configuration.';
+    await expect(
+      Effect.runPromise(run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers))),
+    ).rejects.toThrow('sensitive files');
+  });
+
+  it('commits sensitive files with --allow-sensitive', async () => {
     const console_ = spyConsole();
     const msg = 'feat: add config\n\nAdd environment configuration.';
-    await Effect.runPromise(run(['commit', '.env', '-m', msg]).pipe(Effect.provide(commandLayers)));
-    expect(console_.errorOutput()).toContain('warning: sensitive files');
-    expect(console_.errorOutput()).toContain('.env');
+    await Effect.runPromise(
+      run(['commit', '.env', '--allow-sensitive', '-m', msg]).pipe(Effect.provide(commandLayers)),
+    );
     const result = JSON.parse(console_.output());
     expect(result.message).toBe(msg);
     console_.restore();
