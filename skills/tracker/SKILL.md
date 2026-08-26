@@ -13,7 +13,7 @@ Cape uses Linear as the tracker and a per-repository local read cache. Work is t
 human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan issues and
 tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh the cache
 with `cape tracker`. Linear is the source of truth for issue content and status; the cache is the
-source of truth for reads.
+source of truth for reads, and only moves status forward on refresh.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -138,14 +138,26 @@ Write the state to Linear first, then copy it into the cache. Starting a task:
 
 ```text
 save_issue(id: <task-id>, state: "In Progress")
-save_issue(id: <plan-id>, state: "In Progress")    # while the plan issue is still Todo
-save_issue(id: <human-id>, state: "In Progress")   # same, when a human ticket exists
 ```
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
+```
+
+The first start on an epic also moves its parents. Run this once, when `cape tracker show` still
+lists the plan issue as `Todo`; the epic entry's `humanTicketId` is the human ticket, and AI-only
+work has none:
+
+```text
+save_issue(id: <plan-id>, state: "In Progress")
+save_issue(id: <human-id>, state: "In Progress")   # the home team's in-progress state name
+```
+
+```bash
 cape tracker cache-status <plan-id> "In Progress" started
 ```
+
+A standalone bug with no plan issue skips this block.
 
 Finishing a task:
 
@@ -181,8 +193,7 @@ closing line:
 Fixes <human-id>, <plan-id>
 ```
 
-Tasks are already `Done` and stay off the line: the integration moves every listed issue to
-`In Review` when the PR opens, which would reopen them. On merge it moves the listed issues to
+Tasks are already `Done` and stay off the line. On merge the integration moves the listed issues to
 `Done`; copy that into the cache with `cape tracker cache-status <issue-id> Done completed` per
 issue, or `cache-epic` if you have the full refreshed plan issue with children.
 

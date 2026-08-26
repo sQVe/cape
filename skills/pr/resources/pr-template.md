@@ -50,13 +50,12 @@
 
 ---
 
-<!-- DEFAULT: list the human ticket, the AI plan issue, and every completed task from the
-     tracker cache. Incomplete and canceled children excluded, and only ids that exist (AI-only
-     work has no human ticket). Use `Related to` with the same set ONLY when this PR does not
-     complete the epic (more PRs or a live cutover still pending). Pick one keyword per issue,
-     never both on the same id. -->
+<!-- DEFAULT: list the human ticket and the AI plan issue from the tracker cache, never the
+     tasks, and only ids that exist (AI-only work has no human ticket). Use `Related to` with the
+     same set ONLY when this PR does not complete the epic (more PRs or a live cutover still
+     pending). Pick one keyword per issue, never both on the same id. -->
 
-Fixes ABU-XX, AI-XX, AI-XX
+Fixes ABU-XX, AI-XX
 ```
 
 ## Section guidelines
@@ -73,13 +72,13 @@ Fixes ABU-XX, AI-XX, AI-XX
   marked done)
 - **Issues.** Build the closing line from the tracker cache: `Fixes <human-id>, <plan-id>`, meaning
   the human ticket and the AI plan issue, plus any completed task's own `humanTicketId`. Tasks stay
-  off the line, since they are already `Done` and a listed issue moves to `In Review` when the PR
-  opens. Ids that do not exist are omitted (AI-only work has no human ticket). Use a non-closing
-  keyword (`Related to`) with the same set ONLY when this PR does not complete the epic, meaning
-  more PRs or a live cutover are still pending. A non-closing link still moves the issues through
-  pre-merge statuses but never closes them, which is the most common reason an epic stays open after
-  its PR merges. Closing keywords: `close`, `fix`, `resolve`, `complete`, `implement` (and their
-  tenses). Linear links and closes by Linear identifier, not GitHub issue number.
+  off the line, since they are already `Done`. Ids that do not exist are omitted (AI-only work has
+  no human ticket). Use a non-closing keyword (`Related to`) with the same set ONLY when this PR
+  does not complete the epic, meaning more PRs or a live cutover are still pending. A non-closing
+  link still moves the issues through pre-merge statuses but never closes them, which is the most
+  common reason an epic stays open after its PR merges. Closing keywords: `close`, `fix`, `resolve`,
+  `complete`, `implement` (and their tenses). Linear links and closes by Linear identifier, not
+  GitHub issue number.
 
 ## Test plan format
 

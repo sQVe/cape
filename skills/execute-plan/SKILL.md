@@ -75,18 +75,15 @@ re-reading what it summarized would undo the dispatch.
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
-Mark the task in progress in Linear, then in the cache, per the tracker contract. Then signal the
-phase:
+Mark the task in progress in Linear, then in the cache. When the plan issue is still `Todo`, run the
+first-start block from `cape:tracker` "Update status during build" as well. Then signal the phase:
 
 ```text
 save_issue(id: <task-id>, state: "In Progress")
-save_issue(id: <plan-id>, state: "In Progress")    # while the plan issue is still Todo
-save_issue(id: <human-id>, state: "In Progress")   # same, when a human ticket exists
 ```
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
-cape tracker cache-status <plan-id> "In Progress" started
 cape workspace phase build
 ```
 
