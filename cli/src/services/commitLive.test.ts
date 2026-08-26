@@ -13,6 +13,7 @@ vi.mock('node:child_process', () => ({
 
 vi.mock('node:fs', () => ({
   existsSync: vi.fn(),
+  statSync: vi.fn(() => ({ isDirectory: () => false })),
 }));
 
 const run = <A>(effect: Effect.Effect<A, unknown, CommitService>) =>

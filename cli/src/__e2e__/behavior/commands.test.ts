@@ -237,6 +237,16 @@ describe('cape commit', () => {
     expect(log).toContain('feat: config');
   });
 
+  it('rejects a directory argument', async () => {
+    mkdirSync(join(repoDir, 'apps'));
+    writeFileSync(join(repoDir, 'apps', '.env'), 'SECRET=123\n');
+    const msg = 'feat: apps\n\nAdd the apps directory.';
+    const result = await inProcess(['commit', 'apps', '-m', msg], { cwd: repoDir });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('directories are not allowed');
+    expect(gitInRepo(repoDir, 'log', '--oneline')).not.toContain('feat: apps');
+  });
+
   it('rejects a sensitive file that was staged beforehand', async () => {
     writeFileSync(join(repoDir, '.env'), 'SECRET=123\n');
     gitInRepo(repoDir, 'add', '.env');

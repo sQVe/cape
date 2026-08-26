@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 
 import { Effect, Layer } from 'effect';
 
@@ -27,6 +27,10 @@ const stagedFiles = () =>
 const stageAndCommit = (files: readonly string[], message: string, allowSensitive: boolean) =>
   Effect.try({
     try: () => {
+      const directories = files.filter((f) => existsSync(f) && statSync(f).isDirectory());
+      if (directories.length > 0) {
+        throw new Error(`directories are not allowed: ${directories.join(', ')}. name files`);
+      }
       const sensitive = detectSensitiveFiles([...stagedFiles(), ...files]);
       if (sensitive.length > 0 && !allowSensitive) {
         throw new Error(
