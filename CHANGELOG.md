@@ -27,6 +27,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Skills: Linear now shows the state of the work. Plan issues, tasks, and AI bug issues are created
+  as `Todo`; execute-plan and fix-bug write `In Progress` and `Done` to Linear before copying them
+  into the cache, and the first task moves the plan issue and human ticket to `In Progress`. Tasks
+  leave the PR closing line, which now closes only the human ticket and plan issue.
 - CLI: `cape commit` rejects sensitive files (`.env` at any depth, `*.pem`, `*.key`, credentials,
   secrets) instead of warning; pass `--allow-sensitive` to commit them. The check covers files
   already in the index and the `--no-edit` merge path, not just the named arguments.
@@ -189,10 +193,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Tracker: two-tier team routing. Human-facing tickets go to the Aburaya team; agent-facing plan
   issues and task sub-issues go to the Agents team (AI), linked bidirectionally as pairs. The cache
   carries the pair (`humanTicketId` on epics and, for per-ticket pairs like nested bugs, on tasks),
-  task status is cache-only during build, and `cape:pr` builds the closing line from the cache
-  (`Fixes <human-id>, <plan-id>, <completed task ids>`). Write-plan and fix-bug create the pairs;
-  execute-plan and the code-reviewer read the contract from the AI plan issue; a workspace-setup
-  checklist covers the Agents team, its PR automations, and retiring the `agent-ticket` label.
+  Linear holds task status and the cache copies it, and `cape:pr` builds the closing line from the
+  cache (`Fixes <human-id>, <plan-id>`). Write-plan and fix-bug create the pairs; execute-plan and
+  the code-reviewer read the contract from the AI plan issue; a workspace-setup checklist covers the
+  Agents team, its PR automations, and retiring the `agent-ticket` label.
 
 - Skills: added `cape:unslop`, adapted from Cursor's pstack unslop skill: 31 AI-tell patterns, an
   adding-soul pass, and a self-audit for any human-facing prose. Written as plain markdown — the
@@ -324,9 +328,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   warnings.
 - Hooks: the session banner now renders a stale cache with a freshness marker instead of vanishing,
   and detects a real worktree instead of always labeling the branch as one.
-- Skills: cape no longer sets Linear status; the PR references the epic with `Fixes ABU-XX` so
-  Linear's GitHub integration moves it to In Review on open and Done on merge. finish-epic verifies
-  and hands off instead of closing.
+- Skills: cape no longer closes the human ticket or plan issue; the PR references them with
+  `Fixes ABU-XX` so Linear's GitHub integration moves them to In Review on open and Done on merge.
+  finish-epic verifies and hands off instead of closing.
 - Tooling: consolidated formatting on oxfmt; its config now lives in `vite.config.ts`.
 - Tooling: bumped oxlint, oxfmt, vite-plus, and `@types/node`, and added pinned `typescript` and
   `tsx` devDeps.

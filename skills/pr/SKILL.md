@@ -113,13 +113,13 @@ Write the body for a reviewer who knows the domain but not this branch:
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
 - End the description with the cache-built closing line, whatever the template source:
-  `Fixes <human-id>, <plan-id>, <completed task ids>` from `cape tracker show`, meaning the epic
-  entry's `humanTicketId`, the AI plan issue, and every completed child task plus any completed
-  task's own `humanTicketId`; incomplete and canceled children excluded. List only ids that exist:
-  AI-only work has no `humanTicketId`, so its line starts at the plan issue. Never invent a
-  placeholder. Use `Related to` with the same set ONLY when this PR does not complete the epic.
-  Build it now, before approval. It is what catches Linear up on the cache-only build statuses; step
-  6 only confirms it.
+  `Fixes <human-id>, <plan-id>` from `cape tracker show`, meaning the epic entry's `humanTicketId`
+  and the AI plan issue, plus any completed task's own `humanTicketId`. Tasks stay off the line:
+  they are already `Done`, and so is a standalone bug's AI issue, whose line lists the human ticket
+  alone. List only ids that exist: AI-only work has no `humanTicketId`, so its line starts at the
+  plan issue. Never invent a placeholder. Use `Related to` with the same set ONLY when this PR does
+  not complete the epic. Build it now, before approval. It is what closes the human ticket and plan
+  issue at merge; step 6 only confirms it.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
@@ -203,15 +203,14 @@ cape workspace phase pr
 ```
 
 1. Identify the active epic from the tracker cache or flow context and confirm the description
-   carries the cache-built closing line: `Fixes <human-id>, <plan-id>, <completed task ids>`, built
-   from the epic entry's `humanTicketId` (the human ticket), the AI plan issue, and every task the
-   cache marks completed, plus any completed task's own `humanTicketId`; incomplete and canceled
-   children excluded, and ids that do not exist omitted (AI-only work has no human ticket). This is
-   what catches Linear up on the cache-only build statuses. Use the non-closing `Related to` with
-   the same set ONLY when this PR does not complete the epic (more PRs or a live cutover still
-   pending). Linear's GitHub integration moves the listed issues to In Review on open and Done when
-   a `Fixes` PR merges; cape never sets status manually. This requires the GitHub-Linear integration
-   (see tracker workspace-setup).
+   carries the cache-built closing line: `Fixes <human-id>, <plan-id>`, built from the epic entry's
+   `humanTicketId` (the human ticket) and the AI plan issue, plus any completed task's own
+   `humanTicketId`; tasks themselves stay off the line, and ids that do not exist are omitted
+   (AI-only work has no human ticket). This is what closes the human ticket and plan issue at merge.
+   Use the non-closing `Related to` with the same set ONLY when this PR does not complete the epic
+   (more PRs or a live cutover still pending). Linear's GitHub integration moves the listed issues
+   to In Review on open and Done when a `Fixes` PR merges; cape never closes them manually. This
+   requires the GitHub-Linear integration (see tracker workspace-setup).
 2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
    conventions or the user named any.
 3. Report:

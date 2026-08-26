@@ -18,7 +18,7 @@
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
 - [ ] Configure the GitHub-Linear integration with PR automation for the Aburaya team (automations
       are per-team settings): PR opened sets status to In Review; PR merged to the default branch
-      sets status to Done. cape relies on this; it no longer sets status itself.
+      sets status to Done. cape relies on this to close the human ticket and plan issue.
 - [x] Create epic, task, and bug team-level issue templates from
       [linear-templates.md](linear-templates.md), each defaulting to `src:human` and Medium
       priority. The Bug template prefills the title `Fix `.

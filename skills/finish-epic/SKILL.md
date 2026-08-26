@@ -15,14 +15,14 @@ The evidence gate and automated checks are fixed; verification details adapt to 
 
 ## Rules
 
-1. **Never set Linear status.** Linear's GitHub integration moves the whole set to `Done` when the
-   PR merges, via the closing line `cape:pr` builds from the tracker cache
-   (`Fixes <human-id>, <plan-id>, <completed task ids>`).
+1. **Never close the human ticket or plan issue.** Linear's GitHub integration moves them to `Done`
+   when the PR merges, via the closing line `cape:pr` builds from the tracker cache
+   (`Fixes <human-id>, <plan-id>`).
 2. **Every acceptance criterion needs evidence.** Cite tests, files, or demonstrated behavior.
 3. **All tasks complete, all checks pass.** Do not skip open tasks or failing checks to hand off.
 4. **Stop on failure.** Report missing evidence or the failing command instead of handing off.
 5. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
-   outcome summary, written description-only via `save_issue`, never a status change.
+   outcome summary; that `save_issue` is description-only.
 
 ## Process
 

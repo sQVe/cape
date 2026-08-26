@@ -7,9 +7,9 @@ description: >
 
 # Execute plan
 
-Implement one tracker task, verify it, mark it done in the cache, line up the next task, and stop
-for review. One task per invocation in HITL mode, and all fine-grained plans and reflections stay in
-session, never on the Linear board.
+Implement one tracker task, verify it, mark it done in Linear and the cache, line up the next task,
+and stop for review. One task per invocation in HITL mode, and all fine-grained plans and
+reflections stay in session, never on the Linear board.
 
 The one-task loop, TDD, verification before close, and cache refresh after every Linear write are
 fixed. Implementation tactics adapt to the task.
@@ -21,10 +21,9 @@ fixed. Implementation tactics adapt to the task.
 3. **Orient from the cache.** Use `cape tracker show` and the current git branch to pick work. No
    network reads to pick work; once a task is chosen, fetching its description with MCP `get_issue`
    is fine. Never invent task state.
-4. **Task status is cache-only during build.** Track it with `cape tracker cache-status`; no MCP
-   status writes mid-build; the PR closing line catches Linear up at merge. Content writes
-   (descriptions, new sub-issues) still go to Linear first, followed immediately by the matching
-   `cape tracker` command.
+4. **Linear holds task status; the cache copies it.** Write every status change to Linear with
+   `save_issue`, then copy it with `cape tracker cache-status`. Content writes (descriptions, new
+   sub-issues) go to Linear first too, followed immediately by the matching `cape tracker` command.
 5. **Test before code.** Load `cape:test-driven-development` before any production edit.
 6. **Keep expansion in session.** No expanded plans, divergence notes, or close-out ceremony go to
    Linear. The board tracks issues, not implementation transcripts.
@@ -76,8 +75,12 @@ re-reading what it summarized would undo the dispatch.
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
-Mark the task in progress in the cache only, with no MCP status writes during build, per the tracker
-contract. Then signal the phase:
+Mark the task in progress in Linear, then in the cache. When the plan issue is not started, run the
+first-start block from `cape:tracker` "Update status during build" as well. Then signal the phase:
+
+```text
+save_issue(id: <task-id>, state: "In Progress")
+```
 
 ```bash
 cape tracker cache-status <task-id> "In Progress" started
@@ -111,8 +114,11 @@ Before closing, confirm:
 
 ### 4. Close and plan next
 
-Mark the task done in the cache only, never through MCP. The PR closing line moves it to `Done` in
-Linear at merge, per the tracker contract:
+Mark the task done in Linear, then in the cache:
+
+```text
+save_issue(id: <task-id>, state: "Done")
+```
 
 ```bash
 cape tracker cache-status <task-id> Done completed
@@ -170,5 +176,5 @@ Dispatch `cape:fact-checker` when:
 **Wrong:** The first task reveals the next planned slice is unnecessary, but you create and
 implement it anyway because it sounded plausible during planning.
 
-**Right:** Explain the discovery in session, mark the completed task done in the cache, and create
-the next sub-issue that reflects current reality.
+**Right:** Explain the discovery in session, mark the completed task done in Linear and the cache,
+and create the next sub-issue that reflects current reality.

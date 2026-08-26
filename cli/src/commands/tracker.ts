@@ -193,9 +193,7 @@ const cacheStatus = Command.make(
     yield* Console.log(JSON.stringify({ cached: true, issueId: trimmedIssueId, changed: true }));
   }),
 ).pipe(
-  Command.withDescription(
-    'Update one cached issue status locally. Build-time status is cache-only; Linear catches up via the PR closing line.',
-  ),
+  Command.withDescription('Update one cached issue status locally; the skill writes Linear first.'),
 );
 
 // The cache file name is derived from the repository, so it cannot be written

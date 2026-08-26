@@ -26,8 +26,8 @@ writes are fixed. Investigation depth adapts to the bug.
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
    Linear per the `cape:tracker` contract.
-5. **Refresh cache after every Linear write.** Every create or content update is followed by
-   `cape tracker`; status stays cache-only until the PR closing line.
+5. **Refresh cache after every Linear write.** Every create, content update, or status change is
+   followed by `cape tracker`.
 
 ## Process
 
@@ -39,8 +39,7 @@ cache for orientation and status. If the issue details are not in session, fetch
 
 An adopted human ticket (home team) with no AI counterpart is an incomplete pair: locate the linked
 AI bug issue, or create and link one per the tracker contract's pairing protocol, and refresh the
-cache before proceeding. Build-time status tracks the AI-side id, and the PR closing line needs an
-AI issue to close.
+cache before proceeding. Build-time status is written to the AI-side id.
 
 Whenever the root cause is not yet diagnosed, adopted issue or not, diagnose before touching code:
 
@@ -78,13 +77,13 @@ evidence, and reproduction, then a cache refresh; skip the rest of this step. Wh
 after approval load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
 routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
 Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
-symptom and impact and nothing agent-facing, plus an AI bug issue holding root cause, evidence,
-reproduction steps, expected behavior, actual behavior, suggested fix, and success criteria. When
-the bug has no user-informational value, use the tracker contract's AI-only exception and skip the
-human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an epic, refresh
-the parent with `cape tracker cache-epic`, stamping the bug child's `humanTicketId` into the JSON so
-the PR closing line picks up the bug's own human ticket. If the bug is standalone and not yet in
-cache, create or refresh a containing parent issue first.
+symptom and impact and nothing agent-facing, plus an AI bug issue created `state: "Todo"` holding
+root cause, evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and
+success criteria. When the bug has no user-informational value, use the tracker contract's AI-only
+exception and skip the human ticket. Then refresh the cache per `cape:tracker`: when the bug sits
+under an epic, refresh the parent with `cape tracker cache-epic`, stamping the bug child's
+`humanTicketId` into the JSON so the PR closing line picks up the bug's own human ticket. If the bug
+is standalone and not yet in cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 
@@ -92,8 +91,12 @@ Run the reproduction command from step 1, or the closest check it named, and con
 locally. If reproduction fails, the bug may already be fixed or the environment may differ;
 investigate and report that before editing production code.
 
-Mark the bug in progress in the cache only, with no MCP status writes during build, per the tracker
-contract:
+Mark the bug in progress in Linear, then in the cache. When the bug sits under a plan issue that is
+not started, run the first-start block from `cape:tracker` "Update status during build" as well:
+
+```text
+save_issue(id: <bug-id>, state: "In Progress")
+```
 
 ```bash
 cape tracker cache-status <bug-id> "In Progress" started
@@ -131,8 +134,12 @@ Status: FIXED | PARTIALLY_FIXED | BLOCKED
 **STOP and wait if the user asked to approve closure.** Otherwise close only when verification is
 green.
 
-Never close through MCP. The PR closing line moves the issue to `Done` at merge, per the tracker
-contract. Mirror the closure into the cache:
+Mark the bug done in Linear, then in the cache. The PR closing line closes the human ticket at
+merge, per the tracker contract:
+
+```text
+save_issue(id: <bug-id>, state: "Done")
+```
 
 ```bash
 cape tracker cache-status <bug-id> Done completed
