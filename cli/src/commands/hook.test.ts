@@ -269,6 +269,7 @@ describe('sessionStart', () => {
     });
     const result = await Effect.runPromise(sessionStart().pipe(Effect.provide(layer)));
     expect(result.additionalContext).toContain('skills/unslop/SKILL.md');
+    expect(result.additionalContext).toContain('routing');
     expect(result.additionalContext.indexOf('UNSLOP-BODY')).toBeGreaterThan(
       result.additionalContext.indexOf('routing'),
     );
