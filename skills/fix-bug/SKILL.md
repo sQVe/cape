@@ -92,7 +92,7 @@ locally. If reproduction fails, the bug may already be fixed or the environment 
 investigate and report that before editing production code.
 
 Mark the bug in progress in Linear, then in the cache. When the bug sits under a plan issue that is
-still `Todo`, run the first-start block from `cape:tracker` "Update status during build" as well:
+not started, run the first-start block from `cape:tracker` "Update status during build" as well:
 
 ```text
 save_issue(id: <bug-id>, state: "In Progress")

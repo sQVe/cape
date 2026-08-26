@@ -115,10 +115,11 @@ Write the body for a reviewer who knows the domain but not this branch:
 - End the description with the cache-built closing line, whatever the template source:
   `Fixes <human-id>, <plan-id>` from `cape tracker show`, meaning the epic entry's `humanTicketId`
   and the AI plan issue, plus any completed task's own `humanTicketId`. Tasks stay off the line:
-  they are already `Done`. List only ids that exist: AI-only work has no `humanTicketId`, so its
-  line starts at the plan issue. Never invent a placeholder. Use `Related to` with the same set ONLY
-  when this PR does not complete the epic. Build it now, before approval. It is what closes the
-  human ticket and plan issue at merge; step 6 only confirms it.
+  they are already `Done`, and so is a standalone bug's AI issue, whose line lists the human ticket
+  alone. List only ids that exist: AI-only work has no `humanTicketId`, so its line starts at the
+  plan issue. Never invent a placeholder. Use `Related to` with the same set ONLY when this PR does
+  not complete the epic. Build it now, before approval. It is what closes the human ticket and plan
+  issue at merge; step 6 only confirms it.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.

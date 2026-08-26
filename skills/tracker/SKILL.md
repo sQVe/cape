@@ -12,8 +12,9 @@ description: >
 Cape uses Linear as the tracker and a per-repository local read cache. Work is two-tier:
 human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan issues and
 tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh the cache
-with `cape tracker`. Linear is the source of truth for issue content and status; the cache is the
-source of truth for reads, and only moves status forward on refresh.
+with `cape tracker`. Linear is the source of truth for issue content, and status is written there
+first; the cache is the source of truth for reads, copies status after each write, and only moves it
+forward on refresh.
 
 Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
 to the chain using the tracker.
@@ -144,9 +145,9 @@ save_issue(id: <task-id>, state: "In Progress")
 cape tracker cache-status <task-id> "In Progress" started
 ```
 
-The first start on an epic also moves its parents. Run this once, when `cape tracker show` still
-lists the plan issue as `Todo`; the epic entry's `humanTicketId` is the human ticket, and AI-only
-work has none:
+The first start on an epic also moves its parents. Run this once, while `cape tracker show` lists
+the plan issue as not started (`Todo`, or `Backlog` for plans created before states were set); the
+epic entry's `humanTicketId` is the human ticket, and AI-only work has none:
 
 ```text
 save_issue(id: <plan-id>, state: "In Progress")
@@ -193,9 +194,11 @@ closing line:
 Fixes <human-id>, <plan-id>
 ```
 
-Tasks are already `Done` and stay off the line. On merge the integration moves the listed issues to
-`Done`; copy that into the cache with `cape tracker cache-status <issue-id> Done completed` per
-issue, or `cache-epic` if you have the full refreshed plan issue with children.
+Tasks are already `Done` and stay off the line, and so is a standalone bug's AI issue: its line
+lists the human ticket alone, or nothing for AI-only work. On merge the integration moves the listed
+issues to `Done`; copy that into the cache with
+`cape tracker cache-status <plan-id> Done completed`, or `cache-epic` if you have the full refreshed
+plan issue with children. The human ticket has no cached status of its own.
 
 ## Examples
 

@@ -75,7 +75,7 @@ re-reading what it summarized would undo the dispatch.
 **STOP if the task is too large for one cycle.** Recommend a split and create the smaller sub-issues
 only after the user agrees.
 
-Mark the task in progress in Linear, then in the cache. When the plan issue is still `Todo`, run the
+Mark the task in progress in Linear, then in the cache. When the plan issue is not started, run the
 first-start block from `cape:tracker` "Update status during build" as well. Then signal the phase:
 
 ```text
