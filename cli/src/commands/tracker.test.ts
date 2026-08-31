@@ -58,7 +58,7 @@ describe('cape tracker cache-epic', () => {
           identifier: 'ABU-15',
           title: 'Cape V2',
           project: { name: 'Cape' },
-          labels: { nodes: [{ name: 'type:feature' }, { name: 'area:tracker' }] },
+          labels: { nodes: [{ name: 'feature' }, { name: 'cape' }] },
           state: { name: 'In Progress', type: 'started' },
           children: {
             nodes: [
@@ -66,7 +66,7 @@ describe('cape tracker cache-epic', () => {
                 identifier: 'ABU-56',
                 title: 'Tracker cache CLI',
                 project: 'Cape CLI',
-                labels: ['type:chore', { name: 'priority:medium' }],
+                labels: ['chore', { name: 'cape' }],
                 state: { name: 'Todo', type: 'unstarted' },
               },
             ],
@@ -390,7 +390,7 @@ describe('cape tracker cache-tasks', () => {
             identifier: 'ABU-57',
             title: 'Rewire chains',
             project: { name: 'Cape CLI' },
-            labels: { nodes: [{ name: 'type:bug' }, 'area:cache'] },
+            labels: { nodes: [{ name: 'bug' }, 'cape'] },
             state: { name: 'Todo', type: 'unstarted' },
           },
         ]),
@@ -416,6 +416,42 @@ describe('cape tracker cache-tasks', () => {
         },
       ],
     });
+    console_.restore();
+  });
+
+  it('reads the issue type from a capitalized ungrouped label', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(
+      trackerPath(root),
+      JSON.stringify({
+        version: 1,
+        timestamp: 1,
+        epics: {
+          'ABU-15': { id: 'ABU-15', title: 'Cape V2', status: 'In Progress', tasks: [] },
+        },
+      }),
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-tasks',
+        'ABU-15',
+        JSON.stringify([
+          {
+            identifier: 'ABU-57',
+            title: 'Rewire chains',
+            labels: { nodes: [{ name: 'Bug' }, { name: 'Frontend' }] },
+            state: { name: 'Todo', type: 'unstarted' },
+          },
+        ]),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    const cache = readCache(root);
+    expect(cache.epics['ABU-15'].tasks[0].type).toBe('Bug');
     console_.restore();
   });
 

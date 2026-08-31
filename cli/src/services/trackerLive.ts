@@ -87,13 +87,15 @@ const labelName = (label: LinearLabel) => {
   return typeof label.name === 'string' ? label.name : null;
 };
 
-const issueType = (issue: LinearIssue) => {
-  const label = issueLabels(issue)
+// Linear's `type` label group is display-only: an issue payload carries bare child
+// names ("bug"), never the "type:bug" form the UI shows, so match the names. Casing
+// is per workspace -- grouped labels read "bug", flat ungrouped ones read "Bug".
+const typeLabels = new Set(['bug', 'feature', 'chore']);
+
+const issueType = (issue: LinearIssue) =>
+  issueLabels(issue)
     .map(labelName)
-    .find((name) => name?.startsWith('type:') === true);
-  const type = label?.slice('type:'.length);
-  return type == null || type.length === 0 ? undefined : type;
-};
+    .find((name) => name != null && typeLabels.has(name.toLowerCase())) ?? undefined;
 
 const toTask = (issue: LinearIssue): TrackerTask | null => {
   const id = linearIssueId(issue);

@@ -75,15 +75,15 @@ Create a Linear bug pair for this fix? (adopted issue: write this root cause to 
 For an adopted issue, approval means one `save_issue` on its AI bug issue with the root cause,
 evidence, and reproduction, then a cache refresh; skip the rest of this step. When no issue existed,
 after approval load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team
-routing, dedupe, labels (the AI bug issue gets `type:bug`), priority, and the bug title shape.
-Create the pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the
-symptom and impact and nothing agent-facing, plus an AI bug issue created `state: "Todo"` holding
-root cause, evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and
-success criteria. When the bug has no user-informational value, use the tracker contract's AI-only
-exception and skip the human ticket. Then refresh the cache per `cape:tracker`: when the bug sits
-under an epic, refresh the parent with `cape tracker cache-epic`, stamping the bug child's
-`humanTicketId` into the JSON so the PR closing line picks up the bug's own human ticket. If the bug
-is standalone and not yet in cache, create or refresh a containing parent issue first.
+routing, dedupe, labels (the AI bug issue gets `bug`), priority, and the bug title shape. Create the
+pair per the tracker contract's pairing protocol: a concise human bug ticket carrying the symptom
+and impact and nothing agent-facing, plus an AI bug issue created `state: "Todo"` holding root
+cause, evidence, reproduction steps, expected behavior, actual behavior, suggested fix, and success
+criteria. When the bug has no user-informational value, use the tracker contract's AI-only exception
+and skip the human ticket. Then refresh the cache per `cape:tracker`: when the bug sits under an
+epic, refresh the parent with `cape tracker cache-epic`, stamping the bug child's `humanTicketId`
+into the JSON so the PR closing line picks up the bug's own human ticket. If the bug is standalone
+and not yet in cache, create or refresh a containing parent issue first.
 
 ### 2. Reproduce and start
 

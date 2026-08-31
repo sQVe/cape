@@ -15,7 +15,7 @@ stay in session, not on the board.
 ## Human ticket
 
 The repo's home team. Description only: no R-tables, no constraints, no acceptance criteria. The
-human tier exists to be scannable. Untyped parent. Set `src:*` and Medium priority as template
+human tier exists to be scannable. Untyped parent. Set a `src` label and Medium priority as template
 defaults.
 
 ```markdown
@@ -30,7 +30,7 @@ body.
 ## Plan issue
 
 `AI` team. Untyped parent of the task sub-issues, and itself a sub-issue of the human ticket it
-satisfies, or parentless when AI-only. Set `src:*` and Medium priority as template defaults.
+satisfies, or parentless when AI-only. Set a `src` label and Medium priority as template defaults.
 
 The plan-issue body separates four questions that must never blend:
 
@@ -168,8 +168,8 @@ The work breakdown is a non-binding sketch; do not pre-create these as sub-issue
 
 ## Task
 
-Sub-issue of the plan issue, `AI` team. Set exactly one `type:*`, `src:*`, and Medium priority as
-template defaults.
+Sub-issue of the plan issue, `AI` team. Set exactly one `type` label, one `src` label, and Medium
+priority as template defaults.
 
 ```markdown
 ## Goal
@@ -201,7 +201,8 @@ Done when: [load-bearing completion condition]
 
 ## Bug
 
-Set `type:bug`, `src:*`, and Medium priority as template defaults. Title as `Fix <symptom>`.
+Set the `bug` type label, a `src` label, and Medium priority as template defaults. Title as
+`Fix <symptom>`.
 
 ```markdown
 ## Root cause
