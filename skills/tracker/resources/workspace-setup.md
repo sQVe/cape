@@ -5,25 +5,33 @@
 - [x] Created the `Inbox` project in the Aburaya team.
 - [x] Set the `Inbox` project description to: "Scope: anything not yet belonging to a real project;
       triage out on touch / Not: long-lived workstreams. Done when: ongoing."
-- [x] Confirmed the `type` label group exists with the `chore` child label.
-- [x] Confirmed the `src` label group exists with the `cape` and `human` child labels.
+- [x] Confirmed the `type` label group exists with the `bug`, `feature`, and `chore` child labels.
+- [x] Confirmed the `src` label group exists with the `cape`, `human`, and `pr-watcher` child
+      labels.
+
+Groups are display-only in Linear. A child label's name is the bare word (`cape`, `bug`), and that
+is what the MCP `labels` parameter resolves; `src:cape` is rejected. The agent contract states the
+rule, this checklist matches the names to it.
+
+This taxonomy is Aburaya's, not a cape requirement. Cape lists a team's labels before its first
+labeled write and applies only what it finds, so a workspace with flat capitalized labels gets the
+ones that match and a workspace with none gets no labels at all. Nothing breaks either way. Adding
+`cape` and a `bug` / `feature` / `chore` set to a new workspace buys the source and type filters
+back; skipping it costs only those filters.
 
 ## Manual steps (run in the Linear UI)
 
-- [ ] Delete stock workspace labels `Bug`, `Feature`, and `Improvement`.
-- [ ] Delete ad-hoc labels `dx`, `infra`, and `tooling`.
-- [ ] Create grouped labels `type:bug` and `type:feature` under the `type` label group.
-- [ ] Migrate the existing flat `pr-watcher` label into the `src` group as `src:pr-watcher`, then
-      retag the 19 or so issues carrying it.
+- [x] Delete stock workspace labels `Bug`, `Feature`, and `Improvement`.
+- [x] Delete ad-hoc labels `dx`, `infra`, and `tooling`.
 - [ ] Set the `type` and `src` label groups to single-select in the [Linear UI](https://linear.app).
 - [ ] Configure the GitHub-Linear integration with PR automation for the Aburaya team (automations
       are per-team settings): PR opened sets status to In Review; PR merged to the default branch
       sets status to Done. cape relies on this to close the human ticket and plan issue.
 - [x] Create epic, task, and bug team-level issue templates from
-      [linear-templates.md](linear-templates.md), each defaulting to `src:human` and Medium
-      priority. The Bug template prefills the title `Fix `.
-- [ ] Once `type:bug` and `type:feature` exist, edit the Task and Bug templates to default to
-      `type:feature` and `type:bug` respectively (the Epic template stays untyped).
+      [linear-templates.md](linear-templates.md), each defaulting to the `human` src label and
+      Medium priority. The Bug template prefills the title `Fix `.
+- [ ] Edit the Task and Bug templates to default to the `feature` and `bug` type labels respectively
+      (the Epic template stays untyped).
 - [ ] Optionally set the `Task` template as the team default issue template (Settings → team →
       Templates → Default issue template).
 - [ ] Create the saved view `Orphans` with filter `project = none`; it must read 0 before normal

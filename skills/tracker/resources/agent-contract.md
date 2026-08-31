@@ -17,12 +17,30 @@ Apply before every issue create or update.
   create project-less issues in a home team. Confirm a new project with the user before creating it.
   Projects belong to teams, so a project the `AI` team does not share is rejected on save; leave
   those agent-side issues project-less rather than inventing a project for them.
-- **Labels.** Apply `src:cape` to everything cape creates, plus exactly one `type:*` label
-  (`type:bug`, `type:feature`, `type:chore`) on the AI-side work issue: tasks and AI bug issues.
-  Plan issues and human tickets stay untyped parents, the human half of a bug pair included. The
-  team boundary is what marks agent work, so the retired `agent-ticket` label is never applied. The
-  workspace bootstrap creates these labels; until a given label exists, apply it best-effort and
-  skip what is missing. See [workspace-setup.md](workspace-setup.md).
+- **Labels.** Discover them, never assume them. Run
+  `list_issue_labels(team: <target team>, limit: 250)` once per team per session before the first
+  labeled write, and send the returned name verbatim, its own casing included. Every workspace has
+  its own taxonomy: Aburaya groups `cape`, `bug`, `feature`, and `chore` under `src` and `type`,
+  while other workspaces run flat capitalized labels or none that fit. Match case-insensitively to
+  find the label, then send it spelled as the listing spelled it, so `Bug` goes out as `Bug`. The
+  `limit` matters: the default page is 50 ordered by recency, and a label past that page reads as
+  absent.
+
+  Two slots, at most one label each, filled only when the listing offers a match: a source marker
+  (`cape`) on everything cape creates, and one work-type label (`bug`, `feature`, `chore`) on the
+  AI-side work issue — tasks and AI bug issues. Leave an unmatched slot empty, and never create a
+  label or invent a near-miss; an unmatched slot is a workspace-setup gap, not something to fix
+  mid-write. Plan issues and human tickets stay untyped parents, the human half of a bug pair
+  included. The team boundary is what marks agent work, so the retired `agent-ticket` label is never
+  applied even where it still exists.
+
+  Two API details make this load-bearing. Pass names, never the `group:child` form Linear's UI
+  shows: groups are display grouping, `save_issue` resolves the child name alone, so `cape` works
+  and `src:cape` is rejected with "Could not find or access label(s)". And `labels` replaces the
+  whole set rather than adding to it, so one unresolved name rejects the entire call, and an update
+  that touches labels must resend the ones the issue already carries. See
+  [workspace-setup.md](workspace-setup.md).
+
 - **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never
   use `High`. It is reserved for the human-curated `Next` view, and cape-created `High` issues
   inflate it.

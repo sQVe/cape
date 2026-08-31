@@ -94,6 +94,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Tracker: every labeled issue create failed. The contract asked for `src:cape` and `type:bug`, the
+  `group:child` form Linear's UI renders, but `save_issue` resolves the child name alone and
+  rejected the whole call with "Could not find or access label(s)" — and since `labels` replaces the
+  full set, one unresolved name killed the write. Cape now lists a team's labels once per session
+  and applies only the names it finds, filling a source slot and a work-type slot when the workspace
+  offers a match and leaving them empty when it does not. The hardcoded `src`/`type` taxonomy was
+  Aburaya's alone; workspaces with flat capitalized labels or none no longer fail on it. The cache
+  reader keeps a fixed `bug`/`feature`/`chore` vocabulary, since `cape tracker` makes no network
+  calls and never sees the listing, but it now matches those names case-insensitively instead of a
+  `type:` prefix that never appeared in an MCP payload.
 - PR: the review gate could never terminate. Rule 3 demanded a review of the current HEAD, but
   fixing findings always moves HEAD, so the skill kept demanding another round after every fix
   commit. A review now covers the branch when it read the current HEAD or when every later commit

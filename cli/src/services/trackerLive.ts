@@ -87,13 +87,14 @@ const labelName = (label: LinearLabel) => {
   return typeof label.name === 'string' ? label.name : null;
 };
 
-const issueType = (issue: LinearIssue) => {
-  const label = issueLabels(issue)
+// Linear label groups are display-only, so a payload carries the bare child name,
+// cased per workspace. This vocabulary is fixed; the contract discovers the rest.
+const typeLabels = new Set(['bug', 'feature', 'chore']);
+
+const issueType = (issue: LinearIssue) =>
+  issueLabels(issue)
     .map(labelName)
-    .find((name) => name?.startsWith('type:') === true);
-  const type = label?.slice('type:'.length);
-  return type == null || type.length === 0 ? undefined : type;
-};
+    .find((name) => name != null && typeLabels.has(name.toLowerCase())) ?? undefined;
 
 const toTask = (issue: LinearIssue): TrackerTask | null => {
   const id = linearIssueId(issue);
