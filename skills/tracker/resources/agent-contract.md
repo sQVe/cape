@@ -17,17 +17,20 @@ Apply before every issue create or update.
   create project-less issues in a home team. Confirm a new project with the user before creating it.
   Projects belong to teams, so a project the `AI` team does not share is rejected on save; leave
   those agent-side issues project-less rather than inventing a project for them.
-- **Labels.** Discover them, never assume them. Run `list_issue_labels(team: <target team>)` once
-  per team per session before the first labeled write, and apply only names it returned. Every
-  workspace has its own taxonomy: Aburaya groups `cape`, `bug`, `feature`, and `chore` under `src`
-  and `type`, while other workspaces run flat capitalized labels or none that fit. Match
-  case-insensitively on the listed name.
+- **Labels.** Discover them, never assume them. Run
+  `list_issue_labels(team: <target team>, limit: 250)` once per team per session before the first
+  labeled write, and send the returned name verbatim, its own casing included. Every workspace has
+  its own taxonomy: Aburaya groups `cape`, `bug`, `feature`, and `chore` under `src` and `type`,
+  while other workspaces run flat capitalized labels or none that fit. Match case-insensitively to
+  find the label, then send it spelled as the listing spelled it, so `Bug` goes out as `Bug`. The
+  `limit` matters: the default page is 50 ordered by recency, and a label past that page reads as
+  absent.
 
-  Two slots, each filled only when the listing offers a match: a source marker (`cape`) on
-  everything cape creates, and one work-type label (`bug`, `feature`, `chore`) on the AI-side work
-  issue — tasks and AI bug issues. Fill neither slot twice, leave an unmatched slot empty, and never
-  create a label or invent a near-miss; an unmatched slot is a workspace-setup gap, not something to
-  fix mid-write. Plan issues and human tickets stay untyped parents, the human half of a bug pair
+  Two slots, at most one label each, filled only when the listing offers a match: a source marker
+  (`cape`) on everything cape creates, and one work-type label (`bug`, `feature`, `chore`) on the
+  AI-side work issue — tasks and AI bug issues. Leave an unmatched slot empty, and never create a
+  label or invent a near-miss; an unmatched slot is a workspace-setup gap, not something to fix
+  mid-write. Plan issues and human tickets stay untyped parents, the human half of a bug pair
   included. The team boundary is what marks agent work, so the retired `agent-ticket` label is never
   applied even where it still exists.
 

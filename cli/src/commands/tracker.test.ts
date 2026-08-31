@@ -455,6 +455,42 @@ describe('cape tracker cache-tasks', () => {
     console_.restore();
   });
 
+  it('leaves the type unset when no label is a work type', async () => {
+    const root = makeRoot();
+    mkdirSync(`${root}/hooks/context`, { recursive: true });
+    writeFileSync(
+      trackerPath(root),
+      JSON.stringify({
+        version: 1,
+        timestamp: 1,
+        epics: {
+          'ABU-15': { id: 'ABU-15', title: 'Cape V2', status: 'In Progress', tasks: [] },
+        },
+      }),
+    );
+    const console_ = spyConsole();
+
+    await Effect.runPromise(
+      run([
+        'tracker',
+        'cache-tasks',
+        'ABU-15',
+        JSON.stringify([
+          {
+            identifier: 'ABU-57',
+            title: 'Rewire chains',
+            labels: { nodes: [{ name: 'cape' }, { name: 'Frontend' }] },
+            state: { name: 'Todo', type: 'unstarted' },
+          },
+        ]),
+      ]).pipe(Effect.provide(makeTestCommandLayers())),
+    );
+
+    const cache = readCache(root);
+    expect(cache.epics['ABU-15'].tasks[0].type).toBeUndefined();
+    console_.restore();
+  });
+
   it('preserves the cached epic gitBranchName when replacing tasks', async () => {
     const root = makeRoot();
     mkdirSync(`${root}/hooks/context`, { recursive: true });

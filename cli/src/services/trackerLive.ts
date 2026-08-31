@@ -87,9 +87,8 @@ const labelName = (label: LinearLabel) => {
   return typeof label.name === 'string' ? label.name : null;
 };
 
-// Linear's `type` label group is display-only: an issue payload carries bare child
-// names ("bug"), never the "type:bug" form the UI shows, so match the names. Casing
-// is per workspace -- grouped labels read "bug", flat ungrouped ones read "Bug".
+// Linear label groups are display-only, so a payload carries the bare child name,
+// cased per workspace. This vocabulary is fixed; the contract discovers the rest.
 const typeLabels = new Set(['bug', 'feature', 'chore']);
 
 const issueType = (issue: LinearIssue) =>

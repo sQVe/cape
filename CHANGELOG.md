@@ -101,8 +101,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and applies only the names it finds, filling a source slot and a work-type slot when the workspace
   offers a match and leaving them empty when it does not. The hardcoded `src`/`type` taxonomy was
   Aburaya's alone; workspaces with flat capitalized labels or none no longer fail on it. The cache
-  reads the issue type from the same listed names, case-insensitively, instead of a `type:` prefix
-  that never appeared in an MCP payload.
+  reader keeps a fixed `bug`/`feature`/`chore` vocabulary, since `cape tracker` makes no network
+  calls and never sees the listing, but it now matches those names case-insensitively instead of a
+  `type:` prefix that never appeared in an MCP payload.
 - PR: the review gate could never terminate. Rule 3 demanded a review of the current HEAD, but
   fixing findings always moves HEAD, so the skill kept demanding another round after every fix
   commit. A review now covers the branch when it read the current HEAD or when every later commit
