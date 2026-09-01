@@ -26,8 +26,6 @@ writes are fixed. Investigation depth adapts to the bug.
    closure, never code inspection alone.
 4. **Track the bug in Linear.** Adopt an existing issue or create the human/AI bug pair through MCP
    Linear per the `cape:tracker` contract.
-5. **Refresh cache after every Linear write.** Every create, content update, or status change is
-   followed by `cape tracker`.
 
 ## Process
 
@@ -53,9 +51,6 @@ Whenever the root cause is not yet diagnosed, adopted issue or not, diagnose bef
   hypothesis and what rules the others out instead of padding the list.
 - Tag every debug log added while working the bug with `[DEBUG-<id>]` so step 4 can find them.
 - Record dead ends in the conversation.
-
-Run root-cause and reproduction text through `cape:unslop` before presenting it or writing issue
-prose.
 
 **STOP. Present the investigation summary and wait for approval.** For an adopted issue, approval
 also covers writing the root cause to its AI bug issue with `save_issue` and refreshing the cache.
@@ -168,17 +163,3 @@ Dispatch `cape:code-reviewer` when:
 
 It returns one JSON object. Relay its `findings` through a single `ReportFindings` call; the agent
 has no such tool of its own.
-
-## Skills
-
-Load `cape:test-driven-development` when:
-
-- Step 3 begins
-
-Load `cape:tracker` when:
-
-- Creating, updating, closing, or caching the Linear bug issue
-
-Load `cape:commit` when:
-
-- The fix is verified and ready to commit

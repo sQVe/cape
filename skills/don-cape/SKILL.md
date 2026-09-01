@@ -11,9 +11,6 @@ Route every task to the right cape skill and enforce the order skills run in. Be
 user request, check the routing table. If a cape skill matches, load it with the Skill tool and
 follow it.
 
-The meta-process is fixed: check routing, load the matching skill, follow chain order. Each skill
-defines its own flexibility.
-
 ## Rules
 
 1. **Check the routing table before every task.** If a cape skill matches, use it. `cape:set-goal`
@@ -25,13 +22,16 @@ defines its own flexibility.
    human is present and the stops apply.
 5. **Use tracker for issue state.** Linear writes go through MCP, local reads through the tracker
    cache.
-6. **When editing a cape skill, spend prose only on what no check can enforce.** Anything a lint
-   rule, a hook, or a `cape validate` check can hold belongs in the check.
-7. **Ask questions in the user's terms.** An `AskUserQuestion` label names an outcome in plain
+6. **Ask questions in the user's terms.** An `AskUserQuestion` label names an outcome in plain
    words: "Rebase onto main", "Keep the current base". Commit shas and session internals stay out of
    labels; put them in the option description when the user needs them to decide. A name stays in a
    label only when it is the thing being chosen. State what happened and where things stand before
    asking, and never re-ask a confirmation the user already gave this session.
+7. **Internal vocabulary stays internal.** HITL, AFK, R-IDs, and workflow codenames get a plain-word
+   expansion on first use in any message, ticket, or PR: "R3, the permission check".
+8. **Report progress at state changes the user can act on.** While waiting, say nothing; one message
+   when results land beats ten countdown pings. Panes, tabs, workflow ids, and subagent names stay
+   out of user-facing prose. Name the work, not the plumbing.
 
 ## Routing
 
@@ -91,12 +91,3 @@ BUG    fix-bug -> test-driven-development -> commit, then rejoin BUILD tail
 ```
 
 Each link's contract lives in its own skill; load it and follow it. The STOP points are mandatory.
-Vague feature requests enter at brainstorm. Direct skill invocation or a ready tracker task is the
-user's explicit choice to skip earlier links.
-
-## Examples
-
-**Wrong:** User asks to build a feature; start writing code immediately.
-
-**Right:** Route to `cape:brainstorm`, research the codebase and discuss design, then
-`cape:write-plan` creates the Linear epic and first task.

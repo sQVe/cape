@@ -43,31 +43,7 @@ to the chain using the tracker.
 ## Cache shape
 
 Read the cache with `cape tracker show`, which prints it as JSON. The file itself is named after the
-repository, so `cape tracker path` prints its location; never hardcode a cache filename. Its shape
-is:
-
-```json
-{
-  "version": 1,
-  "timestamp": 1700000000000,
-  "epics": {
-    "AI-15": {
-      "id": "AI-15",
-      "title": "Cape V2",
-      "status": "In Progress",
-      "humanTicketId": "ABU-14",
-      "tasks": [
-        {
-          "id": "AI-56",
-          "title": "Tracker cache CLI",
-          "status": "Todo",
-          "stateType": "unstarted"
-        }
-      ]
-    }
-  }
-}
-```
+repository, so `cape tracker path` prints its location; never hardcode a cache filename.
 
 The `epics` map is keyed by the AI plan issue; its tasks are the plan's sub-issues. `humanTicketId`
 carries the pair (human ticket ↔ plan issue) so `cape:pr` can build the closing line from the cache;
@@ -199,19 +175,3 @@ lists the human ticket alone, or nothing for AI-only work. On merge the integrat
 issues to `Done`; copy that into the cache with
 `cape tracker cache-status <plan-id> Done completed`, or `cache-epic` if you have the full refreshed
 plan issue with children. The human ticket has no cached status of its own.
-
-## Examples
-
-**Wrong:** write-plan puts the full agent contract (R-tables, constraints, acceptance criteria) in
-the human ticket, or creates everything in one team.
-
-**Right:** write-plan creates a concise human ticket in the repo's home team (`Aburaya` in cape) and
-a plan issue in `AI` holding the full contract, sets the plan's `parentId` to that ticket, creates
-the first task as a sub-issue of the plan issue, then runs `cape tracker cache-epic '<json>'`.
-
-**Wrong:** execute-plan marks a task `Done` in the cache only, leaving it `Todo` in Linear until the
-PR merges.
-
-**Right:** execute-plan writes `save_issue(id, state: "Done")`, then runs
-`cape tracker cache-status <task-id> Done completed`. The PR closing line
-(`Fixes <human-id>, <plan-id>`) closes the human ticket and plan at merge.

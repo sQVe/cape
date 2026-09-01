@@ -92,9 +92,6 @@ The first task is a vertical slice with:
 
 ### 4. Create the pair and first task
 
-Run all human-ticket, plan-issue, and task prose through the `cape:unslop` skill before writing to
-Linear.
-
 Load `cape:tracker` and apply its `resources/agent-contract.md`; it owns team routing, dedupe,
 project routing, labels, priority, and naming. Create the pair per the tracker contract's pairing
 protocol: a concise human ticket in the repo's home team whose description a human can scan,
@@ -128,24 +125,3 @@ Continue with cape:execute-plan to start building.
 Omit the human-ticket line for AI-only work.
 
 **STOP.** Do not start implementation in the same invocation.
-
-## Agents
-
-Dispatch `cape:codebase-investigator` when:
-
-- Stress-testing the first task (step 3) and manual verification would take longer than a dispatch
-
-## Skills
-
-Load `cape:tracker` when:
-
-- You need the exact MCP Linear plus cache-write protocol
-- A cache refresh fails and you need the expected cache shape
-
-## Examples
-
-**Wrong:** The design says "tokens stored securely" and the requirement goes to Linear as written.
-It permits localStorage, sessionStorage, or cookies, and the builder picks one at random.
-
-**Right:** Tighten it first: "Tokens stored in httpOnly cookies; NO localStorage tokens (reason: XSS
-token theft)." Then create the human/AI pair and first task and refresh the cache.

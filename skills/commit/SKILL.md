@@ -62,28 +62,16 @@ LRU eviction caused stale entries to persist when access patterns
 were uniform. TTL guarantees freshness regardless of access frequency.
 ```
 
-Pick the type:
-
-| Type       | When to use                                |
-| ---------- | ------------------------------------------ |
-| `feat`     | New functionality                          |
-| `fix`      | Bug fix                                    |
-| `chore`    | Maintenance, config, dependencies, tooling |
-| `refactor` | Restructuring without behavior change      |
-| `docs`     | Documentation only                         |
-| `test`     | Test-only changes                          |
-| `style`    | Formatting, whitespace (no logic change)   |
-| `perf`     | Performance improvement                    |
-
 Subject: imperative mood, lowercase, no period, under 72 characters. Describe the change, not the
 file. Scope: follow the pattern in recent commits; omit if the project doesn't use scopes.
 
 Add a body only when the subject alone doesn't carry the reasoning: a non-obvious design decision,
-or implications beyond the diff. The body explains why, never what; the diff shows the what. Run the
-body through `cape:unslop` before presenting.
+or implications beyond the diff. The body explains why, never what; the diff shows the what. A body
+is one short paragraph, three sentences max: the decision a future reader needs. Diagnosis
+narratives and per-file essays go in the PR or ticket. Related fixes committed together get one
+short line each, never a semicolon chain. Run the body through `cape:unslop` before presenting.
 
-Staging: exclude files outside this group. Warn about untracked files that look like they belong,
-and about anything sensitive (`.env`, credentials, secrets).
+Staging: exclude files outside this group. Warn about untracked files that look like they belong.
 
 ### 4. STOP: confirm
 
@@ -109,13 +97,6 @@ credentials, secrets) unless `--allow-sensitive` is passed, and stages and commi
 If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can
 (formatting, lint), and retry. After 3 failures, report the issues and ask the user to fix manually.
 
-After success, show the commit hash, `git status --short`, and any remaining uncommitted changes. If
-another group remains, loop back to step 3.
-
-## Examples
-
-**Wrong:** `git add -A` then `chore: various updates` covering a new auth middleware and a readme
-typo fix. Two concerns in one blob, and the message says nothing.
-
-**Right:** two commits. First `feat(auth): add authentication middleware` staging `src/auth.ts` and
-`tests/auth.test.ts`, then `docs: fix typo in readme` staging `README.md`.
+After success, report the hash and subject in one line. Mention remaining uncommitted changes only
+if any exist; never re-list prior commits or repeat an unchanged tree state. If another group
+remains, loop back to step 3.

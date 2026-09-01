@@ -98,8 +98,6 @@ reviewer is their own name, with no parenthetical.
 
 ```text
 - [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
-- [x] Code review by Claude Opus 5 (/code-review) on 59a9a3a, findings addressed
-- [x] Code review by @sQVe on 59a9a3a, findings addressed
 ```
 
 Write the model you actually ran, never a version you are guessing at. Naming who reviewed is what
@@ -123,14 +121,16 @@ Write the body for a reviewer who knows the domain but not this branch:
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
-- Be short. A reviewer skims this before reading code, so cut exhaustive enumerations.
 
 When acceptance checks need a deployed environment and could not run pre-merge (see
 `cape:finish-epic` `[~]`), list them under Deferred verification as plain bullets, never as
 checkboxes and never marked done.
 
 Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
-items for any gaps. Run the title and description through the `cape:unslop` skill before presenting.
+items for any gaps.
+
+Then apply the `cape:unslop` plain register to the title and description as its own pass. Cut
+anything narrating how you got here: the body describes the change, not the investigation.
 
 ### 4. STOP: present and get approval (output gate)
 
@@ -202,15 +202,9 @@ Report the phase to the herdr workspace:
 cape workspace phase pr
 ```
 
-1. Identify the active epic from the tracker cache or flow context and confirm the description
-   carries the cache-built closing line: `Fixes <human-id>, <plan-id>`, built from the epic entry's
-   `humanTicketId` (the human ticket) and the AI plan issue, plus any completed task's own
-   `humanTicketId`; tasks themselves stay off the line, and ids that do not exist are omitted
-   (AI-only work has no human ticket). This is what closes the human ticket and plan issue at merge.
-   Use the non-closing `Related to` with the same set ONLY when this PR does not complete the epic
-   (more PRs or a live cutover still pending). Linear's GitHub integration moves the listed issues
-   to In Review on open and Done when a `Fixes` PR merges; cape never closes them manually. This
-   requires the GitHub-Linear integration (see tracker workspace-setup).
+1. Confirm the description carries the step 3 closing line (`Fixes <human-id>, <plan-id>`). Linear's
+   GitHub integration moves the listed issues to In Review on open and Done at merge; cape never
+   closes them manually.
 2. Add labels (`gh pr edit <number> --add-label <label>`) and reviewers when the project has
    conventions or the user named any.
 3. Report:

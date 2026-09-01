@@ -134,13 +134,6 @@ a half-believed candidate never reaches the judgment that would have kept it.
 
 ## Scale by scope
 
-| Scope                   | Strategy                                                                   |
-| ----------------------- | -------------------------------------------------------------------------- |
-| Single file or function | Deep: read every line, trace all callers, check all tests                  |
-| Feature or component    | Focused: entry points, public API, integration tests, key paths            |
-| Cross-cutting change    | Surgical: impact radius analysis, representative samples, regression risks |
-
-**Scope detection.** "Review this file" means single. "Review this feature" means component. "Review
-this refactor" means cross-cutting.
-
-Scope changes what you read, never the bar a finding has to clear.
+Read everything for a single file, entry points and key paths for a feature, impact radius and
+samples for a cross-cutting change. Scope changes what you read, never the bar a finding has to
+clear.

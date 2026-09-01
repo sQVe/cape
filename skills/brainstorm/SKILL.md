@@ -48,8 +48,7 @@ Once brainstorming is confirmed, signal the phase for the herdr rail: `cape work
 Run `cape git context` for recent commits and codebase state, and check existing docs and structure.
 Dispatch `cape:codebase-investigator` in default mode (model: haiku) to find existing patterns
 relevant to the idea. Dispatch `cape:internet-researcher` (model: sonnet) if the idea involves
-external APIs, libraries, or unfamiliar tech. Without agents, investigate manually with Glob, Grep,
-Read, WebSearch, and WebFetch.
+external APIs, libraries, or unfamiliar tech.
 
 Then ask what research could not answer. Use AskUserQuestion for structured choices (token storage,
 auth strategy, data model decisions) and conversational follow-ups for open exploration (what
@@ -128,8 +127,6 @@ line per approach step 4 produced: three in divergent mode, one or two inline.
 | Criterion   | [Design 1]    | [Design 2]    | [Design 3]    |
 | ----------- | ------------- | ------------- | ------------- |
 | [Criterion] | [score + why] | [score + why] | [score + why] |
-
-One column per approach step 4 produced, so drop the unused columns in inline mode.
 
 1. **[Name]** ([its constraint]): [approach]. Trade-off: [x]. Smells: [hits, or none]
 
@@ -215,27 +212,9 @@ from Requirements, Architecture, and Research findings. It verifies each claim a
 evidence (`file:line`) and external sources (`URL, Tier N`). Keep confirmed claims, correct or
 remove refuted ones, update partially correct ones, and move unverifiable ones to open questions.
 
-Run the summary's prose through the `cape:unslop` skill before presenting.
-
 Present the fact-checked summary, then hand off:
 
 ```
 Design summary complete (fact-checked). Next step: formalize into a Linear tracker epic with
 `cape:write-plan`.
 ```
-
-## Examples
-
-**Wrong:** "Add OAuth authentication" gets an immediate "I'll implement OAuth with Auth0". Nobody
-checked that passport.js already lives at auth/passport-config.ts, so the design fights the existing
-architecture.
-
-**Right:** Codebase research finds the passport setup, internet research finds the
-passport-google-oauth20 strategy. The comparison pits extending passport against Auth0 and custom
-JWT, recommends extending, and the user picks it after iterating on refresh token handling.
-
-**Wrong:** Research, intake questions, then a full design summary in one turn. The user only ever
-answered data-gathering questions; every design decision was made for them.
-
-**Right:** Each step ends at a checkpoint. At the research stop the user corrects a missed POC
-feature; at the comparison stop they cut validation from scope. The summary reflects both.

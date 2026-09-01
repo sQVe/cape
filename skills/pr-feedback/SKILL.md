@@ -96,20 +96,20 @@ top-level reply, or no action.
 Flag scope creep: a comment asking for a refactor or feature beyond the PR's intent is out of scope,
 not extra work. A polite or confident comment is not evidence.
 
-Run the rationales through the `cape:unslop` skill, then present the table. Key each row by source:
-the thread node ID, or `summary:<author>@<submittedAt>` so two non-empty bodies from one reviewer
-stay distinct.
+Run the rationales through the `cape:unslop` skill, then present the table. The source column names
+the reviewer (`Copilot #1`, `alice summary`); thread node IDs are carried internally, never printed.
+Comments asking for the same change share one row.
 
 ```text
 PR #<number> review feedback triage
 
-| # | source       | file:line   | comment (short)     | verdict      | action         |
-|---|--------------|-------------|---------------------|--------------|----------------|
-| 1 | PRRT_a…      | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
-| 2 | PRRT_b…      | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
-| 3 | PRRT_c…      | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
-| 4 | PRRT_d…      | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
-| 5 | summary:alice@2026-06-30T07:24:25Z | (none) | missing rollback | Valid | Fix (edit) |
+| # | source        | file:line   | comment (short)     | verdict      | action         |
+|---|---------------|-------------|---------------------|--------------|----------------|
+| 1 | Copilot #1    | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
+| 2 | Copilot #2    | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
+| 3 | bob #1        | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
+| 4 | bob #2        | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
+| 5 | alice summary | (none)      | missing rollback    | Valid        | Fix (edit)     |
 
 Apply the fixes marked Fix and respond to the rest?
 ```
@@ -168,8 +168,9 @@ A summary point that warrants a reply gets one top-level PR comment, never a res
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
-dismissed vs left-open is recorded:
+Confirm each resolve response shows `isResolved: true`. Report the outcome scaled to the result: one
+sentence when everything resolved one way ("Fixed and resolved all 3 threads: <paths>"). Use the
+tally only when outcomes are mixed:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>
@@ -179,35 +180,3 @@ Dismissed + resolved: <count>  (<paths>, reason)
 Left open:            <count>  (<paths>, needs your call)
 Summary points:       <count>  (fixed / replied / no action; no thread to resolve)
 ```
-
-## Skills
-
-Load `cape:test-driven-development` when:
-
-- An accepted comment requires a behavioral change worth a test
-
-Load `cape:fix-bug` when:
-
-- An accepted comment diagnoses a defect that warrants diagnosis to closure
-
-Load `cape:commit` when:
-
-- The accepted fixes are ready to commit referencing the review
-
-Load `cape:unslop` when:
-
-- Writing triage rationales, thread replies, or PR comments
-
-## Examples
-
-**Wrong:** Pull comments from the REST endpoint, hand-paste `PRRT_` IDs into a one-off resolve loop,
-and resolve threads whose fixes are still uncommitted.
-
-**Right:** Fetch threads via the `reviewThreads` query, triage each in the table, fix the valid
-ones, commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes are on
-the remote.
-
-**Wrong:** Spin up `cape:test-driven-development` and write a RED test for a one-line rename.
-
-**Right:** Mark it Valid, Fix (edit); rename directly, commit through `cape:commit`, reply "Fixed in
-`<sha>`", resolve the thread.

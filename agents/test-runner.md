@@ -59,11 +59,8 @@ Never truncate a failure.
 
 ## Scale by scope
 
-| Scope            | Strategy                                                       |
-| ---------------- | -------------------------------------------------------------- |
-| Single test file | Run targeted, report all output                                |
-| Full test suite  | Run all, filter to summary + failures only                     |
-| Hooks or commit  | Run, absorb verbose formatting output, report pass/fail + hook |
+A single targeted test file gets its full output; a full suite, hooks, or a commit gets the summary
+plus failures only.
 
 Lead with the verdict: pass or fail. Always include the exit code, since the caller verifies against
 it. Then everything needed to debug the failures.

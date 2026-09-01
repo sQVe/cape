@@ -1,16 +1,9 @@
 # Linear issue templates
 
-Copy each body into a new Linear issue template in the UI (Settings → Templates). These mirror the
-shapes cape produces, so a human creating an issue by hand gets the same form. Cape cannot apply
-them itself: the Linear MCP server's `save_issue` takes raw markdown and exposes no template field.
-The [agent contract](agent-contract.md) enforces the shape; these templates are a human-side
-convenience.
-
-The shapes split by audience. The human ticket (the repo's home team) is a scannable description and
-nothing more; the plan issue (the workspace's `AI` team) carries the full agent contract. SKILL.md
-documents the pairing protocol. The authoring sources mirror these shapes: human ticket, plan issue,
-and task are produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery
-stay in session, not on the board.
+These bodies mirror the shapes cape produces: human ticket, plan issue, and task by
+`cape:write-plan`, bug by `cape:fix-bug`. To give hand-authored issues the same form, copy each body
+into a Linear issue template (Settings → Templates); cape cannot apply them itself, since
+`save_issue` takes raw markdown and exposes no template field.
 
 ## Human ticket
 
@@ -45,6 +38,9 @@ Pick a variant per plan issue. Default to **Light**. Use **Full** when a user jo
 state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
 
+Scale to the change. A few-line change gets the human-ticket shape plus one R row and one acceptance
+line. Delete empty template sections; never fill them with N/A rows.
+
 ### Plan issue, Light (default)
 
 ```markdown
@@ -67,18 +63,17 @@ involved, or rollout, observability, or rollback matters.
 
 ## Required constraints
 
-- [Settled decision, boundary, or compatibility rule; or "N/A (single task)"]
+- [Settled decision, boundary, or compatibility rule]
 - NO [pattern] (reason: [why])
 
 ## Proposed approach
 
 [2-3 paragraphs the agent may improve: chosen path referencing codebase patterns, key components,
-and data flow. Mermaid for flows over ~3 steps.]
+and data flow. Mermaid only for branching flows; a straight-line pipeline stays prose.]
 
 ## Acceptance criteria
 
-- [ ] R1 verified with evidence.
-- [ ] R2 verified with evidence.
+- [ ] Each R row verified with evidence: name the command or observation, not the row restated.
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
@@ -134,9 +129,7 @@ flowchart LR
 
 ## Acceptance criteria
 
-- [ ] R1 verified with evidence.
-- [ ] R2 verified with evidence.
-- [ ] R3 verified with evidence.
+- [ ] Each R row verified with evidence: name the command or observation, not the row restated.
 - [ ] Existing behavior outside scope is unchanged.
 
 ## Release and observability
@@ -186,9 +179,9 @@ Delivers: R1, R2
 
 ## Execution mode
 
-[HITL | AFK]
+[HITL (user reviews each step) | AFK (unattended)]
 
-Done when: [load-bearing completion condition]
+Done when: [the completion condition the work hangs on]
 
 ## Success criteria
 

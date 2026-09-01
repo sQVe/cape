@@ -22,13 +22,6 @@ anyone acts on it.
    (callers, dependents, imports). Fall back to Glob/Read when the graph does not cover what you
    need. For external claims (APIs, libraries, behavior), use WebSearch, WebFetch, and Context7 to
    find authoritative sources.
-   - File exists? → Glob for the path, Read if found
-   - Function has this signature? → Graph search first, then Read to verify
-   - Module imports/exports X? → `get_neighbors`, then Read
-   - Config has this option? → Read the config file
-   - Dependency is available? → Check package files, lock files, import paths
-   - API behaves this way? → WebFetch official docs, cite with URL and source tier
-   - Library supports this feature? → Context7 or WebSearch, cite with URL and source tier
 
    Code is evidence of what the code does, never of what it was meant to do. Reading a function body
    cannot confirm that the function is correct. A claim about intent needs a separate source: the
@@ -56,14 +49,8 @@ anyone acts on it.
 
 ## Scale by scope
 
-| Scope            | Strategy                                                                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Single claim     | Deep: verify the exact assertion, check related context                                                                    |
-| Claim set (3-10) | Focused: verify each claim independently, cross-reference findings                                                         |
-| Document or plan | Surgical: extract imperative claims (function X does Y, module Z exports W) as a list, batch-verify each, flag refutations |
-
-**Scope detection.** "Check if X is true" → single claim. "Verify these assumptions" → claim set.
-"Fact-check this design doc" → document.
+Verify a single claim deeply. For a document or plan, extract its imperative claims (function X does
+Y, module Z exports W) into a list and batch-verify each.
 
 Lead with the verdict for each claim. Provide file:line evidence. Flag refutations prominently so
 they get addressed before implementation proceeds.

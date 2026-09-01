@@ -107,8 +107,7 @@ Before closing, confirm:
 
 - Every task success criterion is satisfied, with evidence
 - Relevant tests pass
-- The repository's documented check commands pass (for cape itself: `pnpm check`, `pnpm typecheck`,
-  and `pnpm test`)
+- The repository's documented check commands pass
 - Every `CONFIRMED` code-review finding is fixed, and every `PLAUSIBLE` one is fixed or dismissed
   with a reason
 
@@ -150,6 +149,8 @@ Next: <next-id or finish-epic>
 Verification: <commands and results>
 ```
 
+Done is one sentence. Verification names commands and pass or fail, not their output.
+
 **STOP in HITL mode.** Wait for user input. In AFK mode, load `cape:commit`, then continue only if
 the next task is already clear and within the approved scope.
 
@@ -164,17 +165,6 @@ Dispatch `cape:code-reviewer` when:
 
 - A change is non-trivial: it crosses modules or touches public interfaces
 
-It returns one JSON object. Relay its `findings` through a single `ReportFindings` call, which is
-what renders them; the agent has no such tool of its own.
-
 Dispatch `cape:fact-checker` when:
 
 - The implementation depends on claims about codebase structure, API behavior, or dependencies
-
-## Examples
-
-**Wrong:** The first task reveals the next planned slice is unnecessary, but you create and
-implement it anyway because it sounded plausible during planning.
-
-**Right:** Explain the discovery in session, mark the completed task done in Linear and the cache,
-and create the next sub-issue that reflects current reality.

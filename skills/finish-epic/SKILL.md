@@ -80,10 +80,10 @@ Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to 
 Run the checks the epic or project requires. Dispatch `cape:test-runner` (model: haiku) when
 commands are long-running or noisy. If checks fail: **STOP.** Report the failing command.
 
-For non-trivial epics, dispatch `cape:code-reviewer` with the epic contract and branch diff; the
-reviewer judges the delivered code against the R-IDs and required constraints. It returns one JSON
-object: relay its `findings` through a single `ReportFindings` call, which is what renders them, and
-address each before handing off.
+When the epic changes shared behavior, public APIs, or cross-module contracts, dispatch
+`cape:code-reviewer` with the epic contract and branch diff; the reviewer judges the delivered code
+against the R-IDs and required constraints. It returns one JSON object: relay its `findings` through
+a single `ReportFindings` call, which is what renders them, and address each before handing off.
 
 ### 4. Hand off
 
@@ -97,8 +97,7 @@ Verification: <commands passed>
 Tasks completed: <N>
 ```
 
-Run the summary through `cape:unslop` before posting. Do not write validation transcripts or
-implementation notes to Linear.
+Do not write validation transcripts or implementation notes to Linear.
 
 ### 5. Report
 
@@ -114,26 +113,3 @@ Ready for PR; Linear will close the epic on merge.
 ```
 
 Do not load `cape:pr` until the user asks to create the PR.
-
-## Agents
-
-Dispatch `cape:test-runner` when:
-
-- Final verification commands are long-running or noisy
-
-Dispatch `cape:code-reviewer` when:
-
-- The epic changes shared behavior, public APIs, or cross-module contracts
-
-It returns one JSON object. Relay its `findings` through a single `ReportFindings` call; the agent
-has no such tool of its own.
-
-## Skills
-
-Load `cape:tracker` when:
-
-- The tracker cache is missing or stale during verification
-
-Load `cape:commit` when:
-
-- Verified implementation changes remain uncommitted before hand off
