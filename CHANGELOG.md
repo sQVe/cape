@@ -31,6 +31,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Skills: `cape:set-goal` defaults to a `codex` builder and a `claude` reviewer, and the draft's
+  decisions table names whichever reviewer was chosen instead of always `codex`.
 - Skills: Linear now shows the state of the work. Plan issues, tasks, and AI bug issues are created
   as `Todo`; execute-plan and fix-bug write `In Progress` and `Done` to Linear before copying them
   into the cache, and the first task moves the plan issue and human ticket to `In Progress`. Tasks
