@@ -104,12 +104,19 @@ Write the body for a reviewer who knows the domain but not this branch:
   here: the body describes the change, not the investigation.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
-- End with the closing line, built from `cape tracker show` as the comment above the template's
-  `Fixes` line says, whatever the template source. Build it now, before approval; never invent a
-  placeholder.
+- End with the closing line, whatever the template source: `Fixes <human-id>, <plan-id>` from
+  `cape tracker show`, meaning the epic entry's `humanTicketId` and the AI plan issue, plus any
+  completed task's own `humanTicketId`. Tasks stay off the line, and so does a standalone bug's AI
+  issue. List only ids that exist; AI-only work has no `humanTicketId`. Use `Related to` with the
+  same set ONLY when this PR does not complete the epic. Build it now, before approval; never invent
+  a placeholder.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
+
+When acceptance checks need a deployed environment and could not run pre-merge (`cape:finish-epic`
+`[~]`), list them under Deferred verification as plain bullets, never as checkboxes and never marked
+done. Add the section when the repo template lacks it.
 
 Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
 items for any gaps.

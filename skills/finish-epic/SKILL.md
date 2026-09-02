@@ -63,9 +63,8 @@ exercised is `[~]` DEFERRED, never `[x]`. Verify it on a branch preview deploy i
 otherwise it stays deferred.
 
 `[~]` does not block hand-off, but every deferred criterion goes verbatim into the PR's Deferred
-verification section (the `cape:pr` section for env-dependent checks) as "not yet done, verify
-post-merge". Never under Manual verification, which is for subjective judgment only, and never
-presented as verified.
+verification section (`cape:pr` step 3) as "not yet done, verify post-merge". Never under Manual
+verification, which is for subjective judgment only, and never presented as verified.
 
 Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to create through
 `cape:execute-plan`.

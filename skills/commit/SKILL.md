@@ -23,8 +23,9 @@ diff, group changes by concern, propose staging and a message, and commit only a
    `--no-confirm` waives this.
 2. **Never skip hooks.** No `--no-verify` unless the user explicitly asks.
 3. **One logical change per commit.** Split mixed concerns into separate commits.
-4. **Stage only through `cape commit <files>`.** Never run `git add`; it commits the whole index, so
-   a stray `git add -A` leaks into the commit.
+4. **Stage only through `cape commit <files>`.** Never run `git add`. `cape commit` commits the
+   whole index, not just the named files, so anything staged earlier leaks into the commit; unstage
+   it first.
 
 ## Process
 

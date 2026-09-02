@@ -210,3 +210,5 @@ Present the fact-checked summary, then hand off:
 Design summary complete (fact-checked). Next step: formalize into a Linear tracker epic with
 `cape:write-plan`.
 ```
+
+**STOP.** The user runs write-plan; you do not.

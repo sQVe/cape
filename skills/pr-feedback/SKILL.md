@@ -92,20 +92,19 @@ top-level reply, or no action.
 Flag scope creep: a comment asking for a refactor or feature beyond the PR's intent is out of scope,
 not extra work. A polite or confident comment is not evidence.
 
-Present the table. The source column names the reviewer (`Copilot #1`, `alice summary`). Thread node
-IDs stay internal and never print. Comments asking for the same change share one row that lists
-every source.
+Present the table, one row per thread. Key each row by source: the thread node ID, or
+`summary:<author>@<submittedAt>` so two summaries from one reviewer stay distinct.
 
 ```text
 PR #<number> review feedback triage
 
-| # | source        | file:line   | comment (short)     | verdict      | action         |
-|---|---------------|-------------|---------------------|--------------|----------------|
-| 1 | Copilot #1    | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
-| 2 | Copilot #2    | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
-| 3 | bob #1        | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
-| 4 | bob #2        | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
-| 5 | alice summary | (none)      | missing rollback    | Valid        | Fix (edit)     |
+| # | source       | file:line   | comment (short)     | verdict      | action         |
+|---|--------------|-------------|---------------------|--------------|----------------|
+| 1 | PRRT_a…      | auth.ts:42  | null deref on token | Valid        | Fix (edit)     |
+| 2 | PRRT_b…      | cache.ts:88 | races under load    | Valid        | Fix (TDD)      |
+| 3 | PRRT_c…      | util.ts:10  | rename for clarity  | Valid        | Fix (edit)     |
+| 4 | PRRT_d…      | api.ts:200  | add retry layer     | Out of scope | Reply, defer   |
+| 5 | summary:alice@2026-06-30T07:24:25Z | (none) | missing rollback | Valid | Fix (edit) |
 
 Apply the fixes marked Fix and respond to the rest?
 ```
