@@ -11,17 +11,13 @@ description: >
 Verify a completed epic and hand it off to the PR: audit every acceptance criterion, run the
 project's checks, and report what shipped. Hand off only when every criterion has evidence.
 
-The evidence gate and automated checks are fixed; verification details adapt to the repository.
-
 ## Rules
 
 1. **Never close the human ticket or plan issue.** Linear's GitHub integration moves them to `Done`
    when the PR merges, via the closing line `cape:pr` builds from the tracker cache
    (`Fixes <human-id>, <plan-id>`).
 2. **Every acceptance criterion needs evidence.** Cite tests, files, or demonstrated behavior.
-3. **All tasks complete, all checks pass.** Do not skip open tasks or failing checks to hand off.
-4. **Stop on failure.** Report missing evidence or the failing command instead of handing off.
-5. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
+3. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
    outcome summary; that `save_issue` is description-only.
 
 ## Process
@@ -34,8 +30,7 @@ done-like status.
 - Epic already `Done` (the PR merged before this ran): report that the work is closed and stop. Do
   not re-close or rewrite status.
 - Any task still open: **STOP.** Report the open task IDs.
-- Cache missing or stale for this session: follow the `cape:tracker` cache rule and refresh from an
-  MCP result already in session.
+- Cache missing or stale: apply the `cape:tracker` cache rule.
 
 ### 2. Audit acceptance criteria
 
@@ -82,8 +77,7 @@ commands are long-running or noisy. If checks fail: **STOP.** Report the failing
 
 When the epic changes shared behavior, public APIs, or cross-module contracts, dispatch
 `cape:code-reviewer` with the epic contract and branch diff; the reviewer judges the delivered code
-against the R-IDs and required constraints. It returns one JSON object: relay its `findings` through
-a single `ReportFindings` call, which is what renders them, and address each before handing off.
+against the R-IDs and required constraints. Address each finding before handing off.
 
 ### 4. Hand off
 
@@ -96,8 +90,6 @@ Outcome: <2-3 sentence summary>
 Verification: <commands passed>
 Tasks completed: <N>
 ```
-
-Do not write validation transcripts or implementation notes to Linear.
 
 ### 5. Report
 

@@ -10,9 +10,6 @@ description: >
 Stage selectively and commit one logical change at a time in conventional commit format. Read the
 diff, group changes by concern, propose staging and a message, and commit only after approval.
 
-Message style and body depth adapt to project conventions. The staging plan, the conventional
-format, and the approval gate do not.
-
 ## Arguments
 
 - `--no-confirm` (optional): skip the confirmation in step 4. For other cape skills that call
@@ -72,10 +69,7 @@ Staging: exclude files outside this group. Warn about untracked files that look 
 
 ### 4. STOP: confirm
 
-**Do not call `git commit` until the user approves.**
-
-Wait. If the user edits the message or staging, apply their changes exactly. If they reject, ask
-what they'd prefer. Skip this step only when `--no-confirm` was passed.
+Wait. Apply the user's edits exactly. Skip only with `--no-confirm`.
 
 ### 5. Execute
 

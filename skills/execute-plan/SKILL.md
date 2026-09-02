@@ -8,24 +8,15 @@ description: >
 # Execute plan
 
 Implement one tracker task, verify it, mark it done in Linear and the cache, line up the next task,
-and stop for review. One task per invocation in HITL mode, and all fine-grained plans and
-reflections stay in session, never on the Linear board.
-
-The one-task loop, TDD, verification before close, and cache refresh after every Linear write are
-fixed. Implementation tactics adapt to the task.
+and stop for review. One task per invocation in HITL mode.
 
 ## Rules
 
 1. **STOP after each task in HITL mode.** Present the checkpoint and wait for the user.
 2. **Close only after verification.** Tests and the task's success criteria must pass first.
-3. **Orient from the cache.** Use `cape tracker show` and the current git branch to pick work. No
-   network reads to pick work; once a task is chosen, fetching its description with MCP `get_issue`
-   is fine. Never invent task state.
-4. **Linear holds task status; the cache copies it.** Write every status change to Linear with
-   `save_issue`, then copy it with `cape tracker cache-status`. Content writes (descriptions, new
-   sub-issues) go to Linear first too, followed immediately by the matching `cape tracker` command.
-5. **Test before code.** Load `cape:test-driven-development` before any production edit.
-6. **Keep expansion in session.** No expanded plans, divergence notes, or close-out ceremony go to
+3. **Orient from the cache.** Use `cape tracker show` and the current git branch to pick work. Never
+   invent task state.
+4. **Keep expansion in session.** No expanded plans, divergence notes, or close-out ceremony go to
    Linear. The board tracks issues, not implementation transcripts.
 
 ## Process
@@ -39,7 +30,6 @@ the wrong branch. One epic, one worktree:
 1. Read `gitBranchName` for the epic from Linear (`get_issue`), sanitize to ASCII kebab-case.
 2. Use grove: `grove add --base <default-branch> <type>/<branch-slug>` (`<type>` is the
    conventional-commit prefix). If the worktree exists, enter it instead of creating another.
-3. From inside it, run `cape workspace phase build` (safe no-op outside herdr).
 
 ### 1. Orient from the tracker cache
 
@@ -49,8 +39,7 @@ Run `cape tracker show` (shape documented in `cape:tracker`). Pick work in this 
 2. A ready task: `stateType` of `unstarted`, or a status such as `Todo`.
 3. None left and the epic's success criteria look met: load `cape:finish-epic`.
 
-If multiple epics are active, ask the user which one to continue. A missing or stale cache follows
-the `cape:tracker` cache rule: treat it as empty and refresh from an MCP result already in session.
+If multiple epics are active, ask the user which one to continue.
 
 ### 2. Expand in session
 
@@ -100,8 +89,7 @@ for a more direct path first, such as a path that already reaches the destinatio
 endpoint can derive on its own. Go through the layers only after naming why the direct path fails.
 
 If an R-ID or required constraint forces a change of approach, explain the divergence in
-conversation and continue only when the new approach still satisfies the epic contract. The
-divergence stays in session.
+conversation and continue only when the new approach still satisfies the epic contract.
 
 Before closing, confirm:
 
@@ -129,11 +117,7 @@ revealed, not from what planning assumed.
 
 If a ready task already exists in the cache, checkpoint to it. If a new task is needed, create it as
 a sub-issue of the AI plan issue through MCP: load `cape:tracker` and apply its
-`resources/agent-contract.md`. Then refresh the epic cache per `cape:tracker`'s create-work recipe:
-fetch the plan issue with `get_issue`, fill its `children.nodes` from
-`list_issues(parentId: <plan-id>)`, and pass the composed JSON to `cape tracker cache-epic`. That
-refresh is authoritative, so it also drops tasks deleted or reparented in Linear; `cache-tasks`
-never would.
+`resources/agent-contract.md`. Then refresh the epic cache per `cape:tracker`'s create-work recipe.
 
 If no work remains, load `cape:finish-epic`.
 

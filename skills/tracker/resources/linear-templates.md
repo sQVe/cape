@@ -3,13 +3,13 @@
 These bodies mirror the shapes cape produces: human ticket, plan issue, and task by
 `cape:write-plan`, bug by `cape:fix-bug`. To give hand-authored issues the same form, copy each body
 into a Linear issue template (Settings → Templates); cape cannot apply them itself, since
-`save_issue` takes raw markdown and exposes no template field.
+`save_issue` takes raw markdown and exposes no template field. Every template sets a `src` label and
+Medium priority as defaults; tasks and bugs add a `type` label as noted.
 
 ## Human ticket
 
 The repo's home team. Description only: no R-tables, no constraints, no acceptance criteria. The
-human tier exists to be scannable. Untyped parent. Set a `src` label and Medium priority as template
-defaults.
+human tier exists to be scannable. Untyped parent.
 
 ```markdown
 [What changes and why, in 2-4 sentences a human can scan in ten seconds.]
@@ -17,22 +17,10 @@ defaults.
 Done when: [one concrete completion statement]
 ```
 
-The agent plan is a sub-issue of this ticket, so Linear renders the link. Never write one into the
-body.
-
 ## Plan issue
 
 `AI` team. Untyped parent of the task sub-issues, and itself a sub-issue of the human ticket it
-satisfies, or parentless when AI-only. Set a `src` label and Medium priority as template defaults.
-
-The plan-issue body separates four questions that must never blend:
-
-| Section                  | Answers                                                      |
-| ------------------------ | ------------------------------------------------------------ |
-| **Required behavior**    | What must become true; testable, observable outcomes (R-IDs) |
-| **Required constraints** | Already-settled boundaries the agent may not cross           |
-| **Proposed approach**    | A recommendation the agent may improve                       |
-| **Acceptance criteria**  | Evidence the work is done                                    |
+satisfies, or parentless when AI-only.
 
 Pick a variant per plan issue. Default to **Light**. Use **Full** when a user journey changes, a new
 state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
@@ -154,13 +142,12 @@ flowchart LR
 | [Slice 2] | R2       | [Boundary] |
 ````
 
-The work breakdown is a non-binding sketch; do not pre-create these as sub-issues.
-`cape:execute-plan` creates each one lazily, after the previous task reveals what it should be.
+`cape:execute-plan` creates each work-breakdown row lazily, after the previous task reveals what it
+should be.
 
 ## Task
 
-Sub-issue of the plan issue, `AI` team. Set exactly one `type` label, one `src` label, and Medium
-priority as template defaults.
+Sub-issue of the plan issue, `AI` team. Set exactly one `type` label.
 
 ```markdown
 ## Goal
@@ -192,8 +179,7 @@ Done when: [one concrete completion statement]
 
 ## Bug
 
-Set the `bug` type label, a `src` label, and Medium priority as template defaults. Title as
-`Fix <symptom>`.
+Set the `bug` type label. Title as `Fix <symptom>`.
 
 ```markdown
 ## Root cause

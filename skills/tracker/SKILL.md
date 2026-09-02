@@ -12,32 +12,26 @@ description: >
 Cape uses Linear as the tracker and a per-repository local read cache. Work is two-tier:
 human-facing tickets live in the repo's home team (Aburaya for cape); agent-facing plan issues and
 tasks live in the workspace's `AI` team. Skills write to Linear through MCP, then refresh the cache
-with `cape tracker`. Linear is the source of truth for issue content, and status is written there
-first; the cache is the source of truth for reads, copies status after each write, and only moves it
-forward on refresh.
-
-Operation names, team routing, and cache-write rules are fixed. Issue titles and descriptions adapt
-to the chain using the tracker.
+with `cape tracker`.
 
 ## Rules
 
-1. **Use only five operations.** createEpic, createTasks, listReady, updateStatus, close.
-2. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the
+1. **Route by audience.** Agent-facing issues (plans, contracts, task sub-issues) go to the
    workspace's `AI` team; human-facing issues go to the repo's home team, resolved per
    [resources/agent-contract.md](resources/agent-contract.md). Team routing is a `save_issue`
    parameter, with no config layer.
-3. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
-4. **Read from the cache.** Ready-work listing and orientation read `cape tracker show`, never
+2. **Write content to Linear first.** Use MCP Linear `save_issue` for creates and content updates.
+3. **Read from the cache.** Ready-work listing and orientation read `cape tracker show`, never
    Linear. Fetching a chosen issue's full description with MCP `get_issue` is a detail read, not
    orientation, and is allowed.
-5. **Linear holds status; the cache copies it.** Create plan issues, tasks, and AI bug issues with
+4. **Linear holds status; the cache copies it.** Create plan issues, tasks, and AI bug issues with
    `state: "Todo"`. When a task starts or finishes, write the state to Linear with `save_issue`,
    then copy it with `cape tracker cache-status`. The human ticket and plan issue close at merge,
    via the PR closing line.
-6. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
-7. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
+5. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
+6. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
    entries.
-8. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
+7. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
    close-check records to Linear.
 
 ## Cache shape

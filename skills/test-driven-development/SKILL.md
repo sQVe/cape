@@ -10,9 +10,6 @@ description: >
 Let the next test define the next code change. Write a test that exposes the missing behavior, watch
 it fail, make it pass with the simplest change, then clean up only when it helps.
 
-Red-before-green and behavior-focused tests are fixed; test shape, scope, and whether cleanup is
-worth doing adapt to context.
-
 ## Rules
 
 1. **Red before green.** Write or update the test first and watch it fail for the behavior you

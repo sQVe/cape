@@ -76,11 +76,6 @@ the review requirement as a test-plan checkbox.
 
 If nothing matches, proceed without a cape skill.
 
-Before loading `cape:execute-plan` for "continue" or "next task", run `cape tracker show`. If ready
-tasks exist, execute-plan handles them. If none remain but an active epic exists, suggest
-`cape:finish-epic`. A missing or stale cache follows the `cape:tracker` cache rule: treat it as
-empty and say it needs a refresh from the latest MCP result.
-
 ## Chains
 
 ```text

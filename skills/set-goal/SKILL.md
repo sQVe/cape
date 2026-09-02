@@ -19,8 +19,7 @@ BUILD-and-SHIP run; set-goal stages that file, and only the human's `:wq` launch
 2. **Condition and prompt are a pair.** Render them as the draft's `## Condition` and `## Prompt`
    sections from one template, so the prompt's final `CAPE-RUN` line and the condition always match.
 3. **Sole writer for a minted epic.** When minting an epic from a description, you are the only
-   Linear and cache writer. Follow the `cape:tracker` contract and refresh the cache after the
-   write.
+   Linear and cache writer. Follow the `cape:tracker` contract.
 4. **No fixed sentinel.** Completion is the data-carrying `CAPE-RUN` line, never a constant string.
 
 ## Process
@@ -37,9 +36,7 @@ Resolve the target from the invocation:
 - Nothing: use the active epic from the cache; if several are active, ask which.
 
 Read the tracker cache (`cape tracker show`) for the epic's ready-task titles and count; they ground
-the interview and the computed turn cap. Do not network-read for orientation. A stale or missing
-cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in session before
-drafting. Do not guess.
+the interview and the computed turn cap. Do not network-read for orientation. Do not guess.
 
 ### 2. Interview the approach
 
@@ -244,9 +241,6 @@ no Run/Edit/Cancel question; review, edits, and launch all happen in the editor.
      empty turn (the goal stays armed; Esc interrupts only the in-flight turn), and
      `tail_until "Interrupted"` confirms the cancel before the approach prompt goes in as the
      genuine first directive.
-   - A wait that matches stale scrollback passes instantly, so the sends run ahead of the pane. Tail
-     polling makes a failed submit time out and abort the launch through `set -e` and the trap
-     instead of merging.
 
 3. Split a review pane off the invoking pane. Target `$HERDR_PANE_ID` explicitly, never the focused
    pane: focus may be in another workspace, which would open the draft in the wrong place. Run the

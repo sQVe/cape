@@ -41,8 +41,6 @@ cited facts that planning and design decisions can rest on.
 | 2    | Generally reliable | Verified tutorials, well-maintained examples    |
 | 3    | Use with caution   | Stack Overflow, forum posts, outdated tutorials |
 
-Always note which tier your sources fall into.
-
 ## Quote extraction
 
 Read a document (web page, docs page, source file) by pulling word-for-word quotes first, before any

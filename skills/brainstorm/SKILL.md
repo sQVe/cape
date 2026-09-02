@@ -12,9 +12,6 @@ Turn a rough idea into a validated design that `cape:write-plan` can formalize i
 epic. The output is a self-contained design summary built from codebase research, Socratic
 questioning, and competing constraint-driven designs.
 
-Questioning style and research depth adapt to the idea. What never changes: research comes before
-proposals, every step ends at a checkpoint, and the user decides when to advance.
-
 ## Rules
 
 1. **Stop at every checkpoint.** Present findings and wait. The user may discuss, redirect, iterate,
@@ -28,7 +25,6 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 4. **Anti-patterns carry reasons.** Write "NO X (reason: Y)", never a bare "NO X".
 5. **The design summary is self-contained.** `cape:write-plan` must be able to create the epic
    without re-asking brainstorm's questions.
-6. **Stop after the summary.** The user runs write-plan; you do not.
 
 ## Process
 
@@ -37,11 +33,9 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 Run `cape tracker show` before anything else. If it lists ready tasks, ask: "You have N ready
 task(s): [list]. Did you mean to continue with execute-plan instead of starting a new brainstorm?"
 If the user redirects, load `cape:execute-plan` with the Skill tool and stop. If they confirm
-brainstorm, continue. A missing or stale cache follows the `cape:tracker` cache rule: treat it as
-empty.
+brainstorm, continue.
 
-Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`
-(safe no-op outside herdr).
+Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`.
 
 ### 2. Research and clarify
 
@@ -101,8 +95,6 @@ findings, external docs, key decisions), the criteria, and one constraint:
 | 1     | Minimize the interface   | Fewest moving parts, smallest public API         |
 | 2     | Maximize flexibility     | Extension points, configuration, loose coupling  |
 | 3     | Optimize the common case | Fast path for the 80% case, pragmatic trade-offs |
-
-Without agents, design each approach yourself, sequentially, under the stated constraint.
 
 Screen every candidate, dispatched or self-designed, for four module smells:
 

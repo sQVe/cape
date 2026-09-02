@@ -12,9 +12,6 @@ Every fetched review comment ends in a tracked state: applied with a pushed code
 dismissed with a stated reason. A thread is resolved only after its action lands, using the node ID
 recovered once from the `reviewThreads` query and carried per comment.
 
-The fetch, triage, confirm, apply, respond order is fixed and the tracking table is mandatory;
-validity judgment and fix depth adapt to each comment.
-
 ## Arguments
 
 - PR number or URL (optional): the PR to act on. Without it, resolve the current branch's PR.
@@ -125,9 +122,7 @@ transcript so the calls are on record, then continue as if the triage were appro
 
 Run `cape workspace phase build`.
 
-For each row marked Fix, apply the change at the right weight per rule 5: edit nits directly, load
-`cape:test-driven-development` with the comment's concern as the test target for behavioral changes,
-load `cape:fix-bug` for diagnosed defects.
+For each row marked Fix, apply the change at the right weight per rule 5.
 
 Fix only what the accepted comment asks. Leave adjacent code and the out-of-scope items alone. The
 reasoning behind a fix goes in the commit message, not in a code comment. Update each row to Applied
@@ -136,12 +131,10 @@ reasoning behind a fix goes in the commit message, not in a code comment. Update
 ### 5. Commit, respond, and resolve
 
 Load `cape:commit` to commit the fixes referencing the review; let it split unrelated concerns into
-atomic commits. If the user asked to push, push after the commit lands. A thread is not eligible to
-resolve until its fix is on the remote.
+atomic commits. If the user asked to push, push after the commit lands.
 
 Reply, then resolve, over exactly the threads whose fix is pushed or whose dismissal reply is
 posted. One point per reply. A fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason.
-Each `threadId` is the `id` carried from step 1, no re-lookup:
 
 ```bash
 # Reply in a thread (dismissed or out-of-scope, with the reason, or "Fixed in <sha>")

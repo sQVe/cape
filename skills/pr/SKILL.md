@@ -11,9 +11,6 @@ Create a pull request with a conventional title, a template-driven description, 
 gates creation. Nothing ships until every test plan checkbox passes, including the review box, and
 the skill runs the review itself when no review covers the branch.
 
-Every step runs in order and the gates are non-negotiable; only the description content adapts to
-the change.
-
 ## Rules
 
 1. **Never call `cape pr create` without approval.** Present the full description, then use
@@ -23,10 +20,9 @@ the change.
    findings named, through wording or mechanical edits. Addressing findings is how a review round
    ends, not a reason to start another. A fix that goes beyond the finding (new behavior, a new code
    path, a new guard) is unreviewed work; review that delta before ticking. Reuse a covering review
-   from this session. Otherwise run one: dispatch `cape:code-reviewer` over the branch diff and
-   relay its findings through one `ReportFindings` call. The user running the builtin `/code-review`
-   satisfies it too. Tick only once the findings are addressed or dismissed, and never stop to ask
-   for a review you can run yourself.
+   from this session. Otherwise run one: dispatch `cape:code-reviewer` over the branch diff. The
+   user running the builtin `/code-review` satisfies it too. Tick only once the findings are
+   addressed or dismissed, and never stop to ask for a review you can run yourself.
 3. **Never invent description sections.** Use the repo template or the bundled template exactly. No
    ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
    section from step 3.
@@ -108,21 +104,11 @@ Write the body for a reviewer who knows the domain but not this branch:
   here: the body describes the change, not the investigation.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
-- End the description with the cache-built closing line, whatever the template source:
-  `Fixes <human-id>, <plan-id>` from `cape tracker show`, meaning the epic entry's `humanTicketId`
-  and the AI plan issue, plus any completed task's own `humanTicketId`. Tasks stay off the line:
-  they are already `Done`, and so is a standalone bug's AI issue, whose line lists the human ticket
-  alone. List only ids that exist: AI-only work has no `humanTicketId`, so its line starts at the
-  plan issue. Never invent a placeholder. Use `Related to` with the same set ONLY when this PR does
-  not complete the epic. Build it now, before approval. It is what closes the human ticket and plan
-  issue at merge; step 6 only confirms it.
+- End with the closing line per the template's Issues rule, from `cape tracker show`, whatever the
+  template source. Build it now, before approval; never invent a placeholder.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
-
-When acceptance checks need a deployed environment and could not run pre-merge (see
-`cape:finish-epic` `[~]`), list them under Deferred verification as plain bullets, never as
-checkboxes and never marked done.
 
 Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
 items for any gaps.
@@ -161,18 +147,9 @@ the body either way. No robot signature in the title or body.
 
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
 pass, keep `[ ]` on fail. For the review box: when no review covers the branch (rule 2), run
-`cape workspace phase review`, dispatch `cape:code-reviewer` over the branch diff now, relay its
-findings through one `ReportFindings` call, and address or dismiss each one. Then rewrite the box to
-name the model, the reviewer, and the commit it read, and tick it:
-
-```text
-- [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
-```
-
-The sha names the commit the reviewer actually read, never a later HEAD. Commits after it that only
-fix what that review found are the gap rule 2 sanctions; anything else past the sha stands on the
-record as unreviewed work. On any failure, stop, report details, and ask **Fix and retry** or
-**Cancel**.
+`cape workspace phase review`, dispatch `cape:code-reviewer` over the branch diff now, and address
+or dismiss each finding. Then rewrite the box to name the model, the reviewer, and the commit it
+read, and tick it. On any failure, stop, report details, and ask **Fix and retry** or **Cancel**.
 
 After all pass, create:
 

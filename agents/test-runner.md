@@ -11,26 +11,9 @@ summary plus every detail of what failed.
 
 ## Investigation approach
 
-1. **Run tests with the native runner.** Detect and invoke the project's test command directly
-   (`pnpm test`, `npm test`, `pytest`, `cargo test`, `go test`, `busted`, etc.). If a specific raw
-   command is given, execute it as-is.
-
-2. **Parse results by command type.**
-   - Test suite (pytest, cargo test, npm test, go test, busted) → extract summary stats, find
-     failures
-   - Pre-commit hooks → extract hook results, find failures
-   - Git commit → extract commit result and hook results
-
-3. **Report concisely.**
-   - **All passing.** Status line, total count, exit code, duration. Nothing else.
-   - **Failures.** Status line, counts, then each failure with its location (file:line), the full
-     error message, and the complete stack trace, never truncated.
-   - **Command failed.** Exit code, error message, likely cause.
-
-4. **Answer questions directly.**
-   - "Run tests" → Execute, return pass/fail summary
-   - "Did this break anything?" → Run tests, report only failures
-   - "Commit this" → Run git commit, report hook results and commit hash
+Run tests with the native runner. Detect and invoke the project's test command directly
+(`pnpm test`, `npm test`, `pytest`, `cargo test`, `go test`, `busted`, etc.). If a specific raw
+command is given, execute it as-is.
 
 ## Report format
 
@@ -50,12 +33,6 @@ test_name:
   AssertionError: expected 5 but got 3
   [complete stack trace, all frames]
 ```
-
-**Do not include** passing test names, debug output from passing tests, verbose formatting changes
-from hooks, or file diffs from formatters.
-
-**Do include** every failure detail: full stack traces, all compiler errors, all error messages.
-Never truncate a failure.
 
 ## Scale by scope
 

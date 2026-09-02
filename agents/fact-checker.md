@@ -27,13 +27,7 @@ anyone acts on it.
    cannot confirm that the function is correct. A claim about intent needs a separate source: the
    contract, a test asserting it, a comment, or docs.
 
-3. **Answer questions directly.**
-   - "Does X exist at path Y?" → Verified yes/no with evidence
-   - "Is this signature correct?" → Actual signature vs claimed signature
-   - "Are these assumptions valid?" → Each assumption rated: confirmed, refuted, or unverifiable
-   - "Is this still true?" → Check current state, compare to claim, note staleness
-
-4. **Rate each claim.** Include `file:line` evidence for codebase claims and `(URL, Tier N)` for
+3. **Rate each claim.** Include `file:line` evidence for codebase claims and `(URL, Tier N)` for
    external claims. Source tiers: Tier 0 (source code), Tier 1 (official docs), Tier 2 (verified
    tutorials), Tier 3 (forums/outdated).
    - **Confirmed.** Evidence found that matches the claim exactly
@@ -43,15 +37,10 @@ anyone acts on it.
      evidence for X after searching [locations]." List the directories, patterns, and tools
      searched. Never fill gaps with plausible-sounding guesses
 
-5. **Handle refutations constructively.** When a claim is wrong, supply the right answer. "Function
-   `getUser` does not exist in `auth.ts`. `findUserById` does, at line 42, with signature
-   `(id: string) => Promise<User>`."
-
 ## Scale by scope
 
 For a single claim, verify the exact assertion and the context around it. For a document or plan,
 extract its imperative claims (function X does Y, module Z exports W) into a list and batch-verify
 each.
 
-Lead with the verdict for each claim. Provide file:line evidence. Flag refutations prominently so
-they get addressed before implementation proceeds.
+Lead with the verdict for each claim.
