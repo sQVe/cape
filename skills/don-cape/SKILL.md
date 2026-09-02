@@ -27,11 +27,11 @@ follow it.
    labels; put them in the option description when the user needs them to decide. A name stays in a
    label only when it is the thing being chosen. State what happened and where things stand before
    asking, and never re-ask a confirmation the user already gave this session.
-7. **Internal vocabulary stays internal.** HITL, AFK, R-IDs, and workflow codenames get a plain-word
-   expansion on first use in any message, ticket, or PR: "R3, the permission check".
-8. **Report progress at state changes the user can act on.** While waiting, say nothing; one message
-   when results land beats ten countdown pings. Panes, tabs, workflow ids, and subagent names stay
-   out of user-facing prose. Name the work, not the plumbing.
+7. **Expand internal vocabulary on first use.** HITL, AFK, R-IDs, and workflow codenames get a
+   plain-word expansion the first time they appear in a message, ticket, or PR: "R3, the permission
+   check". Panes, tabs, workflow ids, and subagent names stay out of user-facing prose.
+8. **Report at state changes the user can act on.** While waiting, say nothing. One message when
+   results land beats ten countdown pings.
 
 ## Routing
 

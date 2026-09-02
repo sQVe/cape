@@ -3,9 +3,9 @@
 ## Labels
 
 Aburaya groups `cape`, `human`, and `pr-watcher` under `src`, and `bug`, `feature`, `chore` under
-`type`. This taxonomy is Aburaya's, not a cape requirement: cape lists a team's labels before its
-first labeled write and applies only what it finds. Adding `cape` and a `bug` / `feature` / `chore`
-set to a new workspace buys the source and type filters back; skipping it costs only those filters.
+`type`. The taxonomy is Aburaya's own. Cape lists a team's labels before its first labeled write and
+applies only what it finds. Adding `cape` and a `bug` / `feature` / `chore` set to a new workspace
+buys the source and type filters back. Skipping it costs only those filters.
 
 ## Manual steps (run in the Linear UI)
 
@@ -68,5 +68,5 @@ rows = [
 Apply with `herdr config check` then `herdr server reload-config`. A row disappears when none of its
 tokens have a value, so the layout is inert in workspaces cape never touches.
 
-Phase sits on the first row on purpose: a long branch name on the second row consumes the sidebar
-width before a later token gets a column.
+Phase sits on the first row because a long branch name on the second row consumes the sidebar width
+before a later token gets a column.

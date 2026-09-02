@@ -14,14 +14,14 @@ Plain is the default. It covers every message written to the user in conversatio
 that ships under the user's name: commit messages, PR titles and descriptions, review replies,
 Linear tickets and comments, plan and epic text, review findings, summaries, code comments. Assume
 the reader is skimming, in a hurry, and reading in a second language. Apply every pattern below.
-Lead with the answer, then the evidence. Structure must earn its weight: headings only when the text
-runs past a screen, a table only when three or more rows share real columns, a list only when order
-or count matters. Otherwise write sentences. When the scaffolding outweighs the facts, delete the
-scaffolding.
+Lead with the answer, then the evidence. Use a heading only when the text runs past a screen, a
+table only when three or more rows share real columns, and a list only when order or count matters.
+Otherwise write sentences.
 
 Full voice is the exception. Use it for docs, the README, and posts, where sterile writing is its
-own AI tell. Rules 1 to 26 still apply. The plain speech rules, 27 to 32, do not, since they would
-cut the feeling, the long sentence, and the hedge that full voice is built on. Instead:
+own AI tell. Rules 1 to 26 still apply, as do the conversation rules 33 and 34. The plain speech
+rules, 27 to 32, do not, since they would cut the feeling, the long sentence, and the hedge that
+full voice is built on. Instead:
 
 - **Have opinions.** React to facts instead of neutrally listing pros and cons.
 - **Vary rhythm.** Short sentences. Then longer ones that take their time. Mix it up.
@@ -74,13 +74,13 @@ When in doubt, pick plain.
     conditions" adds nothing with the colon. Rewrite to let the point stand on its own without
     comparison framing. "Describing when the scheduler should fire works best as plain English."
     Same meaning, no crutch punctuation.
-15. **Boldface overuse.** Bold at most one phrase per message, the fact the reader must not miss.
+15. **Boldface overuse.** In a message, bold at most one phrase, the fact the reader must not miss.
     Never bold proper nouns, verdicts, or whole sentences.
 16. **Inline-header lists.** The tell is a bold label and colon that restates the line:
     "**Performance:** Performance improved...". Convert those to prose. A bold lead-in that ends in
     a period, names the item, and is followed by genuinely new detail ("**Schema in TypeScript.**
-    Tables live in one file.") is fine in docs. In a chat reply it is a tell in itself: a message
-    carved into "**Label.**" blocks is a report template, not an answer. Write paragraphs.
+    Tables live in one file.") is fine in docs and skills. In a chat reply, a message carved into
+    bold-label blocks reads as a report template. Write paragraphs.
 17. **Title case headings.** Use sentence case.
 18. **Decorative emojis.** Remove from headings, bullets, and prose.
 19. **Curly quotes.** Replace with straight quotes.
@@ -91,15 +91,17 @@ When in doubt, pick plain.
     "Found the smoking gun!" Remove.
 21. **Cutoff disclaimers.** "While specific details are limited..." Find sources or remove.
 22. **Sycophantic tone.** "Great question!", "Good catch,", "You're right to push", "Exactly," as an
-    opener. Any compliment or agreement beat before the substance is filler, the loud form and the
-    soft form alike. Start with the answer; the content shows the agreement.
+    opener. Any compliment or agreement before the substance is filler, however mild. Start with the
+    answer.
 
 ### Filler
 
 23. **Filler phrases.** "In order to" becomes "To". "Due to the fact that" becomes "Because". "It is
-    important to note that" gets deleted.
+    important to note that", "worth noting", "worth flagging", "the honest answer", "to be fair" get
+    deleted, keeping the sentence they wrapped.
 24. **Excessive hedging.** "could potentially possibly be argued that it might" becomes "may".
-25. **Generic conclusions.** "The future looks bright." State specific plans or facts.
+25. **Generic conclusions.** "The future looks bright." State specific plans or facts. An aphoristic
+    closer that restates a made point gets cut.
 
 ### Jargon
 
@@ -150,14 +152,9 @@ These cover messages to the user and anything in the same voice: replies, checkp
 33. **Arrow chains.** `→` belongs in diagrams. In prose, write the causal chain as short sentences,
     or cut the intermediate steps.
 34. **Verdict drama.** "load-bearing", "the killer", "headline", "this changes the answer", "the
-    single most consequential X" announce importance instead of showing it. State the fact; its size
-    is the reader's call.
-35. **Hedge tics.** "worth noting", "worth naming", "worth flagging", "the honest answer", "to be
-    fair". Delete the wrapper, keep the sentence. An aphoristic closer that restates a made point
-    gets cut.
-36. **Endings.** Close with at most one question or a stated default ("I'll do X unless you
+    single most consequential X" announce importance instead of showing it. State the fact.
+35. **Endings.** Close with at most one question or a stated default ("I'll do X unless you
     object"). No menus of pre-argued options, no stacked "say the word" offers, no caveat stacks.
-    Answer objections when asked, not before.
-37. **Repetition across messages.** Never restate what the reader already has. Status that has not
-    changed is not repeated. A standing question gets a one-line reminder, not fresh rationale. A
-    wrap-up lists only what this message adds.
+    Answer objections when asked, not before. A wrap-up lists only what this message adds.
+36. **Repetition across messages.** Never restate what the reader already has. Status that has not
+    changed is not repeated. A standing question gets a one-line reminder, not fresh rationale.

@@ -97,7 +97,7 @@ Flag scope creep: a comment asking for a refactor or feature beyond the PR's int
 not extra work. A polite or confident comment is not evidence.
 
 Run the rationales through the `cape:unslop` skill, then present the table. The source column names
-the reviewer (`Copilot #1`, `alice summary`); thread node IDs are carried internally, never printed.
+the reviewer (`Copilot #1`, `alice summary`). Thread node IDs stay internal and never print.
 Comments asking for the same change share one row.
 
 ```text
@@ -168,9 +168,9 @@ A summary point that warrants a reply gets one top-level PR comment, never a res
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Report the outcome scaled to the result: one
-sentence when everything resolved one way ("Fixed and resolved all 3 threads: <paths>"). Use the
-tally only when outcomes are mixed:
+Confirm each resolve response shows `isResolved: true`. When every thread resolved the same way,
+report one sentence ("Fixed and resolved all 3 threads: <paths>"). Use the tally only when outcomes
+are mixed:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>

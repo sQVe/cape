@@ -323,6 +323,6 @@ export const postToolUseLinearWrite = () =>
     hookSpecificOutput: {
       hookEventName: 'PostToolUse',
       additionalContext:
-        'Linear was updated. Refresh the local tracker cache soon with `cape tracker cache-epic`, `cape tracker cache-tasks`, or `cape tracker cache-status`. Ticket text follows the cape:unslop plain register: no template sections filled for their own sake, no restated rows.',
+        'Linear was updated. Refresh the local tracker cache soon with `cape tracker cache-epic`, `cape tracker cache-tasks`, or `cape tracker cache-status`.',
     },
   });

@@ -38,8 +38,8 @@ Pick a variant per plan issue. Default to **Light**. Use **Full** when a user jo
 state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
 
-Scale to the change. A few-line change gets the human-ticket shape plus one R row and one acceptance
-line. Delete empty template sections; never fill them with N/A rows.
+Scale Light to the change. For a few-line change, the plan issue is the description, one R row, and
+one acceptance line.
 
 ### Plan issue, Light (default)
 
@@ -73,7 +73,7 @@ and data flow. Mermaid only for branching flows; a straight-line pipeline stays 
 
 ## Acceptance criteria
 
-- [ ] Each R row verified with evidence: name the command or observation, not the row restated.
+- [ ] [R1: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
@@ -95,9 +95,7 @@ Light plus the alignment sections. Same untyped-parent rules.
 
 ## Before / after
 
-| Before             | After               |
-| ------------------ | ------------------- |
-| [Current behavior] | [Expected behavior] |
+Before: [current behavior]. After: [expected behavior].
 
 ## Required behavior
 
@@ -129,7 +127,7 @@ flowchart LR
 
 ## Acceptance criteria
 
-- [ ] Each R row verified with evidence: name the command or observation, not the row restated.
+- [ ] [R1: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 
 ## Release and observability
@@ -181,7 +179,7 @@ Delivers: R1, R2
 
 [HITL (user reviews each step) | AFK (unattended)]
 
-Done when: [the completion condition the work hangs on]
+Done when: [one concrete completion statement]
 
 ## Success criteria
 

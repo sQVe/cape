@@ -49,8 +49,9 @@ anyone acts on it.
 
 ## Scale by scope
 
-Verify a single claim deeply. For a document or plan, extract its imperative claims (function X does
-Y, module Z exports W) into a list and batch-verify each.
+For a single claim, verify the exact assertion and the context around it. For a document or plan,
+extract its imperative claims (function X does Y, module Z exports W) into a list and batch-verify
+each.
 
 Lead with the verdict for each claim. Provide file:line evidence. Flag refutations prominently so
 they get addressed before implementation proceeds.

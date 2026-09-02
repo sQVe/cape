@@ -181,14 +181,17 @@ Omit this whole section when the field was empty.>
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 
+Render each variant from its own answer: self-review drops the review step, lazy mode uses the
+one-ahead lines. The table is a summary only. The helper parses `## Condition` and `## Prompt`, so a
+decision changes by editing the prompt body or re-running set-goal.
+
 ### 4. Open the draft for launch
 
 In a herdr workspace, open the draft in a split editor and let the human launch with `:wq`. There is
 no Run/Edit/Cancel question; review, edits, and launch all happen in the editor.
 
 **If the pane is a live herdr workspace**, meaning `$HERDR_PANE_ID` is set AND
-`herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be
-reachable):
+`herdr pane get $HERDR_PANE_ID` succeeds:
 
 1. Write the rendered draft (table plus `## Condition` plus `## Prompt`) to
    `${TMPDIR:-/tmp}/cape-set-goal-<epic>.md`.
@@ -242,9 +245,9 @@ reachable):
      empty turn (the goal stays armed; Esc interrupts only the in-flight turn), and
      `tail_until "Interrupted"` confirms the cancel before the approach prompt goes in as the
      genuine first directive.
-   - A poisoned scrollback wait passes instantly and un-paces the sends (see the tail_until
-     comment); with tail polling a failed submit times out and aborts the launch (`set -e` plus the
-     trap) instead of merging.
+   - A wait that matches stale scrollback passes instantly, so the sends run ahead of the pane. Tail
+     polling makes a failed submit time out and abort the launch through `set -e` and the trap
+     instead of merging.
 
 3. Split a review pane off the invoking pane. Target `$HERDR_PANE_ID` explicitly, never the focused
    pane: focus may be in another workspace, which would open the draft in the wrong place. Run the

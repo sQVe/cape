@@ -44,5 +44,6 @@ Apply before every issue create or update.
   inflate it.
 - **Titles.** Use an imperative verb-object title in sentence case with no prefix, about 70
   characters or less. Bug titles start with `Fix <symptom>`.
-- **Bodies.** Include a `Done when:` line the work hangs on. Use a Mermaid block only for branching
-  flow, state, or architecture descriptions; a straight-line pipeline stays prose.
+- **Bodies.** Include a `Done when:` line. Delete template sections the change leaves empty; never
+  fill them with N/A rows. Use a Mermaid block only for branching flow, state, or architecture
+  descriptions. A straight-line pipeline stays prose.

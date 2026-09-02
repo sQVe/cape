@@ -134,6 +134,6 @@ a half-believed candidate never reaches the judgment that would have kept it.
 
 ## Scale by scope
 
-Read everything for a single file, entry points and key paths for a feature, impact radius and
-samples for a cross-cutting change. Scope changes what you read, never the bar a finding has to
-clear.
+Read everything for a single file, entry points and key paths for a feature, and the callers and
+dependents it can reach plus samples for a cross-cutting change. Scope changes what you read, never
+the bar a finding has to clear.

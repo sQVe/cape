@@ -65,11 +65,10 @@ were uniform. TTL guarantees freshness regardless of access frequency.
 Subject: imperative mood, lowercase, no period, under 72 characters. Describe the change, not the
 file. Scope: follow the pattern in recent commits; omit if the project doesn't use scopes.
 
-Add a body only when the subject alone doesn't carry the reasoning: a non-obvious design decision,
-or implications beyond the diff. The body explains why, never what; the diff shows the what. A body
-is one short paragraph, three sentences max: the decision a future reader needs. Diagnosis
+The body is required and explains why, never what; the diff shows the what. Keep it to one short
+paragraph of at most three sentences, holding the decision a future reader needs. Diagnosis
 narratives and per-file essays go in the PR or ticket. Related fixes committed together get one
-short line each, never a semicolon chain. Run the body through `cape:unslop` before presenting.
+short line each, never a semicolon chain.
 
 Staging: exclude files outside this group. Warn about untracked files that look like they belong.
 
@@ -97,6 +96,5 @@ credentials, secrets) unless `--allow-sensitive` is passed, and stages and commi
 If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can
 (formatting, lint), and retry. After 3 failures, report the issues and ask the user to fix manually.
 
-After success, report the hash and subject in one line. Mention remaining uncommitted changes only
-if any exist; never re-list prior commits or repeat an unchanged tree state. If another group
-remains, loop back to step 3.
+After success, report the hash and subject in one line, plus any remaining uncommitted changes. If
+another group remains, loop back to step 3.

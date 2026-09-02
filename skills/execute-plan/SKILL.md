@@ -144,12 +144,10 @@ Present:
 ```text
 Checkpoint: <task-id> complete
 
-Done: <what changed and what was verified>
+Done: <one sentence: what changed and what was verified>
 Next: <next-id or finish-epic>
-Verification: <commands and results>
+Verification: <commands, pass or fail>
 ```
-
-Done is one sentence. Verification names commands and pass or fail, not their output.
 
 **STOP in HITL mode.** Wait for user input. In AFK mode, load `cape:commit`, then continue only if
 the next task is already clear and within the approved scope.
