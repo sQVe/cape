@@ -12,9 +12,6 @@ Turn a rough idea into a validated design that `cape:write-plan` can formalize i
 epic. The output is a self-contained design summary built from codebase research, Socratic
 questioning, and competing constraint-driven designs.
 
-Questioning style and research depth adapt to the idea. What never changes: research comes before
-proposals, every step ends at a checkpoint, and the user decides when to advance.
-
 ## Rules
 
 1. **Stop at every checkpoint.** Present findings and wait. The user may discuss, redirect, iterate,
@@ -28,7 +25,6 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 4. **Anti-patterns carry reasons.** Write "NO X (reason: Y)", never a bare "NO X".
 5. **The design summary is self-contained.** `cape:write-plan` must be able to create the epic
    without re-asking brainstorm's questions.
-6. **Stop after the summary.** The user runs write-plan; you do not.
 
 ## Process
 
@@ -37,19 +33,16 @@ proposals, every step ends at a checkpoint, and the user decides when to advance
 Run `cape tracker show` before anything else. If it lists ready tasks, ask: "You have N ready
 task(s): [list]. Did you mean to continue with execute-plan instead of starting a new brainstorm?"
 If the user redirects, load `cape:execute-plan` with the Skill tool and stop. If they confirm
-brainstorm, continue. A missing or stale cache follows the `cape:tracker` cache rule: treat it as
-empty.
+brainstorm, continue.
 
-Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`
-(safe no-op outside herdr).
+Once brainstorming is confirmed, signal the phase for the herdr rail: `cape workspace phase plan`.
 
 ### 2. Research and clarify
 
 Run `cape git context` for recent commits and codebase state, and check existing docs and structure.
 Dispatch `cape:codebase-investigator` in default mode (model: haiku) to find existing patterns
 relevant to the idea. Dispatch `cape:internet-researcher` (model: sonnet) if the idea involves
-external APIs, libraries, or unfamiliar tech. Without agents, investigate manually with Glob, Grep,
-Read, WebSearch, and WebFetch.
+external APIs, libraries, or unfamiliar tech.
 
 Then ask what research could not answer. Use AskUserQuestion for structured choices (token storage,
 auth strategy, data model decisions) and conversational follow-ups for open exploration (what
@@ -103,8 +96,6 @@ findings, external docs, key decisions), the criteria, and one constraint:
 | 2     | Maximize flexibility     | Extension points, configuration, loose coupling  |
 | 3     | Optimize the common case | Fast path for the 80% case, pragmatic trade-offs |
 
-Without agents, design each approach yourself, sequentially, under the stated constraint.
-
 Screen every candidate, dispatched or self-designed, for four module smells:
 
 | Smell                  | Test                                                        |
@@ -128,8 +119,6 @@ line per approach step 4 produced: three in divergent mode, one or two inline.
 | Criterion   | [Design 1]    | [Design 2]    | [Design 3]    |
 | ----------- | ------------- | ------------- | ------------- |
 | [Criterion] | [score + why] | [score + why] | [score + why] |
-
-One column per approach step 4 produced, so drop the unused columns in inline mode.
 
 1. **[Name]** ([its constraint]): [approach]. Trade-off: [x]. Smells: [hits, or none]
 
@@ -215,8 +204,6 @@ from Requirements, Architecture, and Research findings. It verifies each claim a
 evidence (`file:line`) and external sources (`URL, Tier N`). Keep confirmed claims, correct or
 remove refuted ones, update partially correct ones, and move unverifiable ones to open questions.
 
-Run the summary's prose through the `cape:unslop` skill before presenting.
-
 Present the fact-checked summary, then hand off:
 
 ```
@@ -224,18 +211,4 @@ Design summary complete (fact-checked). Next step: formalize into a Linear track
 `cape:write-plan`.
 ```
 
-## Examples
-
-**Wrong:** "Add OAuth authentication" gets an immediate "I'll implement OAuth with Auth0". Nobody
-checked that passport.js already lives at auth/passport-config.ts, so the design fights the existing
-architecture.
-
-**Right:** Codebase research finds the passport setup, internet research finds the
-passport-google-oauth20 strategy. The comparison pits extending passport against Auth0 and custom
-JWT, recommends extending, and the user picks it after iterating on refresh token handling.
-
-**Wrong:** Research, intake questions, then a full design summary in one turn. The user only ever
-answered data-gathering questions; every design decision was made for them.
-
-**Right:** Each step ends at a checkpoint. At the research stop the user corrects a missed POC
-feature; at the comparison stop they cut validation from scope. The summary reflects both.
+**STOP.** The user runs write-plan; you do not.

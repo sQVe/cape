@@ -8,16 +8,8 @@ description: >
 # Bro
 
 Say the previous message again, plainly. No jargon, no tables, no raw tool output. The user already
-got the answer once and it did not land, so the job is translation.
-
-## What to cover
-
-- **What happened.** The concrete event: a test failed, three files changed, the query returned no
-  rows.
-- **What it means.** Why that matters for what the user is trying to do.
-- **What to do next.** The one action worth taking, or "nothing, this is finished."
-
-A few sentences. Name real things, files, commands, numbers, instead of categories.
+got the answer once and it did not land, so the job is translation. A few sentences: what happened,
+what it means, what to do next. Name real things, files, commands, numbers, instead of categories.
 
 ## Limits
 

@@ -20,10 +20,9 @@ quality notes:
   last, anything that has already been fixed more than once, and any invariant the change depends
   on.
 
-The agent returns one JSON object. Relay its `findings` through a single `ReportFindings` call,
-which is what renders them; a dispatched agent has no such tool of its own. Report `status` and the `dropped` count in a line of your own.
+The agent returns one JSON object. Relay its `findings` through one `ReportFindings` call, which is
+what renders them. Report `status` and the `dropped` count in a line of your own.
 
-Then work the findings. Fix what is real, and for anything dismissed, say why against the code. The
-reasoning behind a fix goes in the commit message, not in a comment above the fix. When
+Then work the findings. Fix what is real, and for anything dismissed, say why against the code. When
 findings get fixed later in the same session, call `ReportFindings` again with the same findings,
 each carrying an `outcome`.

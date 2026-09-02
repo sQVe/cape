@@ -22,25 +22,12 @@ anyone acts on it.
    (callers, dependents, imports). Fall back to Glob/Read when the graph does not cover what you
    need. For external claims (APIs, libraries, behavior), use WebSearch, WebFetch, and Context7 to
    find authoritative sources.
-   - File exists? → Glob for the path, Read if found
-   - Function has this signature? → Graph search first, then Read to verify
-   - Module imports/exports X? → `get_neighbors`, then Read
-   - Config has this option? → Read the config file
-   - Dependency is available? → Check package files, lock files, import paths
-   - API behaves this way? → WebFetch official docs, cite with URL and source tier
-   - Library supports this feature? → Context7 or WebSearch, cite with URL and source tier
 
    Code is evidence of what the code does, never of what it was meant to do. Reading a function body
    cannot confirm that the function is correct. A claim about intent needs a separate source: the
    contract, a test asserting it, a comment, or docs.
 
-3. **Answer questions directly.**
-   - "Does X exist at path Y?" → Verified yes/no with evidence
-   - "Is this signature correct?" → Actual signature vs claimed signature
-   - "Are these assumptions valid?" → Each assumption rated: confirmed, refuted, or unverifiable
-   - "Is this still true?" → Check current state, compare to claim, note staleness
-
-4. **Rate each claim.** Include `file:line` evidence for codebase claims and `(URL, Tier N)` for
+3. **Rate each claim.** Include `file:line` evidence for codebase claims and `(URL, Tier N)` for
    external claims. Source tiers: Tier 0 (source code), Tier 1 (official docs), Tier 2 (verified
    tutorials), Tier 3 (forums/outdated).
    - **Confirmed.** Evidence found that matches the claim exactly
@@ -50,20 +37,10 @@ anyone acts on it.
      evidence for X after searching [locations]." List the directories, patterns, and tools
      searched. Never fill gaps with plausible-sounding guesses
 
-5. **Handle refutations constructively.** When a claim is wrong, supply the right answer. "Function
-   `getUser` does not exist in `auth.ts`. `findUserById` does, at line 42, with signature
-   `(id: string) => Promise<User>`."
-
 ## Scale by scope
 
-| Scope            | Strategy                                                                                                                   |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Single claim     | Deep: verify the exact assertion, check related context                                                                    |
-| Claim set (3-10) | Focused: verify each claim independently, cross-reference findings                                                         |
-| Document or plan | Surgical: extract imperative claims (function X does Y, module Z exports W) as a list, batch-verify each, flag refutations |
+For a single claim, verify the exact assertion and the context around it. For a document or plan,
+extract its imperative claims (function X does Y, module Z exports W) into a list and batch-verify
+each.
 
-**Scope detection.** "Check if X is true" → single claim. "Verify these assumptions" → claim set.
-"Fact-check this design doc" → document.
-
-Lead with the verdict for each claim. Provide file:line evidence. Flag refutations prominently so
-they get addressed before implementation proceeds.
+Lead with the verdict for each claim.

@@ -12,9 +12,6 @@ Every fetched review comment ends in a tracked state: applied with a pushed code
 dismissed with a stated reason. A thread is resolved only after its action lands, using the node ID
 recovered once from the `reviewThreads` query and carried per comment.
 
-The fetch, triage, confirm, apply, respond order is fixed and the tracking table is mandatory;
-validity judgment and fix depth adapt to each comment.
-
 ## Arguments
 
 - PR number or URL (optional): the PR to act on. Without it, resolve the current branch's PR.
@@ -33,8 +30,7 @@ validity judgment and fix depth adapt to each comment.
 5. **Edit nits directly.** A rename, typo, comment, null guard, import, or formatting fix is a
    direct edit. Load `cape:test-driven-development` only for a behavioral change worth a test, and
    `cape:fix-bug` only for a diagnosed defect. Never wrap a one-line nit in TDD ceremony.
-6. **Commit through `cape:commit`.** Never write the commit by hand.
-7. **Resolve only what landed.** A thread resolves after its fix is pushed or its dismissal reply is
+6. **Resolve only what landed.** A thread resolves after its fix is pushed or its dismissal reply is
    posted, never silently or on an unpushed change. Skip threads already `isResolved`. A review
    summary body has no thread node ID; reply with a top-level PR comment at most, never resolve it.
 
@@ -96,9 +92,8 @@ top-level reply, or no action.
 Flag scope creep: a comment asking for a refactor or feature beyond the PR's intent is out of scope,
 not extra work. A polite or confident comment is not evidence.
 
-Run the rationales through the `cape:unslop` skill, then present the table. Key each row by source:
-the thread node ID, or `summary:<author>@<submittedAt>` so two non-empty bodies from one reviewer
-stay distinct.
+Present the table, one row per thread. Key each row by source: the thread node ID, or
+`summary:<author>@<submittedAt>` so two summaries from one reviewer stay distinct.
 
 ```text
 PR #<number> review feedback triage
@@ -127,9 +122,7 @@ transcript so the calls are on record, then continue as if the triage were appro
 
 Run `cape workspace phase build`.
 
-For each row marked Fix, apply the change at the right weight per rule 5: edit nits directly, load
-`cape:test-driven-development` with the comment's concern as the test target for behavioral changes,
-load `cape:fix-bug` for diagnosed defects.
+For each row marked Fix, apply the change at the right weight per rule 5.
 
 Fix only what the accepted comment asks. Leave adjacent code and the out-of-scope items alone. The
 reasoning behind a fix goes in the commit message, not in a code comment. Update each row to Applied
@@ -138,13 +131,10 @@ reasoning behind a fix goes in the commit message, not in a code comment. Update
 ### 5. Commit, respond, and resolve
 
 Load `cape:commit` to commit the fixes referencing the review; let it split unrelated concerns into
-atomic commits. If the user asked to push, push after the commit lands. A thread is not eligible to
-resolve until its fix is on the remote.
+atomic commits. If the user asked to push, push after the commit lands.
 
 Reply, then resolve, over exactly the threads whose fix is pushed or whose dismissal reply is
-posted. Run replies through the `cape:unslop` skill in its plain register, one point per reply. A
-fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason. Each `threadId` is the `id`
-carried from step 1, no re-lookup:
+posted. One point per reply. A fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason.
 
 ```bash
 # Reply in a thread (dismissed or out-of-scope, with the reason, or "Fixed in <sha>")
@@ -168,8 +158,9 @@ A summary point that warrants a reply gets one top-level PR comment, never a res
 gh pr comment <number> --body '<reply>'
 ```
 
-Confirm each resolve response shows `isResolved: true`. Present the final table so applied vs
-dismissed vs left-open is recorded:
+Confirm each resolve response shows `isResolved: true`. When every thread resolved the same way,
+report one sentence ("Fixed and resolved all 3 threads: <paths>"). Use the tally only when outcomes
+are mixed:
 
 ```text
 Resolved <K>/<N> threads on PR #<number>
@@ -179,35 +170,3 @@ Dismissed + resolved: <count>  (<paths>, reason)
 Left open:            <count>  (<paths>, needs your call)
 Summary points:       <count>  (fixed / replied / no action; no thread to resolve)
 ```
-
-## Skills
-
-Load `cape:test-driven-development` when:
-
-- An accepted comment requires a behavioral change worth a test
-
-Load `cape:fix-bug` when:
-
-- An accepted comment diagnoses a defect that warrants diagnosis to closure
-
-Load `cape:commit` when:
-
-- The accepted fixes are ready to commit referencing the review
-
-Load `cape:unslop` when:
-
-- Writing triage rationales, thread replies, or PR comments
-
-## Examples
-
-**Wrong:** Pull comments from the REST endpoint, hand-paste `PRRT_` IDs into a one-off resolve loop,
-and resolve threads whose fixes are still uncommitted.
-
-**Right:** Fetch threads via the `reviewThreads` query, triage each in the table, fix the valid
-ones, commit and push, then loop `resolveReviewThread` over exactly the threads whose fixes are on
-the remote.
-
-**Wrong:** Spin up `cape:test-driven-development` and write a RED test for a one-line rename.
-
-**Right:** Mark it Valid, Fix (edit); rename directly, commit through `cape:commit`, reply "Fixed in
-`<sha>`", resolve the thread.

@@ -1,22 +1,15 @@
 # Linear issue templates
 
-Copy each body into a new Linear issue template in the UI (Settings → Templates). These mirror the
-shapes cape produces, so a human creating an issue by hand gets the same form. Cape cannot apply
-them itself: the Linear MCP server's `save_issue` takes raw markdown and exposes no template field.
-The [agent contract](agent-contract.md) enforces the shape; these templates are a human-side
-convenience.
-
-The shapes split by audience. The human ticket (the repo's home team) is a scannable description and
-nothing more; the plan issue (the workspace's `AI` team) carries the full agent contract. SKILL.md
-documents the pairing protocol. The authoring sources mirror these shapes: human ticket, plan issue,
-and task are produced by `cape:write-plan`, bug by `cape:fix-bug`. Design rationale and discovery
-stay in session, not on the board.
+These bodies mirror the shapes cape produces: human ticket, plan issue, and task by
+`cape:write-plan`, bug by `cape:fix-bug`. To give hand-authored issues the same form, copy each body
+into a Linear issue template (Settings → Templates); cape cannot apply them itself, since
+`save_issue` takes raw markdown and exposes no template field. Every template sets a `src` label and
+Medium priority as defaults; tasks and bugs add a `type` label as noted.
 
 ## Human ticket
 
 The repo's home team. Description only: no R-tables, no constraints, no acceptance criteria. The
-human tier exists to be scannable. Untyped parent. Set a `src` label and Medium priority as template
-defaults.
+human tier exists to be scannable. Untyped parent.
 
 ```markdown
 [What changes and why, in 2-4 sentences a human can scan in ten seconds.]
@@ -24,26 +17,17 @@ defaults.
 Done when: [one concrete completion statement]
 ```
 
-The agent plan is a sub-issue of this ticket, so Linear renders the link. Never write one into the
-body.
-
 ## Plan issue
 
 `AI` team. Untyped parent of the task sub-issues, and itself a sub-issue of the human ticket it
-satisfies, or parentless when AI-only. Set a `src` label and Medium priority as template defaults.
-
-The plan-issue body separates four questions that must never blend:
-
-| Section                  | Answers                                                      |
-| ------------------------ | ------------------------------------------------------------ |
-| **Required behavior**    | What must become true; testable, observable outcomes (R-IDs) |
-| **Required constraints** | Already-settled boundaries the agent may not cross           |
-| **Proposed approach**    | A recommendation the agent may improve                       |
-| **Acceptance criteria**  | Evidence the work is done                                    |
+satisfies, or parentless when AI-only.
 
 Pick a variant per plan issue. Default to **Light**. Use **Full** when a user journey changes, a new
 state or lifecycle exists, a migration runs, authorization matters, multiple systems or teams are
 involved, or rollout, observability, or rollback matters.
+
+Scale Light to the change. For a few-line change, the plan issue is the description, one R row, and
+one acceptance line.
 
 ### Plan issue, Light (default)
 
@@ -67,18 +51,18 @@ involved, or rollout, observability, or rollback matters.
 
 ## Required constraints
 
-- [Settled decision, boundary, or compatibility rule; or "N/A (single task)"]
+- [Settled decision, boundary, or compatibility rule]
 - NO [pattern] (reason: [why])
 
 ## Proposed approach
 
 [2-3 paragraphs the agent may improve: chosen path referencing codebase patterns, key components,
-and data flow. Mermaid for flows over ~3 steps.]
+and data flow. Mermaid only for branching flows; a straight-line pipeline stays prose.]
 
 ## Acceptance criteria
 
-- [ ] R1 verified with evidence.
-- [ ] R2 verified with evidence.
+- [ ] [R1: the command or observation that proves it]
+- [ ] [R2: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
@@ -100,9 +84,7 @@ Light plus the alignment sections. Same untyped-parent rules.
 
 ## Before / after
 
-| Before             | After               |
-| ------------------ | ------------------- |
-| [Current behavior] | [Expected behavior] |
+Before: [current behavior]. After: [expected behavior].
 
 ## Required behavior
 
@@ -134,9 +116,8 @@ flowchart LR
 
 ## Acceptance criteria
 
-- [ ] R1 verified with evidence.
-- [ ] R2 verified with evidence.
-- [ ] R3 verified with evidence.
+- [ ] [R1: the command or observation that proves it]
+- [ ] [R2: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 
 ## Release and observability
@@ -163,13 +144,12 @@ flowchart LR
 | [Slice 2] | R2       | [Boundary] |
 ````
 
-The work breakdown is a non-binding sketch; do not pre-create these as sub-issues.
-`cape:execute-plan` creates each one lazily, after the previous task reveals what it should be.
+`cape:execute-plan` creates each work-breakdown row lazily, after the previous task reveals what it
+should be.
 
 ## Task
 
-Sub-issue of the plan issue, `AI` team. Set exactly one `type` label, one `src` label, and Medium
-priority as template defaults.
+Sub-issue of the plan issue, `AI` team. Set exactly one `type` label.
 
 ```markdown
 ## Goal
@@ -186,9 +166,9 @@ Delivers: R1, R2
 
 ## Execution mode
 
-[HITL | AFK]
+[HITL (user reviews each step) | AFK (unattended)]
 
-Done when: [load-bearing completion condition]
+Done when: [one concrete completion statement]
 
 ## Success criteria
 
@@ -201,8 +181,7 @@ Done when: [load-bearing completion condition]
 
 ## Bug
 
-Set the `bug` type label, a `src` label, and Medium priority as template defaults. Title as
-`Fix <symptom>`.
+Set the `bug` type label. Title as `Fix <symptom>`.
 
 ```markdown
 ## Root cause

@@ -11,9 +11,6 @@ Interview an epic into a reviewable `/goal` draft and open it for launch. The dr
 decisions table plus a completion condition plus an approach prompt that primes an autonomous
 BUILD-and-SHIP run; set-goal stages that file, and only the human's `:wq` launches it.
 
-The stage-not-start boundary, the draft layout, and the paired `CAPE-RUN` line and condition are
-fixed; interview defaults and approach-prompt wording adapt to the epic.
-
 ## Rules
 
 1. **Stage, never start.** Write the run to a draft file and open it for review. The run launches
@@ -22,11 +19,8 @@ fixed; interview defaults and approach-prompt wording adapt to the epic.
 2. **Condition and prompt are a pair.** Render them as the draft's `## Condition` and `## Prompt`
    sections from one template, so the prompt's final `CAPE-RUN` line and the condition always match.
 3. **Sole writer for a minted epic.** When minting an epic from a description, you are the only
-   Linear and cache writer. Follow the `cape:tracker` contract and refresh the cache after the
-   write.
+   Linear and cache writer. Follow the `cape:tracker` contract.
 4. **No fixed sentinel.** Completion is the data-carrying `CAPE-RUN` line, never a constant string.
-   Do not reintroduce a fixed sentinel or a summarize-never-paste rule as leak protection.
-   Summarizing pane output to save context budget is fine.
 
 ## Process
 
@@ -37,14 +31,12 @@ Resolve the target from the invocation:
 - An epic ID (`/cape:set-goal ABU-123`): use that epic.
 - A free-form description: mint a lean epic first, with a title, goal, success criteria, and one
   first task, via the `cape:tracker` contract, then refresh the cache. One first task is enough
-  because the run creates later tasks one ahead. Run the epic text through `cape:unslop` before
-  writing it. Print a one-line plan summary (epic goal plus first task) before drafting.
+  because the run creates later tasks one ahead. Print a one-line plan summary (epic goal plus first
+  task) before drafting.
 - Nothing: use the active epic from the cache; if several are active, ask which.
 
 Read the tracker cache (`cape tracker show`) for the epic's ready-task titles and count; they ground
-the interview and the computed turn cap. Do not network-read for orientation. A stale or missing
-cache follows the `cape:tracker` cache rule: say so and refresh from an MCP result in session before
-drafting. Do not guess.
+the interview and the computed turn cap. Do not network-read for orientation. Do not guess.
 
 ### 2. Interview the approach
 
@@ -76,10 +68,9 @@ the editor, not with another question.
 Compute the turn cap from the cached task count. Render the draft as one markdown file: a decisions
 table the user scans, then a `## Condition` section and a `## Prompt` section. Substitute the epic
 id, title, derived task source, and interview choices throughout; generate the condition and the
-prompt's final `CAPE-RUN` line from one template so they always match. Run the draft's prose through
-`cape:unslop`. This content goes into the draft file in step 4; do not dump it into the
-conversation. The `## Condition` and `## Prompt` headers are parse markers for the launch helper;
-keep them exact.
+prompt's final `CAPE-RUN` line from one template so they always match. This content goes into the
+draft file in step 4; do not dump it into the conversation. The `## Condition` and `## Prompt`
+headers are parse markers for the launch helper; keep them exact.
 
 ```text
 # Run draft: ABU-123 <title>
@@ -186,12 +177,9 @@ Omit this whole section when the field was empty.>
       CAPE-RUN ABU-123 result=parked pr=none tasks_closed=<n> reason=<one line>
 ```
 
-Render the builder and reviewer from their own answers; they are chosen independently, so the
-reviewer is never derived from the builder. For self-review, drop the reviewer from the per-task
-loop with no review step in its place. For lazy mode, use the one-ahead variants in loop steps 1
-and 5. Omit `## Run instructions` when the free-text field was empty. The table is a read-only
-summary; to flip a decision, edit the `## Prompt` body or re-run set-goal. Editing the table alone
-changes nothing.
+Render each variant from its own answer: self-review drops the review step, lazy mode uses the
+one-ahead lines. The table is a summary only. The helper parses `## Condition` and `## Prompt`, so a
+decision changes by editing the prompt body or re-running set-goal.
 
 ### 4. Open the draft for launch
 
@@ -199,8 +187,7 @@ In a herdr workspace, open the draft in a split editor and let the human launch 
 no Run/Edit/Cancel question; review, edits, and launch all happen in the editor.
 
 **If the pane is a live herdr workspace**, meaning `$HERDR_PANE_ID` is set AND
-`herdr pane get $HERDR_PANE_ID` succeeds (the env var alone is not enough; the pane must be
-reachable):
+`herdr pane get $HERDR_PANE_ID` succeeds:
 
 1. Write the rendered draft (table plus `## Condition` plus `## Prompt`) to
    `${TMPDIR:-/tmp}/cape-set-goal-<epic>.md`.
@@ -247,23 +234,13 @@ reachable):
 
    How the helper stays safe:
 
-   - `:wq` (exit 0) runs the launch; `:cq` (exit 1) hits the `||` and cancels. `/goal` arms only
-     here.
-   - `pane run` submits the condition and its Enter atomically. `tail_until "Goal set:"` confirms
-     the arm before anything else, so the condition and prompt never merge into one over-length
-     input.
+   - `pane run` submits the condition and its Enter atomically; `tail_until "Goal set:"` confirms
+     the arm before anything else is sent, so the condition and prompt never merge into one
+     over-length `/goal` input.
    - Arming starts a turn immediately with the bare condition as directive. `Escape` cancels that
      empty turn (the goal stays armed; Esc interrupts only the in-flight turn), and
-     `tail_until "Interrupted"` confirms the cancel landed before the approach prompt is sent as the
-     genuine first directive. The watcher then evaluates normally after each turn.
-   - Both gates poll only the last few lines of the pane because `herdr wait output` matches recent
-     scrollback, including text that predates the wait, and staging itself plants both markers
-     there: the helper-script preview contains the literal `Goal set:`, and any earlier Esc leaves
-     an `Interrupted` line. A poisoned wait passes instantly, un-paces the send sequence, and merges
-     the condition and prompt into one over-length `/goal` input. With tail polling, a failed submit
-     times out and aborts the launch (`set -e` plus the trap) instead of merging.
-   - The `trap ... EXIT` closes the review pane itself on every exit path (`:wq`, `:cq`, or error),
-     so set-goal never leaves a dangling editor pane in the workspace.
+     `tail_until "Interrupted"` confirms the cancel before the approach prompt goes in as the
+     genuine first directive.
 
 3. Split a review pane off the invoking pane. Target `$HERDR_PANE_ID` explicitly, never the focused
    pane: focus may be in another workspace, which would open the draft in the wrong place. Run the
@@ -277,30 +254,3 @@ reachable):
 **Otherwise** (no reachable herdr pane), write the draft to
 `${TMPDIR:-/tmp}/cape-set-goal-<epic>.md` and print only its path. The user opens it, copies the
 condition and prompt, and launches manually. Then stop.
-
-## Skills
-
-Load `cape:tracker` when:
-
-- You mint an epic from a description and need the create-time contract plus the cache-write
-  commands
-
-Load `cape:write-plan` when:
-
-- A minted epic needs the fuller epic-and-first-task shape rather than a one-line lean epic
-
-## Examples
-
-**Wrong:** On `/cape:set-goal ABU-101`, immediately spawn a task tab or worker pane, or arm `/goal`
-during staging. That recreates the fragile fire-and-forget loop, or kicks off the watcher before any
-run exists so it loops on nothing.
-
-**Right:** Orient from the cache, run the three-question interview, render the draft, and open it in
-a split editor (temp file plus printed path outside herdr). The run launches only when the human
-`:wq`s.
-
-**Wrong:** The user picks "review: self-review only" and the draft still names a separate reviewer
-in the per-task loop.
-
-**Right:** The decisions table reads `Review: self-review`, and the `## Prompt` per-task loop has no
-review step.

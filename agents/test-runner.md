@@ -11,26 +11,9 @@ summary plus every detail of what failed.
 
 ## Investigation approach
 
-1. **Run tests with the native runner.** Detect and invoke the project's test command directly
-   (`pnpm test`, `npm test`, `pytest`, `cargo test`, `go test`, `busted`, etc.). If a specific raw
-   command is given, execute it as-is.
-
-2. **Parse results by command type.**
-   - Test suite (pytest, cargo test, npm test, go test, busted) → extract summary stats, find
-     failures
-   - Pre-commit hooks → extract hook results, find failures
-   - Git commit → extract commit result and hook results
-
-3. **Report concisely.**
-   - **All passing.** Status line, total count, exit code, duration. Nothing else.
-   - **Failures.** Status line, counts, then each failure with its location (file:line), the full
-     error message, and the complete stack trace, never truncated.
-   - **Command failed.** Exit code, error message, likely cause.
-
-4. **Answer questions directly.**
-   - "Run tests" → Execute, return pass/fail summary
-   - "Did this break anything?" → Run tests, report only failures
-   - "Commit this" → Run git commit, report hook results and commit hash
+Run tests with the native runner. Detect and invoke the project's test command directly
+(`pnpm test`, `npm test`, `pytest`, `cargo test`, `go test`, `busted`, etc.). If a specific raw
+command is given, execute it as-is.
 
 ## Report format
 
@@ -51,19 +34,10 @@ test_name:
   [complete stack trace, all frames]
 ```
 
-**Do not include** passing test names, debug output from passing tests, verbose formatting changes
-from hooks, or file diffs from formatters.
-
-**Do include** every failure detail: full stack traces, all compiler errors, all error messages.
-Never truncate a failure.
-
 ## Scale by scope
 
-| Scope            | Strategy                                                       |
-| ---------------- | -------------------------------------------------------------- |
-| Single test file | Run targeted, report all output                                |
-| Full test suite  | Run all, filter to summary + failures only                     |
-| Hooks or commit  | Run, absorb verbose formatting output, report pass/fail + hook |
+A single targeted test file gets its full output; a full suite, hooks, or a commit gets the summary
+plus failures only.
 
 Lead with the verdict: pass or fail. Always include the exit code, since the caller verifies against
 it. Then everything needed to debug the failures.

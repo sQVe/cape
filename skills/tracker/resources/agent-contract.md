@@ -19,12 +19,10 @@ Apply before every issue create or update.
   those agent-side issues project-less rather than inventing a project for them.
 - **Labels.** Discover them, never assume them. Run
   `list_issue_labels(team: <target team>, limit: 250)` once per team per session before the first
-  labeled write, and send the returned name verbatim, its own casing included. Every workspace has
-  its own taxonomy: Aburaya groups `cape`, `bug`, `feature`, and `chore` under `src` and `type`,
-  while other workspaces run flat capitalized labels or none that fit. Match case-insensitively to
-  find the label, then send it spelled as the listing spelled it, so `Bug` goes out as `Bug`. The
-  `limit` matters: the default page is 50 ordered by recency, and a label past that page reads as
-  absent.
+  labeled write, and send the returned name verbatim, its own casing included. Match
+  case-insensitively to find the label, then send it spelled as the listing spelled it, so `Bug`
+  goes out as `Bug`. The `limit` matters: the default page is 50 ordered by recency, and a label
+  past that page reads as absent.
 
   Two slots, at most one label each, filled only when the listing offers a match: a source marker
   (`cape`) on everything cape creates, and one work-type label (`bug`, `feature`, `chore`) on the
@@ -34,11 +32,11 @@ Apply before every issue create or update.
   included. The team boundary is what marks agent work, so the retired `agent-ticket` label is never
   applied even where it still exists.
 
-  Two API details make this load-bearing. Pass names, never the `group:child` form Linear's UI
-  shows: groups are display grouping, `save_issue` resolves the child name alone, so `cape` works
-  and `src:cape` is rejected with "Could not find or access label(s)". And `labels` replaces the
-  whole set rather than adding to it, so one unresolved name rejects the entire call, and an update
-  that touches labels must resend the ones the issue already carries. See
+  Two API details decide whether the call succeeds. Pass names, never the `group:child` form
+  Linear's UI shows: groups are display grouping, `save_issue` resolves the child name alone, so
+  `cape` works and `src:cape` is rejected with "Could not find or access label(s)". And `labels`
+  replaces the whole set rather than adding to it, so one unresolved name rejects the entire call,
+  and an update that touches labels must resend the ones the issue already carries. See
   [workspace-setup.md](workspace-setup.md).
 
 - **Priority.** Create issues at `Medium`; use `Urgent` only for detected production breakage. Never
@@ -46,5 +44,6 @@ Apply before every issue create or update.
   inflate it.
 - **Titles.** Use an imperative verb-object title in sentence case with no prefix, about 70
   characters or less. Bug titles start with `Fix <symptom>`.
-- **Bodies.** Include a load-bearing `Done when:` line. Use a Mermaid block instead of prose for any
-  flow, state, or architecture description longer than about three steps.
+- **Bodies.** Include a `Done when:` line. Delete template sections the change leaves empty; never
+  fill them with N/A rows. Use a Mermaid block only for branching flow, state, or architecture
+  descriptions. A straight-line pipeline stays prose.

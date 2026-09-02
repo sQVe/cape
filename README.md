@@ -54,16 +54,11 @@ so you can review.
 Code review has no cape skill. You run Claude Code's builtin `/code-review`, or `/cape:review` to
 dispatch the `code-reviewer` agent yourself, or a skill dispatches it for you. The agent returns its
 findings as JSON for the caller to relay through one `ReportFindings` call, so every route renders
-the same. The `pr` skill carries the requirement as a test-plan checkbox, runs the review itself
-when no review covers the branch, and `cape pr create` refuses a body with an unticked box. A review
-covers the branch when it read the current HEAD or when every later commit only fixes what its
-findings named.
+the same.
 
 Skill gates are contextual warnings you can ignore. Some Bash commands are denied outright: pushing
 to the default branch, `git commit --amend`, `gh pr merge`, and `gh pr close`. Raw commands with a
-cape equivalent (`git commit`, `gh pr create`) are redirected, not blocked. Broader
-destructive-command policy (force push, `git reset --hard`, `git clean -f`) belongs to the
-cc-safety-net plugin, not cape. See [Installation](#installation).
+cape equivalent (`git commit`, `gh pr create`) are redirected, not blocked.
 
 ## Skills
 
@@ -86,9 +81,8 @@ Cape ships 14 workflow skills plus the `don-cape` router.
 | `unslop`                  | Cut AI tells from prose and set the register          |
 | `bro`                     | Restate the last message in plain language            |
 
-Skills that emit prose (commit messages, PR descriptions, epic text) run their output through the
-`cape:unslop` skill before finalizing. Everything that ships under your name or comes back as a
-report uses that skill's plain register. Docs and the README get its full voice.
+Everything that ships under your name uses the unslop skill's plain register; docs get its full
+voice.
 
 ## Agents
 
@@ -104,9 +98,8 @@ Five agents handle focused sub-tasks. Each dispatch names a model tier.
 
 ## Tracker and Linear
 
-Cape tracks epics and tasks as Linear issues and sub-issues through a Tracker seam (`createEpic`,
-`createTasks`, `listReady`, `updateStatus`, `close`). Writes go to Linear in-session through the MCP
-Linear plugin.
+Cape tracks epics and tasks as Linear issues and sub-issues. Writes go to Linear in-session through
+the MCP Linear plugin.
 
 Reads never touch the network. The `cape tracker` CLI writes Linear results into a local cache (one
 cache file per repository, located with `cape tracker path`), and the session-start hook reads that

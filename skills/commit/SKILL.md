@@ -10,9 +10,6 @@ description: >
 Stage selectively and commit one logical change at a time in conventional commit format. Read the
 diff, group changes by concern, propose staging and a message, and commit only after approval.
 
-Message style and body depth adapt to project conventions. The staging plan, the conventional
-format, and the approval gate do not.
-
 ## Arguments
 
 - `--no-confirm` (optional): skip the confirmation in step 4. For other cape skills that call
@@ -26,8 +23,9 @@ format, and the approval gate do not.
    `--no-confirm` waives this.
 2. **Never skip hooks.** No `--no-verify` unless the user explicitly asks.
 3. **One logical change per commit.** Split mixed concerns into separate commits.
-4. **Stage files by name.** Never `git add .` or `git add -A`.
-5. **Never amend.** Create new commits unless the user asks to amend.
+4. **Stage only through `cape commit <files>`.** Never run `git add`. `cape commit` commits the
+   whole index, not just the named files, so anything staged earlier leaks into the commit; unstage
+   it first.
 
 ## Process
 
@@ -39,7 +37,7 @@ git diff HEAD
 ```
 
 From `recentLog`, note the project's conventions: which types appear, whether scopes are used,
-subject style, whether bodies are common. If there are no changes, tell the user and stop.
+subject style. If there are no changes, tell the user and stop.
 
 ### 2. Group the diff
 
@@ -62,35 +60,19 @@ LRU eviction caused stale entries to persist when access patterns
 were uniform. TTL guarantees freshness regardless of access frequency.
 ```
 
-Pick the type:
-
-| Type       | When to use                                |
-| ---------- | ------------------------------------------ |
-| `feat`     | New functionality                          |
-| `fix`      | Bug fix                                    |
-| `chore`    | Maintenance, config, dependencies, tooling |
-| `refactor` | Restructuring without behavior change      |
-| `docs`     | Documentation only                         |
-| `test`     | Test-only changes                          |
-| `style`    | Formatting, whitespace (no logic change)   |
-| `perf`     | Performance improvement                    |
-
 Subject: imperative mood, lowercase, no period, under 72 characters. Describe the change, not the
 file. Scope: follow the pattern in recent commits; omit if the project doesn't use scopes.
 
-Add a body only when the subject alone doesn't carry the reasoning: a non-obvious design decision,
-or implications beyond the diff. The body explains why, never what; the diff shows the what. Run the
-body through `cape:unslop` before presenting.
+The body is required and explains why, never what; the diff shows the what. Keep it to one short
+paragraph of at most three sentences, holding the decision a future reader needs. Diagnosis
+narratives and per-file essays go in the PR or ticket. Related fixes committed together get one
+short line each, never a semicolon chain.
 
-Staging: exclude files outside this group. Warn about untracked files that look like they belong,
-and about anything sensitive (`.env`, credentials, secrets).
+Staging: exclude files outside this group. Warn about untracked files that look like they belong.
 
 ### 4. STOP: confirm
 
-**Do not call `git commit` until the user approves.**
-
-Wait. If the user edits the message or staging, apply their changes exactly. If they reject, ask
-what they'd prefer. Skip this step only when `--no-confirm` was passed.
+Wait. Apply the user's edits exactly. Skip only with `--no-confirm`.
 
 ### 5. Execute
 
@@ -98,24 +80,13 @@ what they'd prefer. Skip this step only when `--no-confirm` was passed.
 cape commit src/cache.ts src/config.ts -m "$(cat <<'EOF'
 refactor(cache): replace LRU with TTL-based eviction
 
-Body if warranted.
+Why this change, in one to three sentences.
 EOF
 )"
 ```
 
-The CLI validates the message format, rejects staged sensitive files (`.env`, `*.pem`, `*.key`,
-credentials, secrets) unless `--allow-sensitive` is passed, and stages and commits in one operation.
-
 If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can
 (formatting, lint), and retry. After 3 failures, report the issues and ask the user to fix manually.
 
-After success, show the commit hash, `git status --short`, and any remaining uncommitted changes. If
+After success, report the hash and subject in one line, plus any remaining uncommitted changes. If
 another group remains, loop back to step 3.
-
-## Examples
-
-**Wrong:** `git add -A` then `chore: various updates` covering a new auth middleware and a readme
-typo fix. Two concerns in one blob, and the message says nothing.
-
-**Right:** two commits. First `feat(auth): add authentication middleware` staging `src/auth.ts` and
-`tests/auth.test.ts`, then `docs: fix typo in readme` staging `README.md`.

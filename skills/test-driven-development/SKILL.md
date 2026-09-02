@@ -10,9 +10,6 @@ description: >
 Let the next test define the next code change. Write a test that exposes the missing behavior, watch
 it fail, make it pass with the simplest change, then clean up only when it helps.
 
-Red-before-green and behavior-focused tests are fixed; test shape, scope, and whether cleanup is
-worth doing adapt to context.
-
 ## Rules
 
 1. **Red before green.** Write or update the test first and watch it fail for the behavior you
@@ -68,13 +65,3 @@ Dispatch `cape:test-runner` (model: haiku) when:
 
 - A focused run, suite confirmation, or failure capture would pollute your context. Pass the test
   command and working directory; expect pass/fail status with counts and complete failure output.
-
-## Examples
-
-**Wrong:** Add duplicate-email handling in the service, then write tests for duplicates, invalid
-formats, and imagined edge cases, and run the suite once at the end. The code changed before any
-test proved the gap, and the tests batched several behaviors.
-
-**Right:** Write one test showing duplicate emails are currently accepted. Watch it fail. Add the
-smallest guard that rejects duplicates. Re-run the focused test, then the suite. Move to the next
-behavior.

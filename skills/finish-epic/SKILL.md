@@ -11,17 +11,13 @@ description: >
 Verify a completed epic and hand it off to the PR: audit every acceptance criterion, run the
 project's checks, and report what shipped. Hand off only when every criterion has evidence.
 
-The evidence gate and automated checks are fixed; verification details adapt to the repository.
-
 ## Rules
 
 1. **Never close the human ticket or plan issue.** Linear's GitHub integration moves them to `Done`
    when the PR merges, via the closing line `cape:pr` builds from the tracker cache
    (`Fixes <human-id>, <plan-id>`).
 2. **Every acceptance criterion needs evidence.** Cite tests, files, or demonstrated behavior.
-3. **All tasks complete, all checks pass.** Do not skip open tasks or failing checks to hand off.
-4. **Stop on failure.** Report missing evidence or the failing command instead of handing off.
-5. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
+3. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
    outcome summary; that `save_issue` is description-only.
 
 ## Process
@@ -34,8 +30,7 @@ done-like status.
 - Epic already `Done` (the PR merged before this ran): report that the work is closed and stop. Do
   not re-close or rewrite status.
 - Any task still open: **STOP.** Report the open task IDs.
-- Cache missing or stale for this session: follow the `cape:tracker` cache rule and refresh from an
-  MCP result already in session.
+- Cache missing or stale: apply the `cape:tracker` cache rule.
 
 ### 2. Audit acceptance criteria
 
@@ -68,9 +63,8 @@ exercised is `[~]` DEFERRED, never `[x]`. Verify it on a branch preview deploy i
 otherwise it stays deferred.
 
 `[~]` does not block hand-off, but every deferred criterion goes verbatim into the PR's Deferred
-verification section (the `cape:pr` section for env-dependent checks) as "not yet done, verify
-post-merge". Never under Manual verification, which is for subjective judgment only, and never
-presented as verified.
+verification section (`cape:pr` step 3) as "not yet done, verify post-merge". Never under Manual
+verification, which is for subjective judgment only, and never presented as verified.
 
 Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to create through
 `cape:execute-plan`.
@@ -80,10 +74,9 @@ Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to 
 Run the checks the epic or project requires. Dispatch `cape:test-runner` (model: haiku) when
 commands are long-running or noisy. If checks fail: **STOP.** Report the failing command.
 
-For non-trivial epics, dispatch `cape:code-reviewer` with the epic contract and branch diff; the
-reviewer judges the delivered code against the R-IDs and required constraints. It returns one JSON
-object: relay its `findings` through a single `ReportFindings` call, which is what renders them, and
-address each before handing off.
+When the epic changes shared behavior, public APIs, or cross-module contracts, dispatch
+`cape:code-reviewer` with the epic contract and branch diff; the reviewer judges the delivered code
+against the R-IDs and required constraints. Address each finding before handing off.
 
 ### 4. Hand off
 
@@ -96,9 +89,6 @@ Outcome: <2-3 sentence summary>
 Verification: <commands passed>
 Tasks completed: <N>
 ```
-
-Run the summary through `cape:unslop` before posting. Do not write validation transcripts or
-implementation notes to Linear.
 
 ### 5. Report
 
@@ -114,26 +104,3 @@ Ready for PR; Linear will close the epic on merge.
 ```
 
 Do not load `cape:pr` until the user asks to create the PR.
-
-## Agents
-
-Dispatch `cape:test-runner` when:
-
-- Final verification commands are long-running or noisy
-
-Dispatch `cape:code-reviewer` when:
-
-- The epic changes shared behavior, public APIs, or cross-module contracts
-
-It returns one JSON object. Relay its `findings` through a single `ReportFindings` call; the agent
-has no such tool of its own.
-
-## Skills
-
-Load `cape:tracker` when:
-
-- The tracker cache is missing or stale during verification
-
-Load `cape:commit` when:
-
-- Verified implementation changes remain uncommitted before hand off
