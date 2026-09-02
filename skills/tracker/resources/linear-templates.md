@@ -62,6 +62,7 @@ and data flow. Mermaid only for branching flows; a straight-line pipeline stays 
 ## Acceptance criteria
 
 - [ ] [R1: the command or observation that proves it]
+- [ ] [R2: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 ```
 
@@ -116,6 +117,7 @@ flowchart LR
 ## Acceptance criteria
 
 - [ ] [R1: the command or observation that proves it]
+- [ ] [R2: the command or observation that proves it]
 - [ ] Existing behavior outside scope is unchanged.
 
 ## Release and observability
