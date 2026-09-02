@@ -33,6 +33,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Skills: `cape:set-goal` defaults to a `codex` builder and a `claude` reviewer, and the draft's
   decisions table names whichever reviewer was chosen instead of always `codex`.
+- Skills, agents, and docs lost about 800 lines of prose that said nothing the model would not do
+  anyway, that a check already enforces, or that another file already states. Each rule now has one
+  home: the tracker skill for cache and Linear rules, don-cape for the code-review relay, the CLI
+  and deny table for staging, amending, and the PR gate, and the injected unslop skill for register,
+  so the per-skill "run through unslop" pointers are gone. Unslop itself gained conversation rules
+  for replies (arrow chains, verdict drama, endings, repetition across messages), a structure rule
+  (headings, tables, and lists only when they carry more than sentences would), and a plain-register
+  scope that covers every message to the user. The commit skill now says a body is required, which
+  is what `cape commit` enforces.
 - Skills: Linear now shows the state of the work. Plan issues, tasks, and AI bug issues are created
   as `Todo`; execute-plan and fix-bug write `In Progress` and `Done` to Linear before copying them
   into the cache, and the first task moves the plan issue and human ticket to `In Progress`. Tasks
