@@ -93,7 +93,8 @@ Flag scope creep: a comment asking for a refactor or feature beyond the PR's int
 not extra work. A polite or confident comment is not evidence.
 
 Present the table. The source column names the reviewer (`Copilot #1`, `alice summary`). Thread node
-IDs stay internal and never print. Comments asking for the same change share one row.
+IDs stay internal and never print. Comments asking for the same change share one row that lists
+every source.
 
 ```text
 PR #<number> review feedback triage

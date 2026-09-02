@@ -24,8 +24,8 @@ the skill runs the review itself when no review covers the branch.
    user running the builtin `/code-review` satisfies it too. Tick only once the findings are
    addressed or dismissed, and never stop to ask for a review you can run yourself.
 3. **Never invent description sections.** Use the repo template or the bundled template exactly. No
-   ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
-   section from step 3.
+   ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the template's Deferred
+   verification section.
 4. **Stop on failure.** Report what failed instead of pushing through.
 
 ## Process
@@ -104,8 +104,9 @@ Write the body for a reviewer who knows the domain but not this branch:
   here: the body describes the change, not the investigation.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
-- End with the closing line per the template's Issues rule, from `cape tracker show`, whatever the
-  template source. Build it now, before approval; never invent a placeholder.
+- End with the closing line, built from `cape tracker show` as the comment above the template's
+  `Fixes` line says, whatever the template source. Build it now, before approval; never invent a
+  placeholder.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.

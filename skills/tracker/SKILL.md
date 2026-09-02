@@ -45,8 +45,8 @@ a task may carry its own for a per-ticket pair (for example a bug pair created u
 cache stores what banners and ready-work routing need: IDs, titles, statuses, state types, pairing,
 and plan-to-task membership, never expanded plans or implementation transcripts. Ready-task behavior
 is canonical in `cli/src/services/hooks/state.ts:isReadyTask`; follow that definition instead of
-restating statuses. Treat a missing or corrupt cache as empty and refresh it from an MCP result
-already obtained in the session.
+restating statuses. Treat a missing, stale, or corrupt cache as empty and refresh it from an MCP
+result already obtained in the session.
 
 ## Write to Linear, then refresh the cache
 

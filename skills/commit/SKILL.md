@@ -23,6 +23,8 @@ diff, group changes by concern, propose staging and a message, and commit only a
    `--no-confirm` waives this.
 2. **Never skip hooks.** No `--no-verify` unless the user explicitly asks.
 3. **One logical change per commit.** Split mixed concerns into separate commits.
+4. **Stage only through `cape commit <files>`.** Never run `git add`; it commits the whole index, so
+   a stray `git add -A` leaks into the commit.
 
 ## Process
 
@@ -34,7 +36,7 @@ git diff HEAD
 ```
 
 From `recentLog`, note the project's conventions: which types appear, whether scopes are used,
-subject style, whether bodies are common. If there are no changes, tell the user and stop.
+subject style. If there are no changes, tell the user and stop.
 
 ### 2. Group the diff
 
@@ -77,7 +79,7 @@ Wait. Apply the user's edits exactly. Skip only with `--no-confirm`.
 cape commit src/cache.ts src/config.ts -m "$(cat <<'EOF'
 refactor(cache): replace LRU with TTL-based eviction
 
-Body if warranted.
+Why this change, in one to three sentences.
 EOF
 )"
 ```
