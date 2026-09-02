@@ -42,7 +42,6 @@ cape validate skills    # skills only
   rule, a hook, or a `cape validate` check can hold belongs in the check, not in prose.
 - When a skill points at a doc and the model skips or misreads it, sharpen the pointer's trigger
   wording first. Inline the doc only when a sharper pointer still misses.
-- Agents use "Investigation approach" as the section header.
 - Every prose file in the repo goes through the `cape:unslop` skill: skills, agents, README, this
   file. The CHANGELOG is the exception, since released entries are a record.
 - Tests co-located with source in `cli/src/`. E2E tests in `cli/src/__e2e__/`.

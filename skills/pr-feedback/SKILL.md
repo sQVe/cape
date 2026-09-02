@@ -33,8 +33,7 @@ validity judgment and fix depth adapt to each comment.
 5. **Edit nits directly.** A rename, typo, comment, null guard, import, or formatting fix is a
    direct edit. Load `cape:test-driven-development` only for a behavioral change worth a test, and
    `cape:fix-bug` only for a diagnosed defect. Never wrap a one-line nit in TDD ceremony.
-6. **Commit through `cape:commit`.** Never write the commit by hand.
-7. **Resolve only what landed.** A thread resolves after its fix is pushed or its dismissal reply is
+6. **Resolve only what landed.** A thread resolves after its fix is pushed or its dismissal reply is
    posted, never silently or on an unpushed change. Skip threads already `isResolved`. A review
    summary body has no thread node ID; reply with a top-level PR comment at most, never resolve it.
 
@@ -96,9 +95,8 @@ top-level reply, or no action.
 Flag scope creep: a comment asking for a refactor or feature beyond the PR's intent is out of scope,
 not extra work. A polite or confident comment is not evidence.
 
-Run the rationales through the `cape:unslop` skill, then present the table. The source column names
-the reviewer (`Copilot #1`, `alice summary`). Thread node IDs stay internal and never print.
-Comments asking for the same change share one row.
+Present the table. The source column names the reviewer (`Copilot #1`, `alice summary`). Thread node
+IDs stay internal and never print. Comments asking for the same change share one row.
 
 ```text
 PR #<number> review feedback triage
@@ -142,9 +140,8 @@ atomic commits. If the user asked to push, push after the commit lands. A thread
 resolve until its fix is on the remote.
 
 Reply, then resolve, over exactly the threads whose fix is pushed or whose dismissal reply is
-posted. Run replies through the `cape:unslop` skill in its plain register, one point per reply. A
-fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason. Each `threadId` is the `id`
-carried from step 1, no re-lookup:
+posted. One point per reply. A fixed thread gets "Fixed in `<sha>`"; a dismissal states the reason.
+Each `threadId` is the `id` carried from step 1, no re-lookup:
 
 ```bash
 # Reply in a thread (dismissed or out-of-scope, with the reason, or "Fixed in <sha>")

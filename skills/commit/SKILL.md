@@ -26,8 +26,6 @@ format, and the approval gate do not.
    `--no-confirm` waives this.
 2. **Never skip hooks.** No `--no-verify` unless the user explicitly asks.
 3. **One logical change per commit.** Split mixed concerns into separate commits.
-4. **Stage files by name.** Never `git add .` or `git add -A`.
-5. **Never amend.** Create new commits unless the user asks to amend.
 
 ## Process
 
@@ -89,9 +87,6 @@ Body if warranted.
 EOF
 )"
 ```
-
-The CLI validates the message format, rejects staged sensitive files (`.env`, `*.pem`, `*.key`,
-credentials, secrets) unless `--allow-sensitive` is passed, and stages and commits in one operation.
 
 If the commit fails on a pre-commit hook or lint error: analyze the output, auto-fix what you can
 (formatting, lint), and retry. After 3 failures, report the issues and ask the user to fix manually.

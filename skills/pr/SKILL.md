@@ -18,8 +18,7 @@ the change.
 
 1. **Never call `cape pr create` without approval.** Present the full description, then use
    `AskUserQuestion` for explicit confirmation. The only exception is the AFK branch in step 4.
-2. **Never skip the test plan gate.** Every checkbox must be `[x]` before `cape pr create` runs.
-3. **Never tick the review box without a review that covers the branch.** A review covers the branch
+2. **Never tick the review box without a review that covers the branch.** A review covers the branch
    when it read the current HEAD, or when every commit after the sha it read only fixes what its
    findings named, through wording or mechanical edits. Addressing findings is how a review round
    ends, not a reason to start another. A fix that goes beyond the finding (new behavior, a new code
@@ -28,11 +27,10 @@ the change.
    relay its findings through one `ReportFindings` call. The user running the builtin `/code-review`
    satisfies it too. Tick only once the findings are addressed or dismissed, and never stop to ask
    for a review you can run yourself.
-4. **Never invent description sections.** Use the repo template or the bundled template exactly. No
+3. **Never invent description sections.** Use the repo template or the bundled template exactly. No
    ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the Deferred verification
    section from step 3.
-5. **Use `cape pr create`**, not the GitHub API directly.
-6. **Stop on failure.** Report what failed instead of pushing through.
+4. **Stop on failure.** Report what failed instead of pushing through.
 
 ## Process
 
@@ -100,14 +98,14 @@ reviewer is their own name, with no parenthetical.
 - [x] Code review by Claude Opus 5 (cape:code-reviewer) on 59a9a3a, findings addressed or dismissed
 ```
 
-Write the model you actually ran, never a version you are guessing at. Naming who reviewed is what
-separates a review from a checklist item that mentions one, and `cape pr create` rejects the latter
-along with an unfilled `<model>` placeholder. Repo templates rarely carry the box; add it.
+Write the model you actually ran, never a version you are guessing at. Repo templates rarely carry
+the box; add it.
 
 Write the body for a reviewer who knows the domain but not this branch:
 
 - Organize by what changed (area, module, feature), never by how the work was sharded. No per-task
-  or per-issue-id bullet structure, no per-task test counts.
+  or per-issue-id bullet structure, no per-task test counts. Cut anything narrating how you got
+  here: the body describes the change, not the investigation.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
 - End the description with the cache-built closing line, whatever the template source:
@@ -128,9 +126,6 @@ checkboxes and never marked done.
 
 Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
 items for any gaps.
-
-Then apply the `cape:unslop` plain register to the title and description as its own pass. Cut
-anything narrating how you got here: the body describes the change, not the investigation.
 
 ### 4. STOP: present and get approval (output gate)
 
@@ -160,14 +155,12 @@ a human present, since step 5 dispatches it. Step 5's failure path asks a questi
 no one to ask, so take this instead: on a review that needs changes, fix what the findings named and
 run one re-review over the fix delta, since an unattended fix is never self-certified; if that
 re-review still needs changes, stop with the box unticked and report why. `cape pr create` refuses
-the body either way. No human edits an AFK body before it ships, so the step 3 quality bar and
-unslop apply in full, plus two AFK-only rules: never write a robot signature or emoji into the title
-or body, and describe the change, not the orchestration that produced it.
+the body either way. No robot signature in the title or body.
 
 ### 5. Run the gate and create
 
 On Create PR or Create draft: run every test plan checkbox you can run, in order. Mark each `[x]` on
-pass, keep `[ ]` on fail. For the review box: when no review covers the branch (rule 3), run
+pass, keep `[ ]` on fail. For the review box: when no review covers the branch (rule 2), run
 `cape workspace phase review`, dispatch `cape:code-reviewer` over the branch diff now, relay its
 findings through one `ReportFindings` call, and address or dismiss each one. Then rewrite the box to
 name the model, the reviewer, and the commit it read, and tick it:
@@ -177,12 +170,11 @@ name the model, the reviewer, and the commit it read, and tick it:
 ```
 
 The sha names the commit the reviewer actually read, never a later HEAD. Commits after it that only
-fix what that review found are the gap rule 3 sanctions; anything else past the sha stands on the
+fix what that review found are the gap rule 2 sanctions; anything else past the sha stands on the
 record as unreviewed work. On any failure, stop, report details, and ask **Fix and retry** or
 **Cancel**.
 
-After all pass, validate the rewritten description with `cape pr validate --stdin`. It rejects
-missing sections and unchecked boxes; loop back if any `- [ ]` remains. Then create:
+After all pass, create:
 
 ```bash
 cape pr create --title "the title" --body "$(cat <<'EOF'

@@ -56,8 +56,7 @@ already obtained in the session.
 
 ## Write to Linear, then refresh the cache
 
-Before any create or update, apply [resources/agent-contract.md](resources/agent-contract.md). Run
-user-facing issue descriptions through the `cape:unslop` skill before creating them.
+Before any create or update, apply [resources/agent-contract.md](resources/agent-contract.md).
 
 Create paired work with MCP Linear `save_issue`, using the shapes in
 [resources/linear-templates.md](resources/linear-templates.md):

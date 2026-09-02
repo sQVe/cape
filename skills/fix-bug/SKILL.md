@@ -114,7 +114,7 @@ rule 4. Implement the minimum fix, make the test pass, then run the relevant bro
 
 Re-run the step 1 reproduction command, or its closest check, and confirm the symptom is gone. Run
 the relevant tests and project checks. Grep the diff for `DEBUG-` and confirm no tagged log remains.
-Present the fix summary, run through `cape:unslop`:
+Present the fix summary:
 
 ```text
 Fix summary: <bug-id>

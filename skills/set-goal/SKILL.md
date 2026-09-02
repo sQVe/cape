@@ -32,8 +32,8 @@ Resolve the target from the invocation:
 - An epic ID (`/cape:set-goal ABU-123`): use that epic.
 - A free-form description: mint a lean epic first, with a title, goal, success criteria, and one
   first task, via the `cape:tracker` contract, then refresh the cache. One first task is enough
-  because the run creates later tasks one ahead. Run the epic text through `cape:unslop` before
-  writing it. Print a one-line plan summary (epic goal plus first task) before drafting.
+  because the run creates later tasks one ahead. Print a one-line plan summary (epic goal plus first
+  task) before drafting.
 - Nothing: use the active epic from the cache; if several are active, ask which.
 
 Read the tracker cache (`cape tracker show`) for the epic's ready-task titles and count; they ground
@@ -71,10 +71,9 @@ the editor, not with another question.
 Compute the turn cap from the cached task count. Render the draft as one markdown file: a decisions
 table the user scans, then a `## Condition` section and a `## Prompt` section. Substitute the epic
 id, title, derived task source, and interview choices throughout; generate the condition and the
-prompt's final `CAPE-RUN` line from one template so they always match. Run the draft's prose through
-`cape:unslop`. This content goes into the draft file in step 4; do not dump it into the
-conversation. The `## Condition` and `## Prompt` headers are parse markers for the launch helper;
-keep them exact.
+prompt's final `CAPE-RUN` line from one template so they always match. This content goes into the
+draft file in step 4; do not dump it into the conversation. The `## Condition` and `## Prompt`
+headers are parse markers for the launch helper; keep them exact.
 
 ```text
 # Run draft: ABU-123 <title>
