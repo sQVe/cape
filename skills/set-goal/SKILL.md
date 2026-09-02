@@ -299,8 +299,8 @@ run exists so it loops on nothing.
 a split editor (temp file plus printed path outside herdr). The run launches only when the human
 `:wq`s.
 
-**Wrong:** The user picks "review: self-review only" and the draft still names a codex reviewer in
-the per-task loop.
+**Wrong:** The user picks "review: self-review only" and the draft still names a separate reviewer
+in the per-task loop.
 
 **Right:** The decisions table reads `Review: self-review`, and the `## Prompt` per-task loop has no
 review step.
