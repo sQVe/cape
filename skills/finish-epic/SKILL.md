@@ -66,6 +66,9 @@ otherwise it stays deferred.
 verification section (`cape:pr` step 3) as "not yet done, verify post-merge". Never under Manual
 verification, which is for subjective judgment only, and never presented as verified.
 
+After presenting the audit, write it into the epic description by following `cape:tracker`'s "Update
+epic acceptance criteria" section. Keep deferred results visibly deferred.
+
 Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to create through
 `cape:execute-plan`.
 

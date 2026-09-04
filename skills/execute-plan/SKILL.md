@@ -111,6 +111,9 @@ save_issue(id: <task-id>, state: "Done")
 cape tracker cache-status <task-id> Done completed
 ```
 
+Update every epic acceptance criterion the task satisfied, with its evidence inline, by following
+`cape:tracker`'s "Update epic acceptance criteria" section.
+
 Reflect in session: what was built, what changed from the original assumption, whether the epic
 approach still holds, and the next smallest vertical slice. The next task comes from what execution
 revealed, not from what planning assumed.

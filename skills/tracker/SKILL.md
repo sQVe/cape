@@ -124,8 +124,7 @@ save_issue(
 ```
 
 Each `old_string` must match the current description exactly once. Patch operations run atomically,
-so one failed match aborts the whole save. After the description write, refresh the cache under the
-existing rules above.
+so one failed match aborts the whole save.
 
 ## Update status during build
 
