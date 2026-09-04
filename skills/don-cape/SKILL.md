@@ -64,10 +64,9 @@ Otherwise, first matching row wins:
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`            | Standalone                 |
 | "Explain that", "what does that mean", "in plain english", "eli5" | `cape:bro`               | Restates the last message  |
 
-`cape:test-driven-development` is internal. `cape:execute-plan` and `cape:fix-bug` load
-`cape:test-driven-development` before any production code. `cape:tracker` is internal.
-`cape:write-plan`, `cape:execute-plan`, `cape:fix-bug`, `cape:finish-epic`, and `cape:set-goal` load
-`cape:tracker`.
+Two skills are internal. `cape:execute-plan` and `cape:fix-bug` load `cape:test-driven-development`
+before any production code. `cape:write-plan`, `cape:execute-plan`, `cape:fix-bug`,
+`cape:finish-epic`, and `cape:set-goal` load `cape:tracker`.
 
 Code review has no cape skill. The user runs the builtin `/code-review`, or a skill dispatches
 `cape:code-reviewer`. That agent returns its findings as JSON, and whoever dispatched it relays them
