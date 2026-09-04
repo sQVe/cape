@@ -20,5 +20,6 @@ describe('PostToolUse hooks', () => {
     expect(matcher.test('mcp__linear-platform__save_issue')).toBe(true);
     expect(matcher.test('mcp__plugin_linear_linear__get_issue')).toBe(false);
     expect(matcher.test('mcp__github__create_issue')).toBe(false);
+    expect(matcher.test('mcp__jira__save_issue')).toBe(false);
   });
 });
