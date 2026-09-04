@@ -102,6 +102,31 @@ do. Add `"humanTicketId": "<human-ticket-id>"` to the paired child inside `child
 child keeps the plan issue as its parent and so has no parent of its own to derive from. The cache
 preserves the stamp across later refreshes that omit it.
 
+## Update epic acceptance criteria
+
+Use description writes only. Do not change issue status while recording criteria. Mark each
+criterion `[x]` when met, `[~]` when deferred, or `[ ]` when not met. Tick `[x]` only with evidence
+produced by the run. If the only verification is behavioral and the run could not exercise it, leave
+the criterion `[~]`. Never delete or silently untick a criterion; write a stale one as
+`- [ ] ~~<criterion text>~~ — <reason>`.
+
+Update one criterion line with `save_issue`'s `patch` instead of rewriting the description:
+
+```text
+save_issue(
+  id: <epic-id>,
+  patch: [{
+    "op": "replace",
+    "old_string": "- [ ] <criterion text>",
+    "new_string": "- [x] <criterion text> — <evidence>"
+  }]
+)
+```
+
+Each `old_string` must match the current description exactly once. Patch operations run atomically,
+so one failed match aborts the whole save. After the description write, refresh the cache under the
+existing rules above.
+
 ## Update status during build
 
 Write the state to Linear first, then copy it into the cache. Starting a task:
