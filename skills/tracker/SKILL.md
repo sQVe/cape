@@ -28,7 +28,8 @@ with `cape tracker`.
    `state: "Todo"`. When a task starts or finishes, write the state to Linear with `save_issue`,
    then copy it with `cape tracker cache-status`. The human ticket and plan issue close at merge,
    via the PR closing line.
-5. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
+5. **Refresh the cache after every create or status write.** Pipe the MCP result or status details
+   to `cape tracker`. Description-only writes need none; the cache holds no description.
 6. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
    entries.
 7. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or

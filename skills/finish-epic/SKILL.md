@@ -67,7 +67,7 @@ verification section (`cape:pr` step 3) as "not yet done, verify post-merge". Ne
 verification, which is for subjective judgment only, and never presented as verified.
 
 After presenting the audit, write it into the epic description by following `cape:tracker`'s "Update
-epic acceptance criteria" section. Keep deferred results visibly deferred.
+epic acceptance criteria" section.
 
 Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to create through
 `cape:execute-plan`.
