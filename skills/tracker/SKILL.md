@@ -28,8 +28,7 @@ with `cape tracker`.
    `state: "Todo"`. When a task starts or finishes, write the state to Linear with `save_issue`,
    then copy it with `cape tracker cache-status`. The human ticket and plan issue close at merge,
    via the PR closing line.
-5. **Refresh the cache after every create or status write.** Pipe the MCP result or status details
-   to `cape tracker`. Description-only writes need none; the cache holds no description.
+5. **Refresh the cache after every write.** Pipe the MCP result or status details to `cape tracker`.
 6. **No network in the CLI.** `cape tracker` only transforms MCP results you provide into cache
    entries.
 7. **Keep fine-grained plans in session.** Never write expanded plans, divergence logs, or
@@ -107,25 +106,29 @@ preserves the stamp across later refreshes that omit it.
 
 Use description writes only. Do not change issue status while recording criteria. Mark each
 criterion `[x]` when met, `[~]` when deferred, or `[ ]` when not met. Tick `[x]` only with evidence
-produced by the run. If the only verification is behavioral and the run could not exercise it, leave
-the criterion `[~]`. Never delete or silently untick a criterion; write a stale one as
+produced by the run, and name the branch or PR carrying it, so the epic says what landed where. If
+the only verification is behavioral and the run could not exercise it, leave the criterion `[~]`.
+Never delete or silently untick a criterion; write a stale one as
 `- [ ] ~~<criterion text>~~ — <reason>`.
 
-Update one criterion line with `save_issue`'s `patch` instead of rewriting the description:
+Read the epic with `get_issue` first and copy each `old_string` from the line as it currently reads.
+A criterion an earlier write already ticked no longer starts `- [ ]`, and Linear stores a tick as
+`[X]`, so a template anchor misses and the atomic patch drops the whole audit.
+
+Then update each criterion line with `save_issue`'s `patch` instead of rewriting the description:
 
 ```text
 save_issue(
   id: <epic-id>,
   patch: [{
     "op": "replace",
-    "old_string": "- [ ] <criterion text>",
-    "new_string": "- [x] <criterion text> — <evidence>"
+    "old_string": "<the criterion line, verbatim from get_issue>",
+    "new_string": "- [x] <criterion text> — <evidence> (<branch or PR>)"
   }]
 )
 ```
 
-Each `old_string` must match the current description exactly once. Patch operations run atomically,
-so one failed match aborts the whole save.
+This write changes nothing the cache holds, so it needs no refresh.
 
 ## Update status during build
 
