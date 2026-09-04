@@ -1,17 +1,18 @@
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-const script = resolve(import.meta.dirname, '../../scripts/sync-version.mjs');
+const script = fileURLToPath(new URL('./sync-version.mjs', import.meta.url));
 const tempDirs: string[] = [];
 
 afterEach(() => tempDirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true })));
 
 describe('sync-version', () => {
-  it('updates cape manifest versions without changing their formatting', () => {
+  it('updates only the cape plugin version without changing formatting', () => {
     const root = mkdtempSync(join(tmpdir(), 'cape-sync-version-'));
     tempDirs.push(root);
     mkdirSync(join(root, 'cli'));
@@ -23,7 +24,7 @@ describe('sync-version', () => {
     );
     writeFileSync(
       join(root, '.claude-plugin/marketplace.json'),
-      '{\n  "plugins": [\n    { "name": "other", "version": "1.0.0" },\n    { "name": "cape", "version": "1.0.0" }\n  ]\n}\n',
+      '{\n  "name": "cape",\n  "plugins": [\n    { "name": "other", "version": "1.0.0" },\n    { "name": "cape", "version": "1.0.0" }\n  ]\n}\n',
     );
 
     execFileSync(process.execPath, [script], { cwd: root });
@@ -31,7 +32,7 @@ describe('sync-version', () => {
     const marketplace = readFileSync(join(root, '.claude-plugin/marketplace.json'), 'utf8');
     expect(plugin).toBe('{\n  "name": "cape",\n  "version": "2.3.4"\n}\n');
     expect(marketplace).toBe(
-      '{\n  "plugins": [\n    { "name": "other", "version": "1.0.0" },\n    { "name": "cape", "version": "2.3.4" }\n  ]\n}\n',
+      '{\n  "name": "cape",\n  "plugins": [\n    { "name": "other", "version": "1.0.0" },\n    { "name": "cape", "version": "2.3.4" }\n  ]\n}\n',
     );
 
     execFileSync(process.execPath, [script], { cwd: root });
