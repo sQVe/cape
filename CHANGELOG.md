@@ -9,6 +9,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- `cape:write-plan` proposes splitting a human ticket when the design holds slices that ship
+  independently or must land in order: a container ticket, one home-team sub-ticket per slice, and
+  the pair built against the first sub-ticket. The pairing rules already allowed a plan per leaf;
+  nothing ever suggested it.
 - The session-start hook injects `cape:unslop` next to `don-cape`, so the writing rules sit in every
   session and come back after compaction instead of depending on a skill load that other skills'
   pointers triggered about a quarter of the time.
