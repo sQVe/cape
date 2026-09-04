@@ -27,11 +27,6 @@ export interface TrackerCache {
   readonly epics: Record<string, TrackerEpic>;
 }
 
-export const findEpic = (cache: TrackerCache, issueId: string): TrackerEpic | null =>
-  cache.epics[issueId] ??
-  Object.values(cache.epics).find((epic) => epic.humanTicketId === issueId) ??
-  null;
-
 const isOptionalString = (value: unknown) => value == null || typeof value === 'string';
 
 const isTrackerTask = (value: unknown): value is TrackerTask => {
