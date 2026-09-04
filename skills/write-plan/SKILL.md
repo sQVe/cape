@@ -79,10 +79,11 @@ human can scan, carrying no R-tables, constraints, or acceptance criteria, plus 
 holding the full contract from step 2, created as a sub-issue of that ticket with `state: "Todo"`.
 Check the ticket is a leaf first, per the contract's pairing rules. Both stay untyped parents.
 
-When the design holds slices that ship independently or must land in order, propose splitting the
-work before creating anything: a container ticket in the home team, one home-team sub-ticket per
-slice, and the pair above built against the first sub-ticket rather than the container. Say in the
-proposal that the container closes by hand, since no PR lists it.
+When the design holds slices that ship independently or must land in order, stop before creating
+anything and propose the split: a container ticket in the home team, one home-team sub-ticket per
+slice, and the pair above built against the first sub-ticket rather than the container. Say that the
+container closes by hand, since no PR lists it. Wait for the answer; write nothing to Linear until
+the shape is settled.
 
 Create exactly one sub-issue under the plan issue with `save_issue`, `state: "Todo"`, and only
 task-level detail in its description.
