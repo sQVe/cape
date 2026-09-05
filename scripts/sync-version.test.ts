@@ -39,4 +39,24 @@ describe('sync-version', () => {
     expect(readFileSync(join(root, '.claude-plugin/plugin.json'), 'utf8')).toBe(plugin);
     expect(readFileSync(join(root, '.claude-plugin/marketplace.json'), 'utf8')).toBe(marketplace);
   });
+
+  it('writes nothing when one manifest cannot be located', () => {
+    const root = mkdtempSync(join(tmpdir(), 'cape-sync-version-'));
+    tempDirs.push(root);
+    mkdirSync(join(root, 'cli'));
+    mkdirSync(join(root, '.claude-plugin'));
+    writeFileSync(join(root, 'cli/package.json'), '{\n  "version": "2.3.4"\n}\n');
+    const plugin = '{\n  "name": "cape",\n  "version": "1.0.0"\n}\n';
+    // A nested object in the cape entry defeats the brace-matching regex, so the marketplace
+    // transform throws after the plugin transform has already succeeded.
+    const marketplace =
+      '{\n  "name": "cape",\n  "plugins": [\n    { "name": "cape", "version": "1.0.0", "meta": { "a": 1 } }\n  ]\n}\n';
+    writeFileSync(join(root, '.claude-plugin/plugin.json'), plugin);
+    writeFileSync(join(root, '.claude-plugin/marketplace.json'), marketplace);
+
+    expect(() => execFileSync(process.execPath, [script], { cwd: root, stdio: 'pipe' })).toThrow();
+
+    expect(readFileSync(join(root, '.claude-plugin/plugin.json'), 'utf8')).toBe(plugin);
+    expect(readFileSync(join(root, '.claude-plugin/marketplace.json'), 'utf8')).toBe(marketplace);
+  });
 });

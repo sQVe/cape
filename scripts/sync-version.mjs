@@ -13,10 +13,12 @@ const replaceVersion = (json, path) => {
   return json.replace(/("version"\s*:\s*")[^"]*"/, (_, prefix) => `${prefix}${version}"`);
 };
 
+// Both manifests are staged before either is written: a throw partway through would otherwise
+// leave one bumped and one stale, which is the drift this script exists to prevent.
+const staged = [];
 const update = (path, transform) => {
   const current = readFileSync(path, 'utf8');
-  const updated = transform(current);
-  if (updated !== current) writeFileSync(path, updated);
+  staged.push({ path, current, updated: transform(current) });
 };
 
 const pluginPath = '.claude-plugin/plugin.json';
@@ -42,3 +44,7 @@ update(marketplacePath, (json) => {
   );
   return json.replace(capeEntry, replaceVersion(capeEntry, marketplacePath));
 });
+
+for (const { path, current, updated } of staged) {
+  if (updated !== current) writeFileSync(path, updated);
+}
