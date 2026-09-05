@@ -56,17 +56,18 @@ Otherwise, first matching row wins:
 | "Continue", "next task", start/resume epic work, Linear task ID   | `cape:execute-plan`      | Worktree entry is Step 0   |
 | Set up an autonomous run, draft a `/goal`, prep an AFK run        | `/cape:set-goal`         | User-invoked; never loaded |
 | Resolve merge or rebase conflicts, "fix conflicts"                | `cape:resolve-conflicts` | Finishes the merge         |
-| Something broken, error, stack trace, or a diagnosed Linear bug   | `cape:fix-bug`           | Diagnose then patch        |
+| Something broken, a bug to file or fix, error, or stack trace     | `cape:fix-bug`           | Diagnose then patch        |
 | Finish or hand off a tracker epic, all tasks done                 | `cape:finish-epic`       | End of build chain         |
 | Commit, save changes, wrap this up                                | `cape:commit`            | Standalone                 |
 | Create PR, open pull request, "ship it", "ready for review"       | `cape:pr`                | Standalone                 |
 | Act on inbound PR review comments, resolve review threads         | `cape:pr-feedback`       | Inbound review loop        |
-| Linear/tracker operations, issue state, ready work, cache refresh | `cape:tracker`           | Reference skill            |
 | Remove AI tells from prose, "unslop", clean up a draft            | `cape:unslop`            | Standalone                 |
 | "Explain that", "what does that mean", "in plain english", "eli5" | `cape:bro`               | Restates the last message  |
 
-`cape:test-driven-development` is internal: `cape:execute-plan` and `cape:fix-bug` load it before
-any production code.
+`cape:test-driven-development` and `cape:tracker` are internal. `cape:execute-plan` and
+`cape:fix-bug` load `cape:test-driven-development` before any production code. `cape:write-plan`,
+`cape:execute-plan`, and `cape:fix-bug` load `cape:tracker`; `cape:finish-epic` and `cape:set-goal`
+follow its contract.
 
 Code review has no cape skill. The user runs the builtin `/code-review`, or a skill dispatches
 `cape:code-reviewer`. That agent returns its findings as JSON, and whoever dispatched it relays them

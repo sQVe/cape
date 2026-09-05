@@ -119,6 +119,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `mcp__claude_ai_Linear__save_issue` — wrote issues and left the tracker cache stale with no
   reminder. The matcher is now a regex over the server segment, matching any name that carries
   `linear` or `Linear`, while still ignoring Linear reads and non-Linear `save_issue` tools.
+- `don-cape`: tracker-flavoured requests routed to `cape:tracker`, which is `user-invocable: false`
+  and so cannot be reached that way. The row is gone from the action table and folded into the
+  sentence naming the internal skills and what loads them, and the `cape:fix-bug` row now covers a
+  bug to file as well as one to fix, since fix-bug already owns bug-issue creation.
 - Tracker: every labeled issue create failed. The contract asked for `src:cape` and `type:bug`, the
   `group:child` form Linear's UI renders, but `save_issue` resolves the child name alone and
   rejected the whole call with "Could not find or access label(s)" — and since `labels` replaces the
