@@ -17,8 +17,9 @@ project's checks, and report what shipped. Hand off only when every criterion ha
    when the PR merges, via the closing line `cape:pr` builds from the tracker cache
    (`Fixes <human-id>, <plan-id>`).
 2. **Every acceptance criterion needs evidence.** Cite tests, files, or demonstrated behavior.
-3. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets at most a concise
-   outcome summary; that `save_issue` is description-only.
+3. **Linear stays minimal.** Detailed reflections stay in the session. Linear gets the step 2
+   criteria audit and at most a concise outcome summary; both `save_issue` writes are
+   description-only.
 
 ## Process
 
@@ -65,6 +66,9 @@ otherwise it stays deferred.
 `[~]` does not block hand-off, but every deferred criterion goes verbatim into the PR's Deferred
 verification section (`cape:pr` step 3) as "not yet done, verify post-merge". Never under Manual
 verification, which is for subjective judgment only, and never presented as verified.
+
+After presenting the audit, write it into the epic description by following `cape:tracker`'s "Update
+epic acceptance criteria" section.
 
 Any `[ ]` NOT MET: **STOP.** Leave the epic open and recommend the next task to create through
 `cape:execute-plan`.

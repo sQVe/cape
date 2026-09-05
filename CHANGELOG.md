@@ -9,6 +9,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Epic acceptance criteria get ticked as work lands, so a mid-flight epic body says what is done,
+  what landed it, and what is left. `cape:tracker` holds the convention: the marker vocabulary, the
+  evidence bar, and a `save_issue` patch anchored on the criterion line as it currently reads.
+  `cape:execute-plan` ticks at task close and `cape:finish-epic` writes its audit back instead of
+  only printing it.
 - `cape:write-plan` proposes splitting a human ticket when the design holds slices that ship
   independently or must land in order: a container ticket, one home-team sub-ticket per slice, and
   the pair built against the first sub-ticket.

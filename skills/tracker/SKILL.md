@@ -102,6 +102,34 @@ do. Add `"humanTicketId": "<human-ticket-id>"` to the paired child inside `child
 child keeps the plan issue as its parent and so has no parent of its own to derive from. The cache
 preserves the stamp across later refreshes that omit it.
 
+## Update epic acceptance criteria
+
+Use description writes only. Do not change issue status while recording criteria. Mark each
+criterion `[x]` when met, `[~]` when deferred, or `[ ]` when not met. Tick `[x]` only with evidence
+produced by the run, and name the branch or PR carrying it, so the epic says what landed where. If
+the only verification is behavioral and the run could not exercise it, leave the criterion `[~]`.
+Never delete or silently untick a criterion; write a stale one as
+`- [ ] ~~<criterion text>~~ — <reason>`.
+
+Read the epic with `get_issue` first and copy each `old_string` from the line as it currently reads.
+A criterion an earlier write already ticked no longer starts `- [ ]`, and Linear stores a tick as
+`[X]`, so a template anchor misses and the atomic patch drops the whole audit.
+
+Then update each criterion line with `save_issue`'s `patch` instead of rewriting the description:
+
+```text
+save_issue(
+  id: <epic-id>,
+  patch: [{
+    "op": "replace",
+    "old_string": "<the criterion line, verbatim from get_issue>",
+    "new_string": "- [x] <criterion text> — <evidence> (<branch or PR>)"
+  }]
+)
+```
+
+This write changes nothing the cache holds, so it needs no refresh.
+
 ## Update status during build
 
 Write the state to Linear first, then copy it into the cache. Starting a task:
