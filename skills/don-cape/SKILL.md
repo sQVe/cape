@@ -66,7 +66,8 @@ Otherwise, first matching row wins:
 
 `cape:test-driven-development` and `cape:tracker` are internal. `cape:execute-plan` and
 `cape:fix-bug` load `cape:test-driven-development` before any production code. `cape:write-plan`,
-`cape:execute-plan`, `cape:fix-bug`, `cape:finish-epic`, and `cape:set-goal` load `cape:tracker`.
+`cape:execute-plan`, and `cape:fix-bug` load `cape:tracker`; `cape:finish-epic` and `cape:set-goal`
+follow its contract.
 
 Code review has no cape skill. The user runs the builtin `/code-review`, or a skill dispatches
 `cape:code-reviewer`. That agent returns its findings as JSON, and whoever dispatched it relays them
