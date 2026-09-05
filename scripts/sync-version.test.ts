@@ -7,9 +7,9 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 const script = fileURLToPath(new URL('./sync-version.mjs', import.meta.url));
-const tempDirs = [];
+const tempDirs: string[] = [];
 
-const manifests = (marketplace) => {
+const manifests = (marketplace: string) => {
   const root = mkdtempSync(join(tmpdir(), 'cape-sync-version-'));
   tempDirs.push(root);
   mkdirSync(join(root, 'cli'));
@@ -23,11 +23,29 @@ const manifests = (marketplace) => {
   return root;
 };
 
-const read = (root, name) => readFileSync(join(root, '.claude-plugin', name), 'utf8');
+const read = (root: string, name: string) =>
+  readFileSync(join(root, '.claude-plugin', name), 'utf8');
 
-afterEach(() => tempDirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true })));
+afterEach(() =>
+  tempDirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true })),
+);
 
 describe('sync-version', () => {
+  // The rest of this suite runs on temporary fixtures, so it would stay green while the committed
+  // manifests drifted from cli/package.json — the exact failure the script exists to prevent.
+  it('keeps the committed manifests in step with cli/package.json', () => {
+    const repo = fileURLToPath(new URL('..', import.meta.url));
+    const at = (path: string) => JSON.parse(readFileSync(join(repo, path), 'utf8'));
+
+    const { version } = at('cli/package.json');
+    const marketplace = at('.claude-plugin/marketplace.json');
+
+    expect(at('.claude-plugin/plugin.json').version).toBe(version);
+    expect(
+      marketplace.plugins.find((plugin: { name: string }) => plugin.name === 'cape').version,
+    ).toBe(version);
+  });
+
   it('bumps only the cape plugin entry', () => {
     // The outer marketplace object is also named cape, and a foreign plugin is listed first:
     // both are fields a looser match would rewrite instead.
