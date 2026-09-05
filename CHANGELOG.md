@@ -108,6 +108,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- Hooks: the PostToolUse cache-refresh nudge only fired for one Linear MCP server name. The matcher
+  was the literal `mcp__plugin_linear_linear__save_issue`, so a repo that connects Linear under any
+  other name — `linear-platform` in a `.mcp.json`, or the `claude.ai Linear` server's
+  `mcp__claude_ai_Linear__save_issue` — wrote issues and left the tracker cache stale with no
+  reminder. The matcher is now a regex over the server segment, matching any name that carries
+  `linear` or `Linear`, while still ignoring Linear reads and non-Linear `save_issue` tools.
 - Tracker: every labeled issue create failed. The contract asked for `src:cape` and `type:bug`, the
   `group:child` form Linear's UI renders, but `save_issue` resolves the child name alone and
   rejected the whole call with "Could not find or access label(s)" — and since `labels` replaces the

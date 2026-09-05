@@ -44,7 +44,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "mcp__plugin_linear_linear__save_issue",
+        "matcher": "mcp__.*[Ll]inear.*__save_issue",
         "hooks": [
           {
             "type": "command",
