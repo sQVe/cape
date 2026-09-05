@@ -1,6 +1,8 @@
 {
   "name": "cape",
-  "owner": { "name": "sqve" },
+  "owner": {
+    "name": "sqve"
+  },
   "plugins": [
     {
       "name": "cape",

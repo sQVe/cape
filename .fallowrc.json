@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "entry": ["scripts/**/*.test.mjs"],
   "audit": {
     "gate": "new-only",
     "deadCodeBaseline": "fallow-dead-code-baseline.json",
