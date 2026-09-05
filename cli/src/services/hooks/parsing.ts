@@ -40,6 +40,7 @@ export const normalizeEventName = (name: string) => {
 };
 
 export const stripQuotedContent = (command: string): string => {
+  // Bash deny gates fail open by design: quoted payloads such as `sh -c "git push"` bypass them.
   let stripped = command;
   stripped = stripped.replace(/<<-?\s*['"]?(\w+)['"]?\n[\s\S]*?\n\s*\1\b/g, '<<HEREDOC');
   stripped = stripped.replace(/"[^"]*"/g, '""');

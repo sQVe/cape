@@ -24,6 +24,9 @@ cape validate           # all skills, agents, commands
 cape validate skills    # skills only
 ```
 
+`cli/package.json` is the single source of truth for the release version. After changing it, run
+`pnpm version:sync` to update `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`.
+
 ## Conventions
 
 - Commands are thin wrappers. Each routes to a skill with

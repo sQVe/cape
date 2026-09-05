@@ -39,6 +39,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- `cli/package.json` is the single source of truth for the release version. The CLI reads its
+  version from there instead of a literal, and `pnpm version:sync` propagates it to
+  `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, which Claude Code loads
+  directly and so cannot derive theirs at load time.
 - Skills: `cape:set-goal` defaults to a `codex` builder and a `claude` reviewer, and the draft's
   decisions table names whichever reviewer was chosen instead of always `codex`.
 - Skills, agents, and docs lost about 800 lines of prose that said nothing the model would not do

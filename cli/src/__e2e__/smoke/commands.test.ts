@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import packageJson from '../../../package.json' with { type: 'json' };
 import { capeCmd } from '../helpers';
 
 describe('smoke', () => {
@@ -9,6 +10,10 @@ describe('smoke', () => {
 
   it('--version boots and exits 0', () => {
     expect(capeCmd(['--version']).status).toBe(0);
+  });
+
+  it('--version matches package.json', () => {
+    expect(capeCmd(['--version']).stdout).toBe(`cape v${packageJson.version}`);
   });
 
   it('check boots and exits 0', () => {

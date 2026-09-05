@@ -36,8 +36,8 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: ['cli/src/**/*.test.ts', 'skills/**/*.test.ts'],
-          exclude: ['cli/src/__e2e__/**', 'hooks/**', 'scripts/**', 'node_modules/**'],
+          include: ['cli/src/**/*.test.ts', 'scripts/**/*.test.ts', 'skills/**/*.test.ts'],
+          exclude: ['cli/src/__e2e__/**', 'hooks/**', 'node_modules/**'],
         },
       },
       {

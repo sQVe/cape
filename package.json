@@ -16,7 +16,8 @@
     "prepare": "vp config",
     "test": "vp test",
     "test:unit": "vp test --project unit",
-    "test:e2e": "vp test --project e2e"
+    "test:e2e": "vp test --project e2e",
+    "version:sync": "node scripts/sync-version.mjs"
   },
   "devDependencies": {
     "@types/node": "26.1.0",

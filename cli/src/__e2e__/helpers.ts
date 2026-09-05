@@ -7,6 +7,7 @@ import { Effect, Layer } from 'effect';
 import { Command } from 'effect/unstable/cli';
 import { vi } from 'vitest';
 
+import packageJson from '../../package.json' with { type: 'json' };
 import { main } from '../main';
 import { CommitServiceLive } from '../services/commitLive';
 import { GitServiceLive } from '../services/gitLive';
@@ -111,7 +112,7 @@ export const capeCmd = (
   };
 };
 
-const runWith = Command.runWith(main, { version: '1.6.2' });
+const runWith = Command.runWith(main, { version: packageJson.version });
 
 export const inProcess = async (
   args: string[],
