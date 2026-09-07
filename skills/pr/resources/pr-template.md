@@ -3,17 +3,17 @@
 ## Format
 
 ```markdown
-[Brief description of what this PR accomplishes]
+**[One sentence that stands alone: what this PR does.]**
 
-#### Motivation
+[Two or three sentences: the problem and why this approach. Not how; the diff shows how. Written for
+a reviewer who knows the domain but not this branch.]
 
-[Problem being solved or opportunity. Why now? 1-3 sentences.]
+#### Decisions
 
-#### Changes
+<!-- OPTIONAL. Only tradeoffs and shortcomings a reviewer would otherwise question. One sentence
+     each. Not a list of what changed; the diff shows that. -->
 
-- [Describe key changes made]
-- [Include technical implementation details]
-- [Highlight any architectural or design decisions]
+- [Decision and its reason]
 
 #### Test plan
 
@@ -23,23 +23,11 @@
 - [ ] [Command or verifiable behavior]
 - [ ] [Command or verifiable behavior]
 
-#### Verification performed
-
-<!-- Testing done during development. Evidence, not promises. -->
-
-- [Describe testing done and results observed]
-
 #### Deployment notes
 
 <!-- OPTIONAL. Operational steps for deployers (migrations, cache flushes, feature flags). -->
 
 - [Deployment action required]
-
-#### Manual verification
-
-<!-- OPTIONAL. Only for subjective human judgment (visual/UX). Omit for backend changes. -->
-
-- [Subjective item requiring human judgment]
 
 #### Deferred verification
 

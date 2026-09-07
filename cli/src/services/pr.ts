@@ -7,13 +7,9 @@ const templatePaths = [
 ];
 
 const defaultContent = [
-  '#### Motivation',
+  '**[One sentence that stands alone: what this PR does.]**',
   '',
-  '[Problem being solved or opportunity. Why now?]',
-  '',
-  '#### Changes',
-  '',
-  '- [Describe key changes made]',
+  '[Two or three sentences: the problem and why this approach. Not how; the diff shows how.]',
   '',
   '#### Test plan',
   '',

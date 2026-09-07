@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- The bundled PR template is one paragraph, optional Decisions bullets, and the test plan. The
+  Motivation, Changes, Verification performed, and Manual verification sections are gone: they
+  produced an inventory of the diff, repeated the test plan, and narrated review rounds, so a
+  reviewer read six hundred words before the code. `cape pr template` now requires only Test plan
+  when no repo template exists.
+
 ### Added
 
 - Epic acceptance criteria get ticked as work lands, so a mid-flight epic body says what is done,
