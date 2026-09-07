@@ -504,7 +504,7 @@ describe('pr template command', () => {
     await Effect.runPromise(run(['pr', 'template']).pipe(Effect.provide(makeCommandLayers())));
     const result = JSON.parse(console_.output());
     expect(result.source).toBe('default');
-    expect(result.sections).toEqual(['Motivation', 'Changes', 'Test plan']);
+    expect(result.sections).toEqual(['Test plan']);
     console_.restore();
   });
 
@@ -579,9 +579,7 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works',
-        ),
+        Effect.succeed('summary\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works'),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -605,9 +603,7 @@ describe('pr validate command', () => {
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
       readFile: () =>
-        Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [ ] works',
-        ),
+        Effect.succeed('summary\n#### Test plan\n- [x] /code-review run on abc1234\n- [ ] works'),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -627,7 +623,7 @@ describe('pr validate command', () => {
     const console_ = spyConsole();
     const prLayer = Layer.succeed(PrService)({
       fileExists: () => Effect.succeed(false),
-      readFile: () => Effect.succeed('#### Motivation\njust this'),
+      readFile: () => Effect.succeed('just a summary'),
       readStdin: () => Effect.succeed(''),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
@@ -636,11 +632,10 @@ describe('pr validate command', () => {
       Effect.runPromise(
         run(['pr', 'validate', '/tmp/pr-body.md']).pipe(Effect.provide(makeCommandLayers(prLayer))),
       ),
-    ).rejects.toThrow('Changes, Test plan');
+    ).rejects.toThrow('missing sections: Test plan');
     const result = JSON.parse(console_.output());
     expect(result.valid).toBe(false);
-    expect(result.missing).toContain('Changes');
-    expect(result.missing).toContain('Test plan');
+    expect(result.missing).toEqual(['Test plan']);
     console_.restore();
   });
 
@@ -650,9 +645,7 @@ describe('pr validate command', () => {
       fileExists: () => Effect.succeed(false),
       readFile: () => Effect.fail(new Error('should not read file')),
       readStdin: () =>
-        Effect.succeed(
-          '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works',
-        ),
+        Effect.succeed('summary\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works'),
       gitRoot: () => Effect.succeed('/repo'),
       spawnGh: () => Effect.fail(new Error('no gh')),
     });
@@ -707,8 +700,7 @@ describe('pr validate command', () => {
   });
 });
 
-const validBody =
-  '#### Motivation\nwhy\n#### Changes\nwhat\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works';
+const validBody = 'summary\n#### Test plan\n- [x] /code-review run on abc1234\n- [x] works';
 
 const makeCreateHookLayer = (
   overrides: {
@@ -856,7 +848,7 @@ describe('pr create command', () => {
     const console_ = spyConsole();
     await expect(
       Effect.runPromise(
-        run(['pr', 'create', '--title', 'My PR', '--body', '#### Motivation\nonly this']).pipe(
+        run(['pr', 'create', '--title', 'My PR', '--body', 'just a summary']).pipe(
           Effect.provide(makeCreateLayers()),
         ),
       ),

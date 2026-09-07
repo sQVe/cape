@@ -24,8 +24,9 @@ the skill runs the review itself when no review covers the branch.
    user running the builtin `/code-review` satisfies it too. Tick only once the findings are
    addressed or dismissed, and never stop to ask for a review you can run yourself.
 3. **Never invent description sections.** Use the repo template or the bundled template exactly. No
-   ad-hoc "Summary" or "Root cause" sections. The one allowed addition is the template's Deferred
-   verification section.
+   ad-hoc "Summary" or "Root cause" sections. The only allowed additions are the bundled template's
+   Decisions and Deferred verification sections, at the repo template's heading level, only when
+   they have content: Decisions right after the summary, Deferred verification after the test plan.
 4. **Stop on failure.** Report what failed instead of pushing through.
 
 ## Process
@@ -70,15 +71,23 @@ relevant to the change), CHANGELOG.md with an "Unreleased" section (add an entry
 
 ### 3. Write the description
 
-Read the full diff and commit list:
+Read the full diff, the commit list, and the tracker issues the branch closes:
 
 ```bash
 cape git diff branch
 git log <default-branch>..HEAD --oneline
+cape tracker show
 ```
 
+Read the epic, its human ticket, and the completed tasks in full. They hold what the diff cannot
+show, and that is what Decisions is for: an accepted trade-off, a divergence from the contract, a
+mechanism the reviewer must know, or work that has no task of its own or falls outside the epic's
+required behaviors, with why it lands there. At most a handful, one sentence each. The human
+ticket's "done when" is the Deferred verification list when it could not run pre-merge.
+
 Write the description following the detected template. If no repo template exists, match this
-bundled template's sections and heading levels exactly:
+bundled template's sections and heading levels exactly, omitting optional sections that have no
+content:
 
 !`cat "${CLAUDE_SKILL_DIR}/resources/pr-template.md"`
 
@@ -104,6 +113,11 @@ Write the body for a reviewer who knows the domain but not this branch:
   here: the body describes the change, not the investigation.
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
+- Keep it short enough to read before the diff: a bold one-sentence first line that stands alone, a
+  two- or three-sentence paragraph, then Decisions when there are any. Whatever the template source,
+  the body opens with that first line. The summary says what and why, never how; everything else is
+  the diff. No inventory of what changed, no test counts, no review-round history, no trailing
+  "known and accepted" paragraphs.
 - End with the closing line, whatever the template source: `Fixes <human-id>, <plan-id>` from
   `cape tracker show`, meaning the epic entry's `humanTicketId` and the AI plan issue, plus any
   completed task's own `humanTicketId`. Tasks stay off the line, and so does a standalone bug's AI

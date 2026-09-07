@@ -6,15 +6,8 @@ const templatePaths = [
   'docs/pull_request_template.md',
 ];
 
+// Only the sections the validator requires; the prose lives in the skill's template.
 const defaultContent = [
-  '#### Motivation',
-  '',
-  '[Problem being solved or opportunity. Why now?]',
-  '',
-  '#### Changes',
-  '',
-  '- [Describe key changes made]',
-  '',
   '#### Test plan',
   '',
   '- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed',
