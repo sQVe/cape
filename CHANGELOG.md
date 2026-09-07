@@ -7,14 +7,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Changed
-
-- The bundled PR template is one paragraph, optional Decisions bullets, and the test plan. The
-  Motivation, Changes, Verification performed, and Manual verification sections are gone: they
-  produced an inventory of the diff, repeated the test plan, and narrated review rounds, so a
-  reviewer read six hundred words before the code. `cape pr template` now requires only Test plan
-  when no repo template exists.
-
 ### Added
 
 - Epic acceptance criteria get ticked as work lands, so a mid-flight epic body says what is done,
@@ -47,6 +39,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- The bundled PR template is a bold one-line TL;DR, a short paragraph, optional Decisions bullets,
+  and the test plan. The Motivation, Changes, Verification performed, and Manual verification
+  sections are gone: they produced an inventory of the diff, repeated the test plan, and narrated
+  review rounds, so a reviewer read six hundred words before the code. `cape:pr` reads the tracker
+  issues before writing, and `cape pr template` requires only Test plan when no repo template
+  exists.
 - `cli/package.json` is the single source of truth for the release version. The CLI reads its
   version from there instead of a literal, and `pnpm version:sync` propagates it to
   `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`, which Claude Code loads

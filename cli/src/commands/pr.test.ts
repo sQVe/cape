@@ -848,7 +848,7 @@ describe('pr create command', () => {
     const console_ = spyConsole();
     await expect(
       Effect.runPromise(
-        run(['pr', 'create', '--title', 'My PR', '--body', '#### Motivation\nonly this']).pipe(
+        run(['pr', 'create', '--title', 'My PR', '--body', 'just a summary']).pipe(
           Effect.provide(makeCreateLayers()),
         ),
       ),

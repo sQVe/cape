@@ -6,11 +6,8 @@ const templatePaths = [
   'docs/pull_request_template.md',
 ];
 
+// Only the sections the validator requires; the prose lives in the skill's template.
 const defaultContent = [
-  '**[One sentence that stands alone: what this PR does.]**',
-  '',
-  '[Two or three sentences: the problem and why this approach. Not how; the diff shows how.]',
-  '',
   '#### Test plan',
   '',
   '- [ ] Code review by <model> (<reviewer>) on <sha>, findings addressed or dismissed',

@@ -80,9 +80,10 @@ cape tracker show
 ```
 
 Read the epic, its human ticket, and the completed tasks in full. They hold what the diff cannot
-show: the accepted trade-offs, the contract the work was built against, and where the work diverged
-from it. Each of those is a Decisions bullet; the human ticket's "done when" is the Deferred
-verification list when it could not run pre-merge.
+show, and that is what Decisions is for: an accepted trade-off, a divergence from the contract, a
+mechanism the reviewer must know, or work that has no task of its own or falls outside the epic's
+required behaviors, with why it lands there. At most a handful, one sentence each. The human
+ticket's "done when" is the Deferred verification list when it could not run pre-merge.
 
 Write the description following the detected template. If no repo template exists, match this
 bundled template's sections and heading levels exactly:
@@ -112,9 +113,8 @@ Write the body for a reviewer who knows the domain but not this branch:
 - Name behavior, not the diff. Say what the code now does, not which symbols moved. Mention an
   identifier only when the reviewer needs that exact name to find something.
 - Keep it short enough to read before the diff: a bold one-sentence first line that stands alone, a
-  two- or three-sentence paragraph, and at most a handful of Decisions bullets. Whatever the
-  template source, the body opens with that first line. The summary says what and why, never how; a
-  mechanism the reviewer must know is one Decisions bullet, and everything else is the diff. No
+  two- or three-sentence paragraph, then Decisions. Whatever the template source, the body opens
+  with that first line. The summary says what and why, never how; everything else is the diff. No
   inventory of what changed, no test counts, no review-round history, no trailing "known and
   accepted" paragraphs.
 - End with the closing line, whatever the template source: `Fixes <human-id>, <plan-id>` from
@@ -122,8 +122,7 @@ Write the body for a reviewer who knows the domain but not this branch:
   completed task's own `humanTicketId`. Tasks stay off the line, and so does a standalone bug's AI
   issue. List only ids that exist; AI-only work has no `humanTicketId`. Use `Related to` with the
   same set ONLY when this PR does not complete the epic. Build it now, before approval; never invent
-  a placeholder. When the work has no task of its own or falls outside the epic's required
-  behaviors, one Decisions bullet says so and why it lands under that epic.
+  a placeholder.
 - Hyperlink tracker ids in prose (`[ABU-12](https://linear.app/...)`). Leave the closing `Fixes` /
   `Related to` line plain; the integration parses the bare ids, and a link there can break the
   close.
