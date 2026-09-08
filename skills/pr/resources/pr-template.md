@@ -11,7 +11,8 @@ a reviewer who knows the domain but not this branch.]
 #### Decisions
 
 <!-- OPTIONAL. Only tradeoffs and shortcomings a reviewer would otherwise question. One sentence
-     each. Not a list of what changed; the diff shows that. -->
+     each, about the change, not the author: no first person, no account of how you got there. Not
+     a list of what changed; the diff shows that. -->
 
 - [Decision and its reason]
 
