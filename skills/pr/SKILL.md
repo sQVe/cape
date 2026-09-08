@@ -82,10 +82,9 @@ cape tracker show
 Read the epic, its human ticket, and the completed tasks in full. They hold what the diff cannot
 show, and that is what Decisions is for: an accepted trade-off, a divergence from the contract, a
 mechanism the reviewer must know, or work that has no task of its own or falls outside the epic's
-required behaviors, with why it lands there. At most a handful, one sentence each, each stating a
-property of the change rather than the author's stance or process: no first person, no account of
-what you found, corrected, or decided along the way. The human ticket's "done when" is the Deferred
-verification list when it could not run pre-merge.
+required behaviors, with why it lands there. At most a handful, one sentence each. Write them in the
+third person, about the change. The human ticket's "done when" is the Deferred verification list
+when it could not run pre-merge.
 
 Write the description following the detected template. If no repo template exists, match this
 bundled template's sections and heading levels exactly, omitting optional sections that have no
@@ -107,6 +106,9 @@ reviewer is their own name, with no parenthetical.
 
 Write the model you actually ran, never a version you are guessing at. Repo templates rarely carry
 the box; add it.
+
+Every test plan item states the check and its result, never a conclusion the check does not support
+on its own.
 
 Write the body for a reviewer who knows the domain but not this branch:
 
@@ -135,8 +137,7 @@ When acceptance checks need a deployed environment and could not run pre-merge (
 done. Add the section when the repo template lacks it.
 
 Check coverage: happy path, edge cases, integration points, regression risks. Add missing test plan
-items for any gaps. Each item states the check and its result, never a conclusion the check does not
-support on its own.
+items for any gaps.
 
 ### 4. STOP: present and get approval (output gate)
 
