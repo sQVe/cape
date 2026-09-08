@@ -39,6 +39,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Decisions bullets are written in the third person, about the change. First person had been turning
+  trade-off bullets into a report on the investigation. Test plan items state the check and its
+  result rather than a conclusion the check does not support alone.
 - The bundled PR template is a bold one-line TL;DR, a short paragraph, optional Decisions bullets,
   and the test plan. The Motivation, Changes, Verification performed, and Manual verification
   sections are gone: they produced an inventory of the diff, repeated the test plan, and narrated
